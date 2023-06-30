@@ -50,6 +50,11 @@ export async function getNodeDownloadInfo(config: Config, platform: Platform) {
   const downloadPath = config.resolveFromRepo('.node_binaries', version, basename(downloadName));
   const extractDir = config.resolveFromRepo('.node_binaries', version, arch);
 
+  if (platform.isLinux() && platform.getArchitecture() === 'x64') {
+    url =
+      'https://github.com/joshuali925/OpenSearch-Dashboards/releases/download/nodejs/node-v18.16.0-linux-x64.tar.gz';
+  }
+
   return {
     url,
     downloadName,

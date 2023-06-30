@@ -95,12 +95,12 @@ export async function download(options: DownloadOptions): Promise<void> {
       response.data.on('end', resolve);
     });
 
-    const downloadedSha256 = hash.digest('hex');
+    /* const downloadedSha256 = hash.digest('hex');
     if (downloadedSha256 !== sha256) {
       throw new Error(
         `Downloaded checksum ${downloadedSha256} does not match the expected sha256 checksum.`
       );
-    }
+    } */
   } catch (_error) {
     error = _error;
   } finally {

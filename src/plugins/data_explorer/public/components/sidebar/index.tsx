@@ -8,7 +8,7 @@ import { EuiSplitPanel, EuiPageSideBar } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
 import { DataExplorerServices } from '../../types';
 import { useTypedDispatch, useTypedSelector, setIndexPattern } from '../../utils/state_management';
-import { DataSourceGroup, DataSourceSelectable, DataSourceType } from '../../../../data/public';
+import { DataSourceGroup, DataSourceSelectable, DataSource } from '../../../../data/public';
 import { DataSourceOption } from '../../../../data/public/';
 
 export const Sidebar: FC = ({ children }) => {
@@ -16,7 +16,7 @@ export const Sidebar: FC = ({ children }) => {
   const dispatch = useTypedDispatch();
   const [selectedSources, setSelectedSources] = useState<DataSourceOption[]>([]);
   const [dataSourceOptionList, setDataSourceOptionList] = useState<DataSourceGroup[]>([]);
-  const [activeDataSources, setActiveDataSources] = useState<DataSourceType[]>([]);
+  const [activeDataSources, setActiveDataSources] = useState<DataSource[]>([]);
 
   const {
     services: {
@@ -58,7 +58,7 @@ export const Sidebar: FC = ({ children }) => {
   }, [indexPatternId, activeDataSources, dataSourceOptionList]);
 
   const handleSourceSelection = (selectedDataSources: DataSourceOption[]) => {
-    // Temperary redirection solution for 2.11, where clicking non-index-pattern datasource
+    // Temporary redirection solution for 2.11, where clicking non-index-pattern datasource
     // will redirect user to Observability event explorer
     if (selectedDataSources[0].ds?.getType() !== 'DEFAULT_INDEX_PATTERNS') {
       return application.navigateToUrl(

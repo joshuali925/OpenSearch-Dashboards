@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
 import { EuiComboBox } from '@elastic/eui';
-import { DataSourceList, DataSourceOptionType } from './types';
+import { i18n } from '@osd/i18n';
+import React from 'react';
+import { DataSourceOptionType } from './types';
 
 export const DataSourceSelector = ({
   dataSourceList,
@@ -13,7 +14,7 @@ export const DataSourceSelector = ({
   onDataSourceChange,
   singleSelection = true,
 }: {
-  dataSourceList: DataSourceList[];
+  dataSourceList: DataSourceOptionType[];
   selectedOptions: DataSourceOptionType[];
   onDataSourceChange: (selectedDataSourceOptions: DataSourceOptionType[]) => void;
   singleSelection?: boolean;
@@ -24,7 +25,9 @@ export const DataSourceSelector = ({
 
   return (
     <EuiComboBox
-      placeholder="Select a datasource"
+      placeholder={i18n.translate('data.datasource.selectADatasource', {
+        defaultMessage: 'Select a datasource',
+      })}
       options={dataSourceList}
       selectedOptions={selectedOptions}
       onChange={onDataSourceSelectionChange}

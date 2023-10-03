@@ -3,24 +3,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { SavedObject } from '../../../saved_objects/public';
+import { SavedObject } from '../../../../core/types';
 import { IndexPatternSavedObjectAttrs } from '../../../data/common/index_patterns/index_patterns';
-import { IndexPatternsContract } from '../../../data/public';
-import { DataSource } from '../../../data/public';
+import {
+  DataSource,
+  IDataSetParams,
+  IDataSourceMetaData,
+  IDataSourceQueryParams,
+  IDataSourceQueryResult,
+  IndexPatternsContract,
+} from '../../../data/public';
 
-interface DataSourceConfig {
+interface DataSourceConfig<DataSourceMetaData extends IDataSourceMetaData = IDataSourceMetaData> {
   name: string;
   type: string;
-  metadata: any;
+  metadata: DataSourceMetaData;
   indexPatterns: IndexPatternsContract;
 }
 
 export class DefaultDslDataSource extends DataSource<
-  any,
-  any,
+  IDataSourceMetaData,
+  IDataSetParams,
   Promise<Array<SavedObject<IndexPatternSavedObjectAttrs>> | null | undefined>,
-  any,
-  any
+  IDataSourceQueryParams,
+  IDataSourceQueryResult
 > {
   private readonly indexPatterns;
 
@@ -29,7 +35,7 @@ export class DefaultDslDataSource extends DataSource<
     this.indexPatterns = indexPatterns;
   }
 
-  async getDataSet(dataSetParams?: any) {
+  async getDataSet(dataSetParams?: IDataSetParams) {
     await this.indexPatterns.ensureDefaultIndexPattern();
     return await this.indexPatterns.getCache();
   }
@@ -38,7 +44,7 @@ export class DefaultDslDataSource extends DataSource<
     throw new Error('This operation is not supported for this class.');
   }
 
-  async runQuery(queryParams: any) {
+  async runQuery(queryParams: unknown) {
     return null;
   }
 }

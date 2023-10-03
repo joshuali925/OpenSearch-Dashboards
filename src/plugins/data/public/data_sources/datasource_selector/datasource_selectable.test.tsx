@@ -6,7 +6,7 @@
 import React from 'react';
 import { render, act } from '@testing-library/react';
 import { DataSourceSelectable } from './datasource_selectable';
-import { DataSourceType } from '../datasource_services';
+import { DataSource } from '../datasource_services';
 
 describe('DataSourceSelectable', () => {
   let dataSourcesMock;
@@ -22,7 +22,7 @@ describe('DataSourceSelectable', () => {
         getDataSet: jest.fn().mockResolvedValue([]),
         getType: jest.fn().mockReturnValue('DEFAULT_INDEX_PATTERNS'),
         getName: jest.fn().mockReturnValue('SomeName'),
-      } as unknown) as DataSourceType,
+      } as unknown) as DataSource,
     ];
 
     dataSourceOptionListMock = [];

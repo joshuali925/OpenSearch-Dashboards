@@ -5,10 +5,10 @@
 
 import React, { useEffect } from 'react';
 import { DataSourceSelector } from './datasource_selector';
-import { DataSourceType } from '../datasource_services';
 import { DataSourceGroup, DataSourceOption, DataSourceSelectableProps } from './types';
 import { ISourceDataSet } from '../datasource/types';
 import { IndexPattern } from '../../index_patterns';
+import { DataSource } from '../..';
 
 // Mapping between datasource type and its display name.
 const DATASOURCE_TYPE_DISPLAY_NAME_MAP = {
@@ -31,7 +31,7 @@ export const DataSourceSelectable = ({
   // This effect fetches datasets and prepares the datasource list for UI rendering.
   useEffect(() => {
     // Fetches datasets for a given datasource and returns it along with the source.
-    const fetchDataSetWithSource = async (ds: DataSourceType): Promise<ISourceDataSet> => {
+    const fetchDataSetWithSource = async (ds: DataSource): Promise<ISourceDataSet> => {
       const dataSet = await ds.getDataSet();
       return {
         ds,
@@ -40,13 +40,13 @@ export const DataSourceSelectable = ({
     };
 
     // Map through all data sources and fetch their respective datasets.
-    const fetchDataSets = () => dataSources.map((ds: DataSourceType) => fetchDataSetWithSource(ds));
+    const fetchDataSets = () => dataSources.map((ds: DataSource) => fetchDataSetWithSource(ds));
 
     const isIndexPatterns = (dataset: string | IndexPattern) =>
       dataset.attributes?.title && dataset.id;
 
     // Get the option format for the combo box from the dataSource and dataSet.
-    const getSourceOptions = (dataSource: DataSourceType, dataSet: DataSetType) => {
+    const getSourceOptions = (dataSource: DataSource, dataSet: DataSetType) => {
       const optionContent = {
         type: dataSource.getType(),
         name: dataSource.getName(),

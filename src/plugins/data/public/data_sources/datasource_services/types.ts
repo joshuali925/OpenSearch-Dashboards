@@ -3,27 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-  DataSource,
-  DataSourceFactory,
-  IDataSetParams,
-  IDataSourceMetaData,
-  IDataSourceQueryParams,
-  IDataSourceQueryResult,
-  ISourceDataSet,
-} from '../datasource';
+import { DataSourceFactory } from '../datasource';
 import { DataSourceService } from './datasource_service';
 
 export interface IDataSourceFilters {
   names: string[];
 }
 
-export interface IDataSourceRegisterationResult {
+export interface IDataSourceRegistrationResult {
   success: boolean;
   info: string;
 }
 
-export class DataSourceRegisterationError extends Error {
+export class DataSourceRegistrationError extends Error {
   success: boolean;
   info: string;
   constructor(message: string) {
@@ -33,15 +25,14 @@ export class DataSourceRegisterationError extends Error {
   }
 }
 
+export interface DataSourceType {
+  key: string;
+  label: string;
+  // name used in backend that will not be displayed on UI
+  backendName: string;
+}
+
 export interface DataSourceStart {
   dataSourceService: DataSourceService;
   dataSourceFactory: DataSourceFactory;
 }
-
-export type DataSourceType = DataSource<
-  IDataSourceMetaData,
-  IDataSetParams,
-  ISourceDataSet,
-  IDataSourceQueryParams,
-  IDataSourceQueryResult
->;

@@ -3,11 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { DataSourceFactory } from './factory';
+import { IndexPattern, IndexPatternsContract } from '../../index_patterns';
+import { IDataSetParams, IDataSourceMetaData } from '.';
+import { DataSourceType } from '../datasource_services/types';
 import { DataSource } from './datasource';
-import { IndexPattern } from '../../index_patterns';
+import { DataSourceFactory } from './factory';
 
-class MockDataSource extends DataSource<any, any, any, any, any> {
+class MockDataSource extends DataSource {
   private readonly indexPatterns;
 
   constructor({
@@ -18,14 +20,14 @@ class MockDataSource extends DataSource<any, any, any, any, any> {
   }: {
     name: string;
     type: string;
-    metadata: any;
-    indexPatterns: IndexPattern;
+    metadata: IDataSourceMetaData;
+    indexPatterns: IndexPatternsContract;
   }) {
     super(name, type, metadata);
     this.indexPatterns = indexPatterns;
   }
 
-  async getDataSet(dataSetParams?: any) {
+  async getDataSet(dataSetParams?: IDataSetParams) {
     await this.indexPatterns.ensureDefaultIndexPattern();
     return await this.indexPatterns.getCache();
   }
@@ -38,6 +40,12 @@ class MockDataSource extends DataSource<any, any, any, any, any> {
     return null;
   }
 }
+
+const mockDataSourceType: DataSourceType = {
+  key: 'mock',
+  label: 'Mock Datasource',
+  backendName: 'Mock',
+};
 
 describe('DataSourceFactory', () => {
   beforeEach(() => {
@@ -54,15 +62,15 @@ describe('DataSourceFactory', () => {
   it('registers a new data source type correctly', () => {
     const factory = DataSourceFactory.getInstance();
     expect(() => {
-      factory.registerDataSourceType('mock', MockDataSource);
+      factory.registerDataSourceType(mockDataSourceType, MockDataSource);
     }).not.toThrow();
   });
 
   it('throws error when registering an already registered data source type', () => {
     const factory = DataSourceFactory.getInstance();
-    factory.registerDataSourceType('mock', MockDataSource);
+    factory.registerDataSourceType(mockDataSourceType, MockDataSource);
     expect(() => {
-      factory.registerDataSourceType('mock', MockDataSource);
+      factory.registerDataSourceType(mockDataSourceType, MockDataSource);
     }).toThrow('This data source type has already been registered');
   });
 
@@ -75,7 +83,7 @@ describe('DataSourceFactory', () => {
       metadata: null,
       indexPattern: mockIndexPattern,
     };
-    factory.registerDataSourceType('mock', MockDataSource);
+    factory.registerDataSourceType(mockDataSourceType, MockDataSource);
 
     const instance = factory.getDataSourceInstance('mock', config);
     expect(instance).toBeInstanceOf(MockDataSource);

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { i18n } from '@osd/i18n';
+
 export const PLUGIN_ID = 'discover';
 export const DEFAULT_COLUMNS_SETTING = 'defaultColumns';
 export const SAMPLE_SIZE_SETTING = 'discover:sampleSize';
@@ -15,6 +17,10 @@ export const CONTEXT_DEFAULT_SIZE_SETTING = 'context:defaultSize';
 export const CONTEXT_STEP_SETTING = 'context:step';
 export const CONTEXT_TIE_BREAKER_FIELDS_SETTING = 'context:tieBreakerFields';
 export const MODIFY_COLUMNS_ON_SWITCH = 'discover:modifyColumnsOnSwitch';
-export const DEFAULT_DATASOURCE_TYPE = 'DEFAULT_INDEX_PATTERNS';
-export const DEFAULT_DATASOURCE_NAME = 'OpenSearch Default';
-export const INDEX_PATTERN_DATASOURCE_TYPE = 'Index patterns';
+export const DEFAULT_DATASOURCE_TYPE = {
+  key: 'DEFAULT_INDEX_PATTERNS',
+  backendName: 'OpenSearch Default',
+  label: i18n.translate('data.datasource.type.indexPattern', {
+    defaultMessage: 'Index Patterns',
+  }),
+};

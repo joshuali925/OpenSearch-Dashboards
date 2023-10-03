@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { OuiComboBoxOptionOption } from '@elastic/eui';
-import { DataSourceType } from '../datasource_services';
+import { EuiComboBoxOptionOption } from '@elastic/eui';
+import { DataSource } from '../..';
 
 export interface DataSourceGroup {
   label: string;
@@ -16,10 +16,10 @@ export interface DataSourceOption {
   value: string;
 }
 
-export type DataSourceOptionType = OuiComboBoxOptionOption<unknown>;
+export type DataSourceOptionType = EuiComboBoxOptionOption<unknown>;
 
 export interface DataSourceSelectableProps {
-  dataSources: DataSourceType[];
+  dataSources: DataSource[];
   dataSourceOptionList: DataSourceGroup[];
   selectedSources: DataSourceOption[];
   onDataSourceSelect: (dataSourceOption: DataSourceOption[]) => void;

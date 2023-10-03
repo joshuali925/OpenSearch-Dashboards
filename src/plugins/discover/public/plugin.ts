@@ -60,12 +60,7 @@ import {
   DiscoverUrlGenerator,
 } from './url_generator';
 import { SearchEmbeddableFactory } from './embeddable';
-import {
-  DEFAULT_DATASOURCE_TYPE,
-  PLUGIN_ID,
-  DEFAULT_DATASOURCE_NAME,
-  INDEX_PATTERN_DATASOURCE_TYPE,
-} from '../common';
+import { DEFAULT_DATASOURCE_TYPE, PLUGIN_ID } from '../common';
 import { DataExplorerPluginSetup } from '../../data_explorer/public';
 import { registerFeature } from './register_feature';
 import {
@@ -376,9 +371,9 @@ export class DiscoverPlugin
     const { dataSourceService, dataSourceFactory } = plugins.data.dataSources;
     dataSourceFactory.registerDataSourceType(DEFAULT_DATASOURCE_TYPE, DefaultDslDataSource);
     dataSourceService.registerDataSource(
-      dataSourceFactory.getDataSourceInstance(DEFAULT_DATASOURCE_TYPE, {
-        name: DEFAULT_DATASOURCE_NAME,
-        type: DEFAULT_DATASOURCE_TYPE,
+      dataSourceFactory.getDataSourceInstance(DEFAULT_DATASOURCE_TYPE.key, {
+        name: DEFAULT_DATASOURCE_TYPE.backendName,
+        type: DEFAULT_DATASOURCE_TYPE.key,
         metadata: null,
         indexPatterns: plugins.data.indexPatterns,
       })

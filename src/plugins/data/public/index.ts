@@ -509,11 +509,10 @@ export {
   DataSourceFactory,
 } from './data_sources/datasource';
 export {
-  DataSourceRegisterationError,
+  DataSourceRegistrationError,
   DataSourceService,
-  DataSourceType,
   IDataSourceFilters,
-  IDataSourceRegisterationResult,
+  IDataSourceRegistrationResult,
 } from './data_sources/datasource_services';
 export {
   DataSourceSelector,

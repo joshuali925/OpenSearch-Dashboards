@@ -3,19 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { DataSource } from '.';
+import { DataSourceType } from '../datasource_services/types';
+
 /**
  * The DataSourceFactory is responsible for managing the registration and creation of data source classes.
  * It serves as a registry for different data source types and provides a way to instantiate them.
  */
-
-import { DataSourceType } from '../datasource_services';
 
 export class DataSourceFactory {
   // Holds the singleton instance of the DataSourceFactory.
   private static factory: DataSourceFactory;
 
   // A dictionary holding the data source type as the key and its corresponding class constructor as the value.
-  private dataSourceClasses: { [type: string]: new (config: any) => DataSourceType } = {};
+  private dataSources: {
+    [key: string]: {
+      dataSourceClass: new (config: any) => DataSource;
+      dataSourceType: DataSourceType;
+    };
+  } = {};
 
   /**
    * Private constructor to ensure only one instance of DataSourceFactory is created.
@@ -38,31 +44,37 @@ export class DataSourceFactory {
    * Registers a new data source type with its associated class.
    * If the type has already been registered, an error is thrown.
    *
-   * @param {string} type - The identifier for the data source type.
-   * @param {new (config: any) => DataSourceType} dataSourceClass - The constructor of the data source class.
+   * @param {DataSourceType} type - The identifier for the data source type.
+   * @param {new (config: any) => DataSource} dataSourceClass - The constructor of the data source class.
    * @throws {Error} Throws an error if the data source type has already been registered.
    */
-  registerDataSourceType(type: string, dataSourceClass: new (config: any) => DataSourceType): void {
-    if (this.dataSourceClasses[type]) {
+  registerDataSourceType(
+    dataSourceType: DataSourceType,
+    dataSourceClass: new (config: any) => DataSource
+  ): void {
+    if (this.dataSources[dataSourceType.key]) {
       throw new Error('This data source type has already been registered');
     }
-    this.dataSourceClasses[type] = dataSourceClass;
+    this.dataSources[dataSourceType.key] = {
+      dataSourceClass,
+      dataSourceType,
+    };
   }
 
   /**
    * Creates and returns an instance of the specified data source type with the given configuration.
    * If the type hasn't been registered, an error is thrown.
    *
-   * @param {string} type - The identifier for the data source type.
+   * @param {string} key - The identifier for the data source type.
    * @param {any} config - The configuration for the data source instance.
-   * @returns {DataSourceType} An instance of the specified data source type.
+   * @returns {DataSource} An instance of the specified data source type.
    * @throws {Error} Throws an error if the data source type is not supported.
    */
-  getDataSourceInstance(type: string, config: any): DataSourceType {
-    const DataSourceClass = this.dataSourceClasses[type];
-    if (!DataSourceClass) {
+  getDataSourceInstance(key: string, config: any): DataSource {
+    const dataSource = this.dataSources[key];
+    if (!dataSource) {
       throw new Error('Unsupported data source type');
     }
-    return new DataSourceClass(config);
+    return new dataSource.dataSourceClass(config);
   }
 }

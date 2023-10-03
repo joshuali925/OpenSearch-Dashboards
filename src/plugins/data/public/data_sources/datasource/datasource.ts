@@ -13,14 +13,21 @@
  * DataSourceQueryResult: Represents the result from querying the data source.
  */
 
-import { ConnectionStatus } from './types';
+import {
+  ConnectionStatus,
+  IDataSetParams,
+  IDataSourceMetaData,
+  IDataSourceQueryParams,
+  IDataSourceQueryResult,
+  ISourceDataSet,
+} from './types';
 
 export abstract class DataSource<
-  DataSourceMetaData,
-  DataSetParams,
-  SourceDataSet,
-  DataSourceQueryParams,
-  DataSourceQueryResult
+  DataSourceMetaData extends IDataSourceMetaData = IDataSourceMetaData,
+  DataSetParams extends IDataSetParams = IDataSetParams,
+  SourceDataSet extends ISourceDataSet = ISourceDataSet,
+  DataSourceQueryParams extends IDataSourceQueryParams = IDataSourceQueryParams,
+  DataSourceQueryResult extends IDataSourceQueryResult = IDataSourceQueryResult
 > {
   constructor(
     private readonly name: string,

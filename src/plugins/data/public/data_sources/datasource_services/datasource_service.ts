@@ -3,35 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { forEach, isEmpty } from 'lodash';
 import { BehaviorSubject } from 'rxjs';
-import { isEmpty, forEach } from 'lodash';
+import { DataSource } from '../datasource';
 import {
-  DataSource,
-  IDataSetParams,
-  IDataSourceMetaData,
-  IDataSourceQueryParams,
-  IDataSourceQueryResult,
-  ISourceDataSet,
-} from '../datasource';
-import {
+  DataSourceRegistrationError,
   IDataSourceFilters,
-  IDataSourceRegisterationResult,
-  DataSourceRegisterationError,
+  IDataSourceRegistrationResult,
 } from './types';
-
-export type DataSourceType = DataSource<
-  IDataSourceMetaData,
-  IDataSetParams,
-  ISourceDataSet,
-  IDataSourceQueryParams,
-  IDataSourceQueryResult
->;
 
 export class DataSourceService {
   private static dataSourceService: DataSourceService;
   // A record to store all registered data sources, using the data source name as the key.
-  private dataSources: Record<string, DataSourceType> = {};
-  private _dataSourcesSubject: BehaviorSubject<Record<string, DataSourceType>>;
+  private dataSources: Record<string, DataSource> = {};
+  private _dataSourcesSubject: BehaviorSubject<Record<string, DataSource>>;
 
   private constructor() {
     this._dataSourcesSubject = new BehaviorSubject(this.dataSources);
@@ -51,8 +36,8 @@ export class DataSourceService {
    * @returns An array of registration results, one for each data source.
    */
   async registerMultipleDataSources(
-    datasources: DataSourceType[]
-  ): Promise<IDataSourceRegisterationResult[]> {
+    datasources: DataSource[]
+  ): Promise<IDataSourceRegistrationResult[]> {
     return Promise.all(datasources.map((ds) => this.registerDataSource(ds)));
   }
 
@@ -62,12 +47,12 @@ export class DataSourceService {
    *
    * @param ds - The data source to be registered.
    * @returns A registration result indicating success or failure.
-   * @throws {DataSourceRegisterationError} Throws an error if a data source with the same name already exists.
+   * @throws {DataSourceRegistrationError} Throws an error if a data source with the same name already exists.
    */
-  async registerDataSource(ds: DataSourceType): Promise<IDataSourceRegisterationResult> {
+  async registerDataSource(ds: DataSource): Promise<IDataSourceRegistrationResult> {
     const dsName = ds.getName();
     if (dsName in this.dataSources) {
-      throw new DataSourceRegisterationError(
+      throw new DataSourceRegistrationError(
         `Unable to register datasource ${dsName}, error: datasource name exists.`
       );
     } else {
@@ -76,7 +61,7 @@ export class DataSourceService {
         [dsName]: ds,
       };
       this._dataSourcesSubject.next(this.dataSources);
-      return { success: true, info: '' } as IDataSourceRegisterationResult;
+      return { success: true, info: '' } as IDataSourceRegistrationResult;
     }
   }
 
@@ -91,9 +76,9 @@ export class DataSourceService {
    * @param filters - An optional object with filter criteria (e.g., names of data sources).
    * @returns A record of filtered data sources.
    */
-  getDataSources(filters?: IDataSourceFilters): Record<string, DataSourceType> {
+  getDataSources(filters?: IDataSourceFilters): Record<string, DataSource> {
     if (!filters || isEmpty(filters.names)) return this.dataSources;
-    const filteredDataSources: Record<string, DataSourceType> = {};
+    const filteredDataSources: Record<string, DataSource> = {};
     forEach(filters.names, (dsName) => {
       if (dsName in this.dataSources) {
         filteredDataSources[dsName] = this.dataSources[dsName];

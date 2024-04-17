@@ -55,4 +55,9 @@ export {
 
 export { DefaultFormatEditor } from './components/field_editor/components/field_format_editor';
 
-export { MlCardState, IndexPatternTableColumn, IndexPatternTableRecord } from './types';
+export {
+  IndexPatternManagmentContext,
+  IndexPatternTableColumn,
+  IndexPatternTableRecord,
+  MlCardState,
+} from './types';

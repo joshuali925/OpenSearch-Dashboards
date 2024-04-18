@@ -11,8 +11,8 @@ import { useOpenSearchDashboards } from '../../../opensearch_dashboards_react/pu
 import { ChangeIndexPattern, IndexPatternItem } from './change_indexpattern';
 
 export interface VisIndexPatternSelectorProps {
-  selectedIndexPattern: IndexPattern;
-  onChange: (indexPattern: IndexPattern) => void;
+  selectedIndexPattern?: IndexPattern;
+  onChange: (indexPattern?: IndexPattern) => void;
 }
 
 export function VisIndexPatternSelector({
@@ -32,42 +32,28 @@ export function VisIndexPatternSelector({
     indexPatterns.getIdsWithTitle().then((list) => updateIndexPatternItems(list));
   }, [indexPatterns]);
 
-  // Selected IndexPattern
-  const [selected, setSelected] = useState({
-    id: selectedId,
-    title: selectedTitle || '',
-  });
-
-  useEffect(() => {
-    if (!selectedIndexPattern) return;
-
-    const { id, title } = selectedIndexPattern;
-    setSelected({ id, title });
-  }, [selectedIndexPattern]);
-
   // Handle IndexPattern change
   const onChangeCallback = useCallback(
-    async (id: string) => {
+    async (id?: string) => {
+      if (id === undefined) {
+        onChange(undefined);
+        return;
+      }
       onChange(await indexPatterns.get(id));
     },
     [onChange, indexPatterns]
   );
-
-  if (!selectedId) {
-    return null;
-  }
 
   return (
     <div className="visIndexPatternSelector__container">
       <I18nProvider>
         <ChangeIndexPattern
           trigger={{
-            label: selected.title,
-            title: selected.title,
+            title: selectedTitle,
             'data-test-subj': 'indexPatternSelector-switch-link',
             className: 'visIndexPatternSelector__triggerButton',
           }}
-          indexPatternId={selected.id}
+          indexPatternId={selectedId}
           indexPatternItems={indexPatternItems}
           onChange={onChangeCallback}
         />

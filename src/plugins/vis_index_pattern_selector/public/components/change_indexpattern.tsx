@@ -20,7 +20,7 @@ export interface IndexPatternItem {
 }
 
 export type ChangeIndexPatternTriggerProps = EuiButtonEmptyProps & {
-  label: string;
+  label?: string;
   title?: string;
 };
 
@@ -33,7 +33,7 @@ export function ChangeIndexPattern({
 }: {
   trigger: ChangeIndexPatternTriggerProps;
   indexPatternItems: IndexPatternItem[];
-  onChange: (newId: string) => void;
+  onChange: (newId?: string) => void;
   indexPatternId?: string;
   selectableProps?: EuiSelectableProps;
 }) {
@@ -42,7 +42,7 @@ export function ChangeIndexPattern({
   if (!trigger) return null;
 
   const createTrigger = function () {
-    const { label, title, ...rest } = trigger;
+    const { title, ...rest } = trigger;
     return (
       <EuiButtonEmpty
         className="eui-textTruncate"
@@ -54,7 +54,10 @@ export function ChangeIndexPattern({
         onClick={() => setPopoverIsOpen(!isPopoverOpen)}
         {...rest}
       >
-        {label}
+        {title ||
+          i18n.translate('indexPatternSelector.emptyIndexPatternTitle', {
+            defaultMessage: 'No override',
+          })}
       </EuiButtonEmpty>
     );
   };
@@ -80,7 +83,7 @@ export function ChangeIndexPattern({
           data-test-subj="indexPatternSelector-switcher"
           {...selectableProps}
           searchable
-          singleSelection="always"
+          singleSelection
           options={indexPatternItems.map(({ title, id }) => ({
             label: title,
             key: id,
@@ -88,10 +91,8 @@ export function ChangeIndexPattern({
             checked: id === indexPatternId ? 'on' : undefined,
           }))}
           onChange={(choices) => {
-            const choice = (choices.find(({ checked }) => checked) as unknown) as {
-              value: string;
-            };
-            onChange(choice.value);
+            const choice = choices.find(({ checked }) => checked);
+            onChange(choice?.value);
             setPopoverIsOpen(false);
           }}
           searchProps={{

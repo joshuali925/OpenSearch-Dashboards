@@ -10,7 +10,7 @@ import { wrapWithIntl } from 'test_utils/enzyme_helpers';
 import { mount, ReactWrapper, ShallowWrapper } from 'enzyme';
 import { act } from 'react-dom/test-utils';
 import { ChangeIndexPattern } from './change_indexpattern';
-import { VisIndexPatternSelector } from './vis_index_pattern_selector';
+import { VisIndexPatternSelector } from './vindex_pattern_selector';
 import { EuiPopover } from '@elastic/eui';
 import { IndexPattern } from 'src/plugins/data/public';
 import { mockManagementPlugin } from '../../../index_pattern_management/public/mocks';

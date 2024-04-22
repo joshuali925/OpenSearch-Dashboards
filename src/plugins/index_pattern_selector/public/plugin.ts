@@ -5,7 +5,7 @@
 
 import { Plugin } from 'opensearch-dashboards/public';
 
-export class VisIndexPatternSelectorPublicPlugin implements Plugin<void, void> {
+export class IndexPatternSelectorPublicPlugin implements Plugin<void, void> {
   public setup() {}
   public start() {}
 }

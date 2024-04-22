@@ -11,14 +11,11 @@
  * compatible open source license.
  */
 
-export {
-  VisIndexPatternSelector,
-  VisIndexPatternSelectorProps,
-} from './components/vis_index_pattern_selector';
+export { IndexPatternSelector } from './components/index_pattern_selector';
 
-/** dummy plugin, we just want VisIndexPatternSelector to have its own bundle */
+/** dummy plugin, we just want IndexPatternSelector to have its own bundle */
 export function plugin() {
-  return new (class VisIndexPatternSelector {
+  return new (class IndexPatternSelector {
     setup() {}
     start() {}
   })();

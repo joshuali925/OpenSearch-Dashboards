@@ -9,7 +9,7 @@
     "urlForwarding",
     "navigation",
     "uiActions",
-    "visIndexPatternSelector",
+    "indexPatternSelector",
     "savedObjects"
   ],
   "optionalPlugins": ["home", "share", "usageCollection"],

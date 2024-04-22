@@ -1,5 +1,5 @@
 {
-  "id": "visIndexPatternSelector",
+  "id": "indexPatternSelector",
   "version": "opensearchDashboards",
   "ui": true,
   "requiredPlugins": ["opensearchDashboardsReact"]

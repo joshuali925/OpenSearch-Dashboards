@@ -3,68 +3,72 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { i18n } from '@osd/i18n';
-import React, { useState } from 'react';
 import {
   EuiButtonEmpty,
+  EuiButtonEmptyProps,
   EuiPopover,
   EuiPopoverTitle,
   EuiSelectable,
-  EuiButtonEmptyProps,
+  EuiSelectableOption,
 } from '@elastic/eui';
 import { EuiSelectableProps } from '@elastic/eui/src/components/selectable/selectable';
+import { i18n } from '@osd/i18n';
+import React, { useState } from 'react';
 
 export interface IndexPatternItem {
   id: string;
   title: string;
 }
 
-export type ChangeIndexPatternTriggerProps = EuiButtonEmptyProps & {
-  label?: string;
-  title?: string;
-};
+export type ChangeIndexPatternTriggerProps = EuiButtonEmptyProps & {};
+
+interface ChangeIndexPatternProps {
+  indexPatternItems: IndexPatternItem[];
+  selectedId: string | undefined;
+  onChange: (id?: string) => void;
+  selectableProps?: EuiSelectableProps;
+  buttonProps?: EuiButtonEmptyProps;
+}
 
 export function ChangeIndexPattern({
   indexPatternItems,
-  indexPatternId,
+  selectedId,
   onChange,
-  trigger,
   selectableProps,
-}: {
-  trigger: ChangeIndexPatternTriggerProps;
-  indexPatternItems: IndexPatternItem[];
-  onChange: (newId?: string) => void;
-  indexPatternId?: string;
-  selectableProps?: EuiSelectableProps;
-}) {
+  buttonProps,
+}: ChangeIndexPatternProps) {
   const [isPopoverOpen, setPopoverIsOpen] = useState(false);
 
-  if (!trigger) return null;
+  const selectableOptions: EuiSelectableOption[] = indexPatternItems.map(({ title, id }) => ({
+    label: title,
+    key: id,
+    checked: id === selectedId ? 'on' : undefined,
+  }));
 
-  const createTrigger = function () {
-    const { title, ...rest } = trigger;
-    return (
-      <EuiButtonEmpty
-        className="eui-textTruncate"
-        flush="left"
-        color="text"
-        iconSide="right"
-        iconType="arrowDown"
-        title={title}
-        onClick={() => setPopoverIsOpen(!isPopoverOpen)}
-        {...rest}
-      >
-        {title ||
-          i18n.translate('indexPatternSelector.emptyIndexPatternTitle', {
-            defaultMessage: 'No override',
-          })}
-      </EuiButtonEmpty>
-    );
-  };
+  const selectedLabel = selectableOptions.find(({ checked }) => checked)?.label;
+
+  const button = (
+    <EuiButtonEmpty
+      className="eui-textTruncate indexPatternSelector__triggerButton"
+      flush="left"
+      color="text"
+      iconSide="right"
+      iconType="arrowDown"
+      title={selectedLabel}
+      onClick={() => setPopoverIsOpen(!isPopoverOpen)}
+      data-test-subj="indexPatternSelector-switch-link"
+      {...buttonProps}
+    >
+      {selectedLabel ||
+        i18n.translate('indexPatternSelector.emptyIndexPatternLabel', {
+          defaultMessage: 'No override',
+        })}
+    </EuiButtonEmpty>
+  );
 
   return (
     <EuiPopover
-      button={createTrigger()}
+      button={button}
       isOpen={isPopoverOpen}
       closePopover={() => setPopoverIsOpen(false)}
       className="eui-textTruncate"
@@ -84,15 +88,10 @@ export function ChangeIndexPattern({
           {...selectableProps}
           searchable
           singleSelection
-          options={indexPatternItems.map(({ title, id }) => ({
-            label: title,
-            key: id,
-            value: id,
-            checked: id === indexPatternId ? 'on' : undefined,
-          }))}
-          onChange={(choices) => {
-            const choice = choices.find(({ checked }) => checked);
-            onChange(choice?.value);
+          options={selectableOptions}
+          onChange={(options) => {
+            const selectedOption = options.find(({ checked }) => checked);
+            onChange(selectedOption?.key);
             setPopoverIsOpen(false);
           }}
           searchProps={{

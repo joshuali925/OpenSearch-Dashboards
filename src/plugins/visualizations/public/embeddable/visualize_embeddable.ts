@@ -411,6 +411,7 @@ export class VisualizeEmbeddable
         timeRange: this.timeRange,
         query: this.input.query,
         filters: this.input.filters,
+        indexPattern: this.input.indexPattern,
       },
       uiState: this.vis.uiState,
       inspectorAdapters: this.inspectorAdapters,
@@ -438,6 +439,7 @@ export class VisualizeEmbeddable
       visLayers: this.visLayers,
       visAugmenterConfig: this.visAugmenterConfig,
     });
+    console.log('❗this.expression:', { expression: this.expression, params: expressionParams });
 
     if (this.handler && !abortController.signal.aborted) {
       this.handler.update(this.expression, expressionParams);

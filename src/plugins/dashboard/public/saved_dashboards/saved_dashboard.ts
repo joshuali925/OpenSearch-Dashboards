@@ -35,7 +35,13 @@ import {
 } from '../../../../plugins/saved_objects/public';
 import { extractReferences, injectReferences } from './saved_dashboard_references';
 
-import { Filter, ISearchSource, Query, RefreshInterval } from '../../../../plugins/data/public';
+import {
+  Filter,
+  IndexPattern,
+  ISearchSource,
+  Query,
+  RefreshInterval,
+} from '../../../../plugins/data/public';
 import { createDashboardEditUrl } from '../dashboard_constants';
 
 export interface SavedObjectDashboard extends SavedObject {
@@ -53,6 +59,7 @@ export interface SavedObjectDashboard extends SavedObject {
   searchSource: ISearchSource;
   getQuery(): Query;
   getFilters(): Filter[];
+  indexPattern: IndexPattern;
 }
 
 // Used only by the savedDashboards service, usually no reason to change this

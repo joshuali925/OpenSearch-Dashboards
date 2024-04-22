@@ -245,6 +245,8 @@ export class ExpressionsService {
     input: Input = { type: 'null' } as any,
     context?: ExtraContext
   ): ExecutionContract<ExtraContext, Input, Output> => {
+    console.log('❗execution context:', context);
+    console.log('❗execution input:', input);
     const execution = this.executor.createExecution<ExtraContext, Input, Output>(ast, context);
     execution.start(input);
     return execution.contract;

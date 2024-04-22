@@ -28,7 +28,7 @@
  * under the License.
  */
 
-import { Filter, opensearchQuery, TimeRange, Query } from '../../data/public';
+import { Filter, opensearchQuery, TimeRange, Query, IndexPattern } from '../../data/public';
 
 import { SearchAPI } from './data_model/search_api';
 import { TimeCache } from './data_model/time_cache';
@@ -47,6 +47,7 @@ interface VegaRequestHandlerParams {
   query: Query;
   filters: Filter;
   timeRange: TimeRange;
+  indexPattern?: IndexPattern;
   visParams: VisParams;
 }
 
@@ -63,12 +64,16 @@ export function createVegaRequestHandler(
   const { timefilter } = data.query.timefilter;
   const timeCache = new TimeCache(timefilter, 3 * 1000);
 
+  // visParams contains vega json
   return async function vegaRequestHandler({
     timeRange,
     filters,
     query,
+    indexPattern,
     visParams,
   }: VegaRequestHandlerParams) {
+    console.log('❗visParams:', indexPattern, visParams);
+    // console.trace();
     if (!searchAPI) {
       searchAPI = new SearchAPI(
         {
@@ -86,14 +91,23 @@ export function createVegaRequestHandler(
     timeCache.setTimeRange(timeRange);
 
     const opensearchQueryConfigs = opensearchQuery.getOpenSearchQueryConfig(uiSettings);
+    console.log('❗filters:', filters);
     const filtersDsl = opensearchQuery.buildOpenSearchQuery(
       undefined,
       query,
       filters,
       opensearchQueryConfigs
     );
+    console.log('❗filtersDsl:', filtersDsl);
     const { VegaParser } = await import('./data_model/vega_parser');
-    const vp = new VegaParser(visParams.spec, searchAPI, timeCache, filtersDsl, getServiceSettings);
+    const vp = new VegaParser(
+      visParams.spec,
+      searchAPI,
+      timeCache,
+      filtersDsl,
+      indexPattern,
+      getServiceSettings
+    );
 
     return await vp.parseAsync();
   };

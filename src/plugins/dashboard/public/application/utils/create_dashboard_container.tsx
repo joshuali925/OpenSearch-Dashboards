@@ -80,6 +80,7 @@ export const createDashboardContainer = async ({
         services,
         savedDashboard?.id
       );
+      console.log('❗initialInput:', initialInput);
 
       const incomingEmbeddable = services.embeddable
         .getStateTransfer(services.scopedHistory)
@@ -355,6 +356,7 @@ const getDashboardInputFromAppState = (
   const embeddablesMap: {
     [key: string]: DashboardPanelState;
   } = {};
+  console.log('❗appStateData:', appStateData);
   appStateData.panels.forEach((panel: SavedDashboardPanel) => {
     embeddablesMap[panel.panelIndex] = convertSavedDashboardPanelToPanelState(panel);
   });
@@ -366,6 +368,7 @@ const getDashboardInputFromAppState = (
     hidePanelTitles: appStateData.options.hidePanelTitles,
     query: data.query.queryString.getQuery(),
     timeRange: data.query.timefilter.timefilter.getTime(),
+    indexPattern: appStateData.indexPattern,
     refreshConfig: data.query.timefilter.timefilter.getRefreshInterval(),
     viewMode: appStateData.viewMode,
     panels: embeddablesMap,

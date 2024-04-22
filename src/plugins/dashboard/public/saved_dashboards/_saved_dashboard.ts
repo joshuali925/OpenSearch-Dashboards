@@ -21,6 +21,7 @@ export const convertToSerializedDashboard = (
     uiStateJSON,
     searchSource,
     lastSavedTitle,
+    indexPattern,
   } = savedDashboard;
 
   return {
@@ -37,5 +38,6 @@ export const convertToSerializedDashboard = (
     searchSource,
     query: savedDashboard.getQuery(),
     filters: savedDashboard.getFilters(),
+    indexPattern,
   };
 };

@@ -76,6 +76,7 @@ function FilterBarUI(props: Props) {
   if (!uiSettings) return null;
 
   function onFiltersUpdated(filters: Filter[]) {
+    console.log('❗filters:', filters);
     if (props.onFiltersUpdated) {
       props.onFiltersUpdated(filters);
     }

@@ -30,42 +30,43 @@
 
 import './_dashboard_container.scss';
 
+import { I18nProvider } from '@osd/i18n/react';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { I18nProvider } from '@osd/i18n/react';
-import { RefreshInterval, TimeRange, Query, Filter } from 'src/plugins/data/public';
 import { CoreStart, Logos } from 'src/core/public';
+import { Filter, IndexPattern, Query, RefreshInterval, TimeRange } from 'src/plugins/data/public';
 import { Start as InspectorStartContract } from 'src/plugins/inspector/public';
 import uuid from 'uuid';
 import {
   Container,
   ContainerInput,
-  EmbeddableInput,
-  ViewMode,
   EmbeddableFactory,
-  IEmbeddable,
-  EmbeddableStart,
-  PanelState,
-  EmbeddableStateTransfer,
+  EmbeddableInput,
   EmbeddableOutput,
+  EmbeddableStart,
+  EmbeddableStateTransfer,
+  IEmbeddable,
+  PanelState,
+  ViewMode,
 } from '../../../../embeddable/public';
-import { UiActionsStart } from '../../../../ui_actions/public';
-import { DASHBOARD_CONTAINER_TYPE } from './dashboard_constants';
-import { createPanelState } from './panel';
-import { DashboardPanelState } from './types';
-import { DashboardViewport } from './viewport/dashboard_viewport';
 import {
   OpenSearchDashboardsContextProvider,
   OpenSearchDashboardsReactContext,
   OpenSearchDashboardsReactContextValue,
 } from '../../../../opensearch_dashboards_react/public';
+import { UiActionsStart } from '../../../../ui_actions/public';
+import { DASHBOARD_CONTAINER_TYPE } from './dashboard_constants';
+import { createPanelState } from './panel';
+import { IPanelPlacementArgs, PanelPlacementMethod } from './panel/dashboard_panel_placement';
 import { PLACEHOLDER_EMBEDDABLE } from './placeholder';
-import { PanelPlacementMethod, IPanelPlacementArgs } from './panel/dashboard_panel_placement';
+import { DashboardPanelState } from './types';
+import { DashboardViewport } from './viewport/dashboard_viewport';
 
 export interface DashboardContainerInput extends ContainerInput {
   viewMode: ViewMode;
   filters: Filter[];
   query: Query;
+  indexPattern?: IndexPattern;
   timeRange: TimeRange;
   refreshConfig?: RefreshInterval;
   expandedPanelId?: string;
@@ -136,6 +137,7 @@ export class DashboardContainer extends Container<InheritedChildInput, Dashboard
       options.embeddable.getEmbeddableFactory,
       parent
     );
+    console.log('❗initialInput:', initialInput);
     this.embeddablePanel = options.embeddable.getEmbeddablePanel(stateTransfer);
     this.logos = options.chrome.logos;
   }
@@ -252,12 +254,21 @@ export class DashboardContainer extends Container<InheritedChildInput, Dashboard
   }
 
   protected getInheritedInput(id: string): InheritedChildInput {
-    const { viewMode, refreshConfig, timeRange, query, hidePanelTitles, filters } = this.input;
+    const {
+      viewMode,
+      refreshConfig,
+      timeRange,
+      query,
+      indexPattern,
+      hidePanelTitles,
+      filters,
+    } = this.input;
     return {
       filters,
       hidePanelTitles,
       query,
       timeRange,
+      indexPattern,
       refreshConfig,
       viewMode,
       id,

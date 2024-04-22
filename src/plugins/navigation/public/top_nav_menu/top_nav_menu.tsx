@@ -130,6 +130,7 @@ export function TopNavMenu(props: TopNavMenuProps): ReactElement | null {
     // Validate presence of all required fields
     if (!showSearchBar || !props.data) return null;
     const { SearchBar } = props.data.ui;
+    // console.log('❗searchBarProps:', searchBarProps);
     return <SearchBar {...searchBarProps} />;
   }
 

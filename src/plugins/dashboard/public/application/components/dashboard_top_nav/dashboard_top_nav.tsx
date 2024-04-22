@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { memo, useState, useEffect } from 'react';
-import { IndexPattern } from 'src/plugins/data/public';
-import { useCallback } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { IndexPattern } from 'src/plugins/data/public';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
-import { getTopNavConfig } from './top_nav';
-import { DashboardAppStateContainer, DashboardAppState, DashboardServices } from '../../../types';
-import { getNavActions } from '../../utils/get_nav_actions';
-import { DashboardContainer } from '../../embeddable';
+import { VisIndexPatternSelector } from '../../../../../vis_index_pattern_selector/public';
 import { Dashboard } from '../../../dashboard';
+import { DashboardAppState, DashboardAppStateContainer, DashboardServices } from '../../../types';
+import { DashboardContainer } from '../../embeddable';
+import { getNavActions } from '../../utils/get_nav_actions';
+import { getTopNavConfig } from './top_nav';
 
 interface DashboardTopNavProps {
   isChromeVisible: boolean;
@@ -124,27 +124,35 @@ const TopNav = ({
   const showSearchBar = showQueryBar || showFilterBar;
 
   return (
-    <TopNavMenu
-      appName={'dashboard'}
-      config={showTopNavMenu ? topNavMenu : undefined}
-      className={isFullScreenMode ? 'osdTopNavMenu-isFullScreen' : undefined}
-      screenTitle={currentAppState.title}
-      showSearchBar={showSearchBar}
-      showQueryBar={showQueryBar}
-      showQueryInput={showQueryInput}
-      showDatePicker={showDatePicker}
-      showFilterBar={showFilterBar}
-      useDefaultBehaviors={true}
-      indexPatterns={indexPatterns}
-      showSaveQuery={services.dashboardCapabilities.saveQuery as boolean}
-      savedQuery={undefined}
-      onSavedQueryIdChange={(savedQueryId?: string) => {
-        appState.transitions.set('savedQuery', savedQueryId);
-      }}
-      savedQueryId={currentAppState?.savedQuery}
-      onQuerySubmit={handleRefresh}
-      setMenuMountPoint={isEmbeddedExternally ? undefined : setHeaderActionMenu}
-    />
+    <>
+      <TopNavMenu
+        appName={'dashboard'}
+        config={showTopNavMenu ? topNavMenu : undefined}
+        className={isFullScreenMode ? 'osdTopNavMenu-isFullScreen' : undefined}
+        screenTitle={currentAppState.title}
+        showSearchBar={showSearchBar}
+        showQueryBar={showQueryBar}
+        showQueryInput={showQueryInput}
+        showDatePicker={showDatePicker}
+        showFilterBar={showFilterBar}
+        useDefaultBehaviors={true}
+        indexPatterns={indexPatterns}
+        showSaveQuery={services.dashboardCapabilities.saveQuery as boolean}
+        savedQuery={undefined}
+        onSavedQueryIdChange={(savedQueryId?: string) => {
+          appState.transitions.set('savedQuery', savedQueryId);
+        }}
+        savedQueryId={currentAppState?.savedQuery}
+        onQuerySubmit={handleRefresh}
+        setMenuMountPoint={isEmbeddedExternally ? undefined : setHeaderActionMenu}
+      />
+      <VisIndexPatternSelector
+        selectedIndexPattern={currentAppState.indexPattern}
+        onChange={(newIndexPattern) => {
+          appState.transitions.set('indexPattern', newIndexPattern);
+        }}
+      />
+    </>
   );
 };
 

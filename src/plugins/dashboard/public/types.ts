@@ -41,6 +41,7 @@ import {
   AppMountParameters,
   ToastsStart,
 } from 'src/core/public';
+import { IndexPattern } from 'src/plugins/data/public';
 import {
   IOsdUrlStateStorage,
   ReduxLikeStateContainer,
@@ -126,6 +127,7 @@ export interface DashboardAppState {
   query: Query | string;
   filters: Filter[];
   viewMode: ViewMode;
+  indexPattern?: IndexPattern;
   expandedPanelId?: string;
   savedQuery?: string;
 }

@@ -29,19 +29,19 @@
  */
 
 import { i18n } from '@osd/i18n';
-import { UiActionsStart } from 'src/plugins/ui_actions/public';
 import { CoreStart, ScopedHistory } from 'src/core/public';
 import { Start as InspectorStartContract } from 'src/plugins/inspector/public';
+import { UiActionsStart } from 'src/plugins/ui_actions/public';
 import {
-  ContainerOutput,
-  EmbeddableFactoryDefinition,
-  ErrorEmbeddable,
   Container,
+  ContainerOutput,
   EmbeddableFactory,
+  EmbeddableFactoryDefinition,
   EmbeddableStart,
+  ErrorEmbeddable,
 } from '../../../../embeddable/public';
-import { DashboardContainer, DashboardContainerInput } from './dashboard_container';
 import { DASHBOARD_CONTAINER_TYPE } from './dashboard_constants';
+import { DashboardContainer, DashboardContainerInput } from './dashboard_container';
 
 interface StartServices {
   capabilities: CoreStart['application']['capabilities'];

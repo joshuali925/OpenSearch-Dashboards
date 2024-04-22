@@ -156,6 +156,8 @@ export class ExpressionLoader {
       this.execution.cancel();
     }
     this.setParams(params);
+    console.log('❗loader params:', params);
+    console.trace();
     this.execution = getExpressionsService().execute(expression, params.context, {
       search: params.searchContext,
       variables: params.variables || {},

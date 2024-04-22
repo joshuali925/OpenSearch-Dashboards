@@ -61,6 +61,7 @@ export const useDashboardAppAndGlobalState = ({
         opensearchDashboardsVersion,
         usageCollection
       );
+      console.log('❗stateDefaults:', stateDefaults);
 
       const {
         stateContainer,

@@ -8,7 +8,7 @@
  */
 
 import { cloneDeep } from 'lodash';
-import { Filter, ISearchSource, Query, RefreshInterval } from '../../data/public';
+import { Filter, IndexPattern, ISearchSource, Query, RefreshInterval } from '../../data/public';
 import { SavedDashboardPanel } from './types';
 
 // TODO: This class can be revisited and clean up more
@@ -29,6 +29,7 @@ export interface SerializedDashboard {
   searchSource?: ISearchSource;
   query: Query;
   filters: Filter[];
+  indexPattern?: IndexPattern;
   title?: string;
 }
 
@@ -51,6 +52,7 @@ export class Dashboard<TDashboardParams = DashboardParams> {
   public searchSource?: ISearchSource;
   public query: Query;
   public filters: Filter[];
+  public indexPattern?: IndexPattern;
   public title?: string;
   public isDirty = false;
 
@@ -58,6 +60,7 @@ export class Dashboard<TDashboardParams = DashboardParams> {
     this.timeRestore = dashboardState.timeRestore;
     this.query = cloneDeep(dashboardState.query);
     this.filters = cloneDeep(dashboardState.filters);
+    this.indexPattern = dashboardState.indexPattern;
   }
 
   setState(state: PartialDashboardState) {
@@ -99,6 +102,9 @@ export class Dashboard<TDashboardParams = DashboardParams> {
     }
     if (state.filters) {
       this.filters = state.filters;
+    }
+    if (state.indexPattern) {
+      this.indexPattern = state.indexPattern;
     }
   }
 

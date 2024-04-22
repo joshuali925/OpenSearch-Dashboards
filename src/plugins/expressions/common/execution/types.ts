@@ -30,7 +30,7 @@
 
 import { ExpressionType } from '../expression_types';
 import { Adapters, DataAdapter, RequestAdapter } from '../../../inspector/common';
-import { TimeRange, Query, Filter } from '../../../data/common';
+import { TimeRange, Query, Filter, IndexPattern } from '../../../data/common';
 import { SavedObject, SavedObjectAttributes } from '../../../../core/public';
 
 /**
@@ -95,4 +95,5 @@ export interface ExecutionContextSearch {
   filters?: Filter[];
   query?: Query | Query[];
   timeRange?: TimeRange;
+  indexPattern?: IndexPattern;
 }

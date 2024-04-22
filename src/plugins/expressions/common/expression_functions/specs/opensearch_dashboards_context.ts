@@ -38,6 +38,7 @@ interface Arguments {
   q?: string | null;
   filters?: string | null;
   timeRange?: string | null;
+  indexPattern?: string | null;
   savedSearchId?: string | null;
 }
 
@@ -87,6 +88,16 @@ export const opensearchDashboardsContextFunction: ExpressionFunctionOpenSearchDa
         defaultMessage: 'Specify OpenSearch Dashboards time range filter',
       }),
     },
+    indexPattern: {
+      types: ['string', 'null'],
+      default: null,
+      help: i18n.translate(
+        'expressions.functions.opensearch_dashboards_context.indexPattern.help',
+        {
+          defaultMessage: 'Specify index pattern to be used for queries and filters',
+        }
+      ),
+    },
     savedSearchId: {
       types: ['string', 'null'],
       default: null,
@@ -101,6 +112,7 @@ export const opensearchDashboardsContextFunction: ExpressionFunctionOpenSearchDa
 
   async fn(input, args, { getSavedObject }) {
     const timeRange = getParsedValue(args.timeRange, input?.timeRange);
+    const indexPattern = getParsedValue(args.indexPattern, input?.indexPattern);
     let queries = mergeQueries(input?.query, getParsedValue(args?.q, []));
     let filters = [...(input?.filters || []), ...getParsedValue(args?.filters, [])];
 
@@ -131,6 +143,7 @@ export const opensearchDashboardsContextFunction: ExpressionFunctionOpenSearchDa
       query: queries,
       filters: uniqFilters(filters).filter((f: any) => !f.meta?.disabled),
       timeRange,
+      indexPattern,
     };
   },
 };

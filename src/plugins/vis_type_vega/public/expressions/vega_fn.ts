@@ -39,7 +39,7 @@ import {
 import { VegaVisualizationDependencies } from '../plugin';
 import { createVegaRequestHandler } from '../vega_request_handler';
 import { VegaInspectorAdapters } from '../vega_inspector';
-import { TimeRange, Query } from '../../../data/public';
+import { TimeRange, Query, IndexPattern } from '../../../data/public';
 import { VisRenderValue } from '../../../visualizations/public';
 import { VegaParser } from '../data_model/vega_parser';
 
@@ -85,12 +85,15 @@ export const createVegaFn = (
     },
   },
   async fn(input, args, context) {
+    console.log('❗input:', input);
+    // console.trace();
     const vegaRequestHandler = createVegaRequestHandler(dependencies, context);
 
     const response = await vegaRequestHandler({
       timeRange: get(input, 'timeRange') as TimeRange,
       query: get(input, 'query') as Query,
       filters: get(input, 'filters') as any,
+      indexPattern: get(input, 'indexPattern') as IndexPattern | undefined,
       visParams: { spec: args.spec },
     });
 

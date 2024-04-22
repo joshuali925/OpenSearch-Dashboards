@@ -59,6 +59,7 @@ import {
   ControlsDirection,
   OpenSearchDashboards,
 } from './types';
+import { IndexPattern } from '../../../data/public';
 
 // Set default single color to match other OpenSearch Dashboards visualizations
 const defaultColor: string = euiPaletteColorBlind()[0];
@@ -94,6 +95,7 @@ export class VegaParser {
   getServiceSettings: () => Promise<IServiceSettings>;
   filters: Bool;
   timeCache: TimeCache;
+  indexPattern?: IndexPattern;
   visibleVisLayers: Map<VisLayerTypes, boolean>;
   visAugmenterConfig: VisAugmenterEmbeddableConfig;
 
@@ -102,6 +104,7 @@ export class VegaParser {
     searchAPI: SearchAPI,
     timeCache: TimeCache,
     filters: Bool,
+    indexPattern: IndexPattern | undefined,
     getServiceSettings: () => Promise<IServiceSettings>
   ) {
     this.spec = spec as VegaSpec;
@@ -115,6 +118,7 @@ export class VegaParser {
     this.getServiceSettings = getServiceSettings;
     this.filters = filters;
     this.timeCache = timeCache;
+    this.indexPattern = indexPattern;
   }
 
   async parseAsync() {
@@ -132,6 +136,12 @@ export class VegaParser {
 
     if (typeof this.spec === 'string') {
       const spec = hjson.parse(this.spec, { legacyRoot: false });
+      if (this.indexPattern) {
+        spec.data.url.index = this.indexPattern.title;
+        if (spec.data.url['%timefield%']) {
+          spec.data.url['%timefield%'] = this.indexPattern.timeFieldName;
+        }
+      }
 
       if (!spec.$schema) {
         throw new Error(

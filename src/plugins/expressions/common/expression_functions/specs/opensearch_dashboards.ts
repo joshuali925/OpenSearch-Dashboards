@@ -64,6 +64,7 @@ export const opensearchDashboards: ExpressionFunctionOpenSearchDashboards = {
       query: [...toArray(search.query), ...toArray((input || {}).query)],
       filters: [...(search.filters || []), ...((input || {}).filters || [])],
       timeRange: search.timeRange || (input ? input.timeRange : undefined),
+      indexPattern: search.indexPattern || (input ? input.indexPattern : undefined),
     };
 
     return output;

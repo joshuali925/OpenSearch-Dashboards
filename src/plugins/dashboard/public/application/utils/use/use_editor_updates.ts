@@ -43,6 +43,7 @@ export const useEditorUpdates = ({
     setCurrentAppState(initialState);
 
     const unsubscribeStateUpdates = appState.subscribe((state) => {
+      console.log('❗state:', state);
       setCurrentAppState(state);
     });
 

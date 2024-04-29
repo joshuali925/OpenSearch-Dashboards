@@ -129,6 +129,7 @@ export class VisualizeEmbeddable
   private timeRange?: TimeRange;
   private query?: Query;
   private filters?: Filter[];
+  private indexPatternId?: string;
   private visCustomizations?: Pick<VisualizeInput, 'vis' | 'table'>;
   private subscriptions: Subscription[] = [];
   private expression: string = '';
@@ -274,6 +275,12 @@ export class VisualizeEmbeddable
     // Check if query has changed
     if (!_.isEqual(this.input.query, this.query)) {
       this.query = this.input.query;
+      dirty = true;
+    }
+
+    // Check if index pattern id has changed
+    if (this.input.indexPatternId !== this.indexPatternId) {
+      this.indexPatternId = this.input.indexPatternId;
       dirty = true;
     }
 
@@ -440,7 +447,6 @@ export class VisualizeEmbeddable
       visLayers: this.visLayers,
       visAugmenterConfig: this.visAugmenterConfig,
     });
-    console.log('❗this.expression:', { expression: this.expression, params: expressionParams });
 
     if (this.handler && !abortController.signal.aborted) {
       this.handler.update(this.expression, expressionParams);

@@ -203,7 +203,7 @@ export class Executor<Context extends Record<string, unknown> = Record<string, u
     if (typeof ast === 'string') params.expression = ast;
     else params.ast = ast;
 
-    console.log('❗executor params:', params);
+    // console.log('❗executor params:', params);
     const execution = new Execution<Context & ExtraContext, Input, Output>(params);
 
     return execution;

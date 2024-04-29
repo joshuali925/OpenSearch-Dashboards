@@ -72,7 +72,7 @@ export function createVegaRequestHandler(
     indexPattern,
     visParams,
   }: VegaRequestHandlerParams) {
-    console.log('❗visParams:', indexPattern, visParams);
+    // console.log('❗visParams:', indexPattern, visParams);
     // console.trace();
     if (!searchAPI) {
       searchAPI = new SearchAPI(
@@ -91,14 +91,14 @@ export function createVegaRequestHandler(
     timeCache.setTimeRange(timeRange);
 
     const opensearchQueryConfigs = opensearchQuery.getOpenSearchQueryConfig(uiSettings);
-    console.log('❗filters:', filters);
+    // console.log('❗filters:', filters);
     const filtersDsl = opensearchQuery.buildOpenSearchQuery(
       undefined,
       query,
       filters,
       opensearchQueryConfigs
     );
-    console.log('❗filtersDsl:', filtersDsl);
+    // console.log('❗filtersDsl:', filtersDsl);
     const { VegaParser } = await import('./data_model/vega_parser');
     const vp = new VegaParser(
       visParams.spec,

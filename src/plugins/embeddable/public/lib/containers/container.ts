@@ -168,7 +168,7 @@ export abstract class Container<
   public async untilEmbeddableLoaded<TEmbeddable extends IEmbeddable>(
     id: string
   ): Promise<TEmbeddable | ErrorEmbeddable> {
-    console.log('❗container.input:', this.input, this.children);
+    // console.log('❗container.input:', this.input, this.children);
     if (!this.input.panels[id]) {
       throw new PanelNotFoundError();
     }

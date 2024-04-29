@@ -112,7 +112,6 @@ export class EmbeddablePanel extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     const { embeddable } = this.props;
-    console.log('❗embeddable input:', embeddable.getInput());
     const viewMode = embeddable.getInput().viewMode ?? ViewMode.EDIT;
     const hidePanelTitle =
       Boolean(embeddable.parent?.getInput()?.hidePanelTitles) ||

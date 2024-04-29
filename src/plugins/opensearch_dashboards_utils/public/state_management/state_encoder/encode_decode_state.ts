@@ -52,7 +52,7 @@ export function encodeState<State>(state: State, useHash: boolean): string {
     return persistState(state);
   } else {
     const r = rison.encode((state as unknown) as RisonValue);
-    console.log('❗rison:', state, { r });
+    // console.log('❗rison:', state, { r });
     // console.trace();
     return r;
   }

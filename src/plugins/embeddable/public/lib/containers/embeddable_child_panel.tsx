@@ -73,7 +73,7 @@ export class EmbeddableChildPanel extends React.Component<EmbeddableChildPanelPr
     const { container } = this.props;
 
     this.embeddable = await container.untilEmbeddableLoaded(this.props.embeddableId);
-    console.log('❗this.embeddable:', this.embeddable);
+    // console.log('❗this.embeddable:', this.embeddable);
     if (this.mounted) {
       this.setState({ loading: false });
     }

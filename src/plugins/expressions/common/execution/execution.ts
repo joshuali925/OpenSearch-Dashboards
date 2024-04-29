@@ -203,7 +203,7 @@ export class Execution<
     this.state.transitions.start();
 
     const { resolve, reject } = this.firstResultFuture;
-    console.log('❗start input:', input);
+    // console.log('❗start input:', input);
     const chainPromise = this.invokeChain(this.state.get().ast.chain, input);
 
     this.race(chainPromise).then(resolve, (error) => {
@@ -244,7 +244,7 @@ export class Execution<
         args = resolvedArgs;
         timeStart = this.params.debug ? now() : 0;
         const output = await this.race(this.invokeFunction(fn, input, resolvedArgs));
-        console.log('❗invoke chain link:', link, input, output);
+        // console.log('❗invoke chain link:', link, input, output);
 
         if (this.params.debug) {
           const timeEnd: number = now();

@@ -34,7 +34,7 @@ import { I18nProvider } from '@osd/i18n/react';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { CoreStart, Logos } from 'src/core/public';
-import { Filter, IndexPattern, Query, RefreshInterval, TimeRange } from 'src/plugins/data/public';
+import { Filter, Query, RefreshInterval, TimeRange } from 'src/plugins/data/public';
 import { Start as InspectorStartContract } from 'src/plugins/inspector/public';
 import uuid from 'uuid';
 import {
@@ -66,7 +66,7 @@ export interface DashboardContainerInput extends ContainerInput {
   viewMode: ViewMode;
   filters: Filter[];
   query: Query;
-  indexPattern?: IndexPattern;
+  indexPatternId: string;
   timeRange: TimeRange;
   refreshConfig?: RefreshInterval;
   expandedPanelId?: string;
@@ -89,6 +89,7 @@ export interface InheritedChildInput extends IndexSignature {
   filters: Filter[];
   query: Query;
   timeRange: TimeRange;
+  indexPatternId: string;
   refreshConfig?: RefreshInterval;
   viewMode: ViewMode;
   hidePanelTitles?: boolean;
@@ -137,7 +138,7 @@ export class DashboardContainer extends Container<InheritedChildInput, Dashboard
       options.embeddable.getEmbeddableFactory,
       parent
     );
-    console.log('❗initialInput:', initialInput);
+    // console.log('❗initialInput:', initialInput);
     this.embeddablePanel = options.embeddable.getEmbeddablePanel(stateTransfer);
     this.logos = options.chrome.logos;
   }
@@ -259,7 +260,7 @@ export class DashboardContainer extends Container<InheritedChildInput, Dashboard
       refreshConfig,
       timeRange,
       query,
-      indexPattern,
+      indexPatternId,
       hidePanelTitles,
       filters,
     } = this.input;
@@ -268,7 +269,7 @@ export class DashboardContainer extends Container<InheritedChildInput, Dashboard
       hidePanelTitles,
       query,
       timeRange,
-      indexPattern,
+      indexPatternId,
       refreshConfig,
       viewMode,
       id,

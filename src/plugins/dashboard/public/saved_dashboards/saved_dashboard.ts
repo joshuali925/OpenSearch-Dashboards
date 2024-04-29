@@ -28,21 +28,14 @@
  * under the License.
  */
 
+import { Filter, ISearchSource, Query, RefreshInterval } from '../../../../plugins/data/public';
 import {
   createSavedObjectClass,
   SavedObject,
   SavedObjectOpenSearchDashboardsServices,
 } from '../../../../plugins/saved_objects/public';
-import { extractReferences, injectReferences } from './saved_dashboard_references';
-
-import {
-  Filter,
-  IndexPattern,
-  ISearchSource,
-  Query,
-  RefreshInterval,
-} from '../../../../plugins/data/public';
 import { createDashboardEditUrl } from '../dashboard_constants';
+import { extractReferences, injectReferences } from './saved_dashboard_references';
 
 export interface SavedObjectDashboard extends SavedObject {
   id?: string;
@@ -59,7 +52,7 @@ export interface SavedObjectDashboard extends SavedObject {
   searchSource: ISearchSource;
   getQuery(): Query;
   getFilters(): Filter[];
-  indexPattern: IndexPattern;
+  indexPatternId?: string;
 }
 
 // Used only by the savedDashboards service, usually no reason to change this
@@ -123,6 +116,7 @@ export function createSavedDashboardClass(
           timeTo: undefined,
           timeFrom: undefined,
           refreshInterval: undefined,
+          indexPatternId: undefined,
         },
       });
       this.getFullPath = () => `/app/dashboards#${createDashboardEditUrl(String(this.id))}`;

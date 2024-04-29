@@ -28,20 +28,21 @@
  * under the License.
  */
 
-import { get } from 'lodash';
 import { i18n } from '@osd/i18n';
+import { get } from 'lodash';
+import { IndexPattern, Query, TimeRange } from '../../../data/public';
 import {
   ExecutionContext,
   ExpressionFunctionDefinition,
   OpenSearchDashboardsContext,
   Render,
 } from '../../../expressions/public';
-import { VegaVisualizationDependencies } from '../plugin';
-import { createVegaRequestHandler } from '../vega_request_handler';
-import { VegaInspectorAdapters } from '../vega_inspector';
-import { TimeRange, Query, IndexPattern } from '../../../data/public';
 import { VisRenderValue } from '../../../visualizations/public';
 import { VegaParser } from '../data_model/vega_parser';
+import { VegaVisualizationDependencies } from '../plugin';
+import { getData } from '../services';
+import { VegaInspectorAdapters } from '../vega_inspector';
+import { createVegaRequestHandler } from '../vega_request_handler';
 
 type Input = OpenSearchDashboardsContext | null;
 type Output = Promise<Render<RenderValue>>;
@@ -85,15 +86,18 @@ export const createVegaFn = (
     },
   },
   async fn(input, args, context) {
-    console.log('❗input:', input);
-    // console.trace();
+    // console.log('❗input:', input);
     const vegaRequestHandler = createVegaRequestHandler(dependencies, context);
+
+    const indexPattern = input?.indexPatternId
+      ? await getData().indexPatterns.get(input.indexPatternId)
+      : undefined;
 
     const response = await vegaRequestHandler({
       timeRange: get(input, 'timeRange') as TimeRange,
       query: get(input, 'query') as Query,
       filters: get(input, 'filters') as any,
-      indexPattern: get(input, 'indexPattern') as IndexPattern | undefined,
+      indexPattern,
       visParams: { spec: args.spec },
     });
 

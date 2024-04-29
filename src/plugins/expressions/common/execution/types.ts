@@ -28,10 +28,10 @@
  * under the License.
  */
 
-import { ExpressionType } from '../expression_types';
-import { Adapters, DataAdapter, RequestAdapter } from '../../../inspector/common';
-import { TimeRange, Query, Filter, IndexPattern } from '../../../data/common';
 import { SavedObject, SavedObjectAttributes } from '../../../../core/public';
+import { Filter, Query, TimeRange } from '../../../data/common';
+import { Adapters, DataAdapter, RequestAdapter } from '../../../inspector/common';
+import { ExpressionType } from '../expression_types';
 
 /**
  * `ExecutionContext` is an object available to all functions during a single execution;
@@ -95,5 +95,5 @@ export interface ExecutionContextSearch {
   filters?: Filter[];
   query?: Query | Query[];
   timeRange?: TimeRange;
-  indexPattern?: IndexPattern;
+  indexPatternId?: string;
 }

@@ -28,17 +28,17 @@
  * under the License.
  */
 
-import { uniqBy } from 'lodash';
 import { i18n } from '@osd/i18n';
+import { uniqBy } from 'lodash';
+import { IIndexPattern, Query, uniqFilters } from '../../../../data/common';
 import { ExpressionFunctionDefinition } from '../../expression_functions';
 import { OpenSearchDashboardsContext } from '../../expression_types';
-import { Query, uniqFilters } from '../../../../data/common';
 
 interface Arguments {
   q?: string | null;
   filters?: string | null;
   timeRange?: string | null;
-  indexPattern?: string | null;
+  indexPatternId?: string | null;
   savedSearchId?: string | null;
 }
 
@@ -88,13 +88,13 @@ export const opensearchDashboardsContextFunction: ExpressionFunctionOpenSearchDa
         defaultMessage: 'Specify OpenSearch Dashboards time range filter',
       }),
     },
-    indexPattern: {
+    indexPatternId: {
       types: ['string', 'null'],
       default: null,
       help: i18n.translate(
-        'expressions.functions.opensearch_dashboards_context.indexPattern.help',
+        'expressions.functions.opensearch_dashboards_context.indexPatternId.help',
         {
-          defaultMessage: 'Specify index pattern to be used for queries and filters',
+          defaultMessage: 'Specify index pattern ID to be used for queries and filters',
         }
       ),
     },
@@ -112,7 +112,7 @@ export const opensearchDashboardsContextFunction: ExpressionFunctionOpenSearchDa
 
   async fn(input, args, { getSavedObject }) {
     const timeRange = getParsedValue(args.timeRange, input?.timeRange);
-    const indexPattern = getParsedValue(args.indexPattern, input?.indexPattern);
+    const indexPatternId = getParsedValue(args.indexPatternId, input?.indexPatternId);
     let queries = mergeQueries(input?.query, getParsedValue(args?.q, []));
     let filters = [...(input?.filters || []), ...getParsedValue(args?.filters, [])];
 
@@ -143,7 +143,7 @@ export const opensearchDashboardsContextFunction: ExpressionFunctionOpenSearchDa
       query: queries,
       filters: uniqFilters(filters).filter((f: any) => !f.meta?.disabled),
       timeRange,
-      indexPattern,
+      indexPatternId,
     };
   },
 };

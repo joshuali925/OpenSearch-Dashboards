@@ -6,8 +6,8 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { IndexPattern } from 'src/plugins/data/public';
+import { IndexPatternSelector } from '../../../../../index_pattern_selector/public';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
-import { VisIndexPatternSelector } from '../../../../../vis_index_pattern_selector/public';
 import { Dashboard } from '../../../dashboard';
 import { DashboardAppState, DashboardAppStateContainer, DashboardServices } from '../../../types';
 import { DashboardContainer } from '../../embeddable';
@@ -146,10 +146,10 @@ const TopNav = ({
         onQuerySubmit={handleRefresh}
         setMenuMountPoint={isEmbeddedExternally ? undefined : setHeaderActionMenu}
       />
-      <VisIndexPatternSelector
-        selectedIndexPattern={currentAppState.indexPattern}
-        onChange={(newIndexPattern) => {
-          appState.transitions.set('indexPattern', newIndexPattern);
+      <IndexPatternSelector
+        selectedId={currentAppState.indexPatternId}
+        onChange={(id) => {
+          appState.transitions.set('indexPatternId', id || '');
         }}
       />
     </>

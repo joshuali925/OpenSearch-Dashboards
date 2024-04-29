@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { cloneDeep, isEqual, uniqBy } from 'lodash';
 import { i18n } from '@osd/i18n';
+import deepEqual from 'fast-deep-equal';
+import { cloneDeep, isEqual, uniqBy } from 'lodash';
+import React from 'react';
 import { EMPTY, Observable, Subscription, merge, pipe } from 'rxjs';
 import {
   catchError,
@@ -16,17 +17,8 @@ import {
   startWith,
   switchMap,
 } from 'rxjs/operators';
-import deepEqual from 'fast-deep-equal';
 
 import { IndexPattern, opensearchFilters } from '../../../../data/public';
-import {
-  DASHBOARD_CONTAINER_TYPE,
-  DashboardContainer,
-  DashboardContainerInput,
-  DashboardPanelState,
-  DashboardEmptyScreen,
-  DashboardEmptyScreenProps,
-} from '../embeddable';
 import {
   ContainerOutput,
   EmbeddableFactoryNotFoundError,
@@ -35,21 +27,29 @@ import {
   isErrorEmbeddable,
   openAddPanelFlyout,
 } from '../../../../embeddable/public';
-import {
-  convertPanelStateToSavedDashboardPanel,
-  convertSavedDashboardPanelToPanelState,
-} from '../utils/embeddable_saved_object_converters';
+import { getSavedObjectFinder } from '../../../../saved_objects/public';
+import { Dashboard } from '../../dashboard';
+import { DashboardConstants } from '../../dashboard_constants';
+import { SavedObjectDashboard } from '../../saved_dashboards';
 import {
   DashboardAppState,
   DashboardAppStateContainer,
   DashboardServices,
   SavedDashboardPanel,
 } from '../../types';
-import { getSavedObjectFinder } from '../../../../saved_objects/public';
-import { DashboardConstants } from '../../dashboard_constants';
-import { SavedObjectDashboard } from '../../saved_dashboards';
+import {
+  DASHBOARD_CONTAINER_TYPE,
+  DashboardContainer,
+  DashboardContainerInput,
+  DashboardEmptyScreen,
+  DashboardEmptyScreenProps,
+  DashboardPanelState,
+} from '../embeddable';
+import {
+  convertPanelStateToSavedDashboardPanel,
+  convertSavedDashboardPanelToPanelState,
+} from '../utils/embeddable_saved_object_converters';
 import { migrateLegacyQuery } from '../utils/migrate_legacy_query';
-import { Dashboard } from '../../dashboard';
 
 export const createDashboardContainer = async ({
   services,
@@ -80,7 +80,7 @@ export const createDashboardContainer = async ({
         services,
         savedDashboard?.id
       );
-      console.log('❗initialInput:', initialInput);
+      // console.log('❗initialInput:', initialInput);
 
       const incomingEmbeddable = services.embeddable
         .getStateTransfer(services.scopedHistory)
@@ -356,7 +356,7 @@ const getDashboardInputFromAppState = (
   const embeddablesMap: {
     [key: string]: DashboardPanelState;
   } = {};
-  console.log('❗appStateData:', appStateData);
+  // console.log('❗appStateData:', appStateData);
   appStateData.panels.forEach((panel: SavedDashboardPanel) => {
     embeddablesMap[panel.panelIndex] = convertSavedDashboardPanelToPanelState(panel);
   });
@@ -368,7 +368,7 @@ const getDashboardInputFromAppState = (
     hidePanelTitles: appStateData.options.hidePanelTitles,
     query: data.query.queryString.getQuery(),
     timeRange: data.query.timefilter.timefilter.getTime(),
-    indexPattern: appStateData.indexPattern,
+    indexPatternId: appStateData.indexPatternId,
     refreshConfig: data.query.timefilter.timefilter.getRefreshInterval(),
     viewMode: appStateData.viewMode,
     panels: embeddablesMap,
@@ -395,6 +395,8 @@ const getChangesForContainerStateFromAppState = (
   }
 
   const containerInput = currentContainer.getInput();
+  console.log('❗containerInput:', containerInput);
+  console.log('❗appStateDashboardInput:', appStateDashboardInput);
   const differences: Partial<DashboardContainerInput> = {};
 
   // Filters shouldn't  be compared using regular isEqual
@@ -529,6 +531,7 @@ export const refreshDashboardContainer = ({
     currentDashboardInput
   );
 
+  console.log('❗changes:', changes);
   if (changes) {
     dashboardContainer.updateInput(changes);
 

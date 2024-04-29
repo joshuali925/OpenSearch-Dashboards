@@ -31,7 +31,6 @@
 import { SerializableState } from '../../opensearch_dashboards_utils/common';
 import { Query, TimeRange } from '../../data/common/query';
 import { Filter } from '../../data/common/opensearch_query/filters';
-import { IndexPattern } from '../../data/common';
 
 export enum ViewMode {
   EDIT = 'edit',
@@ -79,6 +78,9 @@ export type EmbeddableInput = {
    * Visualization filters used to narrow down results.
    */
   filters?: Filter[];
-  // TODO do we need index pattern here?
-  indexPattern?: IndexPattern;
+
+  /**
+   * Index pattern id used to override the default index pattern.
+   */
+  indexPatternId?: string;
 };

@@ -86,6 +86,6 @@ export function updateSavedDashboard(
     refreshInterval,
     query: appState.query as Query,
     filters: unpinnedFilters,
-    indexPattern: appState.indexPattern,
+    indexPattern: appState.indexPatternId,
   });
 }

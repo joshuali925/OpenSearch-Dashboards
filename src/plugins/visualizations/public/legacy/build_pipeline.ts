@@ -86,6 +86,7 @@ interface BuildVisConfigFunction {
 export interface BuildPipelineParams {
   timefilter: TimefilterContract;
   timeRange?: any;
+  indexPatternId?: string;
   abortSignal?: AbortSignal;
   visLayers?: VisLayers;
   visAugmenterConfig?: VisAugmenterEmbeddableConfig;
@@ -390,6 +391,7 @@ export const buildVislibDimensions = async (
 
 export const buildPipeline = async (vis: Vis, params: BuildPipelineParams) => {
   const { indexPattern, searchSource } = vis.data;
+  const indexPatternId = params.indexPatternId || indexPattern?.id;
   const query = searchSource!.getField('query');
   const filters = searchSource!.getField('filter');
   const { uiState, title } = vis;
@@ -414,7 +416,7 @@ export const buildPipeline = async (vis: Vis, params: BuildPipelineParams) => {
     // request handler
     if (vis.type.requestHandler === 'courier') {
       pipeline += `opensearchaggs
-        ${prepareString('index', indexPattern!.id)}
+        ${prepareString('index', indexPatternId)}
         metricsAtAllLevels=${vis.isHierarchical()}
         partialRows=${vis.params.showPartialRows || false}
         ${prepareJson('aggConfigs', vis.data.aggs!.aggs)} | `;
@@ -442,7 +444,7 @@ export const buildPipeline = async (vis: Vis, params: BuildPipelineParams) => {
     metricsAtAllLevels=${vis.isHierarchical()}
     partialRows=${vis.params.showPartialRows || false} `;
       if (indexPattern) {
-        pipeline += `${prepareString('index', indexPattern.id)} `;
+        pipeline += `${prepareString('index', indexPatternId)} `;
         if (vis.data.aggs) {
           pipeline += `${prepareJson('aggConfigs', vis.data.aggs!.aggs)}`;
         }

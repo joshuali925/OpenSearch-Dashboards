@@ -61,7 +61,7 @@ export const useDashboardAppAndGlobalState = ({
         opensearchDashboardsVersion,
         usageCollection
       );
-      console.log('❗stateDefaults:', stateDefaults);
+      // console.log('❗stateDefaults:', stateDefaults);
 
       const {
         stateContainer,
@@ -166,6 +166,7 @@ export const useDashboardAppAndGlobalState = ({
         // If app state is changes, then set unsaved changes to true
         // the only thing app state is not tracking is the time filter, need to check the previous dashboard if they count time filter change or not
         const stopSyncingFromAppState = stateContainer.subscribe((appStateData) => {
+          console.log('❗appStateData changed:', appStateData);
           refreshDashboardContainer({
             dashboardContainer,
             dashboardServices: services,

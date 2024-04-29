@@ -127,7 +127,7 @@ export interface DashboardAppState {
   query: Query | string;
   filters: Filter[];
   viewMode: ViewMode;
-  indexPattern?: IndexPattern;
+  indexPatternId: string;
   expandedPanelId?: string;
   savedQuery?: string;
 }

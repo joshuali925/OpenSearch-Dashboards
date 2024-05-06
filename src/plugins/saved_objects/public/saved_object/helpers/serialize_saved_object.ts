@@ -52,6 +52,8 @@ export function serializeSavedObject(savedObject: SavedObject, config: SavedObje
     }
   });
 
+  // console.log('❗savedObject:', savedObject);
+  // console.trace();
   if (savedObject.searchSource) {
     const {
       searchSourceJSON,
@@ -66,6 +68,8 @@ export function serializeSavedObject(savedObject: SavedObject, config: SavedObje
       savedObject.searchSourceFields
     );
     const searchSourceJSON = stringify(searchSourceFields);
+    // console.log('❗searchSourceFields:', searchSourceFields);
+    // console.log('❗searchSourceJSON:', searchSourceJSON);
     attributes.kibanaSavedObjectMeta = { searchSourceJSON };
     references.push(...searchSourceReferences);
   }
@@ -74,5 +78,6 @@ export function serializeSavedObject(savedObject: SavedObject, config: SavedObje
     references.push(savedObject.unresolvedIndexPatternReference);
   }
 
+  // console.log('❗attributes:', attributes);
   return { attributes, references };
 }

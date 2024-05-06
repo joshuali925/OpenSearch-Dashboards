@@ -32,7 +32,7 @@ import { TimefilterContract } from 'src/plugins/data/public';
 import { SavedObjectSaveOpts } from 'src/plugins/saved_objects/public';
 import { updateSavedDashboard } from './update_saved_dashboard';
 
-import { DashboardAppStateContainer } from '../../types';
+import { DashboardAppStateContainer, DashboardServices } from '../../types';
 import { Dashboard } from '../../dashboard';
 import { SavedObjectDashboard } from '../../saved_dashboards';
 
@@ -41,7 +41,8 @@ import { SavedObjectDashboard } from '../../saved_dashboards';
  * @returns A promise that if resolved, will contain the id of the newly saved
  * dashboard.
  */
-export function saveDashboard(
+export async function saveDashboard(
+  services: DashboardServices,
   timeFilter: TimefilterContract,
   stateContainer: DashboardAppStateContainer,
   savedDashboard: SavedObjectDashboard,
@@ -50,7 +51,7 @@ export function saveDashboard(
 ): Promise<string> {
   const appState = stateContainer.getState();
 
-  updateSavedDashboard(savedDashboard, appState, timeFilter, dashboard);
+  await updateSavedDashboard(services, savedDashboard, appState, timeFilter, dashboard);
 
   // TODO: should update Dashboard class in the if(id) block
   return savedDashboard.save(saveOptions).then((id: string) => {

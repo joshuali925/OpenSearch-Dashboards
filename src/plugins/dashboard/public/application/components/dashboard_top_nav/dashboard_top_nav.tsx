@@ -148,9 +148,7 @@ const TopNav = ({
       />
       <IndexPatternSelector
         selectedId={currentAppState.indexPatternId}
-        onChange={(id) => {
-          appState.transitions.set('indexPatternId', id || '');
-        }}
+        onChange={(id) => appState.transitions.set('indexPatternId', id)}
       />
     </>
   );

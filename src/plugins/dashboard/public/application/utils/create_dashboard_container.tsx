@@ -395,8 +395,6 @@ const getChangesForContainerStateFromAppState = (
   }
 
   const containerInput = currentContainer.getInput();
-  console.log('❗containerInput:', containerInput);
-  console.log('❗appStateDashboardInput:', appStateDashboardInput);
   const differences: Partial<DashboardContainerInput> = {};
 
   // Filters shouldn't  be compared using regular isEqual
@@ -516,6 +514,7 @@ export const refreshDashboardContainer = ({
   savedDashboard: Dashboard;
   appStateData?: DashboardAppState;
 }) => {
+  // console.log('❗appStateData:', appStateData);
   if (!appStateData) {
     return;
   }
@@ -531,7 +530,10 @@ export const refreshDashboardContainer = ({
     currentDashboardInput
   );
 
-  console.log('❗changes:', changes);
+  // console.log('❗savedDashboard:', savedDashboard);
+  // console.log('❗dashboardContainer:', dashboardContainer);
+  // console.log('❗currentDashboardInput:', currentDashboardInput);
+  // console.log('❗changes:', changes);
   if (changes) {
     dashboardContainer.updateInput(changes);
 

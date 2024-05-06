@@ -24,8 +24,8 @@ export type ChangeIndexPatternTriggerProps = EuiButtonEmptyProps & {};
 
 interface ChangeIndexPatternProps {
   indexPatternItems: IndexPatternItem[];
-  selectedId: string | undefined;
-  onChange: (id?: string) => void;
+  selectedId: string;
+  onChange: (id: string) => void;
   selectableProps?: EuiSelectableProps;
   buttonProps?: EuiButtonEmptyProps;
 }
@@ -91,7 +91,7 @@ export function ChangeIndexPattern({
           options={selectableOptions}
           onChange={(options) => {
             const selectedOption = options.find(({ checked }) => checked);
-            onChange(selectedOption?.key);
+            onChange(selectedOption?.key || '');
             setPopoverIsOpen(false);
           }}
           searchProps={{

@@ -52,7 +52,7 @@ export interface SavedObjectDashboard extends SavedObject {
   searchSource: ISearchSource;
   getQuery(): Query;
   getFilters(): Filter[];
-  indexPatternId?: string;
+  getIndexPatternId(): string;
 }
 
 // Used only by the savedDashboards service, usually no reason to change this
@@ -116,7 +116,6 @@ export function createSavedDashboardClass(
           timeTo: undefined,
           timeFrom: undefined,
           refreshInterval: undefined,
-          indexPatternId: undefined,
         },
       });
       this.getFullPath = () => `/app/dashboards#${createDashboardEditUrl(String(this.id))}`;
@@ -128,6 +127,10 @@ export function createSavedDashboardClass(
 
     getFilters() {
       return this.searchSource!.getOwnField('filter') || [];
+    }
+
+    getIndexPatternId() {
+      return this.searchSource!.getOwnField('index')?.id || '';
     }
   }
 

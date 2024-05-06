@@ -42,6 +42,7 @@ export const useDashboardAppAndGlobalState = ({
   dashboard?: Dashboard;
 }) => {
   const [appState, setAppState] = useState<DashboardAppStateContainer | undefined>();
+  // console.log('❗appState:', appState?.getState());
   const [currentContainer, setCurrentContainer] = useState<DashboardContainer | undefined>();
   const [indexPatterns, setIndexPatterns] = useState<IndexPattern[]>([]);
 
@@ -61,7 +62,6 @@ export const useDashboardAppAndGlobalState = ({
         opensearchDashboardsVersion,
         usageCollection
       );
-      // console.log('❗stateDefaults:', stateDefaults);
 
       const {
         stateContainer,
@@ -73,6 +73,7 @@ export const useDashboardAppAndGlobalState = ({
         services,
         savedDashboardInstance,
       });
+      // console.log('❗stateContainer:', stateContainer);
 
       const {
         filterManager,
@@ -118,6 +119,7 @@ export const useDashboardAppAndGlobalState = ({
           savedDashboard: savedDashboardInstance,
           appState: stateContainer,
         });
+        // console.log('❗dashboardContainer:', dashboardContainer);
         if (!dashboardContainer) {
           return;
         }
@@ -166,7 +168,6 @@ export const useDashboardAppAndGlobalState = ({
         // If app state is changes, then set unsaved changes to true
         // the only thing app state is not tracking is the time filter, need to check the previous dashboard if they count time filter change or not
         const stopSyncingFromAppState = stateContainer.subscribe((appStateData) => {
-          console.log('❗appStateData changed:', appStateData);
           refreshDashboardContainer({
             dashboardContainer,
             dashboardServices: services,

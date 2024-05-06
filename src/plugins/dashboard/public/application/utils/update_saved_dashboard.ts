@@ -30,13 +30,14 @@
 
 import _ from 'lodash';
 import { Query, RefreshInterval, TimefilterContract } from 'src/plugins/data/public';
-import { FilterUtils } from './filter_utils';
-import { SavedObjectDashboard } from '../../saved_dashboards';
-import { DashboardAppState } from '../../types';
 import { opensearchFilters } from '../../../../data/public';
 import { Dashboard } from '../../dashboard';
+import { SavedObjectDashboard } from '../../saved_dashboards';
+import { DashboardAppState, DashboardServices } from '../../types';
+import { FilterUtils } from './filter_utils';
 
-export function updateSavedDashboard(
+export async function updateSavedDashboard(
+  services: DashboardServices,
   savedDashboard: SavedObjectDashboard,
   appState: DashboardAppState,
   timeFilter: TimefilterContract,
@@ -75,6 +76,11 @@ export function updateSavedDashboard(
   // save the queries
   savedDashboard.searchSource.setField('query', appState.query as Query);
 
+  savedDashboard.searchSource.setField(
+    'index',
+    await services.data.indexPatterns.get(appState.indexPatternId)
+  );
+
   dashboard.setState({
     title: appState.title,
     description: appState.description,
@@ -86,6 +92,6 @@ export function updateSavedDashboard(
     refreshInterval,
     query: appState.query as Query,
     filters: unpinnedFilters,
-    indexPattern: appState.indexPatternId,
+    indexPatternId: appState.indexPatternId,
   });
 }

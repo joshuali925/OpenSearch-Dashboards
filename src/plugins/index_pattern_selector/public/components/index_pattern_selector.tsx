@@ -10,8 +10,8 @@ import { useOpenSearchDashboards } from '../../../opensearch_dashboards_react/pu
 import { ChangeIndexPattern, IndexPatternItem } from './change_index_pattern';
 
 export interface IndexPatternSelectorProps {
-  selectedId?: string;
-  onChange: (id?: string) => void;
+  selectedId: string;
+  onChange: (id: string) => void;
 }
 
 export function IndexPatternSelector({ selectedId, onChange }: IndexPatternSelectorProps) {

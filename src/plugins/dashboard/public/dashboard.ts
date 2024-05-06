@@ -29,6 +29,7 @@ export interface SerializedDashboard {
   searchSource?: ISearchSource;
   query: Query;
   filters: Filter[];
+  indexPatternId: string;
   title?: string;
 }
 
@@ -51,6 +52,7 @@ export class Dashboard<TDashboardParams = DashboardParams> {
   public searchSource?: ISearchSource;
   public query: Query;
   public filters: Filter[];
+  public indexPatternId: string;
   public title?: string;
   public isDirty = false;
 
@@ -58,6 +60,7 @@ export class Dashboard<TDashboardParams = DashboardParams> {
     this.timeRestore = dashboardState.timeRestore;
     this.query = cloneDeep(dashboardState.query);
     this.filters = cloneDeep(dashboardState.filters);
+    this.indexPatternId = dashboardState.indexPatternId;
   }
 
   setState(state: PartialDashboardState) {
@@ -99,6 +102,9 @@ export class Dashboard<TDashboardParams = DashboardParams> {
     }
     if (state.filters) {
       this.filters = state.filters;
+    }
+    if (state.indexPatternId) {
+      this.indexPatternId = state.indexPatternId;
     }
   }
 

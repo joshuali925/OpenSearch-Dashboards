@@ -384,6 +384,7 @@ export const getNavActions = (
     const timefilter = queryService.timefilter.timefilter;
     try {
       const id = await saveDashboard(
+        services,
         timefilter,
         stateContainer,
         savedDashboard,

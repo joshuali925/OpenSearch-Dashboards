@@ -45,7 +45,7 @@ export function getAppStateDefaults(
     options: savedDashboard.optionsJSON ? JSON.parse(savedDashboard.optionsJSON) : {},
     query: savedDashboard.getQuery(),
     filters: savedDashboard.getFilters(),
-    indexPatternId: savedDashboard.indexPatternId,
+    indexPatternId: savedDashboard.getIndexPatternId(),
     viewMode: savedDashboard.id || hideWriteControls ? ViewMode.VIEW : ViewMode.EDIT,
   };
 }

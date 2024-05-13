@@ -123,6 +123,15 @@ const TopNav = ({
   const showFilterBar = shouldShowFilterBar(forceHideFilterBar);
   const showSearchBar = showQueryBar || showFilterBar;
 
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.data.type === 'changeIndexPattern')
+        appState.transitions.set('indexPatternId', event.data.id);
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [appState]);
+
   return (
     <>
       <TopNavMenu

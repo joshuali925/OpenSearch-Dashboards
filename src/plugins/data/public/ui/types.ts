@@ -30,6 +30,9 @@ export interface QueryEnhancement {
       initialFrom?: string;
       initialTo?: string;
     };
+    queryAssist?: {
+      enabled?: boolean;
+    };
   };
   fields?: {
     filterable?: boolean;

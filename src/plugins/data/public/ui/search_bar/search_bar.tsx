@@ -28,23 +28,21 @@
  * under the License.
  */
 
-import { compact } from 'lodash';
 import { InjectedIntl, injectI18n } from '@osd/i18n/react';
 import classNames from 'classnames';
+import { compact, get, isEqual } from 'lodash';
 import React, { Component } from 'react';
 import ResizeObserver from 'resize-observer-polyfill';
-import { get, isEqual } from 'lodash';
-
 import {
-  withOpenSearchDashboards,
   OpenSearchDashboardsReactContextValue,
+  withOpenSearchDashboards,
 } from '../../../../opensearch_dashboards_react/public';
-
-import QueryBarTopRow from '../query_string_input/query_bar_top_row';
-import { SavedQueryAttributes, TimeHistoryContract, SavedQuery } from '../../query';
+import { Filter, IIndexPattern, Query, TimeRange } from '../../../common';
+import { SavedQuery, SavedQueryAttributes, TimeHistoryContract } from '../../query';
 import { IDataPluginServices } from '../../types';
-import { TimeRange, Query, Filter, IIndexPattern } from '../../../common';
 import { FilterBar } from '../filter_bar/filter_bar';
+import { QueryAssistBar } from '../query_assist';
+import QueryBarTopRow from '../query_string_input/query_bar_top_row';
 import { SavedQueryMeta, SaveQueryForm } from '../saved_query_form';
 import { SavedQueryManagementComponent } from '../saved_query_management';
 import { QueryEnhancement, Settings } from '../types';
@@ -212,6 +210,11 @@ class SearchBarUI extends Component<SearchBarProps, State> {
     const showQueryInput =
       this.props.showQueryInput && this.props.indexPatterns && this.state.query;
     return this.props.showQueryBar && (showDatePicker || showQueryInput);
+  }
+
+  private shouldRenderQueryAssistBar() {
+    return this.props.queryEnhancements?.get(this.state.query?.language!)?.searchBar?.queryAssist
+      ?.enabled;
   }
 
   private shouldRenderFilterBar() {
@@ -435,6 +438,21 @@ class SearchBarUI extends Component<SearchBarProps, State> {
       );
     }
 
+    let queryAssistBar;
+    if (this.shouldRenderQueryAssistBar()) {
+      queryAssistBar = (
+        <QueryAssistBar
+          services={this.services}
+          indexPatterns={this.props.indexPatterns}
+          isLoading={this.props.isLoading}
+          onSubmit={this.onQueryBarSubmit}
+          query={this.state.query}
+          dateRangeFrom={this.state.dateRangeFrom}
+          dateRangeTo={this.state.dateRangeTo}
+        />
+      );
+    }
+
     let filterBar;
     if (this.shouldRenderFilterBar()) {
       const filterGroupClasses = classNames('globalFilterGroup__wrapper', {
@@ -467,6 +485,7 @@ class SearchBarUI extends Component<SearchBarProps, State> {
 
     return (
       <div className="globalQueryBar" data-test-subj="globalQueryBar">
+        {queryAssistBar}
         {queryBar}
         {filterBar}
 

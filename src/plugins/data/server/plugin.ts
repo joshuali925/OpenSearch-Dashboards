@@ -28,19 +28,20 @@
  * under the License.
  */
 
-import { PluginInitializerContext, CoreSetup, CoreStart, Plugin, Logger } from 'src/core/server';
-import { ExpressionsServerSetup } from 'src/plugins/expressions/server';
+import { CoreSetup, CoreStart, Logger, Plugin, PluginInitializerContext } from 'src/core/server';
 import { DataSourcePluginSetup } from 'src/plugins/data_source/server';
+import { ExpressionsServerSetup } from 'src/plugins/expressions/server';
+import { UsageCollectionSetup } from '../../usage_collection/server';
 import { ConfigSchema } from '../config';
+import { AutocompleteService } from './autocomplete';
+import { DqlTelemetryService } from './dql_telemetry';
+import { FieldFormatsService, FieldFormatsSetup, FieldFormatsStart } from './field_formats';
 import { IndexPatternsService, IndexPatternsServiceStart } from './index_patterns';
+import { QueryService } from './query/query_service';
+import { QueryAssistService } from './query_assist';
+import { ScriptsService } from './scripts';
 import { ISearchSetup, ISearchStart, SearchEnhancements } from './search';
 import { SearchService } from './search/search_service';
-import { QueryService } from './query/query_service';
-import { ScriptsService } from './scripts';
-import { DqlTelemetryService } from './dql_telemetry';
-import { UsageCollectionSetup } from '../../usage_collection/server';
-import { AutocompleteService } from './autocomplete';
-import { FieldFormatsService, FieldFormatsSetup, FieldFormatsStart } from './field_formats';
 import { getUiSettings } from './ui_settings';
 
 export interface DataEnhancements {
@@ -83,6 +84,7 @@ export class DataServerPlugin
   private readonly scriptsService: ScriptsService;
   private readonly dqlTelemetryService: DqlTelemetryService;
   private readonly autocompleteService: AutocompleteService;
+  private readonly queryAssistService: QueryAssistService;
   private readonly indexPatterns = new IndexPatternsService();
   private readonly fieldFormats = new FieldFormatsService();
   private readonly queryService = new QueryService();
@@ -94,6 +96,7 @@ export class DataServerPlugin
     this.scriptsService = new ScriptsService();
     this.dqlTelemetryService = new DqlTelemetryService(initializerContext);
     this.autocompleteService = new AutocompleteService(initializerContext);
+    this.queryAssistService = new QueryAssistService(initializerContext);
   }
 
   public async setup(
@@ -105,6 +108,7 @@ export class DataServerPlugin
     this.queryService.setup(core);
     this.autocompleteService.setup(core);
     this.dqlTelemetryService.setup(core, { usageCollection });
+    this.queryAssistService.setup(core);
 
     core.uiSettings.register(getUiSettings());
 

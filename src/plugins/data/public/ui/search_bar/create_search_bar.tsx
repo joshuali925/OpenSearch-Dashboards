@@ -224,6 +224,7 @@ export function createSearchBar({
           onClearSavedQuery={defaultOnClearSavedQuery(props, clearSavedQuery)}
           onSavedQueryUpdated={defaultOnSavedQueryUpdated(props, setSavedQuery)}
           onSaved={defaultOnSavedQueryUpdated(props, setSavedQuery)}
+          searchBarExtensionConfigs={data.searchBarExtensionsRegistry.getAll()}
           {...overrideDefaultBehaviors(props)}
         />
       </OpenSearchDashboardsContextProvider>

@@ -28,27 +28,27 @@
  * under the License.
  */
 
-import { compact } from 'lodash';
 import { InjectedIntl, injectI18n } from '@osd/i18n/react';
 import classNames from 'classnames';
+import { compact, get, isEqual } from 'lodash';
 import React, { Component } from 'react';
 import ResizeObserver from 'resize-observer-polyfill';
-import { get, isEqual } from 'lodash';
-
 import {
-  withOpenSearchDashboards,
   OpenSearchDashboardsReactContextValue,
+  withOpenSearchDashboards,
 } from '../../../../opensearch_dashboards_react/public';
 
-import QueryBarTopRow from '../query_string_input/query_bar_top_row';
 import QueryEditorTopRow from '../query_editor/query_editor_top_row';
-import { SavedQueryAttributes, TimeHistoryContract, SavedQuery } from '../../query';
+import { Filter, IIndexPattern, Query, TimeRange } from '../../../common';
+import { SavedQuery, SavedQueryAttributes, TimeHistoryContract } from '../../query';
 import { IDataPluginServices } from '../../types';
-import { TimeRange, Query, Filter, IIndexPattern } from '../../../common';
+import { SearchBarExtensions } from '../search_bar_extensions/search_bar_extensions';
 import { FilterBar } from '../filter_bar/filter_bar';
+import QueryBarTopRow from '../query_string_input/query_bar_top_row';
 import { SavedQueryMeta, SaveQueryForm } from '../saved_query_form';
 import { SavedQueryManagementComponent } from '../saved_query_management';
 import { QueryEnhancement, Settings } from '../types';
+import { SearchBarExtensionConfig } from '../search_bar_extensions/search_bar_extensions_registry';
 
 interface SearchBarInjectedDeps {
   opensearchDashboards: OpenSearchDashboardsReactContextValue<IDataPluginServices>;
@@ -98,6 +98,7 @@ export interface SearchBarOwnProps {
 
   onRefresh?: (payload: { dateRange: TimeRange }) => void;
   indicateNoData?: boolean;
+  searchBarExtensionConfigs: SearchBarExtensionConfig[];
 }
 
 export type SearchBarProps = SearchBarOwnProps & SearchBarInjectedDeps;
@@ -124,6 +125,7 @@ class SearchBarUI extends Component<SearchBarProps, State> {
 
   private services = this.props.opensearchDashboards.services;
   private savedQueryService = this.services.data.query.savedQueries;
+  public queryBarRef: HTMLElement | null = null;
   public filterBarRef: Element | null = null;
   public filterBarWrapperRef: Element | null = null;
 
@@ -514,8 +516,17 @@ class SearchBarUI extends Component<SearchBarProps, State> {
 
     return (
       <div className="globalQueryBar" data-test-subj="globalQueryBar">
+        <SearchBarExtensions
+          attachmentInsert={{ sibling: this.queryBarRef!, position: 'before' }}
+          configs={this.props.searchBarExtensionConfigs}
+        />
         {queryBar}
         {queryEditor}
+        <div
+          ref={(node) => {
+            this.queryBarRef = node;
+          }}
+        />
         {filterBar}
 
         {this.state.showSaveQueryModal ? (

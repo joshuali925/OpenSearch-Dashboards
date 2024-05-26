@@ -93,6 +93,7 @@ import { DataSourceFactory } from './data_sources/datasource';
 import { registerDefaultDataSource } from './data_sources/register_default_datasource';
 import { DefaultDslDataSource } from './data_sources/default_datasource';
 import { DEFAULT_DATA_SOURCE_TYPE } from './data_sources/constants';
+import { SearchBarExtensionsRegistry } from './ui/search_bar_extensions/search_bar_extensions_registry';
 
 declare module '../../ui_actions/public' {
   export interface ActionContextMapping {
@@ -116,6 +117,7 @@ export class DataPublicPlugin
   private readonly fieldFormatsService: FieldFormatsService;
   private readonly queryService: QueryService;
   private readonly storage: IStorageWrapper;
+  private readonly searchBarExtensionsRegistry = new SearchBarExtensionsRegistry();
 
   constructor(initializerContext: PluginInitializerContext<ConfigSchema>) {
     this.searchService = new SearchService(initializerContext);
@@ -175,6 +177,9 @@ export class DataPublicPlugin
         if (enhancements.search) searchService.__enhance(enhancements.search);
         if (enhancements.ui) uiService.__enhance(enhancements.ui);
       },
+      registerSearchBarExtension: this.searchBarExtensionsRegistry.register.bind(
+        this.searchBarExtensionsRegistry
+      ),
     };
   }
 
@@ -234,7 +239,7 @@ export class DataPublicPlugin
       },
     ]);
 
-    const dataServices = {
+    const dataServices: Omit<DataPublicPluginStart, 'ui'> = {
       actions: {
         createFiltersFromValueClickAction,
         createFiltersFromRangeSelectAction,
@@ -248,6 +253,7 @@ export class DataPublicPlugin
         dataSourceService,
         dataSourceFactory,
       },
+      searchBarExtensionsRegistry: this.searchBarExtensionsRegistry,
     };
 
     registerDefaultDataSource(dataServices);

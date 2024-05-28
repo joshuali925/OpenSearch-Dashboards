@@ -4,11 +4,12 @@
  */
 
 import { MountPoint } from 'opensearch-dashboards/public';
+import React from 'react';
 
 export interface SearchBarExtensionConfig {
   id: string;
   order: number;
-  mount: (toggleUiAttachment: () => void) => MountPoint;
+  createMount: (toggleUiAttachment: () => void) => MountPoint;
   uiAttachment?: React.ReactNode;
 }
 

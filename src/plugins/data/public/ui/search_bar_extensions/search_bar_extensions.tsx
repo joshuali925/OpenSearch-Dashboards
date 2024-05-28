@@ -5,13 +5,12 @@
 
 import React from 'react';
 import { EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
-import { EuiPortalProps } from '@opensearch-project/oui/src/eui_components/portal/portal';
 import { SearchBarExtension } from './search_bar_extension';
 import { SearchBarExtensionConfig } from './search_bar_extensions_registry';
 
 interface SearchBarExtensionsProps {
   configs: SearchBarExtensionConfig[];
-  attachmentInsert: EuiPortalProps['insert'];
+  attachmentSibling: HTMLElement;
 }
 
 export const SearchBarExtensions: React.FC<SearchBarExtensionsProps> = (props) => {
@@ -19,7 +18,7 @@ export const SearchBarExtensions: React.FC<SearchBarExtensionsProps> = (props) =
     <EuiFlexGroup gutterSize="s" justifyContent="center">
       {props.configs.map((config) => (
         <EuiFlexItem grow={false} key={config.id}>
-          <SearchBarExtension config={config} attachmentInsert={props.attachmentInsert} />
+          <SearchBarExtension config={config} attachmentSibling={props.attachmentSibling} />
         </EuiFlexItem>
       ))}
     </EuiFlexGroup>

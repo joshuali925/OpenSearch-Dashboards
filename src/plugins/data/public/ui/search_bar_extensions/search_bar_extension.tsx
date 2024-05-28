@@ -3,85 +3,54 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { EuiPortal } from '@elastic/eui';
-import { EuiPortalProps } from '@opensearch-project/oui/src/eui_components/portal/portal';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { UnmountCallback } from 'opensearch-dashboards/public';
 import { SearchBarExtensionConfig } from './search_bar_extensions_registry';
+import { MountPointPortal } from '../../../../opensearch_dashboards_react/public';
 
 interface SearchBarExtensionProps {
   config: SearchBarExtensionConfig;
-  attachmentInsert: EuiPortalProps['insert'];
+  attachmentSibling: HTMLElement;
 }
 
-interface SearchBarExtensionStates {
-  showAttachment: boolean;
-}
+export const SearchBarExtension: React.FC<SearchBarExtensionProps> = (props) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const unmounts = useRef<UnmountCallback[]>([]);
+  const [showAttachment, setShowAttachment] = useState(false);
 
-export class SearchBarExtension extends React.Component<
-  SearchBarExtensionProps,
-  SearchBarExtensionStates
-> {
-  private readonly ref = React.createRef<HTMLDivElement>();
-  private unrender?: () => void;
+  const mount = useMemo(() => props.config.createMount(() => setShowAttachment((show) => !show)), [
+    props.config,
+  ]);
 
-  constructor(props: SearchBarExtensionProps) {
-    super(props);
-    this.state = {
-      showAttachment: false,
-    };
-  }
-
-  public componentDidMount() {
-    this.renderExtension();
-  }
-
-  public componentDidUpdate(prevProps: SearchBarExtensionProps) {
-    if (this.props.config === prevProps.config) {
-      return;
-    }
-
-    this.unrenderExtension();
-    this.renderExtension();
-  }
-
-  public componentWillUnmount() {
-    this.unrenderExtension();
-  }
-
-  public render() {
-    return (
-      <>
-        <div ref={this.ref} />
-        {this.state.showAttachment && (
-          <EuiPortal insert={this.props.attachmentInsert}>
-            {this.props.config.uiAttachment}
-          </EuiPortal>
-        )}
-      </>
-    );
-  }
-
-  private toggleShowAttachment() {
-    this.setState({ showAttachment: !this.state.showAttachment });
-  }
-
-  private renderExtension() {
-    if (!this.ref.current) {
+  useEffect(() => {
+    if (!ref.current) {
       throw new Error('<SearchBarExtension /> mounted without ref');
     }
 
-    if (this.props.config) {
-      this.unrender = this.props.config.mount(this.toggleShowAttachment.bind(this))(
-        this.ref.current
-      );
+    if (props.config) {
+      unmounts.current.push(mount(ref.current));
     }
-  }
 
-  private unrenderExtension() {
-    this.setState({ showAttachment: false });
-    if (this.unrender) {
-      this.unrender();
-      this.unrender = undefined;
-    }
-  }
-}
+    return () => {
+      if (unmounts.current.length) {
+        unmounts.current.map((unmount) => unmount);
+        unmounts.current = [];
+      }
+    };
+  }, [mount, props.config]);
+
+  return (
+    <>
+      <div ref={ref} />
+      {props.config.uiAttachment && (
+        <MountPointPortal
+          setMountPoint={(mountPoint) => unmounts.current.push(mountPoint(props.attachmentSibling))}
+        >
+          <div style={{ display: showAttachment ? 'block' : 'none' }}>
+            {props.config.uiAttachment}
+          </div>
+        </MountPointPortal>
+      )}
+    </>
+  );
+};

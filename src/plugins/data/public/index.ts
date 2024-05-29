@@ -479,7 +479,11 @@ export {
 
 export { isTimeRange, isQuery, isFilter, isFilters } from '../common';
 
-export { ACTION_GLOBAL_APPLY_FILTER, ApplyGlobalFilterActionContext } from './actions';
+export {
+  ACTION_GLOBAL_APPLY_FILTER,
+  ApplyGlobalFilterActionContext,
+  ApplyGlobalQueryActionContext,
+} from './actions';
 
 export * from '../common/field_mapping';
 

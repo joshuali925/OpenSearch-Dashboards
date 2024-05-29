@@ -3,54 +3,73 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { MountPoint, UnmountCallback } from 'opensearch-dashboards/public';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { UnmountCallback } from 'opensearch-dashboards/public';
-import { SearchBarExtensionConfig } from './search_bar_extensions_registry';
-import { MountPointPortal } from '../../../../opensearch_dashboards_react/public';
+import { IIndexPattern } from '../../../common';
 
 interface SearchBarExtensionProps {
   config: SearchBarExtensionConfig;
-  attachmentSibling: HTMLElement;
+  dependencies: SearchBarExtensionDependencies;
+}
+
+export interface SearchBarExtensionDependencies {
+  /**
+   * Currently selected index patterns.
+   */
+  indexPatterns?: IIndexPattern[];
+}
+
+export interface SearchBarExtensionConfig {
+  /**
+   * The id for the search bar extension.
+   */
+  id: string;
+  /**
+   * The order in which the search bar extension should be rendered.
+   * Lower numbers indicate higher position.
+   */
+  order: number;
+  /**
+   * A function that determines if the search bar extension is enabled and should be rendered on UI.
+   * @returns whether the extension is enabled.
+   */
+  isEnabled: () => Promise<boolean>;
+  /**
+   * A function that returns the mount point for the search bar extension.
+   * @param dependencies - The dependencies required for the extension.
+   * @returns The mount point for the search bar extension.
+   */
+  createMount: (dependencies: SearchBarExtensionDependencies) => MountPoint;
 }
 
 export const SearchBarExtension: React.FC<SearchBarExtensionProps> = (props) => {
   const ref = useRef<HTMLDivElement>(null);
-  const unmounts = useRef<UnmountCallback[]>([]);
-  const [showAttachment, setShowAttachment] = useState(false);
+  const unmount = useRef<UnmountCallback | null>(null);
+  const [isEnabled, setIsEnabled] = useState(false);
 
-  const mount = useMemo(() => props.config.createMount(() => setShowAttachment((show) => !show)), [
+  const mount = useMemo(() => props.config.createMount(props.dependencies), [
     props.config,
+    props.dependencies,
   ]);
 
   useEffect(() => {
-    if (!ref.current) {
-      throw new Error('<SearchBarExtension /> mounted without ref');
-    }
+    props.config.isEnabled().then(setIsEnabled);
+  }, [props.dependencies, props.config]);
 
-    if (props.config) {
-      unmounts.current.push(mount(ref.current));
+  useEffect(() => {
+    if (ref.current && props.config) {
+      unmount.current = mount(ref.current);
     }
 
     return () => {
-      if (unmounts.current.length) {
-        unmounts.current.map((unmount) => unmount);
-        unmounts.current = [];
+      if (unmount.current) {
+        unmount.current();
+        unmount.current = null;
       }
     };
   }, [mount, props.config]);
 
-  return (
-    <>
-      <div ref={ref} />
-      {props.config.uiAttachment && (
-        <MountPointPortal
-          setMountPoint={(mountPoint) => unmounts.current.push(mountPoint(props.attachmentSibling))}
-        >
-          <div style={{ display: showAttachment ? 'block' : 'none' }}>
-            {props.config.uiAttachment}
-          </div>
-        </MountPointPortal>
-      )}
-    </>
-  );
+  if (!isEnabled) return null;
+
+  return <div ref={ref} />;
 };

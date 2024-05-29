@@ -42,12 +42,12 @@ import QueryEditorTopRow from '../query_editor/query_editor_top_row';
 import { Filter, IIndexPattern, Query, TimeRange } from '../../../common';
 import { SavedQuery, SavedQueryAttributes, TimeHistoryContract } from '../../query';
 import { IDataPluginServices } from '../../types';
-import { SearchBarExtensions } from '../search_bar_extensions/search_bar_extensions';
 import { FilterBar } from '../filter_bar/filter_bar';
 import QueryBarTopRow from '../query_string_input/query_bar_top_row';
 import { SavedQueryMeta, SaveQueryForm } from '../saved_query_form';
 import { SavedQueryManagementComponent } from '../saved_query_management';
 import { QueryEnhancement, Settings } from '../types';
+import { SearchBarExtensions } from '../search_bar_extensions/search_bar_extensions';
 
 interface SearchBarInjectedDeps {
   opensearchDashboards: OpenSearchDashboardsReactContextValue<IDataPluginServices>;
@@ -123,8 +123,6 @@ class SearchBarUI extends Component<SearchBarProps, State> {
 
   private services = this.props.opensearchDashboards.services;
   private savedQueryService = this.services.data.query.savedQueries;
-  private searchBarExtensionConfigs = this.services.data.searchBarExtensionsRegistry.getAll();
-  public queryBarRef: HTMLElement | null = null;
   public filterBarRef: Element | null = null;
   public filterBarWrapperRef: Element | null = null;
 
@@ -236,6 +234,13 @@ class SearchBarUI extends Component<SearchBarProps, State> {
       compact(this.props.indexPatterns).length > 0 &&
       (this.props.queryEnhancements?.get(this.state.query?.language!)?.searchBar?.showFilterBar ??
         true)
+    );
+  }
+
+  private shouldRenderExtensions() {
+    return (
+      !!this.props.queryEnhancements?.get(this.state.query?.language?.toUpperCase()!)?.searchBar
+        ?.extensions?.length ?? false
     );
   }
 
@@ -513,19 +518,24 @@ class SearchBarUI extends Component<SearchBarProps, State> {
       );
     }
 
+    let searchBarExtensions;
+    if (this.shouldRenderExtensions()) {
+      searchBarExtensions = (
+        <SearchBarExtensions
+          configs={
+            this.props.queryEnhancements?.get(this.state.query?.language?.toUpperCase()!)?.searchBar
+              ?.extensions
+          }
+          dependencies={{ indexPatterns: this.props.indexPatterns }}
+        />
+      );
+    }
+
     return (
       <div className="globalQueryBar" data-test-subj="globalQueryBar">
-        <SearchBarExtensions
-          attachmentSibling={this.queryBarRef!}
-          configs={this.searchBarExtensionConfigs}
-        />
         {queryBar}
+        {searchBarExtensions}
         {queryEditor}
-        <div
-          ref={(node) => {
-            this.queryBarRef = node;
-          }}
-        />
         {filterBar}
 
         {this.state.showSaveQueryModal ? (

@@ -4,23 +4,25 @@
  */
 
 import React from 'react';
-import { EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
-import { SearchBarExtension } from './search_bar_extension';
-import { SearchBarExtensionConfig } from './search_bar_extensions_registry';
+import {
+  SearchBarExtension,
+  SearchBarExtensionConfig,
+  SearchBarExtensionDependencies,
+} from './search_bar_extension';
 
 interface SearchBarExtensionsProps {
-  configs: SearchBarExtensionConfig[];
-  attachmentSibling: HTMLElement;
+  configs?: SearchBarExtensionConfig[];
+  dependencies: SearchBarExtensionDependencies;
 }
 
 export const SearchBarExtensions: React.FC<SearchBarExtensionsProps> = (props) => {
+  if (!props.configs) return null;
+
   return (
-    <EuiFlexGroup gutterSize="s" justifyContent="center">
+    <>
       {props.configs.map((config) => (
-        <EuiFlexItem grow={false} key={config.id}>
-          <SearchBarExtension config={config} attachmentSibling={props.attachmentSibling} />
-        </EuiFlexItem>
+        <SearchBarExtension key={config.id} config={config} dependencies={props.dependencies} />
       ))}
-    </EuiFlexGroup>
+    </>
   );
 };

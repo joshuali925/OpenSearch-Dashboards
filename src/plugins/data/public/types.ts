@@ -41,10 +41,6 @@ import { IndexPatternsContract } from './index_patterns';
 import { UsageCollectionSetup } from '../../usage_collection/public';
 import { DataSourceStart } from './data_sources/datasource_services/types';
 import { IUiStart, UiEnhancements } from './ui';
-import {
-  SearchBarExtensionsRegistry,
-  SearchBarExtensionsRegistrySetup,
-} from './ui/search_bar_extensions/search_bar_extensions_registry';
 
 export interface DataPublicPluginEnhancements {
   search?: SearchEnhancements;
@@ -73,7 +69,6 @@ export interface DataPublicPluginSetup {
    * @internal
    */
   __enhance: (enhancements: DataPublicPluginEnhancements) => void;
-  registerSearchBarExtension: SearchBarExtensionsRegistrySetup['register'];
 }
 
 /**
@@ -128,7 +123,6 @@ export interface DataPublicPluginStart {
    * {@link DataSourceStart}
    */
   dataSources: DataSourceStart;
-  searchBarExtensionsRegistry: SearchBarExtensionsRegistry;
 }
 
 export interface IDataPluginServices extends Partial<CoreStart> {

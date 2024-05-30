@@ -339,8 +339,8 @@ data.enhancements.enabled: true
 # # uiSettings:
 # #   overrides:o
 # #     "timepicker:quickRanges": []
-opensearch_alerting.enabled: false
-opensearch_security.enabled: false
+# opensearch_alerting.enabled: false
+# opensearch_security.enabled: false
 # ql_dashboards.enabled: false
 
 # opensearch.hosts: [https://localhost:9200]fea

@@ -56,6 +56,7 @@ export interface QueryStringInputProps {
   size?: SuggestionsListSize;
   className?: string;
   isInvalid?: boolean;
+  queryEditorRef: React.RefObject<HTMLDivElement>;
 }
 
 interface Props extends QueryStringInputProps {
@@ -522,23 +523,25 @@ export default class QueryStringInputUI extends Component<Props, State> {
               </EuiFlexGroup>
             </EuiFlexItem>
             <EuiFlexItem grow={true}>
-              <CodeEditor
-                height={70}
-                languageId="json"
-                value={this.getQueryString()}
-                onChange={() => {}}
-                options={{
-                  readOnly: true,
-                  lineNumbers: 'on',
-                  fontSize: 12,
-                  minimap: {
-                    enabled: false,
-                  },
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  wrappingIndent: 'indent',
-                }}
-              />
+              <div ref={this.props.queryEditorRef}>
+                <CodeEditor
+                  height={70}
+                  languageId="json"
+                  value={this.getQueryString()}
+                  onChange={() => {}}
+                  options={{
+                    readOnly: true,
+                    lineNumbers: 'on',
+                    fontSize: 12,
+                    minimap: {
+                      enabled: false,
+                    },
+                    scrollBeyondLastLine: false,
+                    wordWrap: 'on',
+                    wrappingIndent: 'indent',
+                  }}
+                />
+              </div>
             </EuiFlexItem>
           </EuiFlexGroup>
         )}

@@ -7,6 +7,7 @@ import { SearchInterceptor } from '../search';
 import { IndexPatternSelectProps } from './index_pattern_select';
 import { StatefulSearchBarProps } from './search_bar';
 import { Settings } from './settings';
+import { SearchBarExtensionConfig } from './search_bar_extensions/search_bar_extension';
 
 export * from './settings';
 
@@ -30,6 +31,7 @@ export interface QueryEnhancement {
       initialFrom?: string;
       initialTo?: string;
     };
+    extensions?: SearchBarExtensionConfig[];
   };
   fields?: {
     filterable?: boolean;

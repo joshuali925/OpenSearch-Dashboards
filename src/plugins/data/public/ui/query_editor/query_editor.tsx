@@ -57,6 +57,7 @@ export interface QueryEditorProps {
   size?: SuggestionsListSize;
   className?: string;
   isInvalid?: boolean;
+  queryEditorRef: React.RefObject<HTMLDivElement>;
 }
 
 interface Props extends QueryEditorProps {
@@ -514,24 +515,26 @@ export default class QueryEditorUI extends Component<Props, State> {
               </EuiFlexGroup>
             </EuiFlexItem>
             <EuiFlexItem grow={true}>
-              <CodeEditor
-                height={70}
-                languageId="markdown"
-                value={this.getQueryString()}
-                onChange={() => {}}
-                options={{
-                  lineNumbers: 'on',
-                  lineHeight: 20,
-                  fontSize: 12,
-                  fontFamily: 'Roboto Mono',
-                  minimap: {
-                    enabled: false,
-                  },
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  wrappingIndent: 'indent',
-                }}
-              />
+              <div ref={this.props.queryEditorRef}>
+                <CodeEditor
+                  height={70}
+                  languageId="markdown"
+                  value={this.getQueryString()}
+                  onChange={() => {}}
+                  options={{
+                    lineNumbers: 'on',
+                    lineHeight: 20,
+                    fontSize: 12,
+                    fontFamily: 'Roboto Mono',
+                    minimap: {
+                      enabled: false,
+                    },
+                    scrollBeyondLastLine: false,
+                    wordWrap: 'on',
+                    wrappingIndent: 'indent',
+                  }}
+                />
+              </div>
             </EuiFlexItem>
           </EuiFlexGroup>
         )}

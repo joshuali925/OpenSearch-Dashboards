@@ -3,13 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { MountPoint, UnmountCallback } from 'opensearch-dashboards/public';
+import { EuiPortal } from '@elastic/eui';
+import { EuiPortalProps } from '@opensearch-project/oui';
+import { UnmountCallback } from 'opensearch-dashboards/public';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { IIndexPattern } from '../../../common';
 
 interface SearchBarExtensionProps {
   config: SearchBarExtensionConfig;
   dependencies: SearchBarExtensionDependencies;
+  portalInsert: EuiPortalProps['insert'];
 }
 
 export interface SearchBarExtensionDependencies {
@@ -39,37 +42,22 @@ export interface SearchBarExtensionConfig {
    * @param dependencies - The dependencies required for the extension.
    * @returns The mount point for the search bar extension.
    */
-  createMount: (dependencies: SearchBarExtensionDependencies) => MountPoint;
+  getComponent: (dependencies: SearchBarExtensionDependencies) => React.ReactElement;
 }
 
 export const SearchBarExtension: React.FC<SearchBarExtensionProps> = (props) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const unmount = useRef<UnmountCallback | null>(null);
   const [isEnabled, setIsEnabled] = useState(false);
 
-  const mount = useMemo(() => props.config.createMount(props.dependencies), [
-    props.config,
-    props.dependencies,
-  ]);
+  const component = useMemo(
+    () => props.config.getComponent(props.dependencies),
+    [props.config, props.dependencies]
+  );
 
   useEffect(() => {
     props.config.isEnabled().then(setIsEnabled);
   }, [props.dependencies, props.config]);
 
-  useEffect(() => {
-    if (ref.current && props.config) {
-      unmount.current = mount(ref.current);
-    }
-
-    return () => {
-      if (unmount.current) {
-        unmount.current();
-        unmount.current = null;
-      }
-    };
-  }, [mount, props.config]);
-
   if (!isEnabled) return null;
 
-  return <div ref={ref} />;
+  return <EuiPortal insert={props.portalInsert}>{component}</EuiPortal>;
 };

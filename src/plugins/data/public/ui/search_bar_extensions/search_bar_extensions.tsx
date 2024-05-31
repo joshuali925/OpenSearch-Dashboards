@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { EuiPortalProps } from '@elastic/eui';
 import React from 'react';
 import {
   SearchBarExtension,
@@ -13,6 +14,7 @@ import {
 interface SearchBarExtensionsProps {
   configs?: SearchBarExtensionConfig[];
   dependencies: SearchBarExtensionDependencies;
+  portalInsert: EuiPortalProps['insert'];
 }
 
 export const SearchBarExtensions: React.FC<SearchBarExtensionsProps> = (props) => {
@@ -21,7 +23,7 @@ export const SearchBarExtensions: React.FC<SearchBarExtensionsProps> = (props) =
   return (
     <>
       {props.configs.map((config) => (
-        <SearchBarExtension key={config.id} config={config} dependencies={props.dependencies} />
+        <SearchBarExtension key={config.id} config={config} dependencies={props.dependencies} portalInsert={props.portalInsert} />
       ))}
     </>
   );

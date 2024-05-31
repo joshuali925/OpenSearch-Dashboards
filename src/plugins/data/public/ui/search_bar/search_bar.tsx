@@ -123,6 +123,7 @@ class SearchBarUI extends Component<SearchBarProps, State> {
 
   private services = this.props.opensearchDashboards.services;
   private savedQueryService = this.services.data.query.savedQueries;
+  public queryEditorRef = React.createRef<HTMLDivElement>();
   public filterBarRef: Element | null = null;
   public filterBarWrapperRef: Element | null = null;
 
@@ -238,9 +239,10 @@ class SearchBarUI extends Component<SearchBarProps, State> {
   }
 
   private shouldRenderExtensions() {
+    if (!this.props.isEnhancementsEnabled) return false;
     return (
-      !!this.props.queryEnhancements?.get(this.state.query?.language?.toUpperCase()!)?.searchBar
-        ?.extensions?.length ?? false
+      (!!this.props.queryEnhancements?.get(this.state.query?.language?.toUpperCase()!)?.searchBar
+        ?.extensions?.length ?? false) && this.queryEditorRef.current
     );
   }
 
@@ -484,6 +486,7 @@ class SearchBarUI extends Component<SearchBarProps, State> {
           }
           dataTestSubj={this.props.dataTestSubj}
           indicateNoData={this.props.indicateNoData}
+          queryEditorRef={this.queryEditorRef}
         />
       );
     }
@@ -527,6 +530,7 @@ class SearchBarUI extends Component<SearchBarProps, State> {
               ?.extensions
           }
           dependencies={{ indexPatterns: this.props.indexPatterns }}
+          portalInsert={{ sibling: this.queryEditorRef.current, position: 'before' }}
         />
       );
     }

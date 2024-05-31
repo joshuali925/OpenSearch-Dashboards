@@ -34,11 +34,11 @@ export function registerPplQueryAssistRoute(logger: Logger, router: IRouter) {
       },
     },
     async (context, request, response) => {
-      return response.ok({
+      /* return response.ok({
         body:
           'source=opensearch_dashboards_sample_data_ecommerce | head ' +
           Math.floor(Math.random() * 100),
-      });
+      }); */
       try {
         const pplRequest = await requestAgentByConfig({
           context,

@@ -15,6 +15,11 @@ export interface QueryEnhancementsPluginSetupDependencies {
   home?: HomeServerPluginSetup;
 }
 
+export interface QlDashboardsPluginStartDependencies {
+  data: DataPluginStart;
+}
+
+
 export interface ISchema {
   name: string;
   type: string;

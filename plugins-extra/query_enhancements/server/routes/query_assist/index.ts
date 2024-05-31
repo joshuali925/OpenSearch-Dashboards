@@ -1,0 +1,1 @@
+export { registerPplQueryAssistRoute } from './routes';

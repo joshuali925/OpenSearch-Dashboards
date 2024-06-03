@@ -82,6 +82,8 @@ export const QueryAssistBar: React.FC<QueryAssistInputProps> = (props) => {
     };
   }, []);
 
+  React.useEffect(() => () => console.log('❗QueryAssistBar unmount'), []);
+
   // useEffect(() => () => abortControllerRef.current?.abort(), [abortControllerRef]);
 
   const onSubmit = async (e: SyntheticEvent) => {

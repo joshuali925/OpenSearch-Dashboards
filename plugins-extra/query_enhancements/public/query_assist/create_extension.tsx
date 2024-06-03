@@ -7,18 +7,19 @@ export const createQueryAssistExtension = (http: HttpSetup): SearchBarExtensionC
   return {
     id: 'query-assist-ppl',
     order: 1000,
-    isEnabled: (() => {
-      let agentConfigured: boolean;
-      return async () => {
-        if (agentConfigured === undefined) {
-          agentConfigured = await http
-            .get<{ configured: boolean }>('/api/ql/query_assist/configured/PPL')
-            .then((response) => response.configured)
-            .catch(() => false);
-        }
-        return agentConfigured;
-      };
-    })(),
+    // isEnabled: (() => {
+    //   let agentConfigured: boolean;
+    //   return async () => {
+    //     if (agentConfigured === undefined) {
+    //       agentConfigured = await http
+    //         .get<{ configured: boolean }>('/api/ql/query_assist/configured/PPL')
+    //         .then((response) => response.configured)
+    //         .catch(() => false);
+    //     }
+    //     return agentConfigured;
+    //   };
+    // })(),
+    isEnabled: () => Promise.resolve(true),
     getComponent: (dependencies) => <QueryAssistBar dependencies={dependencies} />,
   };
 };

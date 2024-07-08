@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import React, { ReactNode } from 'react';
 import { Observable } from 'rxjs';
 import { SearchInterceptor } from '../search';
 import { IndexPatternSelectProps } from './index_pattern_select';
-import { StatefulSearchBarProps } from './search_bar';
 import { QueryEditorExtensionConfig } from './query_editor/query_editor_extensions';
+import { StatefulSearchBarProps } from './search_bar';
 import { Settings } from './settings';
 import { SuggestionsComponentProps } from './typeahead/suggestions_component';
 
@@ -17,6 +18,10 @@ export interface QueryEnhancement {
   // TODO: MQL do want to default have supported all data_sources?
   // or should data connect have a record of query enhancements that are supported
   language: string;
+  /**
+   * Component for showing hint text under the language selector label.
+   */
+  languageHint?: ReactNode;
   search: SearchInterceptor;
   // Leave blank to support all data sources
   // supportedDataSourceTypes?: Record<string, GenericDataSource>;

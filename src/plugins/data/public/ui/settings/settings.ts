@@ -60,6 +60,7 @@ export class Settings {
   }
 
   getAllQueryEnhancements() {
+    console.log('❗this.queryEnhancements:', this.queryEnhancements);
     return this.queryEnhancements;
   }
 

@@ -3,10 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EuiComboBox, EuiComboBoxOptionOption, PopoverAnchorPosition } from '@elastic/eui';
+import {
+  EuiComboBox,
+  EuiComboBoxOptionOption,
+  EuiHighlight,
+  EuiSuperSelect,
+  EuiSuperSelectOption,
+  PopoverAnchorPosition,
+} from '@elastic/eui';
 import { i18n } from '@osd/i18n';
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { getUiService } from '../../services';
+import { QueryEnhancement } from '../types';
 
 interface Props {
   language: string;
@@ -15,10 +23,12 @@ interface Props {
   appName?: string;
 }
 
-const mapExternalLanguageToOptions = (language: string) => {
+type LanguageOption = EuiSuperSelectOption<string>;
+
+const mapExternalLanguageToOptions = (enhancement: QueryEnhancement): LanguageOption => {
   return {
-    label: language,
-    value: language,
+    value: enhancement.language,
+    inputDisplay: enhancement.language + enhancement.languageHint,
   };
 };
 
@@ -30,13 +40,13 @@ export const QueryLanguageSelector = (props: Props) => {
     defaultMessage: 'Lucene',
   });
 
-  const languageOptions: EuiComboBoxOptionOption[] = [
+  const languageOptions: LanguageOption[] = [
     {
-      label: dqlLabel,
+      inputDisplay: dqlLabel,
       value: 'kuery',
     },
     {
-      label: luceneLabel,
+      inputDisplay: luceneLabel,
       value: 'lucene',
     },
   ];
@@ -54,35 +64,64 @@ export const QueryLanguageSelector = (props: Props) => {
       )
     )
       return;
-    languageOptions.unshift(mapExternalLanguageToOptions(enhancement.language));
+    languageOptions.unshift(mapExternalLanguageToOptions(enhancement));
   });
 
   const selectedLanguage = {
     label:
       (languageOptions.find(
-        (option) => (option.value as string).toLowerCase() === props.language.toLowerCase()
+        (option) => option.value.toLowerCase() === props.language.toLowerCase()
       )?.label as string) ?? languageOptions[0].label,
   };
 
-  const handleLanguageChange = (newLanguage: EuiComboBoxOptionOption[]) => {
-    const queryLanguage = newLanguage[0].value as string;
+  const handleLanguageChange = (newLanguage: LanguageOption[]) => {
+    const queryLanguage = newLanguage[0].value!.language as string;
     props.onSelectLanguage(queryLanguage);
     uiService.Settings.setUserQueryLanguage(queryLanguage);
   };
 
   uiService.Settings.setUserQueryLanguage(props.language);
 
+  const renderOption: EuiComboBox<LanguageOptionValue>['props']['renderOption'] = (
+    option,
+    searchValue,
+    contentClassName
+  ) => {
+    return (
+      <>
+        <EuiHighlight search={searchValue} className={contentClassName}>
+          {option.label}
+        </EuiHighlight>
+        {option.value?.hint}
+      </>
+    );
+  };
+
   return (
-    <EuiComboBox
-      fullWidth
-      className="languageSelector"
-      data-test-subj="languageSelector"
-      options={languageOptions}
-      selectedOptions={[selectedLanguage]}
-      onChange={handleLanguageChange}
-      singleSelection={{ asPlainText: true }}
-      isClearable={false}
-      async
+    <EuiSuperSelect
+      options={[
+        {
+          value: 'warning',
+          inputDisplay: 'warning',
+        },
+      ]}
+      valueOfSelected={selectedLanguage}
+      onChange={onChange}
     />
   );
+
+  // return (
+  //   <EuiComboBox
+  //     fullWidth
+  //     className="languageSelector"
+  //     data-test-subj="languageSelector"
+  //     options={languageOptions}
+  //     selectedOptions={[selectedLanguage]}
+  //     onChange={handleLanguageChange}
+  //     singleSelection={{ asPlainText: true }}
+  //     isClearable={false}
+  //     renderOption={renderOption}
+  //     async
+  //   />
+  // );
 };

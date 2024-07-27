@@ -55,12 +55,6 @@ module.exports = () => {
           fileName: false,
         },
       ],
-      [
-        require.resolve('@babel/plugin-transform-class-static-block'),
-        {
-          fileName: false,
-        },
-      ],
     ],
     env: {
       production: {

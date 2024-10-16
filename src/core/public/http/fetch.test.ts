@@ -299,6 +299,12 @@ describe('Fetch', () => {
       expect(fetchMock.lastUrl()).toBe('http://localhost/myBase/my/path');
     });
 
+    it('should not include empty array in query params', async () => {
+      fetchMock.get('*', {});
+      await fetchInstance.get('/my/path', { query: { a: 'a', b: [], c: 'c' } });
+      expect(fetchMock.lastUrl()).toBe('http://localhost/myBase/my/path?a=a&c=c');
+    });
+
     it('should make request with defaults', async () => {
       fetchMock.get('*', {});
       await fetchInstance.fetch('/my/path');

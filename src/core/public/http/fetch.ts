@@ -55,7 +55,7 @@ const JSON_CONTENT = /^(application\/(json|x-javascript)|text\/(x-)?javascript|x
 const NDJSON_CONTENT = /^(application\/ndjson)(;.*)?$/;
 
 const removedUndefined = (obj: Record<string, any> | undefined) => {
-  return omitBy(obj, (v) => v === undefined);
+  return omitBy(obj, (v) => v === undefined || (Array.isArray(v) && v.length === 0));
 };
 
 export class Fetch {

@@ -28,8 +28,14 @@ In general, we have these types of tests. See [Test guidelines](#test-guidelines
 - Unit tests: Unit tests: small and modular tests that utilize mocks for external dependencies.
 - Integration tests: higher-level tests that verify interactions between systems (eg. HTTP APIs, OpenSearch API calls, calling other plugin).
 - Functional tests: end-to-end tests that verify behavior in a web browser.
+
+These tiers should roughly follow the traditional ["testing pyramid"](https://martinfowler.com/articles/practical-test-pyramid.html), where there are more exhaustive testing at the unit level, fewer at the integration level, and very few at the functional level.
+
+Additionally there are a few more checks
+
 - Backwards Compatibility tests: tests that verify any changes are backwards compatible with previous versions.
 - Performance tests: tests that measure page render performance using lighthouse.
+- TypeScript and linting: static checks to prevent TypeScript ESLint and type errors.
 
 > Contributors submitting pull requests (PRs) to the codebase are required to ensure that their code changes include appropriate testing coverage. This includes, but is not limited to, unit tests, integration tests, functional tests, and backwards compatibility tests where applicable.
 > It is the responsibility of the contributor to verify that their code changes do not introduce regressions or break existing functionality. PRs lacking sufficient testing coverage may be subject to delays in review or rejection until adequate tests are provided.
@@ -71,7 +77,7 @@ Functional tests are end-to-end tests that verify behavior in a web browser. Ope
 
 Selenium based functional tests are legacy code. They will be maintained but developers should not add any new tests. Any refactor to Selenium tests should be done by migrating them to Cypress.
 
-Cypress based functional tests can test end-to-end UI workflows as well as API behavior. All new cypress tests should be added to the [cypress/integration](https://github.com/opensearch-project/OpenSearch-Dashboards/tree/HEAD/cypress/integration) directory.
+Cypress based functional tests can test end-to-end UI workflows as well as API behavior. All new cypress tests should be added to the [cypress/integration](/cypress/integration) directory.
 
 **Guidelines**:
 * Cypress tests do not need to cover every possible interaction, but they must cover critical workflows such as release blockers. Prioritize test development based on impact.
@@ -86,10 +92,10 @@ Cypress based functional tests can test end-to-end UI workflows as well as API b
 
 ### Performance tests
 
-Performance tests measures performance against [the pre-defined baselines](https://github.com/opensearch-project/OpenSearch-Dashboards/blob/-/baselines/lighthouse_baseline.json) using lighthouse.
+Performance tests measures performance against [the pre-defined baselines](/baselines/lighthouse_baseline.json) using lighthouse.
 
 **Guidelines**:
-* Performance critical apps (the initial landing app and apps that render a lot of data, like dashboards) should onboard to the [lighthouse testing](https://github.com/opensearch-project/OpenSearch-Dashboards/blob/-/.github/workflows/lighthouse_testing.yml) workflow.
+* Performance critical apps (the initial landing app and apps that render a lot of data, like dashboards) should onboard to the [lighthouse testing](/.github/workflows/lighthouse_testing.yml) workflow.
 * The workflow action should pass before PR is merged, unless maintainers override them. Any overridden CI should have a comment on the PR for visibility.
 
 # Running tests
@@ -208,11 +214,11 @@ Make sure you run lint checker before submitting a pull request. To run lint che
 
 Please ensure that you don't introduce any broken links accidently. For any intentional broken link (e.g. dummy url in unit test), you can add it to [lycheeexclude](https://github.com/opensearch-project/OpenSearch-Dashboards/blob/main/.lycheeexclude) allow-list specifically.
 
-Pull request checks also prohibits typescript errors, see [/TYPESCRIPT.md](/TYPESCRIPT.md) for details.
+Pull request checks also prohibits typescript errors, see [TYPESCRIPT.md](/TYPESCRIPT.md) for details.
 
 # Writing Tests
 
-Conventions and best practices for writing tests can be found in [/src/core/TESTING.md](/src/core/TESTING.md)
+Conventions and best practices for writing tests can be found in [src/core/TESTING.md](/src/core/TESTING.md)
 
 # Continuous Integration
 

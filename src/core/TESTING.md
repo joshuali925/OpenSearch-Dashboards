@@ -248,11 +248,11 @@ Main subjects for tests should be:
 
 ##### Functional Test Runner
 
-If your plugin relies on the opensearch server to store data and supports additional configuration, you can leverage the Functional Test Runner(FTR) to implement integration tests.
-FTR bootstraps an opensearch and a OpenSearch Dashboards instance and runs the test suite against it.
+If your plugin relies on the opensearch server to store data and supports additional configuration, you can leverage Cypress to implement integration tests.
+FTR bootstraps an OpenSearch and a OpenSearch Dashboards instance and runs the test suite against it.
 Pros:
 
-- runs the whole Elastic stack
+- runs the whole OpenSearch stack
 - tests cross-plugin integration
 - emulates a real user interaction with the stack
 - allows adjusting config values
@@ -329,7 +329,7 @@ export default function({ getService }: FtrProviderContext) {
 
 ##### TestUtils
 
-It can be utilized if your plugin doesn't interact with the opensearch server or mocks the own methods doing so.
+It can be utilized if your plugin doesn't interact with the OpenSearch server or mocks the own methods doing so.
 Runs tests against real OpenSearch Dashboards server instance.
 Pros:
 

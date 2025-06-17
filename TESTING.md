@@ -6,12 +6,12 @@
   - [Unit tests](#unit-tests)
   - [Integration tests](#integration-tests)
   - [Functional tests](#functional-tests)
-  - [Backwards Compatibility tests](#backwards-compatibility-tests)
-  - [Additional checks](#additional-checks)
+  - [Performance tests](#performance-tests)
 - [Running tests](#running-tests)
-  - [Unit tests](#unit-tests)
-  - [Integration tests](#integration-tests)
-  - [Functional tests](#functional-tests)
+  - [Unit tests](#unit-tests-1)
+  - [Integration tests](#integration-tests-1)
+  - [Functional tests](#functional-tests-1)
+  - [Performance tests](#performance-tests-1)
   - [Backwards Compatibility tests](#backwards-compatibility-tests)
   - [Additional checks](#additional-checks)
 - [Writing Tests](#writing-tests)
@@ -46,7 +46,7 @@ In general, we have these types of tests. See [Test guidelines](#test-guidelines
 
 Unit tests are fast and easy to debug, and they should cover most permutations of logics. OpenSearch Dashboards uses [Codecov](https://app.codecov.io/gh/opensearch-project/OpenSearch-Dashboards) to enforce test coverage in PRs to be above 80%.
 
-Guidelines:
+**Guidelines**:
 - Snapshot testing can be used to validate data structures, but developers should avoid react component snapshots. Those snapshots grow large and are hard to maintain properly.
 - Component tests should use react-testing-library, following their conventions like [query priority](https://testing-library.com/docs/queries/about/#priority).
 - All components should be developed to be testable. Utils and services should aim for higher (90% - 100%) coverage than react components.
@@ -59,21 +59,21 @@ Guidelines:
 
 ### Integration tests
 
-Integration tests are tests defined by `**/integration_tests/**/*.test.[tj]sx?`. Developers can leverage the [osd_server](https://github.com/opensearch-project/OpenSearch-Dashboards/blob/6db13a3b13eff8d01e70b944c87c14a7e3506784/src/core/test_helpers/osd_server.ts#L129) helper to start OpenSearch and OpenSearch Dashboards and verify API behavior against the server endpoint.
+Integration tests are tests defined by files matching `**/integration_tests/**/*.test.[tj]sx?`. Developers can leverage the [osd_server](https://github.com/opensearch-project/OpenSearch-Dashboards/blob/6db13a3b13eff8d01e70b944c87c14a7e3506784/src/core/test_helpers/osd_server.ts#L129) helper to start OpenSearch and OpenSearch Dashboards and verify API behavior against the server endpoint.
 
-Guidelines:
+**Guidelines**:
 * Plugins should prefer to test APIs using Cypress. OpenSearch Dashboards does not have an effective way to enforce jest integration test coverage, and it cannot verify that the tests are executing against actual server implementations rather than mocked servers or responses.
 * The workflow action should pass before PR is merged, unless maintainers override them.
 
 ### Functional tests
 
-End-to-end tests that verify behavior in a web browser. OpenSearch Dashboards contains two types of functional tests: Cypress based and Selenium based (using `yarn test:ftr`).
+Functional tests are end-to-end tests that verify behavior in a web browser. OpenSearch Dashboards contains two types of functional tests: Cypress based and Selenium based.
 
 Selenium based functional tests are legacy code. They will be maintained but developers should not add any new tests. Any refactor to Selenium tests should be done by migrating them to Cypress.
 
 Cypress based functional tests can test end-to-end UI workflows as well as API behavior. All new cypress tests should be added to the [cypress/integration](https://github.com/opensearch-project/OpenSearch-Dashboards/tree/HEAD/cypress/integration) directory.
 
-Guidelines:
+**Guidelines**:
 * Cypress tests do not need to cover every possible interaction, but they must cover critical workflows such as release blockers. Prioritize test development based on impact.
 * Keep tests focused. Do not test multiple features in one test or depend on other tests. Use proper hooks to setup and cleanup environment, remove any side effects.
 * Flaky tests need to be fixed to reduce maintenance efforts. Here are some ways to avoid flaky tests:
@@ -86,9 +86,9 @@ Guidelines:
 
 ### Performance tests
 
-Performance tests measures performance against [the pre-defined baselines](https://github.com/opensearch-project/OpenSearch-Dashboards/blob/-/baselines/lighthouse_baseline.json).
+Performance tests measures performance against [the pre-defined baselines](https://github.com/opensearch-project/OpenSearch-Dashboards/blob/-/baselines/lighthouse_baseline.json) using lighthouse.
 
-Guidelines:
+**Guidelines**:
 * Performance critical apps (the initial landing app and apps that render a lot of data, like dashboards) should onboard to the [lighthouse testing](https://github.com/opensearch-project/OpenSearch-Dashboards/blob/-/.github/workflows/lighthouse_testing.yml) workflow.
 * The workflow action should pass before PR is merged, unless maintainers override them. Any overridden CI should have a comment on the PR for visibility.
 
@@ -99,17 +99,25 @@ The following is a cheatsheet of options for running the tests for OpenSearch Da
 ### Unit tests
 
 To run all the unit tests:
+
 `yarn test:jest`
+
 To run specific unit tests, pass the path to the test:
+
 `yarn test:jest [test path]`
+
 To run specific unit test groups:
+
 `yarn test:jest --ci-group=1 --ci-group=2`
 
 ### Integration tests
 
 To run all the integration tests:
+
 `yarn test:jest_integration`
+
 To run specific integration tests, pass the path to the test:
+
 `yarn test:jest_integration [test path]`
 
 ### Functional tests
@@ -168,6 +176,11 @@ This will print off an address, to which you could open your chrome browser on y
 
 If you prefer to run functional tests using Docker, you can find instructions on how to set up and debug functional tests in a Docker environment in the [Debug Functional Tests](docs/docker-dev/docker-dev-setup-manual.md#debug-functional-tests) section of the `docker-dev-setup-manual.md` file.
 
+### Performance tests
+
+To run performance tests:
+`yarn lhci autorun`
+
 ### Backwards Compatibility tests
 
 To run all the backwards compatibility tests on OpenSearch Dashboards without security:
@@ -194,6 +207,8 @@ Make sure you run lint checker before submitting a pull request. To run lint che
 `node scripts/precommit_hook.js --fix`
 
 Please ensure that you don't introduce any broken links accidently. For any intentional broken link (e.g. dummy url in unit test), you can add it to [lycheeexclude](https://github.com/opensearch-project/OpenSearch-Dashboards/blob/main/.lycheeexclude) allow-list specifically.
+
+Pull request checks also prohibits typescript errors, see [/TYPESCRIPT.md](/TYPESCRIPT.md) for details.
 
 # Writing Tests
 

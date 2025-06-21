@@ -33,6 +33,7 @@ import { Plugin, CoreSetup } from 'opensearch-dashboards/public';
 import { ThemeService, ColorsService } from './services';
 
 export type Theme = Omit<ThemeService, 'init'>;
+
 export type Color = Omit<ColorsService, 'init'>;
 
 /** @public */

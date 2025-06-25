@@ -9,7 +9,7 @@ import { Router, Route, Switch } from 'react-router-dom';
 import { Provider as ReduxProvider } from 'react-redux';
 import { Store } from 'redux';
 import { AppMountParameters } from '../../../../core/public';
-import { ExploreServices } from '../types';
+import { ExploreServices, ExploreSetupDependencies } from '../types';
 import { LogsPage } from './pages/logs';
 import { OpenSearchDashboardsContextProvider } from '../../../opensearch_dashboards_react/public';
 import { IndexPatternProvider } from './components/index_pattern_context';
@@ -17,6 +17,7 @@ import { ExploreFlavor } from '../../common';
 import { TracesPage } from './pages/traces';
 import { MetricsPage } from './pages/metrics';
 import { NoFlavor } from './components/no_view';
+import { DataPublicPluginSetup } from '../../../../plugins/data/public';
 
 // Route component props interface
 interface ExploreRouteProps {
@@ -25,16 +26,22 @@ interface ExploreRouteProps {
 }
 
 type ExploreComponentProps = ExploreRouteProps &
-  Partial<Pick<AppMountParameters, 'setHeaderActionMenu'>>;
+  Partial<Pick<AppMountParameters, 'setHeaderActionMenu'>> & { dataSetup: DataPublicPluginSetup };
 
 const renderExploreFlavor = (flavor: ExploreFlavor, props: ExploreComponentProps) => {
   switch (flavor) {
     case ExploreFlavor.Logs:
-      return <LogsPage setHeaderActionMenu={props.setHeaderActionMenu} />;
+      return (
+        <LogsPage setHeaderActionMenu={props.setHeaderActionMenu} dataSetup={props.dataSetup} />
+      );
     case ExploreFlavor.Traces:
-      return <TracesPage setHeaderActionMenu={props.setHeaderActionMenu} />;
+      return (
+        <TracesPage setHeaderActionMenu={props.setHeaderActionMenu} dataSetup={props.dataSetup} />
+      );
     case ExploreFlavor.Metrics:
-      return <MetricsPage setHeaderActionMenu={props.setHeaderActionMenu} />;
+      return (
+        <MetricsPage setHeaderActionMenu={props.setHeaderActionMenu} dataSetup={props.dataSetup} />
+      );
     default:
       // This code should never be reached at runtime, it exists to make the
       // switch cases exhaustive
@@ -45,20 +52,22 @@ const renderExploreFlavor = (flavor: ExploreFlavor, props: ExploreComponentProps
 
 // View route for saved searches
 const ViewRoute = (props: ExploreComponentProps) => (
-  <LogsPage setHeaderActionMenu={props.setHeaderActionMenu} />
+  <LogsPage setHeaderActionMenu={props.setHeaderActionMenu} dataSetup={props.dataSetup} />
 );
 
 export const renderApp = (
   { element, history, setHeaderActionMenu }: AppMountParameters,
   services: ExploreServices,
   store: Store,
-  flavor: ExploreFlavor
+  flavor: ExploreFlavor,
+  setupDeps: ExploreSetupDependencies
 ) => {
   // Create main route props
   const mainRouteProps = {
     services,
     history,
     setHeaderActionMenu,
+    dataSetup: setupDeps.data,
   };
   ReactDOM.render(
     <Router history={history}>
@@ -69,7 +78,7 @@ export const renderApp = (
               <Switch>
                 {/* View route for saved searches */}
                 <Route path="/view/:id" exact>
-                  <ViewRoute {...mainRouteProps} />
+                  <ViewRoute {...mainRouteProps} dataSetup={setupDeps.data} />
                 </Route>
 
                 <Route path={[`/`]} exact={false}>

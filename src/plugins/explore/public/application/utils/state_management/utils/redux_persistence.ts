@@ -4,6 +4,7 @@
  */
 
 import { RootState } from '../store';
+import { ResultStatus } from '../types';
 
 /**
  * Persists Redux state to URL
@@ -12,27 +13,10 @@ import { RootState } from '../store';
 export const persistReduxState = (state: RootState, services: any) => {
   if (state.ui.transaction?.inProgress) return;
   try {
-    // Update QueryStringManager to match Redux state
-    if (state.query.dataset && services.data?.query?.queryString) {
-      const queryStringQuery = services.data.query.queryString.getQuery();
-      const isEqual = (a: any, b: any) => JSON.stringify(a) === JSON.stringify(b);
-
-      if (!isEqual(queryStringQuery, state.query)) {
-        services.data.query.queryString.setQuery(state.query);
-
-        // Set language if it changed
-        if (state.query.language !== queryStringQuery.language) {
-          services.data.query.queryString
-            .getLanguageService()
-            .setUserQueryLanguage(state.query.language);
-        }
-      }
-    }
-
-    // Persist _q (Query state)
+    // Sync up _q (Query state) to URL state
     services.osdUrlStateStorage.set('_q', state.query, { replace: true });
 
-    // Persist _a (Application state)
+    // Sync up _a (Application state) to URL state
     services.osdUrlStateStorage.set(
       '_a',
       {
@@ -49,11 +33,10 @@ export const persistReduxState = (state: RootState, services: any) => {
 
 /**
  * Loads Redux state from URL or returns default state
- * OPTIMIZED: Avoids duplicate dataset caching by smart state handling
  */
 export const loadReduxState = async (services: any): Promise<any> => {
   try {
-    // Use the osdUrlStateStorage from services (now properly initialized in plugin.ts)
+    // Use the osdUrlStateStorage from services
     if (!services.osdUrlStateStorage) {
       return await getPreloadedState(services);
     }
@@ -62,24 +45,16 @@ export const loadReduxState = async (services: any): Promise<any> => {
     const queryState = services.osdUrlStateStorage.get('_q');
     const appState = services.osdUrlStateStorage.get('_a');
 
-    // Smart query state handling
+    // Query state handling
     let finalQueryState;
     if (queryState && queryState.dataset) {
-      // We have a complete query state with dataset from URL - use it directly
-      // No need to run dataset caching since it's already been processed
-
       finalQueryState = queryState;
     } else {
-      // No query state or missing dataset - run full initialization
-
-      const defaultQuery = {
-        language: 'PPL', // Default language for explore
-      };
       finalQueryState = await getPreloadedQueryState(services);
     }
+    services.data.query.queryString.setQuery(finalQueryState);
 
-    // Smart app state handling - only run preload functions for missing sections
-
+    // Only run preload functions for missing sections
     const finalUIState = appState?.ui || (await getPreloadedUIState(services));
     const finalResultsState = appState?.results || (await getPreloadedResultsState(services));
     const finalTabState = appState?.tab || (await getPreloadedTabState(services));
@@ -155,17 +130,11 @@ const getPreloadedQueryState = async (services: any) => {
 
   // If we have a dataset, generate query with PPL language
   if (selectedDataset) {
-    // Set language to PPL for explore
-    const exploreLanguage = 'PPL';
-    const datasetWithPPL = { ...selectedDataset, language: exploreLanguage };
-
-    // Generate query using the same method as HeaderDatasetSelector
+    // Currently set default language to PPL for explore
+    const datasetWithPPL = { ...selectedDataset, language: 'PPL' };
     const queryWithDefaults = services.data.query.queryString.getInitialQueryByDataset(
       datasetWithPPL
     );
-
-    // Update global QueryStringManager to keep it in sync
-    services.data.query.queryString.setQuery(queryWithDefaults);
 
     return queryWithDefaults;
   } else {
@@ -183,7 +152,7 @@ const getPreloadedQueryState = async (services: any) => {
 const getPreloadedUIState = async (services: any) => {
   return {
     activeTabId: 'logs',
-    status: 'uninitialized',
+    status: ResultStatus.UNINITIALIZED,
     error: null,
     abortController: null,
     transaction: {
@@ -216,6 +185,7 @@ const getPreloadedLegacyState = async (services: any) => {
 
   return {
     // Fields that exist in data_explorer + discover
+    // TODO: load saved explore by id
     savedSearch: undefined, // Matches discover format - string ID, not object
     columns: defaultColumns,
     sort: [],

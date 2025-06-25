@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef, memo } from 'react';
 import {
   DEFAULT_COLUMNS_SETTING,
   DOC_HIDE_TIME_COLUMN_SETTING,
@@ -12,7 +12,7 @@ import {
 } from '../../../common';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
 import { IndexPatternField, opensearchFilters, UI_SETTINGS } from '../../../../data/public';
-import { DocViewFilterFn, OpenSearchSearchHit } from '../../types/doc_views_types';
+import { DocViewFilterFn } from '../../types/doc_views_types';
 import { DataTable } from './data_table';
 import {
   useDispatch,
@@ -26,6 +26,7 @@ import { getDocViewsRegistry } from '../../application/legacy/discover/opensearc
 import { ExploreServices } from '../../types';
 import {
   selectColumns,
+  selectRows,
   selectSavedSearch,
 } from '../../application/utils/state_management/selectors';
 import { useIndexPatternContext } from '../../application/components/index_pattern_context';
@@ -34,12 +35,7 @@ import {
   removeColumn,
 } from '../../application/utils/state_management/slices/legacy_slice';
 
-interface Props {
-  rows?: Array<OpenSearchSearchHit<Record<string, any>>>;
-  scrollToTop?: () => void;
-}
-
-export const ExploreDataTable = ({ rows, scrollToTop }: Props) => {
+const ExploreDataTableComponent = () => {
   const { services } = useOpenSearchDashboards<ExploreServices>();
   const {
     uiSettings,
@@ -51,6 +47,7 @@ export const ExploreDataTable = ({ rows, scrollToTop }: Props) => {
   } = services;
 
   const savedSearch = useSelector(selectSavedSearch);
+  const rows = useSelector(selectRows);
   const columns = useSelector(selectColumns);
   const { indexPattern } = useIndexPatternContext();
 
@@ -82,23 +79,38 @@ export const ExploreDataTable = ({ rows, scrollToTop }: Props) => {
     return displayedColumns;
   }, [columns, indexPattern, uiSettings]);
 
-  const docViewsRegistry = getDocViewsRegistry();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToTop = useCallback(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+    }
+  }, []);
+
+  const docViewsRegistry = useMemo(() => getDocViewsRegistry(), []);
 
   const dispatch = useDispatch();
-  const onAddColumn = (col: string) => {
-    if (indexPattern && capabilities.discover?.save) {
-      popularizeField(indexPattern, col, indexPatterns);
-    }
+  const onAddColumn = useCallback(
+    (col: string) => {
+      if (indexPattern && capabilities.discover?.save) {
+        popularizeField(indexPattern, col, indexPatterns);
+      }
 
-    dispatch(addColumn({ column: col }));
-  };
-  const onRemoveColumn = (col: string) => {
-    if (indexPattern && capabilities.discover?.save) {
-      popularizeField(indexPattern, col, indexPatterns);
-    }
+      dispatch(addColumn({ column: col }));
+    },
+    [indexPattern, capabilities.discover?.save, indexPatterns, dispatch]
+  );
 
-    dispatch(removeColumn(col));
-  };
+  const onRemoveColumn = useCallback(
+    (col: string) => {
+      if (indexPattern && capabilities.discover?.save) {
+        popularizeField(indexPattern, col, indexPatterns);
+      }
+
+      dispatch(removeColumn(col));
+    },
+    [indexPattern, capabilities.discover?.save, indexPatterns, dispatch]
+  );
 
   const onAddFilter = useCallback(
     (field: string | IndexPatternField, values: string, operation: '+' | '-') => {
@@ -116,16 +128,6 @@ export const ExploreDataTable = ({ rows, scrollToTop }: Props) => {
     [filterManager, indexPattern]
   );
 
-  if (indexPattern === undefined) {
-    // TODO: handle better
-    return null;
-  }
-
-  if (!rows || rows.length === 0) {
-    // TODO: handle better
-    return <div>{'loading...'}</div>;
-  }
-
   return (
     <div
       data-render-complete={true}
@@ -135,6 +137,7 @@ export const ExploreDataTable = ({ rows, scrollToTop }: Props) => {
       data-test-subj="discoverTable"
       className="eui-xScrollWithShadows"
       style={{ height: '100%' }}
+      ref={containerRef}
     >
       <DataTable
         columns={tableColumns}
@@ -151,3 +154,5 @@ export const ExploreDataTable = ({ rows, scrollToTop }: Props) => {
     </div>
   );
 };
+
+export const ExploreDataTable = memo(ExploreDataTableComponent);

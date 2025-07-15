@@ -97,6 +97,12 @@ export interface HomePluginSetupDependencies {
   contentManagement: ContentManagementPluginSetup;
 }
 
+const uncovered () => {
+  const x = 0;
+  x++;
+  console.log(x);
+};
+
 export class HomePublicPlugin
   implements
     Plugin<
@@ -116,6 +122,7 @@ export class HomePublicPlugin
     core: CoreSetup<HomePluginStartDependencies>,
     { urlForwarding, usageCollection, contentManagement }: HomePluginSetupDependencies
   ): HomePublicPluginSetup {
+    uncovered();
     const setCommonService = async (
       homeOpenSearchDashboardsServices?: Partial<HomeOpenSearchDashboardsServices>
     ) => {

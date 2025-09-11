@@ -1,4 +1,9 @@
 /*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/*
  * SPDX-License-Identifier: Apache-2.0
  *
  * The OpenSearch Contributors require contributions made to
@@ -118,7 +123,10 @@ export class UIActionsIntegrationService {
 
     // Attach actions to triggers
     this.uiActionsSetup.attachAction(TABLE_ROW_SELECT_TRIGGER as any, 'CAPTURE_TABLE_ROW_CONTEXT');
-    this.uiActionsSetup.attachAction(EMBEDDABLE_PANEL_HOVER_TRIGGER as any, 'CAPTURE_PANEL_HOVER_CONTEXT');
+    this.uiActionsSetup.attachAction(
+      EMBEDDABLE_PANEL_HOVER_TRIGGER as any,
+      'CAPTURE_PANEL_HOVER_CONTEXT'
+    );
     this.uiActionsSetup.attachAction(FILTER_APPLIED_TRIGGER as any, 'CAPTURE_FILTER_CONTEXT');
   }
 
@@ -134,115 +142,135 @@ export class UIActionsIntegrationService {
 
   private setupTableRowClickListener(): void {
     // Use event delegation to capture table row clicks
-    document.addEventListener('click', (event: MouseEvent) => {
-      const target = event.target;
-      
-      // Ensure target is an HTMLElement before calling closest
-      if (!target || !(target instanceof HTMLElement)) {
-        return;
-      }
-      
-      // Check if click is on a table row in Discover
-      const tableRow = target.closest('tr[data-test-subj="docTableRow"]');
-      if (tableRow) {
-        console.log('🔍 Table row clicked detected');
-        
-        // Extract row data
-        const rowIndex = Array.from(tableRow.parentElement?.children || []).indexOf(tableRow);
-        const cells = tableRow.querySelectorAll('td');
-        const rowData: Record<string, any> = {};
-        
-        cells.forEach((cell, index) => {
-          const fieldName = cell.getAttribute('data-test-subj') || `field_${index}`;
-          rowData[fieldName] = cell.textContent?.trim() || '';
-        });
+    document.addEventListener(
+      'click',
+      (event: MouseEvent) => {
+        const target = event.target;
 
-        // Trigger the UI Action
-        if (this.contextCaptureCallback) {
-          this.contextCaptureCallback(TABLE_ROW_SELECT_TRIGGER, {
-            rowData,
-            rowIndex,
-            tableState: {
-              totalRows: tableRow.parentElement?.children.length || 0,
-              selectedRow: rowIndex,
-            },
-            timestamp: Date.now(),
-          });
+        // Ensure target is an HTMLElement before calling closest
+        if (!target || !(target instanceof HTMLElement)) {
+          return;
         }
-      }
-    }, { capture: true });
+
+        // Check if click is on a table row in Discover
+        const tableRow = target.closest('tr[data-test-subj="docTableRow"]');
+        if (tableRow) {
+          console.log('🔍 Table row clicked detected');
+
+          // Extract row data
+          const rowIndex = Array.from(tableRow.parentElement?.children || []).indexOf(tableRow);
+          const cells = tableRow.querySelectorAll('td');
+          const rowData: Record<string, any> = {};
+
+          cells.forEach((cell, index) => {
+            const fieldName = cell.getAttribute('data-test-subj') || `field_${index}`;
+            rowData[fieldName] = cell.textContent?.trim() || '';
+          });
+
+          // Trigger the UI Action
+          if (this.contextCaptureCallback) {
+            this.contextCaptureCallback(TABLE_ROW_SELECT_TRIGGER, {
+              rowData,
+              rowIndex,
+              tableState: {
+                totalRows: tableRow.parentElement?.children.length || 0,
+                selectedRow: rowIndex,
+              },
+              timestamp: Date.now(),
+            });
+          }
+        }
+      },
+      { capture: true }
+    );
   }
 
   private setupEmbeddablePanelHoverListener(): void {
     // Listen for mouse enter events on embeddable panels
-    document.addEventListener('mouseenter', (event: MouseEvent) => {
-      const target = event.target;
-      
-      // Ensure target is an HTMLElement before calling closest
-      if (!target || !(target instanceof HTMLElement)) {
-        return;
-      }
-      
-      // Check if hover is on an embeddable panel
-      const embeddablePanel = target.closest('[data-test-subj="embeddablePanel"]');
-      if (embeddablePanel) {
-        const panelId = embeddablePanel.getAttribute('data-embeddable-id');
-        
-        // Debounce and avoid duplicate triggers for the same panel
-        if (panelId === this.lastHoveredPanel) {
+    document.addEventListener(
+      'mouseenter',
+      (event: MouseEvent) => {
+        const target = event.target;
+
+        // Ensure target is an HTMLElement before calling closest
+        if (!target || !(target instanceof HTMLElement)) {
           return;
         }
-        
-        // Clear previous timeout
-        if (this.hoverDebounceTimeout) {
-          clearTimeout(this.hoverDebounceTimeout);
-        }
-        
-        this.lastHoveredPanel = panelId;
-        
-        // Debounce the hover event
-        this.hoverDebounceTimeout = setTimeout(() => {
-          console.log('🎯 Embeddable panel hover detected');
-          
-          // Extract panel information
-          const panelTitle = embeddablePanel.querySelector('[data-test-subj="dashboardPanelTitle"]')?.textContent?.trim();
-          
-          // Trigger the UI Action
-          if (this.contextCaptureCallback) {
-            this.contextCaptureCallback(EMBEDDABLE_PANEL_HOVER_TRIGGER, {
-              embeddableId: panelId,
-              panelTitle,
-              panelElement: embeddablePanel,
-              timestamp: Date.now(),
-            });
+
+        // Check if hover is on an embeddable panel
+        const embeddablePanel = target.closest('[data-test-subj="embeddablePanel"]');
+        if (embeddablePanel) {
+          const panelId = embeddablePanel.getAttribute('data-embeddable-id');
+
+          // Debounce and avoid duplicate triggers for the same panel
+          if (panelId === this.lastHoveredPanel) {
+            return;
           }
-        }, 100); // 100ms debounce
-      }
-    }, { capture: true });
+
+          // Clear previous timeout
+          if (this.hoverDebounceTimeout) {
+            clearTimeout(this.hoverDebounceTimeout);
+          }
+
+          this.lastHoveredPanel = panelId;
+
+          // Debounce the hover event
+          this.hoverDebounceTimeout = setTimeout(() => {
+            console.log('🎯 Embeddable panel hover detected');
+
+            // Extract panel information
+            const panelTitle = embeddablePanel
+              .querySelector('[data-test-subj="dashboardPanelTitle"]')
+              ?.textContent?.trim();
+
+            // Trigger the UI Action
+            if (this.contextCaptureCallback) {
+              this.contextCaptureCallback(EMBEDDABLE_PANEL_HOVER_TRIGGER, {
+                embeddableId: panelId,
+                panelTitle,
+                panelElement: embeddablePanel,
+                timestamp: Date.now(),
+              });
+            }
+          }, 100); // 100ms debounce
+        }
+      },
+      { capture: true }
+    );
 
     // Reset hover state when mouse leaves
-    document.addEventListener('mouseleave', (event: MouseEvent) => {
-      const target = event.target;
-      
-      if (!target || !(target instanceof HTMLElement)) {
-        return;
-      }
-      
-      const embeddablePanel = target.closest('[data-test-subj="embeddablePanel"]');
-      if (embeddablePanel) {
-        const panelId = embeddablePanel.getAttribute('data-embeddable-id');
-        if (panelId === this.lastHoveredPanel) {
-          this.lastHoveredPanel = null;
+    document.addEventListener(
+      'mouseleave',
+      (event: MouseEvent) => {
+        const target = event.target;
+
+        if (!target || !(target instanceof HTMLElement)) {
+          return;
         }
-      }
-    }, { capture: true });
+
+        const embeddablePanel = target.closest('[data-test-subj="embeddablePanel"]');
+        if (embeddablePanel) {
+          const panelId = embeddablePanel.getAttribute('data-embeddable-id');
+          if (panelId === this.lastHoveredPanel) {
+            this.lastHoveredPanel = null;
+          }
+        }
+      },
+      { capture: true }
+    );
   }
 
   // Method to manually trigger context capture (for testing)
   public triggerContextCapture(triggerType: string, data: any): void {
     console.log(`🧪 Manually triggering context capture: ${triggerType}`, data);
+    console.log('🔥 DEBUG: contextCaptureCallback exists:', !!this.contextCaptureCallback);
+
     if (this.contextCaptureCallback) {
+      console.log('🔥 DEBUG: Calling contextCaptureCallback');
       this.contextCaptureCallback(triggerType, data);
+      console.log('🔥 DEBUG: contextCaptureCallback called successfully');
+    } else {
+      console.error('🔥 DEBUG: contextCaptureCallback is not set!');
     }
   }
 }

@@ -30,6 +30,7 @@
       - [Build](../src/dev/build/README.md)
       - [I18n](../src/dev/i18n/README.md)
     - plugins
+      - [Ai_chatbot](../src/plugins/ai_chatbot/README.md)
       - [Application_config](../src/plugins/application_config/README.md)
       - [Banner](../src/plugins/banner/README.md)
       - [Bfetch](../src/plugins/bfetch/README.md)
@@ -39,6 +40,7 @@
           - application
             - [Hooks](../src/plugins/console/public/application/hooks/README.md)
       - [Content_management](../src/plugins/content_management/README.md)
+      - [Context_provider](../src/plugins/context_provider/README.md)
       - [Csp_handler](../src/plugins/csp_handler/README.md)
       - [Dashboard](../src/plugins/dashboard/README.md)
       - [Data](../src/plugins/data/README.md)
@@ -209,6 +211,7 @@
   - [CONTRIBUTING](../CONTRIBUTING.md)
   - [DEVELOPER_GUIDE](../DEVELOPER_GUIDE.md)
   - [MAINTAINERS](../MAINTAINERS.md)
+  - [MEMORY_DEMO_GUIDE](../MEMORY_DEMO_GUIDE.md)
   - [README](../README.md)
   - [RELEASING](../RELEASING.md)
   - [SECURITY](../SECURITY.md)
@@ -216,3 +219,4 @@
   - [TRIAGING](../TRIAGING.md)
   - [TYPESCRIPT](../TYPESCRIPT.md)
   - [Testing_strategy](../testing_strategy.md)
+  - [Ui_actions_comprehensive_explanation](../ui_actions_comprehensive_explanation.md)

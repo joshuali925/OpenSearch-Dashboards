@@ -22,32 +22,6 @@ export class ClaudeOSDAgent {
   private initializeTools(): AgentTool[] {
     return [
       {
-        name: 'add_filter',
-        description: 'Add a filter to the current dashboard or explore view',
-        parameters: {
-          type: 'object',
-          properties: {
-            field: { type: 'string', description: 'Field name to filter on (e.g., level, service, message)' },
-            value: { type: 'string', description: 'Value to filter for (e.g., ERROR, auth-service)' },
-            operation: { type: 'string', enum: ['is', 'is_not', 'exists'], description: 'Filter operation' }
-          },
-          required: ['field', 'value']
-        },
-        execute: this.addFilter.bind(this)
-      },
-      {
-        name: 'expand_panel',
-        description: 'Expand a dashboard panel to full screen view',
-        parameters: {
-          type: 'object',
-          properties: {
-            panelId: { type: 'string', description: 'ID of the panel to expand' }
-          },
-          required: ['panelId']
-        },
-        execute: this.expandPanel.bind(this)
-      },
-      {
         name: 'expand_document',
         description: 'Expand a document in the explore logs view to see full details',
         parameters: {
@@ -60,44 +34,6 @@ export class ClaudeOSDAgent {
         execute: this.expandDocument.bind(this)
       }
     ];
-  }
-
-  private async addFilter(params: { field: string; value: string; operation?: string }): Promise<string> {
-    try {
-      console.log(`🔧 Agent executing: Add filter ${params.field}=${params.value}`);
-      
-      if (this.uiActions) {
-        await this.uiActions.executeTriggerActions('ADD_FILTER_TRIGGER', {
-          field: params.field,
-          value: params.value,
-          operation: params.operation || 'is'
-        });
-        return `✅ Added filter: ${params.field} = ${params.value}`;
-      } else {
-        return `❌ UI Actions not available. Make sure you're on a dashboard or explore page.`;
-      }
-    } catch (error) {
-      console.error('❌ Error adding filter:', error);
-      return `❌ Error adding filter: ${error.message}`;
-    }
-  }
-
-  private async expandPanel(params: { panelId: string }): Promise<string> {
-    try {
-      console.log(`🔧 Agent executing: Expand panel ${params.panelId}`);
-      
-      if (this.uiActions) {
-        await this.uiActions.executeTriggerActions('EXPAND_PANEL_TRIGGER', {
-          panelId: params.panelId
-        });
-        return `✅ Expanded panel: ${params.panelId}`;
-      } else {
-        return `❌ UI Actions not available. Make sure you're on a dashboard page.`;
-      }
-    } catch (error) {
-      console.error('❌ Error expanding panel:', error);
-      return `❌ Error expanding panel: ${error.message}`;
-    }
   }
 
   private async expandDocument(params: { documentId: string }): Promise<string> {

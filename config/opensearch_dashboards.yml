@@ -401,3 +401,5 @@ aiChatbot.enabled: true
 # osdMcpServer.enabled: true
 # osdMcpServer.stdio.enabled: true
 # osdMcpServer.stdio.autoStart: true
+# Set the value to true to enable the keyboard shortcuts (requires workspace.enabled: true)
+# opensearchDashboards.keyboardShortcuts.enabled: true

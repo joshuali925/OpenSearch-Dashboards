@@ -48,6 +48,10 @@ import {
   VisualizationRegistryServiceStart,
 } from './services/visualization_registry_service';
 import { AppStore } from './application/utils/state_management/store';
+import {
+  QueryPanelActionsRegistryService,
+  QueryPanelActionsRegistryServiceSetup,
+} from './services/query_panel_actions_registry';
 
 // Context Provider Integration
 import { ExploreContextContributor } from './context_contributor';
@@ -58,6 +62,7 @@ import { ExploreContextContributor } from './context_contributor';
 
 export interface ExplorePluginSetup {
   visualizationRegistry: VisualizationRegistryServiceSetup;
+  queryPanelActionsRegistry: QueryPanelActionsRegistryServiceSetup;
   docViews: {
     addDocView: (docViewSpec: unknown) => void;
   };
@@ -176,6 +181,7 @@ export interface ExploreServices {
   // Explore-specific services
   tabRegistry: TabRegistryService;
   visualizationRegistry: VisualizationRegistryService;
+  queryPanelActionsRegistry: QueryPanelActionsRegistryService;
   expressions: ExpressionsStart;
 
   dashboard: DashboardStart;

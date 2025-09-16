@@ -2,6 +2,7 @@
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  */
+/* eslint-disable no-console */
 
 import { i18n } from '@osd/i18n';
 import { stringify } from 'query-string';
@@ -54,6 +55,7 @@ import {
 import { createSavedExploreLoader } from './saved_explore';
 import { TabRegistryService } from './services/tab_registry/tab_registry_service';
 import { setUsageCollector } from './services/usage_collector';
+import { QueryPanelActionsRegistryService } from './services/query_panel_actions_registry';
 import { VisualizationRegistryService } from './services/visualization_registry_service';
 import {
   ExplorePluginSetup,
@@ -99,11 +101,10 @@ export class ExplorePlugin
   private urlGenerator?: import('./types').ExplorePluginStart['urlGenerator'];
   private initializeServices?: () => { core: CoreStart; plugins: ExploreStartDependencies };
 
-  // Add a new property for the tab registry
+  // Registries
   private tabRegistry: TabRegistryService = new TabRegistryService();
-
-  /** visualization registry */
   private visualizationRegistryService = new VisualizationRegistryService();
+  private queryPanelActionsRegistryService = new QueryPanelActionsRegistryService();
 
   // Context Provider Integration
   private contextContributor?: ExploreContextContributor;
@@ -261,7 +262,8 @@ export class ExplorePlugin
           pluginsStart,
           this.initializerContext,
           this.tabRegistry,
-          this.visualizationRegistryService
+          this.visualizationRegistryService,
+          this.queryPanelActionsRegistryService
         );
 
         // Add osdUrlStateStorage to services (like VisBuilder and DataExplorer)
@@ -432,6 +434,7 @@ export class ExplorePlugin
           this.docViewsLinksRegistry?.addDocViewLink(docViewLinkSpec as any),
       },
       visualizationRegistry: visualizationRegistryService.setup(),
+      queryPanelActionsRegistry: this.queryPanelActionsRegistryService.setup(),
     };
   }
 
@@ -457,7 +460,8 @@ export class ExplorePlugin
         plugins,
         this.initializerContext,
         this.tabRegistry,
-        this.visualizationRegistryService
+        this.visualizationRegistryService,
+        this.queryPanelActionsRegistryService
       );
       setLegacyServices({
         ...services,

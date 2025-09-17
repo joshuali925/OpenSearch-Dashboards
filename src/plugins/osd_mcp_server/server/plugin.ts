@@ -3,11 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { CoreSetup, CoreStart, Plugin, PluginInitializerContext, Logger } from '../../../../core/server';
-import { MCPServer } from './mcp_server';
-import { MCPSSEHandler } from './mcp_sse_handler';
 import { spawn, ChildProcess } from 'child_process';
 import { join } from 'path';
+import {
+  CoreSetup,
+  CoreStart,
+  Plugin,
+  PluginInitializerContext,
+  Logger,
+} from '../../../../core/server';
+import { MCPServer } from './mcp_server';
+import { MCPSSEHandler } from './mcp_sse_handler';
 import { OsdMcpServerConfig } from '../config';
 import { registerReduxBridgeRoutes } from './routes/redux_bridge';
 
@@ -41,7 +47,7 @@ export class OsdMcpServerPlugin
         autoStart: false, // Default to false for safety
       },
     };
-    
+
     // Try to get config if available
     try {
       if (initializerContext.config && typeof initializerContext.config.get === 'function') {
@@ -72,7 +78,7 @@ export class OsdMcpServerPlugin
       async (context: any, request: any, response: any) => {
         try {
           this.logger.info('MCP SSE endpoint accessed');
-          
+
           // Handle CORS preflight requests
           if (request.headers['access-control-request-method']) {
             this.logger.info('Handling CORS preflight request');
@@ -86,23 +92,23 @@ export class OsdMcpServerPlugin
               body: '',
             });
           }
-          
+
           // Try a different approach - return a custom response that bypasses OSD's response handling
           const rawResponse = request.raw.res;
-          
+
           // Set SSE headers directly on the raw response
           rawResponse.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
+            Connection: 'keep-alive',
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Headers': 'Cache-Control, Content-Type, osd-xsrf',
             'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
           });
-          
+
           // Send initial SSE message
           rawResponse.write(': MCP SSE connection established\n\n');
-          
+
           // Send MCP server info
           const serverInfo = {
             jsonrpc: '2.0',
@@ -114,7 +120,7 @@ export class OsdMcpServerPlugin
             },
           };
           rawResponse.write(`data: ${JSON.stringify(serverInfo)}\n\n`);
-          
+
           // Keep connection alive
           const heartbeat = setInterval(() => {
             try {
@@ -123,20 +129,19 @@ export class OsdMcpServerPlugin
               clearInterval(heartbeat);
             }
           }, 30000);
-          
+
           // Handle disconnect
           request.raw.req.on('close', () => {
             this.logger.info('MCP SSE client disconnected');
             clearInterval(heartbeat);
           });
-          
+
           // Return a response that doesn't interfere with our raw response
           return response.custom({
             statusCode: 200,
             headers: {},
             body: '',
           });
-          
         } catch (error) {
           this.logger.error('Error in MCP SSE endpoint:', error);
           return response.internalError({
@@ -158,15 +163,15 @@ export class OsdMcpServerPlugin
       async (context: any, request: any, response: any) => {
         try {
           this.logger.info('MCP POST request received');
-          
+
           // Handle MCP request from AG-UI
           const mcpRequest = request.body;
           this.logger.info('MCP request body:', JSON.stringify(mcpRequest, null, 2));
           this.logger.info('MCP request method:', mcpRequest?.method);
-          
+
           // Process the MCP request
           const mcpResponse = await this.processMCPRequest(mcpRequest);
-          
+
           return response.ok({
             body: mcpResponse,
             headers: {
@@ -189,7 +194,6 @@ export class OsdMcpServerPlugin
         }
       }
     );
-
 
     // MCP Server info endpoint (for debugging)
     router.get(
@@ -264,7 +268,7 @@ export class OsdMcpServerPlugin
           return response.internalError({
             body: {
               error: error instanceof Error ? error.message : 'Tool execution failed',
-              toolName: request.params.toolName
+              toolName: request.params.toolName,
             },
           });
         }
@@ -306,7 +310,7 @@ export class OsdMcpServerPlugin
             jsonrpc: '2.0',
             id: mcpRequest.id,
             result: {
-              tools: tools,
+              tools,
             },
           };
 
@@ -368,10 +372,10 @@ export class OsdMcpServerPlugin
   private startStdioServer(): void {
     try {
       this.logger.info('Starting MCP stdio server automatically...');
-      
+
       // Path to the standalone stdio server
       const stdioServerPath = join(__dirname, '..', 'standalone', 'osd-mcp-stdio.js');
-      
+
       // Spawn the stdio server process
       this.stdioProcess = spawn('node', [stdioServerPath], {
         stdio: ['pipe', 'pipe', 'pipe'],
@@ -405,7 +409,6 @@ export class OsdMcpServerPlugin
 
       this.logger.info('MCP stdio server started successfully');
       this.logger.info('AG-UI can now connect via SSH bridge to this stdio server');
-      
     } catch (error) {
       this.logger.error('Error starting MCP stdio server:', error);
     }
@@ -413,7 +416,7 @@ export class OsdMcpServerPlugin
 
   public stop() {
     this.logger.info('OSD MCP Server plugin: Stop');
-    
+
     // Clean up MCP server
     if (this.mcpServer) {
       this.mcpServer.cleanup();

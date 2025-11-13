@@ -142,8 +142,12 @@ const observeCompiler = (
             if (path.endsWith('.scss')) {
               workUnits += EXTRA_SCSS_WORK_UNITS;
 
-              for (const depPath of module.buildInfo.fileDependencies) {
-                referencedFiles.add(depPath);
+              // In Webpack 5, fileDependencies might be a Set or undefined
+              const fileDeps = module.buildInfo?.fileDependencies;
+              if (fileDeps && typeof fileDeps[Symbol.iterator] === 'function') {
+                for (const depPath of fileDeps) {
+                  referencedFiles.add(depPath);
+                }
               }
             }
 

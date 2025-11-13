@@ -71,6 +71,11 @@ export function getWebpackConfig(bundle: Bundle, bundleRefs: BundleRefs, worker:
       hashFunction: 'xxhash64',
     },
 
+    ignoreWarnings: [
+      // Ignore "export not found" warnings from TypeScript transpileOnly mode
+      /export .* was not found in/,
+    ],
+
     optimization: {
       emitOnErrors: false,
     },
@@ -184,7 +189,8 @@ export function getWebpackConfig(bundle: Bundle, bundleRefs: BundleRefs, worker:
                         )
                       )};\n${content}`;
                     },
-                    webpackImporter: false,
+                    // Use webpack's resolver for @imports (required for sass-loader 16+)
+                    webpackImporter: true,
                     implementation: require('sass-embedded'),
                     sassOptions: {
                       outputStyle: 'compressed',
@@ -295,6 +301,24 @@ export function getWebpackConfig(bundle: Bundle, bundleRefs: BundleRefs, worker:
       alias: {
         core_app_image_assets: Path.resolve(worker.repoRoot, 'src/core/public/core_app/images'),
         'opensearch-dashboards/public': Path.resolve(worker.repoRoot, 'src/core/public'),
+        // Workaround for json11 package.json typo: "dis/es" should be "dist/es"
+        json11: Path.resolve(worker.repoRoot, 'node_modules/json11/dist/cjs/index.cjs'),
+      },
+      fallback: {
+        // Webpack 5 no longer polyfills Node.js core modules automatically
+        // Provide fallbacks for modules needed in browser bundles
+        path: require.resolve('path-browserify'),
+        util: require.resolve('util/'),
+        url: require.resolve('url/'),
+        zlib: require.resolve('browserify-zlib'),
+        stream: require.resolve('stream-browserify'),
+        buffer: require.resolve('buffer/'),
+        assert: require.resolve('assert/'),
+        http: require.resolve('stream-http'),
+        https: require.resolve('https-browserify'),
+        os: require.resolve('os-browserify/browser'),
+        crypto: require.resolve('crypto-browserify'),
+        process: require.resolve('process/browser'),
       },
     },
 

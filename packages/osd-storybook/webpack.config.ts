@@ -17,7 +17,6 @@ const stats = {
   errorDetails: true,
   errors: true,
   moduleTrace: true,
-  warningsFilter: /(export .* was not found in)|(entrypoint size limit)/,
 };
 
 // Extend the Storybook Webpack config with some customizations
@@ -27,6 +26,12 @@ export default function ({ config: storybookConfig }: { config: Configuration })
     devServer: {
       stats,
     },
+    ignoreWarnings: [
+      // Ignore "export not found" warnings from TypeScript
+      /export .* was not found in/,
+      // Ignore entrypoint size limit warnings
+      /entrypoint size limit/,
+    ],
     module: {
       rules: [
         {

@@ -58,7 +58,6 @@ export function failedStatsToErrorMessage(stats: webpack.Stats) {
   const details = stats.toString({
     preset: 'minimal',
     colors: true,
-    warningsFilter: STATS_WARNINGS_FILTER,
     errors: true,
     errorDetails: true,
     moduleTrace: true,
@@ -133,7 +132,10 @@ export interface WebpackIgnoredModule {
 }
 
 export function isIgnoredModule(module: any): module is WebpackIgnoredModule {
-  return module?.constructor?.name === 'RawModule' && module.identifierStr?.startsWith('ignored ');
+  return (
+    module?.constructor?.name === 'RawModule' &&
+    (module.identifierStr?.startsWith('ignored ') || module.identifierStr?.startsWith('ignored|'))
+  );
 }
 
 /** module replacing imports for webpack externals */

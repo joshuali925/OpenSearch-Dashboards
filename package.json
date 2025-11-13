@@ -274,6 +274,7 @@
     "js-yaml": "^4.1.0",
     "json-stable-stringify": "^1.0.1",
     "json-stringify-safe": "5.0.1",
+    "json11": "2.0.0",
     "json5": "^2.2.3",
     "lodash": "^4.17.21",
     "lru-cache": "^4.1.5",

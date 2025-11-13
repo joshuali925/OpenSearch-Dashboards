@@ -30,7 +30,7 @@
 
 import webpack from 'webpack';
 
-const STATS_WARNINGS_FILTER = /(export .* was not found in|Should not import the named export)/;
+const STATS_WARNINGS_FILTER = /(export .* was not found in|Should not import the named export|from "autoprefixer" plugin)/;
 
 export function isFailureStats(stats: webpack.Stats) {
   if (stats.hasErrors()) {

@@ -10,7 +10,7 @@ export const defaultConfig: StorybookConfig = {
     '@osd/storybook/preset',
     '@storybook/addon-knobs',
     '@storybook/addon-essentials',
-    '@storybook/addon-postcss',
+    // Removed @storybook/addon-postcss (uses PostCSS 7) - PostCSS is configured directly in webpackFinal
   ],
   core: {
     builder: 'webpack4',

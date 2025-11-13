@@ -227,4 +227,5 @@
   - [TESTING](../TESTING.md)
   - [TRIAGING](../TRIAGING.md)
   - [TYPESCRIPT](../TYPESCRIPT.md)
+  - [WEBPACK5_MIGRATION](../WEBPACK5_MIGRATION.md)
   - [Testing_strategy](../testing_strategy.md)

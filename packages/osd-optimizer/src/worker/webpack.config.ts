@@ -86,6 +86,11 @@ export function getWebpackConfig(bundle: Bundle, bundleRefs: BundleRefs, worker:
       new CleanWebpackPlugin(),
       new BundleRefsPlugin(bundle, bundleRefs),
       ...(bundle.banner ? [new webpack.BannerPlugin({ banner: bundle.banner, raw: true })] : []),
+      // Webpack 5 no longer provides Node.js globals automatically
+      new webpack.ProvidePlugin({
+        process: 'process/browser',
+        Buffer: ['buffer', 'Buffer'],
+      }),
     ],
 
     module: {

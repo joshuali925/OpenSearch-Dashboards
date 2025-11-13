@@ -32,10 +32,8 @@ import Path from 'path';
 
 import { stringifyRequest } from 'loader-utils';
 import webpack from 'webpack';
-// @ts-expect-error
 import TerserPlugin from 'terser-webpack-plugin';
-// @ts-expect-error
-import webpackMerge from 'webpack-merge';
+import { merge as webpackMerge } from 'webpack-merge';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CompressionPlugin from 'compression-webpack-plugin';
 import * as UiSharedDeps from '@osd/ui-shared-deps';
@@ -49,14 +47,15 @@ export function getWebpackConfig(bundle: Bundle, bundleRefs: BundleRefs, worker:
   const ENTRY_CREATOR = require.resolve('./entry_point_creator');
 
   const commonConfig: webpack.Configuration = {
-    node: { fs: 'empty' },
     context: Path.normalize(bundle.contextDir),
-    cache: true,
+    cache: {
+      type: 'memory',
+    },
     entry: {
       [bundle.id]: ENTRY_CREATOR,
     },
 
-    devtool: worker.dist ? false : '#cheap-source-map',
+    devtool: worker.dist ? false : 'cheap-source-map',
     profile: worker.profileWebpack,
 
     output: {
@@ -68,12 +67,12 @@ export function getWebpackConfig(bundle: Bundle, bundleRefs: BundleRefs, worker:
           bundle.sourceRoot,
           info.absoluteResourcePath
         )}${info.query}`,
-      jsonpFunction: `${bundle.id}_bundle_jsonpfunction`,
-      hashFunction: 'Xxh64',
+      chunkLoadingGlobal: `${bundle.id}_bundle_jsonpfunction`,
+      hashFunction: 'xxhash64',
     },
 
     optimization: {
-      noEmitOnErrors: true,
+      emitOnErrors: false,
     },
 
     externals: [UiSharedDeps.externals],
@@ -207,9 +206,11 @@ export function getWebpackConfig(bundle: Bundle, bundleRefs: BundleRefs, worker:
         },
         {
           test: /\.(woff|woff2|ttf|eot|svg|ico|png|jpg|gif|jpeg)(\?|$)/,
-          loader: 'url-loader',
-          options: {
-            limit: 8192,
+          type: 'asset',
+          parser: {
+            dataUrlCondition: {
+              maxSize: 8192,
+            },
           },
         },
         {
@@ -252,9 +253,7 @@ export function getWebpackConfig(bundle: Bundle, bundleRefs: BundleRefs, worker:
         },
         {
           test: /\.(html|md|txt|tmpl)$/,
-          use: {
-            loader: 'raw-loader',
-          },
+          type: 'asset/source',
         },
         {
           test: /\.cjs$/,
@@ -322,23 +321,19 @@ export function getWebpackConfig(bundle: Bundle, bundleRefs: BundleRefs, worker:
       }),
       new CompressionPlugin({
         algorithm: 'brotliCompress',
-        filename: '[path].br',
+        filename: '[path][base].br',
         test: /\.(js|css)$/,
-        cache: false,
       }),
       new CompressionPlugin({
         algorithm: 'gzip',
-        filename: '[path].gz',
+        filename: '[path][base].gz',
         test: /\.(js|css)$/,
-        cache: false,
       }),
     ],
 
     optimization: {
       minimizer: [
         new TerserPlugin({
-          cache: false,
-          sourceMap: false,
           extractComments: false,
           parallel: false,
           terserOptions: {

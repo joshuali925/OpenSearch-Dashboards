@@ -5,14 +5,14 @@
 
 import { resolve } from 'path';
 import { stringifyRequest } from 'loader-utils';
-import { Configuration, Stats } from 'webpack';
-import webpackMerge from 'webpack-merge';
+import { Configuration } from 'webpack';
+import { merge as webpackMerge } from 'webpack-merge';
 import { REPO_ROOT } from './lib/constants';
 
 const BABEL_PRESET_PATH = require.resolve('@osd/babel-preset/webpack_preset');
 
 const stats = {
-  ...Stats.presetToOptions('minimal'),
+  preset: 'minimal' as const,
   colors: true,
   errorDetails: true,
   errors: true,

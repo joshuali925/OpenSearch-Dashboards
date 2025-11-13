@@ -55,22 +55,26 @@ export class BundleRefsPlugin {
       // changed and we should re-run resolutions
       this.resolvedRefEntryCache.clear();
       this.resolvedRequestCache.clear();
+    });
 
+    // In Webpack 5, we need to hook into normalModuleFactory directly
+    compiler.hooks.normalModuleFactory.tap('BundleRefsPlugin', (normalModuleFactory) => {
       // hook into the creation of NormalModule instances in webpack, if the import
       // statement leading to the creation of the module is pointing to a bundleRef
       // entry then create a BundleRefModule instead of a NormalModule.
-      compilationParams.normalModuleFactory.hooks.factory.tap(
-        'BundleRefsPlugin/normalModuleFactory/factory',
-        (wrappedFactory: ModuleFactory): ModuleFactory => (data, callback) => {
-          const context = data.context;
-          const dep = data.dependencies[0];
+      // In Webpack 5, we need to use 'factorize' hook instead of 'factory'
+      normalModuleFactory.hooks.factorize.tapAsync(
+        'BundleRefsPlugin/normalModuleFactory/factorize',
+        (resolveData: any, callback: any) => {
+          const context = resolveData.context;
+          const request = resolveData.request;
 
-          this.maybeReplaceImport(context, dep.request, compiler).then(
+          this.maybeReplaceImport(context, request, compiler).then(
             (module) => {
               if (!module) {
-                wrappedFactory(data, callback);
+                callback();
               } else {
-                callback(undefined, module);
+                callback(null, module);
               }
             },
             (error) => callback(error)
@@ -99,7 +103,9 @@ export class BundleRefsPlugin {
       compilation.hooks.finishModules.tapPromise(
         'BundleRefsPlugin/finishModules',
         async (modules) => {
-          const usedBundleIds = (modules as any[])
+          // In Webpack 5, modules is a Set, not an Array
+          const modulesArray = Array.from(modules);
+          const usedBundleIds = modulesArray
             .filter((m: any): m is BundleRefModule => m instanceof BundleRefModule)
             .map((m) => m.ref.bundleId);
 

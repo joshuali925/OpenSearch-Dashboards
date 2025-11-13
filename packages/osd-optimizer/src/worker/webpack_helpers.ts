@@ -29,8 +29,8 @@
  */
 
 import webpack from 'webpack';
-// @ts-ignore
-import Stats from 'webpack/lib/Stats';
+
+const STATS_WARNINGS_FILTER = /(export .* was not found in)/;
 
 export function isFailureStats(stats: webpack.Stats) {
   if (stats.hasErrors()) {
@@ -45,16 +45,18 @@ export function isFailureStats(stats: webpack.Stats) {
   // exported, typescript has no choice but to emit the export. Fortunately,
   // the extraneous export should not be harmful, so we just suppress these warnings
   // https://github.com/TypeStrong/ts-loader#transpileonly-boolean-defaultfalse
-  const filteredWarnings = Stats.filterWarnings(warnings, STATS_WARNINGS_FILTER);
+  const filteredWarnings =
+    warnings?.filter((warning: any) => {
+      const message = typeof warning === 'string' ? warning : warning.message;
+      return !STATS_WARNINGS_FILTER.test(message);
+    }) || [];
 
   return filteredWarnings.length > 0;
 }
 
-const STATS_WARNINGS_FILTER = new RegExp(['(export .* was not found in)'].join(''));
-
 export function failedStatsToErrorMessage(stats: webpack.Stats) {
   const details = stats.toString({
-    ...Stats.presetToOptions('minimal'),
+    preset: 'minimal',
     colors: true,
     warningsFilter: STATS_WARNINGS_FILTER,
     errors: true,
@@ -159,6 +161,20 @@ export interface WebpackConcatenatedModule {
 
 export function isConcatenatedModule(module: any): module is WebpackConcatenatedModule {
   return module?.constructor?.name === 'ConcatenatedModule';
+}
+
+/** runtime module (new in Webpack 5) */
+export interface WebpackRuntimeModule {
+  type: string;
+  name: string;
+}
+
+export function isRuntimeModule(module: any): module is WebpackRuntimeModule {
+  // In Webpack 5, runtime modules have constructors that end with 'RuntimeModule'
+  return (
+    module?.constructor?.name?.endsWith('RuntimeModule') ||
+    module?.constructor?.name === 'RuntimeModule'
+  );
 }
 
 export function getModulePath(module: WebpackNormalModule) {

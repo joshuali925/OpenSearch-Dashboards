@@ -31,7 +31,10 @@ export class BundleRefModule extends Module {
   public buildInfo?: any;
 
   constructor(public readonly ref: BundleRef) {
-    super('osd/bundleRef', null);
+    // Use 'javascript/esm' type for Webpack 5 compatibility
+    super('javascript/esm', null);
+    // Webpack 5 requires these properties
+    this.factoryMeta = {};
   }
 
   libIdent() {
@@ -39,8 +42,9 @@ export class BundleRefModule extends Module {
   }
 
   // Webpack 5 changed chunkCondition API
+  // Return true to allow this module in all chunks
   chunkCondition(chunk: any) {
-    return chunk.canBeInitial();
+    return true;
   }
 
   identifier() {

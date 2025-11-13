@@ -78,6 +78,10 @@ export function getWebpackConfig(bundle: Bundle, bundleRefs: BundleRefs, worker:
 
     optimization: {
       emitOnErrors: false,
+      // Ensure consistent module IDs for better caching and debugging
+      moduleIds: 'deterministic',
+      // Keep readable module IDs in development
+      ...(worker.dist ? {} : { chunkIds: 'named' }),
     },
 
     externals: [UiSharedDeps.externals],

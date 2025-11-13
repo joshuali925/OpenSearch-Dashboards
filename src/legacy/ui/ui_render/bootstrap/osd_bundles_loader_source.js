@@ -55,7 +55,22 @@ function osdBundlesLoader() {
       throw new Error('__osdBundles__ does not have a module defined for "' + key + '"');
     }
 
-    return modules[key].bundleRequire(modules[key].bundleModuleKey);
+    try {
+      var bundleRequire = modules[key].bundleRequire;
+      var bundleModuleKey = modules[key].bundleModuleKey;
+
+      // Ensure bundleRequire is a function
+      if (typeof bundleRequire !== 'function') {
+        throw new Error('bundleRequire for "' + key + '" is not a function');
+      }
+
+      // Call the bundle's __webpack_require__ with the module ID
+      var moduleExports = bundleRequire(bundleModuleKey);
+      return moduleExports;
+    } catch (error) {
+      console.error('Error loading bundle "' + key + '":', error);
+      throw error;
+    }
   }
 
   return { has: has, define: define, get: get };

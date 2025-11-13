@@ -57,28 +57,25 @@ export class BundleRefsPlugin {
       this.resolvedRequestCache.clear();
     });
 
-    // In Webpack 5, we need to hook into normalModuleFactory directly
-    compiler.hooks.normalModuleFactory.tap('BundleRefsPlugin', (normalModuleFactory) => {
+    // In Webpack 5, normalModuleFactory is accessed through compiler.hooks.normalModuleFactory
+    compiler.hooks.normalModuleFactory.tap('BundleRefsPlugin', (normalModuleFactory: any) => {
       // hook into the creation of NormalModule instances in webpack, if the import
       // statement leading to the creation of the module is pointing to a bundleRef
       // entry then create a BundleRefModule instead of a NormalModule.
-      // In Webpack 5, we need to use 'factorize' hook instead of 'factory'
-      normalModuleFactory.hooks.factorize.tapAsync(
+      // In Webpack 5, we use the 'factorize' hook to replace module creation
+      normalModuleFactory.hooks.factorize.tapPromise(
         'BundleRefsPlugin/normalModuleFactory/factorize',
-        (resolveData: any, callback: any) => {
+        async (resolveData: any) => {
           const context = resolveData.context;
           const request = resolveData.request;
 
-          this.maybeReplaceImport(context, request, compiler).then(
-            (module) => {
-              if (!module) {
-                callback();
-              } else {
-                callback(null, module);
-              }
-            },
-            (error) => callback(error)
-          );
+          const module = await this.maybeReplaceImport(context, request, compiler);
+          if (module) {
+            // Return the BundleRefModule, webpack will use it instead of creating a normal module
+            return module;
+          }
+          // Return undefined to let webpack continue with normal module creation
+          return undefined;
         }
       );
     });

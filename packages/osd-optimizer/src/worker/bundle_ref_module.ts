@@ -31,20 +31,15 @@ export class BundleRefModule extends Module {
   public buildInfo?: any;
 
   constructor(public readonly ref: BundleRef) {
-    // Use 'javascript/esm' type for Webpack 5 compatibility
-    super('javascript/esm', null);
-    // Webpack 5 requires these properties
-    this.factoryMeta = {};
+    super('osd/bundleRef', null);
   }
 
   libIdent() {
     return this.ref.exportId;
   }
 
-  // Webpack 5 changed chunkCondition API
-  // Return true to allow this module in all chunks
-  chunkCondition(chunk: any) {
-    return true;
+  chunkCondition(chunk: any, { chunkGraph }: any) {
+    return chunkGraph.getNumberOfEntryModules(chunk) > 0;
   }
 
   identifier() {
@@ -55,27 +50,29 @@ export class BundleRefModule extends Module {
     return this.identifier();
   }
 
-  needRebuild() {
-    return false;
+  needBuild(context: any, callback: any) {
+    return callback(null, !this.buildMeta);
   }
 
-  build(
-    options: any,
-    compilation: any,
-    resolver: any,
-    fileSystem: any,
-    callback: (error?: Error | null) => void
-  ) {
-    this.built = true;
-    this.buildMeta = {};
+  build(_: any, __: any, ___: any, ____: any, callback: () => void) {
+    this.buildMeta = {
+      async: false,
+      exportsType: undefined,
+    };
     this.buildInfo = {
-      cacheable: true,
+      strict: false,
+      topLevelDeclarations: new Set(),
+      module: __.outputOptions.module,
+      exportsArgument: '__webpack_exports__',
     };
     callback();
   }
 
-  // Webpack 5 uses codeGeneration instead of source()
-  codeGeneration(context: any) {
+  getConcatenationBailoutReason({ moduleGraph }: any) {
+    return `@osd/bundleRef externals can't be concatenated`;
+  }
+
+  codeGeneration(_: any) {
     const sources = new Map();
     sources.set(
       'javascript',
@@ -85,10 +82,27 @@ export class BundleRefModule extends Module {
       Object.defineProperties(__webpack_exports__, Object.getOwnPropertyDescriptors(ns))
     `)
     );
+
+    const data = new Map();
+    data.set('url', this.ref.exportId);
+
     return {
       sources,
-      runtimeRequirements: new Set(['__webpack_require__.r', '__webpack_exports__']),
+      runtimeRequirements: new Set([
+        'module',
+        '__webpack_exports__',
+        '__webpack_require__',
+      ]),
+      data,
     };
+  }
+
+  source() {
+    return `
+      __webpack_require__.r(__webpack_exports__);
+      var ns = __osdBundles__.get('${this.ref.exportId}');
+      Object.defineProperties(__webpack_exports__, Object.getOwnPropertyDescriptors(ns))
+    `;
   }
 
   size() {

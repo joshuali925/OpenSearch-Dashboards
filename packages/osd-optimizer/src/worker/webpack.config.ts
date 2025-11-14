@@ -40,6 +40,7 @@ import * as UiSharedDeps from '@osd/ui-shared-deps';
 
 import { Bundle, BundleRefs, WorkerConfig } from '../common';
 import { BundleRefsPlugin } from './bundle_refs_plugin';
+import { BundleRefUsedExportsPlugin } from './bundle_ref_used_exports_plugin';
 
 const BABEL_PRESET_PATH = require.resolve('@osd/babel-preset/webpack_preset');
 
@@ -89,6 +90,10 @@ export function getWebpackConfig(bundle: Bundle, bundleRefs: BundleRefs, worker:
     plugins: [
       new CleanWebpackPlugin(),
       new BundleRefsPlugin(bundle, bundleRefs),
+      // This plugin is needed to mark exports on public entry files as used
+      // otherwise webpack 5's aggressive exports analysis will mark them as unused
+      // and they will be removed, causing runtime errors when loading modules
+      new BundleRefUsedExportsPlugin(bundle),
       ...(bundle.banner ? [new webpack.BannerPlugin({ banner: bundle.banner, raw: true })] : []),
       // Webpack 5 no longer provides Node.js globals automatically
       new webpack.ProvidePlugin({

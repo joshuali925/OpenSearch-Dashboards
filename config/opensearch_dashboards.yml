@@ -415,3 +415,13 @@
 # @experimental Set the value to true to enable context provider
 # contextProvider:
 #   enabled: true
+
+# @experimental Set the enabled value to true and provide an AG-UI agent to enable chat
+chat:
+  enabled: true
+  agUiUrl: 'http://localhost:5050/api/agui/chat'
+# @experimental Set the value to true to enable context provider
+contextProvider:
+  enabled: true
+# Enable the new explore experience (required for AI features)
+explore.enabled: true

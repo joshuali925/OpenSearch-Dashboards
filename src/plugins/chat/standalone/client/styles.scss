@@ -1,0 +1,116 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+// Reset and base styles
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+// Standalone app container
+.standalone-chat-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #f5f7fa;
+}
+
+// Header
+.standalone-header {
+  flex-shrink: 0;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #d3dae6;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+}
+
+.standalone-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1c21;
+  }
+}
+
+.standalone-header-info {
+  font-size: 14px;
+  color: #69707d;
+  padding: 4px 12px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+// Main content area
+.standalone-main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0; // Important for flex child scrolling
+}
+
+// Chat window adjustments for standalone mode
+.standalone-main {
+  // The ChatWindow component will fill this area
+  .chatWindow {
+    width: 100%;
+    height: 100%;
+    border: none;
+    box-shadow: none;
+  }
+
+  // Adjust chat container for fullscreen
+  .chatContainer {
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 100%;
+    padding: 24px;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .standalone-header {
+    padding: 12px 16px;
+  }
+
+  .standalone-header-content {
+    h1 {
+      font-size: 20px;
+    }
+  }
+
+  .standalone-header-info {
+    display: none;
+  }
+
+  .standalone-main {
+    .chatContainer {
+      padding: 16px;
+    }
+  }
+}

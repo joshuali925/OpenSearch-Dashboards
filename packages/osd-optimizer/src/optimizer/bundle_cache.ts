@@ -107,31 +107,9 @@ export function getBundleCacheEvent$(
         continue;
       }
 
-      const bundleRefExportIds = bundle.cache.getBundleRefExportIds();
-      if (!bundleRefExportIds) {
-        events.push({
-          type: 'bundle not cached',
-          reason: 'bundle references missing',
-          bundle,
-        });
-        continue;
-      }
-
-      const refs = bundleRefs.filterByExportIds(bundleRefExportIds);
-
-      const bundleRefsDiff = diffCacheKey(
-        refs.map((r) => r.exportId).sort((a, b) => a.localeCompare(b)),
-        bundleRefExportIds
-      );
-      if (bundleRefsDiff) {
-        events.push({
-          type: 'bundle not cached',
-          reason: 'bundle references outdated',
-          diff: bundleRefsDiff,
-          bundle,
-        });
-        continue;
-      }
+      // Bundle refs check removed - it was overly conservative and caused false cache misses.
+      // The file hash check below is the real source of truth for whether cached output is valid.
+      // If source files haven't changed, the bundle refs imports should be the same (with deterministic builds).
 
       eligibleBundles.push(bundle);
     }

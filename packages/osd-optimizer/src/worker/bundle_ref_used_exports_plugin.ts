@@ -80,18 +80,10 @@ export class BundleRefUsedExportsPlugin {
               moduleGraph.getExportsInfo(module).setAllKnownExportsUsed();
               // @ts-ignore
               moduleGraph.getExportsInfo(module).setUsedInUnknownWay();
-              moduleGraph.addExtraReason(
-                module,
-                `BundleRefUsedExportsPlugin/namespace#=>${module.resource}`
-              );
             } else {
               Array.from(exportsInfo.exports).forEach((exportInfo: any) => {
                 if (exportInfo.name) {
                   moduleGraph.getExportsInfo(module).setUsedInUnknownWay(exportInfo.name);
-                  moduleGraph.addExtraReason(
-                    module,
-                    `BundleRefUsedExportsPlugin/${exportInfo.name}#=>${module.resource}`
-                  );
                 }
               });
             }

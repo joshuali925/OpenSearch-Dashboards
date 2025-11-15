@@ -189,11 +189,13 @@ const observeCompiler = (
       }
 
       const files = Array.from(referencedFiles).sort(ascending((p) => p));
+      // Sort bundleRefExportIds for consistent cache keys across builds
+      const sortedBundleRefExportIds = bundleRefExportIds.sort((a, b) => a.localeCompare(b));
 
       getHashes(files)
         .then((hashes) => {
           bundle.cache.set({
-            bundleRefExportIds,
+            bundleRefExportIds: sortedBundleRefExportIds,
             optimizerCacheKey: workerConfig.optimizerCacheKey,
             cacheKey: bundle.createCacheKey(files, hashes),
             moduleCount,

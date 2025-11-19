@@ -29,3 +29,4 @@
  */
 
 export const SEARCH_EMBEDDABLE_TYPE = 'search';
+export const METRIC_EMBEDDABLE_TYPE = 'metric';

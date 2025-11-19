@@ -53,15 +53,17 @@ import {
   syncHistoryLocations,
   getServices,
   setUsageCollector,
+  setExpressions,
 } from './opensearch_dashboards_services';
 import { createSavedSearchesLoader } from './saved_searches';
+import { createSavedMetricLoader } from './saved_metric_viz';
 import { buildServices } from './build_services';
 import {
   DiscoverUrlGeneratorState,
   DISCOVER_APP_URL_GENERATOR,
   DiscoverUrlGenerator,
 } from './url_generator';
-import { SearchEmbeddableFactory } from './embeddable';
+import { SearchEmbeddableFactory, MetricEmbeddableFactory } from './embeddable';
 import { PLUGIN_ID } from '../common';
 import { DataExplorerPluginSetup } from '../../data_explorer/public';
 import { registerFeature } from './register_feature';
@@ -99,6 +101,7 @@ export interface DiscoverSetup {
 
 export interface DiscoverStart {
   savedSearchLoader: SavedObjectLoader;
+  savedMetricLoader: SavedObjectLoader;
 
   /**
    * `share` plugin URL generator for Discover app. Use it to generate links into
@@ -150,6 +153,7 @@ export interface DiscoverStartPlugins {
   urlForwarding: UrlForwardingStart;
   inspector: InspectorPublicPluginStart;
   visualizations: VisualizationsStart;
+  expressions: ExpressionsStart;
 }
 
 /**
@@ -423,6 +427,7 @@ export class DiscoverPlugin
       }
       const services = buildServices(core, plugins, this.initializerContext);
       setServices(services);
+      setExpressions(plugins.expressions);
       this.servicesInitialized = true;
 
       return { core, plugins };
@@ -463,6 +468,13 @@ export class DiscoverPlugin
         chrome: core.chrome,
         overlays: core.overlays,
       }),
+      savedMetricLoader: createSavedMetricLoader({
+        savedObjectsClient: core.savedObjects.client,
+        indexPatterns: plugins.data.indexPatterns,
+        search: plugins.data.search,
+        chrome: core.chrome,
+        overlays: core.overlays,
+      }),
     };
   }
 
@@ -485,6 +497,8 @@ export class DiscoverPlugin
     };
 
     const factory = new SearchEmbeddableFactory(getStartServices);
+    const metricFactory = new MetricEmbeddableFactory(getStartServices);
     plugins.embeddable.registerEmbeddableFactory(factory.type, factory);
+    plugins.embeddable.registerEmbeddableFactory(metricFactory.type, metricFactory);
   }
 }

@@ -30,7 +30,7 @@ export const prometheusTypeConfig: DatasetTypeConfig = {
       title: connection.title,
       type: DATASET.PROMETHEUS,
       language: 'PROMQL',
-      timeFieldName: patternMeta?.timeFieldName,
+      timeFieldName: patternMeta?.timeFieldName || 'Time',
       dataSource: connection.parent
         ? {
             id: connection.parent.id,

@@ -5,10 +5,10 @@
 
 import '../explore_page.scss';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { EuiErrorBoundary, EuiPage, EuiPageBody } from '@elastic/eui';
 import { AppMountParameters, HeaderVariant } from 'opensearch-dashboards/public';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from '@osd/i18n';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../types';
@@ -26,7 +26,9 @@ import {
   EXPLORE_PATTERNS_TAB_ID,
   EXPLORE_VISUALIZATION_TAB_ID,
 } from '../../../../common';
-import { setActiveTab } from '../../utils/state_management/slices';
+import { setActiveTab, setQueryWithHistory } from '../../utils/state_management/slices';
+import { selectQuery } from '../../utils/state_management/selectors';
+import { DataStructure } from '../../../../../data/common';
 
 /**
  * Main application component for the Explore plugin
@@ -38,6 +40,67 @@ export const MetricsPage: React.FC<Partial<Pick<AppMountParameters, 'setHeaderAc
   const { savedExplore } = useInitPage();
   const { keyboardShortcut } = services;
   const dispatch = useDispatch();
+  const currentQuery = useSelector(selectQuery);
+
+  // Auto-select first Prometheus connection on page load
+  useEffect(() => {
+    const initializePrometheusDataset = async () => {
+      // If loading a saved explore, don't auto-select
+      if (savedExplore) {
+        return;
+      }
+
+      // If current dataset is already Prometheus, don't change it
+      if (currentQuery.dataset && currentQuery.dataset.type === 'PROMETHEUS') {
+        return;
+      }
+
+      try {
+        const datasetService = services.data.query.queryString.getDatasetService();
+        const prometheusTypeConfig = datasetService.getType('PROMETHEUS');
+
+        if (!prometheusTypeConfig) {
+          return;
+        }
+
+        // Fetch Prometheus connections
+        const prometheusRoot: DataStructure = {
+          id: 'PROMETHEUS',
+          title: 'Prometheus',
+          type: 'PROMETHEUS',
+        };
+        const result = await prometheusTypeConfig.fetch(services, [prometheusRoot]);
+
+        if (result.children && result.children.length > 0) {
+          // Get the first Prometheus connection
+          const firstConnection = result.children[0];
+          const dataset = prometheusTypeConfig.toDataset([prometheusRoot, firstConnection]);
+
+          // Cache the dataset first to ensure DataView is available
+          await datasetService.cacheDataset(
+            dataset,
+            {
+              uiSettings: services.uiSettings,
+              savedObjects: services.savedObjects,
+              notifications: services.notifications,
+              http: services.http,
+              data: services.data,
+            },
+            false
+          );
+
+          // Set it as the selected dataset with PromQL language
+          const initialQuery = services.data.query.queryString.getInitialQueryByDataset(dataset);
+          dispatch(setQueryWithHistory(initialQuery));
+        }
+      } catch (error) {
+        // Silently fail - user can manually select a dataset
+        console.error('Failed to auto-select Prometheus dataset:', error);
+      }
+    };
+
+    initializePrometheusDataset();
+  }, [currentQuery.dataset, savedExplore, services, dispatch]);
 
   keyboardShortcut?.useKeyboardShortcut({
     id: 'switchToLogsTabLogs',

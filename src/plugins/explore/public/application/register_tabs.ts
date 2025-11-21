@@ -46,7 +46,10 @@ export const registerBuiltInTabs = (
     label: registryFlavor === ExploreFlavor.Traces ? 'Spans' : 'Logs',
     flavor: [ExploreFlavor.Logs, ExploreFlavor.Metrics, ExploreFlavor.Traces],
     order: 10,
-    supportedLanguages: [EXPLORE_DEFAULT_LANGUAGE],
+    supportedLanguages:
+      registryFlavor === ExploreFlavor.Metrics
+        ? [EXPLORE_DEFAULT_LANGUAGE, 'PROMQL']
+        : [EXPLORE_DEFAULT_LANGUAGE],
 
     component: LogsTab,
   };
@@ -58,7 +61,7 @@ export const registerBuiltInTabs = (
     tabRegistry.registerTab({
       id: EXPLORE_PATTERNS_TAB_ID,
       label: 'Patterns',
-      flavor: [ExploreFlavor.Logs, ExploreFlavor.Metrics],
+      flavor: [ExploreFlavor.Logs],
       order: 15,
       supportedLanguages: [EXPLORE_DEFAULT_LANGUAGE],
 
@@ -146,7 +149,10 @@ export const registerBuiltInTabs = (
     label: 'Visualization',
     flavor: [ExploreFlavor.Logs, ExploreFlavor.Metrics, ExploreFlavor.Traces],
     order: 20,
-    supportedLanguages: [EXPLORE_DEFAULT_LANGUAGE],
+    supportedLanguages:
+      registryFlavor === ExploreFlavor.Metrics
+        ? [EXPLORE_DEFAULT_LANGUAGE, 'PROMQL']
+        : [EXPLORE_DEFAULT_LANGUAGE],
 
     // Prepare query based on language
     prepareQuery: (query) => {
@@ -162,7 +168,7 @@ export const registerBuiltInTabs = (
     tabRegistry.registerTab({
       id: EXPLORE_FIELD_STATS_TAB_ID,
       label: 'Field Stats',
-      flavor: [ExploreFlavor.Logs, ExploreFlavor.Metrics],
+      flavor: [ExploreFlavor.Logs],
       order: 25,
       supportedLanguages: [EXPLORE_DEFAULT_LANGUAGE],
       component: FieldStatsTab,

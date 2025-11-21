@@ -101,13 +101,18 @@ export const DatasetSelectWidget = () => {
   );
 
   const supportedTypes = useMemo(() => {
-    return (
-      services.supportedTypes || [
-        DEFAULT_DATA.SET_TYPES.INDEX,
-        DEFAULT_DATA.SET_TYPES.INDEX_PATTERN,
-      ]
-    );
-  }, [services.supportedTypes]);
+    const defaultTypes = services.supportedTypes || [
+      DEFAULT_DATA.SET_TYPES.INDEX,
+      DEFAULT_DATA.SET_TYPES.INDEX_PATTERN,
+    ];
+
+    // For metrics flavor, only allow Prometheus datasets
+    if (flavorId === 'metrics') {
+      return ['PROMETHEUS'];
+    }
+
+    return defaultTypes.filter((type) => type !== 'PROMETHEUS');
+  }, [services.supportedTypes, flavorId]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 

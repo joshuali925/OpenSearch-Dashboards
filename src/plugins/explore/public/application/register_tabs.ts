@@ -4,6 +4,7 @@
  */
 
 import { LogsTab } from '../components/tabs/logs_tab';
+import { MetricsTab } from '../components/tabs/metrics_tab';
 import { FieldStatsTab } from '../components/tabs/field_stats_tab';
 import { TabDefinition, TabRegistryService } from '../services/tab_registry/tab_registry_service';
 import { ExploreServices } from '../types';
@@ -40,21 +41,27 @@ export const registerBuiltInTabs = (
 ) => {
   const isExperimentalEnabled = services.uiSettings.get(ENABLE_EXPERIMENTAL_SETTING, false);
 
-  // Register Logs Tab
-  const logsTabDefinition: TabDefinition = {
-    id: EXPLORE_LOGS_TAB_ID,
-    label: registryFlavor === ExploreFlavor.Traces ? 'Spans' : 'Logs',
-    flavor: [ExploreFlavor.Logs, ExploreFlavor.Metrics, ExploreFlavor.Traces],
-    order: 10,
-    supportedLanguages:
-      registryFlavor === ExploreFlavor.Metrics
-        ? [EXPLORE_DEFAULT_LANGUAGE, 'PROMQL']
-        : [EXPLORE_DEFAULT_LANGUAGE],
-
-    component: LogsTab,
-  };
-
-  tabRegistry.registerTab(logsTabDefinition);
+  if (registryFlavor === ExploreFlavor.Metrics) {
+    tabRegistry.registerTab({
+      id: 'metrics',
+      label: 'Table',
+      flavor: [ExploreFlavor.Metrics],
+      order: 10,
+      supportedLanguages: ['PROMQL'],
+      component: MetricsTab,
+    });
+  } else {
+    // Register Logs Tab
+    const logsTabDefinition: TabDefinition = {
+      id: EXPLORE_LOGS_TAB_ID,
+      label: registryFlavor === ExploreFlavor.Traces ? 'Spans' : 'Logs',
+      flavor: [ExploreFlavor.Logs, ExploreFlavor.Traces],
+      order: 10,
+      supportedLanguages: [EXPLORE_DEFAULT_LANGUAGE],
+      component: LogsTab,
+    };
+    tabRegistry.registerTab(logsTabDefinition);
+  }
 
   // Register Patterns Tab
   if (isExperimentalEnabled) {

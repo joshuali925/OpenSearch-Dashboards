@@ -244,8 +244,9 @@ export const executeQueries = createAsyncThunk<
     !results[dataTableCacheKey] ||
     dataTableQueryStatus?.status === QueryExecutionStatus.UNINITIALIZED;
   const needsHistogramQuery =
-    !results[histogramCacheKey] ||
-    histogramQueryStatus?.status === QueryExecutionStatus.UNINITIALIZED;
+    query.language !== 'PROMQL' &&
+    (!results[histogramCacheKey] ||
+      histogramQueryStatus?.status === QueryExecutionStatus.UNINITIALIZED);
 
   const promises = [];
   // Execute query without aggregations

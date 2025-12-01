@@ -15,6 +15,8 @@ export interface MetricsDataTableProps {
   searchResult?: IPrometheusSearchResult;
 }
 
+const emptyHits: NonNullable<IPrometheusSearchResult['instantHits']>['hits'] = [];
+
 export const MetricsDataTable: React.FC<MetricsDataTableProps> = ({ searchResult }) => {
   const { services } = useOpenSearchDashboards<ExploreServices>();
   const dateFormat = services.uiSettings.get(UI_SETTINGS.DATE_FORMAT);

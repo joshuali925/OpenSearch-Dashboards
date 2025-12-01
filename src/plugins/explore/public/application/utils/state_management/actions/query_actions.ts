@@ -13,7 +13,7 @@ import {
   IndexPatternField,
 } from '../../../../../../../../src/plugins/data/common';
 import { QueryExecutionStatus } from '../types';
-import { setResults, ISearchResult } from '../slices';
+import { setResults, ISearchResult, IPrometheusSearchResult } from '../slices';
 import { setIndividualQueryStatus } from '../slices/query_editor/query_editor_slice';
 import { ExploreServices } from '../../../../types';
 import {
@@ -488,11 +488,29 @@ const executeQueryBase = async (
       .ok({ json: rawResults });
 
     // Store RAW results in cache
-    let rawResultsWithMeta: ISearchResult = {
+    const dataFrame = searchSource.getDataFrame();
+    let rawResultsWithMeta: ISearchResult | IPrometheusSearchResult = {
       ...rawResults,
       elapsedMs: inspectorRequest.getTime()!,
-      fieldSchema: searchSource.getDataFrame()?.schema,
+      fieldSchema: dataFrame?.schema,
     };
+
+    // Prometheus table uses instant query results, visualization uses range query results
+    if (query.language === 'PROMQL' && dataFrame?.meta?.instantData) {
+      const instantData = dataFrame.meta.instantData;
+      const instantHits = instantData.rows.map((row: Record<string, unknown>) => ({
+        _index: dataFrame.name,
+        _source: row,
+      }));
+      rawResultsWithMeta = {
+        ...rawResultsWithMeta,
+        instantHits: {
+          hits: instantHits,
+          total: instantHits.length,
+        },
+        instantFieldSchema: instantData.schema,
+      };
+    }
 
     if (isHistogramQuery && histogramConfig) {
       rawResultsWithMeta = processRawResultsForHistogram(

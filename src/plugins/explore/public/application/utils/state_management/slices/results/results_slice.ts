@@ -14,11 +14,11 @@ export interface ISearchResult extends SearchResponse<any> {
 }
 
 export interface IPrometheusSearchResult extends ISearchResult {
-  instantHits: {
+  instantHits?: {
     hits: Array<{ _index?: string; _source: Record<string, unknown> }>;
     total: number;
   };
-  instantFieldSchema: Array<Partial<IFieldType>>;
+  instantFieldSchema?: Array<Partial<IFieldType>>;
 }
 
 export interface ResultsState {

@@ -8,11 +8,11 @@ import { getSuggestions } from './code_completion';
 import { IndexPattern } from '../../index_patterns';
 import { IDataPluginServices } from '../../types';
 import { QuerySuggestion } from '../../autocomplete';
-import * as utils from '../shared/utils';
 
 describe('promql code_completion', () => {
   describe('getSuggestions', () => {
     const mockIndexPattern = {
+      id: 'test-datasource-id',
       title: 'test-index',
       fields: [
         { name: 'field1', type: 'string' },
@@ -21,9 +21,27 @@ describe('promql code_completion', () => {
       ],
     } as IndexPattern;
 
-    const mockServices = {
+    const mockPrometheusClient = {
+      getMetricMetadata: jest.fn().mockResolvedValue({
+        prometheus_http_requests_total: [
+          {
+            type: 'counter',
+            help: 'Total number of HTTP requests',
+          },
+        ],
+      }),
+      getLabels: jest.fn().mockResolvedValue([]),
+      getLabelValues: jest.fn().mockResolvedValue([]),
+    };
+
+    const mockServices = ({
       appName: 'test-app',
-    } as IDataPluginServices;
+      data: {
+        resourceClientFactory: {
+          get: jest.fn().mockReturnValue(mockPrometheusClient),
+        },
+      },
+    } as unknown) as IDataPluginServices;
 
     const mockPosition = {
       lineNumber: 1,
@@ -75,43 +93,42 @@ describe('promql code_completion', () => {
 
       checkSuggestionsContain(result, {
         text: 'rate',
-        type: monaco.languages.CompletionItemKind.Keyword,
+        type: monaco.languages.CompletionItemKind.Function,
       });
     });
 
-    // TODO: update with a mocked metrics api call
     it('should suggest metrics when suggestMetrics is true', async () => {
       const result = await getSimpleSuggestions('');
 
       checkSuggestionsContain(result, {
         text: 'prometheus_http_requests_total',
-        type: monaco.languages.CompletionItemKind.Method,
+        type: monaco.languages.CompletionItemKind.Field,
       });
     });
 
-    it.skip('should suggest all labels when suggestLabels is true and NO metric specified', async () => {});
+    it('should set detail field on suggestions', async () => {
+      const result = await getSimpleSuggestions('');
 
-    it.skip('should suggest only necessary labels when suggestLabels is true and HAS metric specified', async () => {});
+      const functionSuggestion = result.find((s) => s.text === 'rate');
+      expect(functionSuggestion).toBeDefined();
+      expect(functionSuggestion?.detail).toBeDefined();
+      expect(typeof functionSuggestion?.detail).toBe('string');
+    });
 
-    it.skip('should suggest label values when suggestLabelValues is true', async () => {});
+    it('should set documentation field on all suggestions', async () => {
+      const result = await getSimpleSuggestions('');
 
-    it.skip('should suggest time range units', async () => {});
+      expect(result.length).toBeGreaterThan(0);
+      result.forEach((suggestion) => {
+        expect(suggestion.documentation).toBeDefined();
+        expect(typeof suggestion.documentation).toBe('string');
+      });
+    });
 
-    // TODO: mock like below for real calling of functions
+    it('should call prometheus client with indexPattern.id', async () => {
+      await getSimpleSuggestions('');
 
-    // it.skip('should suggest values after column names', async () => {
-    //   const mockedValues = ['value1', 'value2'];
-    //   jest.spyOn(utils, 'fetchColumnValues').mockResolvedValue(mockedValues);
-
-    //   const result = await getSimpleSuggestions('SELECT * FROM test-index WHERE field1 = ');
-
-    //   expect(utils.fetchColumnValues).toHaveBeenCalled();
-    //   mockedValues.forEach((val) => {
-    //     checkSuggestionsContain(result, {
-    //       text: val,
-    //       type: monaco.languages.CompletionItemKind.Value,
-    //     });
-    //   });
-    // });
+      expect(mockPrometheusClient.getMetricMetadata).toHaveBeenCalledWith(mockIndexPattern.id);
+    });
   });
 });

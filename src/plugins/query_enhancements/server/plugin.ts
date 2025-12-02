@@ -72,10 +72,10 @@ export class QueryEnhancementsPlugin
 
     data.search.registerSearchStrategy(SEARCH_STRATEGY.PPL, pplSearchStrategy);
     data.search.registerSearchStrategy(SEARCH_STRATEGY.PPL_RAW, pplRawSearchStrategy);
-    data.search.registerSearchStrategy(SEARCH_STRATEGY.PROMQL, promqlSearchStrategy);
     data.search.registerSearchStrategy(SEARCH_STRATEGY.SQL, sqlSearchStrategy);
     data.search.registerSearchStrategy(SEARCH_STRATEGY.SQL_ASYNC, sqlAsyncSearchStrategy);
     data.search.registerSearchStrategy(SEARCH_STRATEGY.PPL_ASYNC, pplAsyncSearchStrategy);
+    data.search.registerSearchStrategy(SEARCH_STRATEGY.PROMQL, promqlSearchStrategy);
 
     // @ts-ignore https://github.com/opensearch-project/openSearch-Dashboards/issues/4274
     core.http.registerRouteHandlerContext('query_assist', () => ({
@@ -104,6 +104,8 @@ export class QueryEnhancementsPlugin
       sqlasync: sqlAsyncSearchStrategy,
       pplasync: pplAsyncSearchStrategy,
     });
+
+    resourceManagerService.register('prometheus', prometheusManager);
 
     this.logger.info('queryEnhancements: Setup complete');
     return {

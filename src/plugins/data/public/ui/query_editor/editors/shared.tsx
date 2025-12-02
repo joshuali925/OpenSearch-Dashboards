@@ -67,7 +67,7 @@ export const SingleLineInput: React.FC<SingleLineInputProps> = ({
   value,
   onChange,
   editorDidMount,
-  languageProviders,
+  provideCompletionItems,
   prepend,
   footerItems,
   queryStatus,

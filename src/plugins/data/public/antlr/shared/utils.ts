@@ -250,7 +250,7 @@ export const formatFieldsToSuggestions = (
     return {
       text: field.name,
       type: monaco.languages.CompletionItemKind.Field,
-      labelDescription: `Field: ${field.esTypes?.[0] ?? field.type}`,
+      detail: `Field: ${field.esTypes?.[0] ?? field.type}`,
       ...(modifyInsertText && { insertText: modifyInsertText(field.name) }), // optionally include insert text if fn exists
       ...(sortTextImportance && { sortText: sortTextImportance }),
     };
@@ -345,7 +345,7 @@ const singleParseQuery = <
     cursorTokenIndex,
     cursor,
     query,
-    tree
+    parseTree
   );
 };
 

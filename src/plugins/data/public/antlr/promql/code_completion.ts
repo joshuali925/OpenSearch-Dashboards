@@ -33,12 +33,12 @@ export const getSuggestions = async ({
   selectionStart,
   selectionEnd,
   indexPattern,
-  dataset,
   position,
   query,
   services,
 }: QuerySuggestionGetFnArgs): Promise<QuerySuggestion[]> => {
-  if (!services || !services.appName || !indexPattern || !dataset) return [];
+  if (!services || !services.appName || !indexPattern) return [];
+
   try {
     const { lineNumber, column } = position || {};
     const suggestions = getOpenSearchPromQLAutoCompleteSuggestions(query, {
@@ -52,7 +52,7 @@ export const getSuggestions = async ({
     const finalSuggestions: MonacoCompatibleQuerySuggestion[] = [];
 
     if (suggestions.suggestMetrics) {
-      const metrics = await prometheusResourceClient.getMetricMetadata(dataset.id);
+      const metrics = await prometheusResourceClient.getMetricMetadata(indexPattern.id);
       finalSuggestions.push(
         ...Object.entries(metrics).map(([af, [{ type, help }]]) => ({
           text: `${af}`,
@@ -66,14 +66,14 @@ export const getSuggestions = async ({
     if (suggestions.suggestLabels || suggestions.suggestLabels === '') {
       // TODO: figure out why partial label being typed will always appear regardless of metric before it
       const labels = await prometheusResourceClient.getLabels(
-        dataset.id,
+        indexPattern.id!,
         suggestions.suggestLabels !== '' ? suggestions.suggestLabels : undefined
       );
       finalSuggestions.push(
         ...labels.map((af: string) => ({
           text: `${af}`,
           type: monaco.languages.CompletionItemKind.Class,
-          labelDescription: PromQLSuggestionItemDescriptions.LABEL,
+          detail: PromQLSuggestionItemDescriptions.LABEL,
         }))
       );
     }
@@ -82,14 +82,14 @@ export const getSuggestions = async ({
       // TODO: match what's already typed to the suggestion name so that it appears when being typed
       // TODO: update when we can get metric name passed in
       const labelValues = await prometheusResourceClient.getLabelValues(
-        dataset.id,
+        indexPattern.id!,
         suggestions.suggestLabelValues.label
       );
       finalSuggestions.push(
         ...labelValues.map((af: string) => ({
           text: `${af}`,
           type: monaco.languages.CompletionItemKind.Interface,
-          labelDescription: PromQLSuggestionItemDescriptions.VALUE,
+          detail: PromQLSuggestionItemDescriptions.VALUE,
         }))
       );
     }
@@ -99,7 +99,7 @@ export const getSuggestions = async ({
         ...prometheusDurationUnits.map((af) => ({
           text: `${af}`,
           type: monaco.languages.CompletionItemKind.Unit,
-          labelDescription: PromQLSuggestionItemDescriptions.DURATION,
+          detail: PromQLSuggestionItemDescriptions.DURATION,
           replacePosition: new monaco.Range(lineNumber, column, lineNumber, column), // remove duration token association
         }))
       );
@@ -110,7 +110,7 @@ export const getSuggestions = async ({
         ...functionNames.map((func) => ({
           text: func,
           type: monaco.languages.CompletionItemKind.Function,
-          labelDescription: PromQLSuggestionItemDescriptions.FUNCTION,
+          detail: PromQLSuggestionItemDescriptions.FUNCTION,
         }))
       );
     }
@@ -120,7 +120,7 @@ export const getSuggestions = async ({
         ...aggregationOperators.map((agg) => ({
           text: agg,
           type: monaco.languages.CompletionItemKind.Function,
-          labelDescription: PromQLSuggestionItemDescriptions.AGGREGATION_OPERATOR,
+          detail: PromQLSuggestionItemDescriptions.AGGREGATION_OPERATOR,
         }))
       );
     }
@@ -131,18 +131,15 @@ export const getSuggestions = async ({
           text: sk.value,
           type: monaco.languages.CompletionItemKind.Keyword,
           insertText: `${sk.value}`,
-          labelDescription: PromQLSuggestionItemDescriptions.KEYWORD,
+          detail: PromQLSuggestionItemDescriptions.KEYWORD,
         }))
       );
     }
 
     // add a link to prometheus documentation on every description
-    finalSuggestions.forEach(
-      (sugg) =>
-        (sugg.documentation = {
-          value: prometheusDocumentationWebsite,
-        })
-    );
+    finalSuggestions.forEach((sugg) => {
+      sugg.documentation = prometheusDocumentationWebsite;
+    });
 
     return finalSuggestions;
   } catch (error) {

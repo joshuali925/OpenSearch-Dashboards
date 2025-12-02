@@ -20,10 +20,7 @@ export interface DefaultInputProps extends React.JSX.IntrinsicAttributes {
     end?: any[];
   };
   headerRef?: React.RefObject<HTMLDivElement>;
-  languageProviders: {
-    provideCompletionItems: monaco.languages.CompletionItemProvider['provideCompletionItems'];
-    triggerCharacters: string[];
-  };
+  provideCompletionItems: monaco.languages.CompletionItemProvider['provideCompletionItems'];
   queryStatus?: QueryStatus;
 }
 
@@ -34,7 +31,7 @@ export const DefaultInput: React.FC<DefaultInputProps> = ({
   footerItems,
   editorDidMount,
   headerRef,
-  languageProviders,
+  provideCompletionItems,
   queryStatus,
 }) => {
   // Simple wrapper for editorDidMount

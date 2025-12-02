@@ -12,6 +12,7 @@ import { BaseConnectionManager } from './base_connection_manager';
 import { GetResourcesResponse } from '../clients/base_connection_client';
 import { URI } from '../../../common/constants';
 import { PromQLConnectionClient } from '../clients/promql_connection_client';
+import { ResourcesRequest } from '../../routes/resources/routes';
 
 const BASE_RESOURCE_API = 'api/v1';
 const BASE_ALERT_MANAGER_API = 'alertmanager/api/v2';
@@ -73,8 +74,7 @@ interface RulesQuery {
   resourceType: typeof PROMETHEUS_RESOURCE_TYPES.RULES;
   resourceName: undefined;
 }
-export type PrometheusResourceQuery = OpenSearchDashboardsRequest &
-  CommonQuery &
+type PrometheusResourceQuery = CommonQuery &
   (
     | LabelsQuery
     | LabelValuesQuery
@@ -120,7 +120,7 @@ class PrometheusManager extends BaseConnectionManager<OpenSearchClient> {
 
   getResources<R extends PrometheusResource>(
     context: RequestHandlerContext,
-    request: PrometheusResourceQuery,
+    request: OpenSearchDashboardsRequest,
     query: PrometheusResourceQuery
   ): Promise<GetResourcesResponse<R>> {
     return this.getClient(context, request).getResources<R>({
@@ -129,11 +129,16 @@ class PrometheusManager extends BaseConnectionManager<OpenSearchClient> {
     });
   }
 
-  handlePostRequest(
-    _context: RequestHandlerContext,
-    _request: OpenSearchDashboardsRequest
-  ): Promise<any> {
-    throw new Error('POST requests are not supported for Prometheus manager');
+  handlePostRequest(context: RequestHandlerContext, request: ResourcesRequest) {
+    const { id: dataSourceName } = request.body.connection;
+    const { type: resourceType, name: resourceName } = request.body.resource;
+    const query = {
+      dataSourceName,
+      resourceType,
+      resourceName,
+      query: {},
+    } as PrometheusResourceQuery;
+    return this.getResources(context, request, query);
   }
 }
 

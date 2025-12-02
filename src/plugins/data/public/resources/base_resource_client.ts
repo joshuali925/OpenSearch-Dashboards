@@ -5,8 +5,6 @@
 
 import { HttpSetup } from 'opensearch-dashboards/public';
 
-const BASE_API = 'api/enhancements';
-
 export class BaseResourceClient {
   private http: HttpSetup;
   private dataConnectionType: string;
@@ -21,9 +19,18 @@ export class BaseResourceClient {
     resourceType: string,
     resourceName?: string
   ): Promise<T> {
-    const resourceNameSuffix = resourceName ? `/${resourceName}` : '';
-    const path = `/${BASE_API}/${this.dataConnectionType}/${dataConnectionId}/resources/${resourceType}${resourceNameSuffix}`;
-    const response = await this.http.get(path);
+    const response = await this.http.post('/api/enhancements/resources', {
+      body: JSON.stringify({
+        connection: {
+          id: dataConnectionId,
+          type: this.dataConnectionType,
+        },
+        resource: {
+          type: resourceType,
+          name: resourceName,
+        },
+      }),
+    });
     return response.data;
   }
 }

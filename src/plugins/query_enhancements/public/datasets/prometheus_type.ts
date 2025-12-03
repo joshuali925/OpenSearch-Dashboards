@@ -4,6 +4,7 @@
  */
 
 import {
+  CORE_SIGNAL_TYPES,
   DATA_STRUCTURE_META_TYPES,
   DataStructure,
   DataStructureCustomMeta,
@@ -31,6 +32,7 @@ export const prometheusTypeConfig: DatasetTypeConfig = {
       type: DATASET.PROMETHEUS,
       language: 'PROMQL',
       timeFieldName: patternMeta?.timeFieldName || 'Time',
+      signalType: CORE_SIGNAL_TYPES.METRICS,
       dataSource: connection.parent
         ? {
             id: connection.parent.id,

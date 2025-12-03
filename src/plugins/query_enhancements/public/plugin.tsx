@@ -267,8 +267,8 @@ export class QueryEnhancementsPlugin
       showDocLinks: false,
       showVisualization: true,
       editor: createEditor(SingleLineInput, null, pplControls, DefaultInput),
-      editorSupportedAppNames: ['discover'],
-      supportedAppNames: ['explore/metrics'],
+      editorSupportedAppNames: ['explore'],
+      supportedAppNames: ['explore'],
       sampleQueries: [
         {
           title: i18n.translate('queryEnhancements.promqlSampleQuery.upMetric', {

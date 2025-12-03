@@ -767,4 +767,33 @@ describe('redux_persistence', () => {
       });
     });
   });
+
+  describe('language field preservation', () => {
+    it('should preserve language field from URL dataset in loadReduxState', async () => {
+      const mockQueryState = {
+        query: 'rate(http_requests_total[5m])',
+        language: 'PromQL',
+        dataset: {
+          id: 'prometheus-ds',
+          title: 'Prometheus',
+          type: 'PROMETHEUS',
+          language: 'PromQL',
+        },
+      };
+
+      (mockServices.osdUrlStateStorage!.get as jest.Mock)
+        .mockReturnValueOnce(mockQueryState)
+        .mockReturnValueOnce(null);
+
+      (mockServices.data.dataViews!.get as jest.Mock).mockResolvedValue({
+        id: 'prometheus-ds',
+        title: 'Prometheus',
+        signalType: undefined,
+      });
+
+      const result = await loadReduxState(mockServices);
+
+      expect(result.query.dataset?.language).toBe('PromQL');
+    });
+  });
 });

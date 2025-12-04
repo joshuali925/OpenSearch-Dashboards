@@ -8,6 +8,40 @@ import { getSuggestions } from './code_completion';
 import { IndexPattern } from '../../index_patterns';
 import { IDataPluginServices } from '../../types';
 import { QuerySuggestion } from '../../autocomplete';
+import * as sharedUtils from '../shared/utils';
+
+// Mock parseQuery in shared/utils
+jest.mock('../shared/utils', () => ({
+  parseQuery: jest.fn(),
+}));
+
+// Ensure Monaco languages constants are available in tests
+jest.mock('@osd/monaco', () => {
+  const actual = jest.requireActual('@osd/monaco');
+  return {
+    ...actual,
+    monaco: {
+      ...actual.monaco,
+      languages: {
+        ...actual.monaco?.languages,
+        CompletionItemKind: {
+          Function: 1,
+          Field: 4,
+          Class: 6,
+          Interface: 7,
+          Unit: 12,
+          Keyword: 14,
+        },
+        CompletionItemInsertTextRule: {
+          InsertAsSnippet: 4,
+        },
+      },
+      Range: actual.monaco?.Range || jest.fn(),
+    },
+  };
+});
+
+const mockParseQuery = sharedUtils.parseQuery as jest.Mock;
 
 describe('promql code_completion', () => {
   describe('getSuggestions', () => {
@@ -47,6 +81,34 @@ describe('promql code_completion', () => {
       lineNumber: 1,
       column: 1,
     } as monaco.Position;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+
+      // Re-setup ALL mocks that were cleared
+      (mockServices.data.resourceClientFactory.get as jest.Mock).mockReturnValue(
+        mockPrometheusClient
+      );
+      mockPrometheusClient.getMetricMetadata.mockResolvedValue({
+        prometheus_http_requests_total: [
+          {
+            type: 'counter',
+            help: 'Total number of HTTP requests',
+          },
+        ],
+      });
+      mockPrometheusClient.getLabels.mockResolvedValue([]);
+      mockPrometheusClient.getLabelValues.mockResolvedValue([]);
+
+      // Default mock: return suggestions for metrics, functions, and aggregations
+      mockParseQuery.mockReturnValue({
+        errors: [],
+        suggestKeywords: [],
+        suggestMetrics: true,
+        suggestFunctionNames: true,
+        suggestAggregationOperators: true,
+      });
+    });
 
     const getSimpleSuggestions = async (
       query: string,
@@ -123,6 +185,17 @@ describe('promql code_completion', () => {
         expect(suggestion.documentation).toBeDefined();
         expect(typeof suggestion.documentation).toBe('string');
       });
+    });
+
+    it('should include insertText snippet for function suggestions', async () => {
+      const result = await getSimpleSuggestions('');
+
+      const functionSuggestion = result.find((s) => s.text === 'rate');
+      expect(functionSuggestion).toBeDefined();
+      expect(functionSuggestion?.insertText).toBe('rate($0)');
+      expect(functionSuggestion?.insertTextRules).toBe(
+        monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet
+      );
     });
 
     it('should call prometheus client with indexPattern.id', async () => {

@@ -5,6 +5,8 @@
 
 export const prometheusDurationUnits = ['ms', 's', 'm', 'h', 'd', 'w', 'y'];
 
+export const promqlTriggerCharacters = [' ', '=', "'", '"', '`', '{', '(', ','];
+
 export const prometheusDocumentationWebsite =
   '[Prometheus Documentation](https://prometheus.io/docs/prometheus/latest/querying/basics/)';
 

@@ -108,6 +108,7 @@ import {
   getSimplifiedPPLSuggestions,
 } from './antlr/opensearch_ppl/code_completion';
 import { getSuggestions as getPromQLSuggestions } from './antlr/promql/code_completion';
+import { promqlTriggerCharacters } from './antlr/promql/constants';
 import { createStorage, DataStorage, UI_SETTINGS } from '../common';
 import { ResourceClientFactory } from './resources/resource_client_factory';
 
@@ -198,7 +199,11 @@ export class DataPublicPlugin
     autoComplete.addQuerySuggestionProvider('PPL', getPPLSuggestions);
     autoComplete.addQuerySuggestionProvider('PPL_Simplified', getSimplifiedPPLSuggestions); // Support implicit PPL queries that don't necessarily start with source = datasetName
     autoComplete.addQuerySuggestionProvider('AI', getPromptSuggestions);
-    autoComplete.addQuerySuggestionProvider('PROMQL', getPromQLSuggestions);
+    autoComplete.addQuerySuggestionProvider(
+      'PROMQL',
+      getPromQLSuggestions,
+      promqlTriggerCharacters
+    );
 
     const useNewSavedQueriesUI =
       core.uiSettings.get(UI_SETTINGS.QUERY_ENHANCEMENTS_ENABLED) &&

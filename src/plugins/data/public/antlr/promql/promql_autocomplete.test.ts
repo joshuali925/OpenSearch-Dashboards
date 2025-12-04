@@ -38,23 +38,23 @@ describe('processVisitedRules', () => {
 
   it('should set the correct suggestions based on the rules visited', () => {
     const mockRules = new Map();
-    mockRules.set(PromQLParser.RULE_metricName, {});
+    mockRules.set(PromQLParser.RULE_metricName, { ruleList: [] });
     const tokenStream = createTokenStream([1]);
 
     const result = processVisitedRules(mockRules, 2, tokenStream);
-    expect(result.suggestMetrics).toBeDefined();
-    expect(result.shouldSuggestLabels).toBe(false);
+    expect(result.suggestMetrics).toBe(true);
+    expect(result.shouldSuggestLabels).toBeUndefined();
   });
 
   it('should handle multiple rules correctly', () => {
     const mockRules = new Map();
-    mockRules.set(PromQLParser.RULE_labelValue, {});
-    mockRules.set(PromQLParser.RULE_labelName, {});
+    mockRules.set(PromQLParser.RULE_labelValue, { ruleList: [] });
+    mockRules.set(PromQLParser.RULE_labelName, { ruleList: [PromQLParser.RULE_labelMatcher] });
     const tokenStream = createTokenStream([1]);
 
     const result = processVisitedRules(mockRules, 2, tokenStream);
-    expect(result.shouldSuggestLabelValues).toBeDefined();
-    expect(result.shouldSuggestLabels).toBe(true);
+    expect(result.shouldSuggestLabelValues).toBe(true);
+    expect(result.shouldSuggestLabels).toBe(0); // LabelOrigin.LabelMatcher = 0
   });
 
   describe.skip('Test Specific Rules', () => {

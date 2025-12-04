@@ -111,6 +111,8 @@ export const getSuggestions = async ({
           text: func,
           type: monaco.languages.CompletionItemKind.Function,
           detail: PromQLSuggestionItemDescriptions.FUNCTION,
+          insertText: `${func}($0)`,
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         }))
       );
     }
@@ -121,6 +123,8 @@ export const getSuggestions = async ({
           text: agg,
           type: monaco.languages.CompletionItemKind.Function,
           detail: PromQLSuggestionItemDescriptions.AGGREGATION_OPERATOR,
+          insertText: `${agg}($0)`,
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         }))
       );
     }

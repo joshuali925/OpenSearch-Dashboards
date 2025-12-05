@@ -107,7 +107,10 @@ import {
   getDefaultSuggestions as getPPLSuggestions,
   getSimplifiedPPLSuggestions,
 } from './antlr/opensearch_ppl/code_completion';
+import { getSuggestions as getPromQLSuggestions } from './antlr/promql/code_completion';
+import { promqlTriggerCharacters } from './antlr/promql/constants';
 import { createStorage, DataStorage, UI_SETTINGS } from '../common';
+import { ResourceClientFactory } from './resources/resource_client_factory';
 
 declare module '../../ui_actions/public' {
   export interface ActionContextMapping {
@@ -196,6 +199,11 @@ export class DataPublicPlugin
     autoComplete.addQuerySuggestionProvider('PPL', getPPLSuggestions);
     autoComplete.addQuerySuggestionProvider('PPL_Simplified', getSimplifiedPPLSuggestions); // Support implicit PPL queries that don't necessarily start with source = datasetName
     autoComplete.addQuerySuggestionProvider('AI', getPromptSuggestions);
+    autoComplete.addQuerySuggestionProvider(
+      'PROMQL',
+      getPromQLSuggestions,
+      promqlTriggerCharacters
+    );
 
     const useNewSavedQueriesUI =
       core.uiSettings.get(UI_SETTINGS.QUERY_ENHANCEMENTS_ENABLED) &&
@@ -333,6 +341,7 @@ export class DataPublicPlugin
         dataSourceService,
         dataSourceFactory,
       },
+      resourceClientFactory: new ResourceClientFactory(core.http),
     };
 
     registerDefaultDataSource(dataServices);

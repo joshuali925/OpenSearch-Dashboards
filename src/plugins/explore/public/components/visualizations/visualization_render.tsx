@@ -12,12 +12,12 @@ import { TableVis } from './table/table_vis';
 import { defaultTableChartStyles, TableChartStyle } from './table/table_vis_config';
 import { convertStringsToMappings } from './visualization_builder_utils';
 import { ExecutionContextSearch } from '../../../../expressions/common/';
-import { toExpression } from './utils/to_expression';
 import { ExpressionRendererEvent, ExpressionsStart } from '../../../../expressions/public';
 import { VisualizationEmptyState } from './visualization_empty_state';
 import { visualizationRegistry } from './visualization_registry';
 import { RenderChartConfig } from './types';
 import { opensearchFilters, TimeRange } from '../../../../data/public';
+import { ChartRenderer } from './chart_renderer';
 
 interface Props {
   data$: Observable<VisData | undefined>;
@@ -154,16 +154,14 @@ export const VisualizationRender = ({
 
   const hasSelectionMapping = Object.keys(visConfig?.axesMapping ?? {}).length !== 0;
   if (hasSelectionMapping) {
-    if (!ExpressionRenderer) {
-      return null;
-    }
-    const expression = toExpression(searchContext, spec);
     return (
-      <ExpressionRenderer
-        key={JSON.stringify(searchContext) + expression}
-        expression={expression}
+      <ChartRenderer
+        chartType={visConfig?.type}
+        spec={spec}
         searchContext={searchContext}
-        onEvent={onExpressionEvent}
+        ExpressionRenderer={ExpressionRenderer}
+        onSelectTimeRange={onSelectTimeRange}
+        onExpressionEvent={onExpressionEvent}
       />
     );
   }

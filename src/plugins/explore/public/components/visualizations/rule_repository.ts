@@ -60,6 +60,10 @@ import {
   createSingleHistogramChart,
   createNumericalHistogramChart,
 } from './histogram/to_expression';
+import { createEchartsLineSpec } from './echarts_line/to_spec';
+import { createEchartsBarSpec } from './echarts_bar/to_spec';
+import { createEchartsGaugeSpec } from './echarts_gauge/to_spec';
+import { createEchartsMetricSpec } from './echarts_metric/to_spec';
 
 type RuleMatchIndex = [number, number, number];
 
@@ -101,9 +105,12 @@ const oneMetricOneDateRule: VisualizationRule = {
     compare([1, 0, 1], [numerical.length, categorical.length, date.length]),
   chartTypes: [
     { ...CHART_METADATA.line, priority: 100 },
+    { ...CHART_METADATA.echarts_line, priority: 95 },
     { ...CHART_METADATA.area, priority: 80 },
     { ...CHART_METADATA.bar, priority: 60 },
+    { ...CHART_METADATA.echarts_bar, priority: 55 },
     { ...CHART_METADATA.metric, priority: 40 },
+    { ...CHART_METADATA.echarts_metric, priority: 35 },
   ],
   toSpec: (
     transformedData,
@@ -153,6 +160,35 @@ const oneMetricOneDateRule: VisualizationRule = {
           styleOptions as MetricChartStyle,
           axisColumnMappings
         );
+      case 'echarts_line':
+        return createEchartsLineSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as LineChartStyle,
+          axisColumnMappings,
+          timeRange
+        );
+      case 'echarts_bar':
+        return createEchartsBarSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as BarChartStyle,
+          axisColumnMappings,
+          timeRange
+        );
+      case 'echarts_metric':
+        return createEchartsMetricSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as MetricChartStyle,
+          axisColumnMappings
+        );
       default:
         return createSimpleLineChart(
           transformedData,
@@ -175,7 +211,9 @@ const twoMetricOneDateRule: VisualizationRule = {
     compare([2, 0, 1], [numerical.length, categorical.length, date.length]),
   chartTypes: [
     { ...CHART_METADATA.line, priority: 100 },
+    { ...CHART_METADATA.echarts_line, priority: 95 },
     { ...CHART_METADATA.bar, priority: 80 },
+    { ...CHART_METADATA.echarts_bar, priority: 75 },
     { ...CHART_METADATA.area, priority: 60 },
   ],
   toSpec: (
@@ -230,6 +268,26 @@ const twoMetricOneDateRule: VisualizationRule = {
           axisColumnMappings,
           timeRange
         );
+      case 'echarts_line':
+        return createEchartsLineSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as LineChartStyle,
+          axisColumnMappings,
+          timeRange
+        );
+      case 'echarts_bar':
+        return createEchartsBarSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as BarChartStyle,
+          axisColumnMappings,
+          timeRange
+        );
       default:
         return createLineBarChart(
           transformedData,
@@ -252,8 +310,10 @@ const oneMetricOneCateOneDateRule: VisualizationRule = {
     compare([1, 1, 1], [numerical.length, categorical.length, date.length]),
   chartTypes: [
     { ...CHART_METADATA.line, priority: 100 },
+    { ...CHART_METADATA.echarts_line, priority: 95 },
     { ...CHART_METADATA.area, priority: 80 },
     { ...CHART_METADATA.bar, priority: 60 },
+    { ...CHART_METADATA.echarts_bar, priority: 55 },
     { ...CHART_METADATA.state_timeline, priority: 40 },
   ],
   toSpec: (
@@ -306,6 +366,26 @@ const oneMetricOneCateOneDateRule: VisualizationRule = {
           dateColumns,
           styleOptions as StateTimeLineChartStyle,
           axisColumnMappings
+        );
+      case 'echarts_line':
+        return createEchartsLineSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as LineChartStyle,
+          axisColumnMappings,
+          timeRange
+        );
+      case 'echarts_bar':
+        return createEchartsBarSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as BarChartStyle,
+          axisColumnMappings,
+          timeRange
         );
       default:
         return createMultiLineChart(
@@ -559,9 +639,11 @@ const oneMetricOneCateRule: VisualizationRule = {
     compare([1, 1, 0], [numerical.length, categorical.length, date.length]),
   chartTypes: [
     { ...CHART_METADATA.bar, priority: 100 },
+    { ...CHART_METADATA.echarts_bar, priority: 95 },
     { ...CHART_METADATA.bar_gauge, priority: 80 },
     { ...CHART_METADATA.pie, priority: 60 },
     { ...CHART_METADATA.line, priority: 40 },
+    { ...CHART_METADATA.echarts_line, priority: 35 },
     { ...CHART_METADATA.area, priority: 20 },
   ],
   toSpec: (
@@ -619,6 +701,24 @@ const oneMetricOneCateRule: VisualizationRule = {
           styleOptions as AreaChartStyle,
           axisColumnMappings
         );
+      case 'echarts_bar':
+        return createEchartsBarSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as BarChartStyle,
+          axisColumnMappings
+        );
+      case 'echarts_line':
+        return createEchartsLineSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as LineChartStyle,
+          axisColumnMappings
+        );
       default:
         return createBarSpec(
           transformedData,
@@ -640,7 +740,9 @@ const oneMetricRule: VisualizationRule = {
     compare([1, 0, 0], [numerical.length, categorical.length, date.length]),
   chartTypes: [
     { ...CHART_METADATA.metric, priority: 100 },
+    { ...CHART_METADATA.echarts_metric, priority: 95 },
     { ...CHART_METADATA.gauge, priority: 80 },
+    { ...CHART_METADATA.echarts_gauge, priority: 75 },
     { ...CHART_METADATA.histogram, priority: 60 },
     { ...CHART_METADATA.bar, priority: 40 },
   ],
@@ -663,6 +765,15 @@ const oneMetricRule: VisualizationRule = {
           styleOptions as MetricChartStyle,
           axisColumnMappings
         );
+      case 'echarts_metric':
+        return createEchartsMetricSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as MetricChartStyle,
+          axisColumnMappings
+        );
       case 'gauge':
         return createGauge(
           transformedData,
@@ -677,6 +788,15 @@ const oneMetricRule: VisualizationRule = {
           transformedData,
           numericalColumns,
           styleOptions as HistogramChartStyle,
+          axisColumnMappings
+        );
+      case 'echarts_gauge':
+        return createEchartsGaugeSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as GaugeChartStyle,
           axisColumnMappings
         );
       default:

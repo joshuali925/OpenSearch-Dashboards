@@ -175,6 +175,14 @@ export class VisualizationRegistry {
         return createBarGaugeConfig();
       case 'histogram':
         return createHistogramConfig();
+      case 'echarts_line':
+        return createLineConfig();
+      case 'echarts_bar':
+        return createBarConfig();
+      case 'echarts_gauge':
+        return createGaugeConfig();
+      case 'echarts_metric':
+        return createMetricConfig();
       default:
         return;
     }

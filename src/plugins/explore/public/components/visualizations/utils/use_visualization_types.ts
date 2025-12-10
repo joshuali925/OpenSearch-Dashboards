@@ -36,7 +36,11 @@ export type ChartType =
   | 'gauge'
   | 'state_timeline'
   | 'bar_gauge'
-  | 'histogram';
+  | 'histogram'
+  | 'echarts_line'
+  | 'echarts_bar'
+  | 'echarts_gauge'
+  | 'echarts_metric';
 
 export interface ChartStylesMapping {
   line: LineChartStyle;
@@ -51,6 +55,12 @@ export interface ChartStylesMapping {
   state_timeline: StateTimeLineChartStyle;
   bar_gauge: BarGaugeChartStyle;
   histogram: HistogramChartStyle;
+  // ECharts types use the same styles as their Vega counterparts
+  // This enables transparent renderer switching
+  echarts_line: LineChartStyle;
+  echarts_bar: BarChartStyle;
+  echarts_gauge: GaugeChartStyle;
+  echarts_metric: MetricChartStyle;
 }
 
 export type StyleOptions =

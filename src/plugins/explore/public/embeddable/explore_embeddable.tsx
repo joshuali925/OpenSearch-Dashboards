@@ -52,6 +52,7 @@ import {
 import { normalizeResultRows } from '../components/visualizations/utils/normalize_result_rows';
 import { visualizationRegistry } from '../components/visualizations/visualization_registry';
 import { prepareQueryForLanguage } from '../application/utils/languages';
+import { getRendererType } from '../components/visualizations/chart_renderer';
 
 export interface SearchProps {
   description?: string;
@@ -87,6 +88,7 @@ export interface SearchProps {
     rows: Array<Record<string, any>>;
     columns: VisColumn[];
   };
+  echartsSpec?: Record<string, any>;
 }
 
 interface ExploreEmbeddableConfig {
@@ -421,8 +423,17 @@ export class ExploreEmbeddable
             selectedChartType,
             axesMapping
           );
-          const exp = toExpression(searchContext, spec);
-          this.searchProps.expression = exp;
+
+          // Determine renderer type based on chart type, not spec marker
+          // e.g., 'echarts_line' -> ECharts, 'line' -> Vega
+          if (getRendererType(selectedChartType) === 'echarts') {
+            this.searchProps.echartsSpec = spec;
+            this.searchProps.expression = undefined;
+          } else {
+            const exp = toExpression(searchContext, spec);
+            this.searchProps.expression = exp;
+            this.searchProps.echartsSpec = undefined;
+          }
         }
       }
     }

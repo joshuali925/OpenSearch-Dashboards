@@ -48,9 +48,7 @@ export const createEchartsBarSpec = (
     // Group by color field
     seriesData = colorValues.map((colorVal) => {
       const data = xValues.map((xVal) => {
-        const row = transformedData.find(
-          (r) => r[xField!] === xVal && r[colorField] === colorVal
-        );
+        const row = transformedData.find((r) => r[xField!] === xVal && r[colorField] === colorVal);
         return row ? row[metricField!] : 0;
       });
       return {
@@ -109,7 +107,7 @@ export const createEchartsBarSpec = (
   const categoryAxisConfig = {
     type: 'category',
     data: xValues.map((v) => (isXTemporal ? new Date(v).toLocaleString() : String(v))),
-    name: isHorizontal ? (styles.yAxisTitle || metricName) : (styles.xAxisTitle || xName),
+    name: isHorizontal ? styles.yAxisTitle || metricName : styles.xAxisTitle || xName,
     nameLocation: 'middle',
     nameGap: 30,
     axisLabel: {
@@ -120,7 +118,7 @@ export const createEchartsBarSpec = (
 
   const valueAxisConfig = {
     type: 'value',
-    name: isHorizontal ? (styles.xAxisTitle || xName) : (styles.yAxisTitle || metricName),
+    name: isHorizontal ? styles.xAxisTitle || xName : styles.yAxisTitle || metricName,
     nameLocation: 'middle',
     nameGap: 50,
     axisLabel: {
@@ -134,6 +132,13 @@ export const createEchartsBarSpec = (
   const option: any = {
     // Mark this as an ECharts spec
     __echarts__: true,
+    // Store metadata for time range brush functionality
+    __metadata__: {
+      isXTemporal,
+      xField,
+      // Store original timestamp values for mapping brush selection back to time range
+      xValues: isXTemporal ? xValues.map((v) => new Date(v).getTime()) : undefined,
+    },
     title: styles.titleOptions?.show
       ? {
           text: styles.titleOptions?.titleName || `${metricName} Chart`,
@@ -146,16 +151,17 @@ export const createEchartsBarSpec = (
       axisPointer: {
         type: 'shadow',
       },
-      formatter: styles.stackMode === 'percent'
-        ? (params: any) => {
-            const items = Array.isArray(params) ? params : [params];
-            let result = items[0]?.axisValueLabel || '';
-            items.forEach((item: any) => {
-              result += `<br/>${item.marker} ${item.seriesName}: ${item.value}%`;
-            });
-            return result;
-          }
-        : undefined,
+      formatter:
+        styles.stackMode === 'percent'
+          ? (params: any) => {
+              const items = Array.isArray(params) ? params : [params];
+              let result = items[0]?.axisValueLabel || '';
+              items.forEach((item: any) => {
+                result += `<br/>${item.marker} ${item.seriesName}: ${item.value}%`;
+              });
+              return result;
+            }
+          : undefined,
     },
     legend: legendConfig,
     grid: {
@@ -165,6 +171,27 @@ export const createEchartsBarSpec = (
       top: styles.titleOptions?.show ? '15%' : '10%',
       containLabel: true,
     },
+    // Add dataZoom for brush selection on temporal x-axis (only for vertical bars)
+    ...(isXTemporal &&
+      !isHorizontal && {
+        dataZoom: [
+          {
+            type: 'inside',
+            xAxisIndex: 0,
+            filterMode: 'none',
+            zoomOnMouseWheel: false,
+            moveOnMouseMove: false,
+            moveOnMouseWheel: false,
+          },
+        ],
+        brush: {
+          toolbox: ['lineX'],
+          brushType: 'lineX',
+          xAxisIndex: 0,
+          throttleType: 'debounce',
+          throttleDelay: 300,
+        },
+      }),
     xAxis: isHorizontal ? valueAxisConfig : categoryAxisConfig,
     yAxis: isHorizontal ? categoryAxisConfig : valueAxisConfig,
     series,

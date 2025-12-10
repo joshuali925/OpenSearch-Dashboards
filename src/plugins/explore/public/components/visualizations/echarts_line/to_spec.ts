@@ -143,6 +143,11 @@ export const createEchartsLineSpec = (
   const option: any = {
     // Mark this as an ECharts spec
     __echarts__: true,
+    // Store metadata for time range brush functionality
+    __metadata__: {
+      isXTemporal,
+      xField,
+    },
     title: styles.titleOptions?.show
       ? {
           text: styles.titleOptions?.titleName || `${metricName} Chart`,
@@ -164,6 +169,26 @@ export const createEchartsLineSpec = (
       top: styles.titleOptions?.show ? '15%' : '10%',
       containLabel: true,
     },
+    // Add dataZoom for brush selection on temporal x-axis
+    ...(isXTemporal && {
+      dataZoom: [
+        {
+          type: 'inside',
+          xAxisIndex: 0,
+          filterMode: 'none',
+          zoomOnMouseWheel: false,
+          moveOnMouseMove: false,
+          moveOnMouseWheel: false,
+        },
+      ],
+      brush: {
+        toolbox: ['lineX'],
+        brushType: 'lineX',
+        xAxisIndex: 0,
+        throttleType: 'debounce',
+        throttleDelay: 300,
+      },
+    }),
     xAxis: {
       type: isXTemporal ? 'time' : 'category',
       name: styles.xAxisTitle || xName,

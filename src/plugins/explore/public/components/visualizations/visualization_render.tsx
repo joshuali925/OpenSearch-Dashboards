@@ -157,7 +157,14 @@ export const VisualizationRender = ({
   if (hasSelectionMapping) {
     // Check if this is an ECharts spec
     if (isEchartsSpec(spec)) {
-      return <EchartsRenderer option={spec} height="100%" width="100%" />;
+      return (
+        <EchartsRenderer
+          option={spec}
+          height="100%"
+          width="100%"
+          onSelectTimeRange={onSelectTimeRange}
+        />
+      );
     }
 
     // Otherwise, use Vega/Expression renderer

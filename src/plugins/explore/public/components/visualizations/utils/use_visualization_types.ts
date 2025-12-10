@@ -23,6 +23,18 @@ import {
 } from '../state_timeline/state_timeline_config';
 import { BarGaugeChartStyle, BarGaugeChartStyleOptions } from '../bar_gauge/bar_gauge_vis_config';
 import { HistogramChartStyle, HistogramChartStyleOptions } from '../histogram/histogram_vis_config';
+import {
+  EchartsLineChartStyle,
+  EchartsLineChartStyleOptions,
+} from '../echarts_line/echarts_line_vis_config';
+import {
+  EchartsBarChartStyle,
+  EchartsBarChartStyleOptions,
+} from '../echarts_bar/echarts_bar_vis_config';
+import {
+  EchartsGaugeChartStyle,
+  EchartsGaugeChartStyleOptions,
+} from '../echarts_gauge/echarts_gauge_vis_config';
 
 export type ChartType =
   | 'line'
@@ -36,7 +48,10 @@ export type ChartType =
   | 'gauge'
   | 'state_timeline'
   | 'bar_gauge'
-  | 'histogram';
+  | 'histogram'
+  | 'echarts_line'
+  | 'echarts_bar'
+  | 'echarts_gauge';
 
 export interface ChartStylesMapping {
   line: LineChartStyle;
@@ -51,6 +66,9 @@ export interface ChartStylesMapping {
   state_timeline: StateTimeLineChartStyle;
   bar_gauge: BarGaugeChartStyle;
   histogram: HistogramChartStyle;
+  echarts_line: EchartsLineChartStyle;
+  echarts_bar: EchartsBarChartStyle;
+  echarts_gauge: EchartsGaugeChartStyle;
 }
 
 export type StyleOptions =
@@ -65,7 +83,10 @@ export type StyleOptions =
   | GaugeChartStyleOptions
   | StateTimeLineChartStyleOptions
   | BarGaugeChartStyleOptions
-  | HistogramChartStyleOptions;
+  | HistogramChartStyleOptions
+  | EchartsLineChartStyleOptions
+  | EchartsBarChartStyleOptions
+  | EchartsGaugeChartStyleOptions;
 
 export type ChartStyles = ChartStylesMapping[ChartType];
 

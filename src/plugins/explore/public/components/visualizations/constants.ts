@@ -21,6 +21,10 @@ export const CHART_METADATA: Record<ChartType, ChartMetadata> = {
   bar_gauge: { type: 'bar_gauge', name: 'Bar Gauge', icon: 'visBarHorizontal' },
   // TODO add histogram icons
   histogram: { type: 'histogram', name: 'Histogram', icon: 'visBarVertical' },
+  // ECharts visualizations
+  echarts_line: { type: 'echarts_line', name: 'Line (ECharts)', icon: 'visLine' },
+  echarts_bar: { type: 'echarts_bar', name: 'Bar (ECharts)', icon: 'visBarVertical' },
+  echarts_gauge: { type: 'echarts_gauge', name: 'Gauge (ECharts)', icon: 'visGauge' },
 };
 
 // Map both OSD_FIELD_TYPES and OPENSEARCH_FIELD_TYPES to VisFieldType

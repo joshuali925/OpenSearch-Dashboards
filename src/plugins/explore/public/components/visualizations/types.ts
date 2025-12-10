@@ -222,6 +222,17 @@ export interface Threshold {
   color: string;
 }
 
+export enum GaugeThresholdMode {
+  Absolute = 'absolute',
+  Percentage = 'percentage',
+}
+
+export interface GaugeThresholdOptions {
+  mode: GaugeThresholdMode;
+  thresholds: Threshold[];
+  baseColor: string;
+}
+
 export enum AggregationType {
   SUM = 'sum',
   MEAN = 'mean',

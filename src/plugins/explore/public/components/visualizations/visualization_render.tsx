@@ -18,6 +18,7 @@ import { VisualizationEmptyState } from './visualization_empty_state';
 import { visualizationRegistry } from './visualization_registry';
 import { RenderChartConfig } from './types';
 import { opensearchFilters, TimeRange } from '../../../../data/public';
+import { EchartsRenderer, isEchartsSpec } from './echarts_renderer';
 
 interface Props {
   data$: Observable<VisData | undefined>;
@@ -154,6 +155,12 @@ export const VisualizationRender = ({
 
   const hasSelectionMapping = Object.keys(visConfig?.axesMapping ?? {}).length !== 0;
   if (hasSelectionMapping) {
+    // Check if this is an ECharts spec
+    if (isEchartsSpec(spec)) {
+      return <EchartsRenderer option={spec} height="100%" width="100%" />;
+    }
+
+    // Otherwise, use Vega/Expression renderer
     if (!ExpressionRenderer) {
       return null;
     }

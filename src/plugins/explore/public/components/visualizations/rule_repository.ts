@@ -63,9 +63,11 @@ import {
 import { createEchartsLineSpec } from './echarts_line/to_spec';
 import { createEchartsBarSpec } from './echarts_bar/to_spec';
 import { createEchartsGaugeSpec } from './echarts_gauge/to_spec';
+import { createEchartsMetricSpec } from './echarts_metric/to_spec';
 import { EchartsLineChartStyle } from './echarts_line/echarts_line_vis_config';
 import { EchartsBarChartStyle } from './echarts_bar/echarts_bar_vis_config';
 import { EchartsGaugeChartStyle } from './echarts_gauge/echarts_gauge_vis_config';
+import { EchartsMetricChartStyle } from './echarts_metric/echarts_metric_vis_config';
 
 type RuleMatchIndex = [number, number, number];
 
@@ -112,6 +114,7 @@ const oneMetricOneDateRule: VisualizationRule = {
     { ...CHART_METADATA.bar, priority: 60 },
     { ...CHART_METADATA.echarts_bar, priority: 55 },
     { ...CHART_METADATA.metric, priority: 40 },
+    { ...CHART_METADATA.echarts_metric, priority: 35 },
   ],
   toSpec: (
     transformedData,
@@ -180,6 +183,15 @@ const oneMetricOneDateRule: VisualizationRule = {
           styleOptions as EchartsBarChartStyle,
           axisColumnMappings,
           timeRange
+        );
+      case 'echarts_metric':
+        return createEchartsMetricSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as EchartsMetricChartStyle,
+          axisColumnMappings
         );
       default:
         return createSimpleLineChart(
@@ -742,6 +754,7 @@ const oneMetricRule: VisualizationRule = {
     compare([1, 0, 0], [numerical.length, categorical.length, date.length]),
   chartTypes: [
     { ...CHART_METADATA.metric, priority: 100 },
+    { ...CHART_METADATA.echarts_metric, priority: 95 },
     { ...CHART_METADATA.gauge, priority: 80 },
     { ...CHART_METADATA.echarts_gauge, priority: 75 },
     { ...CHART_METADATA.histogram, priority: 60 },
@@ -764,6 +777,15 @@ const oneMetricRule: VisualizationRule = {
           categoricalColumns,
           dateColumns,
           styleOptions as MetricChartStyle,
+          axisColumnMappings
+        );
+      case 'echarts_metric':
+        return createEchartsMetricSpec(
+          transformedData,
+          numericalColumns,
+          categoricalColumns,
+          dateColumns,
+          styleOptions as EchartsMetricChartStyle,
           axisColumnMappings
         );
       case 'gauge':

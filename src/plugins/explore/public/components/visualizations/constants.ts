@@ -25,6 +25,7 @@ export const CHART_METADATA: Record<ChartType, ChartMetadata> = {
   echarts_line: { type: 'echarts_line', name: 'Line (ECharts)', icon: 'visLine' },
   echarts_bar: { type: 'echarts_bar', name: 'Bar (ECharts)', icon: 'visBarVertical' },
   echarts_gauge: { type: 'echarts_gauge', name: 'Gauge (ECharts)', icon: 'visGauge' },
+  echarts_metric: { type: 'echarts_metric', name: 'Metric (ECharts)', icon: 'visMetric' },
 };
 
 // Map both OSD_FIELD_TYPES and OPENSEARCH_FIELD_TYPES to VisFieldType

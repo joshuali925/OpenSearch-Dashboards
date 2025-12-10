@@ -30,6 +30,7 @@ import { createHistogramConfig } from './histogram/histogram_vis_config';
 import { createEchartsLineConfig } from './echarts_line/echarts_line_vis_config';
 import { createEchartsBarConfig } from './echarts_bar/echarts_bar_vis_config';
 import { createEchartsGaugeConfig } from './echarts_gauge/echarts_gauge_vis_config';
+import { createEchartsMetricConfig } from './echarts_metric/echarts_metric_vis_config';
 
 /**
  * Registry for visualization rules and configurations.
@@ -184,6 +185,8 @@ export class VisualizationRegistry {
         return createEchartsBarConfig();
       case 'echarts_gauge':
         return createEchartsGaugeConfig();
+      case 'echarts_metric':
+        return createEchartsMetricConfig();
       default:
         return;
     }

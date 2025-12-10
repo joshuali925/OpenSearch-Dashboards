@@ -35,6 +35,10 @@ import {
   EchartsGaugeChartStyle,
   EchartsGaugeChartStyleOptions,
 } from '../echarts_gauge/echarts_gauge_vis_config';
+import {
+  EchartsMetricChartStyle,
+  EchartsMetricChartStyleOptions,
+} from '../echarts_metric/echarts_metric_vis_config';
 
 export type ChartType =
   | 'line'
@@ -51,7 +55,8 @@ export type ChartType =
   | 'histogram'
   | 'echarts_line'
   | 'echarts_bar'
-  | 'echarts_gauge';
+  | 'echarts_gauge'
+  | 'echarts_metric';
 
 export interface ChartStylesMapping {
   line: LineChartStyle;
@@ -69,6 +74,7 @@ export interface ChartStylesMapping {
   echarts_line: EchartsLineChartStyle;
   echarts_bar: EchartsBarChartStyle;
   echarts_gauge: EchartsGaugeChartStyle;
+  echarts_metric: EchartsMetricChartStyle;
 }
 
 export type StyleOptions =
@@ -86,7 +92,8 @@ export type StyleOptions =
   | HistogramChartStyleOptions
   | EchartsLineChartStyleOptions
   | EchartsBarChartStyleOptions
-  | EchartsGaugeChartStyleOptions;
+  | EchartsGaugeChartStyleOptions
+  | EchartsMetricChartStyleOptions;
 
 export type ChartStyles = ChartStylesMapping[ChartType];
 

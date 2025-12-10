@@ -52,6 +52,7 @@ import {
 import { normalizeResultRows } from '../components/visualizations/utils/normalize_result_rows';
 import { visualizationRegistry } from '../components/visualizations/visualization_registry';
 import { prepareQueryForLanguage } from '../application/utils/languages';
+import { isEchartsSpec } from '../components/visualizations/echarts_renderer';
 
 export interface SearchProps {
   description?: string;
@@ -87,6 +88,7 @@ export interface SearchProps {
     rows: Array<Record<string, any>>;
     columns: VisColumn[];
   };
+  echartsSpec?: Record<string, any>;
 }
 
 interface ExploreEmbeddableConfig {
@@ -421,8 +423,17 @@ export class ExploreEmbeddable
             selectedChartType,
             axesMapping
           );
-          const exp = toExpression(searchContext, spec);
-          this.searchProps.expression = exp;
+
+          // Check if this is an ECharts spec - if so, store it directly
+          // Otherwise, convert to Vega expression
+          if (isEchartsSpec(spec)) {
+            this.searchProps.echartsSpec = spec;
+            this.searchProps.expression = undefined;
+          } else {
+            const exp = toExpression(searchContext, spec);
+            this.searchProps.expression = exp;
+            this.searchProps.echartsSpec = undefined;
+          }
         }
       }
     }

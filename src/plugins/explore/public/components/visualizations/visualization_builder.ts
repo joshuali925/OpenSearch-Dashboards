@@ -42,6 +42,12 @@ export class VisualizationBuilder {
   private getUrlStateStorage: Options['getUrlStateStorage'];
   private getExpression: Options['getExpressions'];
   private subscriptions = Array<Subscription>();
+  private renderConfig$: Observable<RenderChartConfig | undefined> | null = null;
+
+  // Cached bound functions to prevent unnecessary re-renders
+  private boundUpdateStyles: ((styles?: Partial<StyleOptions>) => void) | null = null;
+  private boundSetAxesMapping: ((mapping: Record<string, string>) => void) | null = null;
+  private boundSetCurrentChartType: ((chartType?: ChartType) => void) | null = null;
 
   visConfig$ = new BehaviorSubject<ChartConfig | undefined>(undefined);
   data$ = new BehaviorSubject<VisData | undefined>(undefined);
@@ -353,6 +359,11 @@ export class VisualizationBuilder {
     this.visConfig$ = new BehaviorSubject<ChartConfig | undefined>(undefined);
     this.data$ = new BehaviorSubject<VisData | undefined>(undefined);
     this.showRawTable$ = new BehaviorSubject<boolean>(false);
+    this.renderConfig$ = null; // Clear cached observable
+    // Clear cached bound functions
+    this.boundUpdateStyles = null;
+    this.boundSetAxesMapping = null;
+    this.boundSetCurrentChartType = null;
     this.isInitialized = false;
   }
 
@@ -361,18 +372,46 @@ export class VisualizationBuilder {
   }
 
   getRenderConfig$(): Observable<RenderChartConfig | undefined> {
-    return this.visConfig$.pipe(
-      map((config) => {
-        if (config?.type) {
-          const vis = visualizationRegistry.getVisualizationConfig(config.type);
-          if (vis) {
-            const styles: ChartStyles = mergeStyles(vis.ui.style.defaults, config.styles);
-            return { styles, type: config.type, axesMapping: config.axesMapping };
+    // Cache the observable to prevent re-subscriptions on every render
+    if (!this.renderConfig$) {
+      this.renderConfig$ = this.visConfig$.pipe(
+        map((config) => {
+          if (config?.type) {
+            const vis = visualizationRegistry.getVisualizationConfig(config.type);
+            if (vis) {
+              const styles: ChartStyles = mergeStyles(vis.ui.style.defaults, config.styles);
+              return { styles, type: config.type, axesMapping: config.axesMapping };
+            }
+            return undefined;
           }
-          return undefined;
-        }
-      })
-    );
+        })
+      );
+    }
+    return this.renderConfig$;
+  }
+
+  // Get cached bound function for updateStyles
+  private getBoundUpdateStyles() {
+    if (!this.boundUpdateStyles) {
+      this.boundUpdateStyles = this.updateStyles.bind(this);
+    }
+    return this.boundUpdateStyles;
+  }
+
+  // Get cached bound function for setAxesMapping
+  private getBoundSetAxesMapping() {
+    if (!this.boundSetAxesMapping) {
+      this.boundSetAxesMapping = this.setAxesMapping.bind(this);
+    }
+    return this.boundSetAxesMapping;
+  }
+
+  // Get cached bound function for setCurrentChartType
+  private getBoundSetCurrentChartType() {
+    if (!this.boundSetCurrentChartType) {
+      this.boundSetCurrentChartType = this.setCurrentChartType.bind(this);
+    }
+    return this.boundSetCurrentChartType;
   }
 
   renderVisualization({
@@ -394,7 +433,7 @@ export class VisualizationBuilder {
       searchContext,
       ExpressionRenderer,
       onSelectTimeRange,
-      onStyleChange: this.updateStyles.bind(this),
+      onStyleChange: this.getBoundUpdateStyles(),
     });
   }
 
@@ -403,9 +442,9 @@ export class VisualizationBuilder {
       className,
       data$: this.data$,
       config$: this.getRenderConfig$(),
-      onStyleChange: this.updateStyles.bind(this),
-      onAxesMappingChange: this.setAxesMapping.bind(this),
-      onChartTypeChange: this.setCurrentChartType.bind(this),
+      onStyleChange: this.getBoundUpdateStyles(),
+      onAxesMappingChange: this.getBoundSetAxesMapping(),
+      onChartTypeChange: this.getBoundSetCurrentChartType(),
     });
   }
 }

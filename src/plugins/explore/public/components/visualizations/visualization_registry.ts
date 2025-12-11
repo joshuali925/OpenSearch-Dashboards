@@ -27,10 +27,6 @@ import { createGaugeConfig } from './gauge/gauge_vis_config';
 import { createStateTimelineConfig } from './state_timeline/state_timeline_config';
 import { createBarGaugeConfig } from './bar_gauge/bar_gauge_vis_config';
 import { createHistogramConfig } from './histogram/histogram_vis_config';
-import { createEchartsLineConfig } from './echarts_line/echarts_line_vis_config';
-import { createEchartsBarConfig } from './echarts_bar/echarts_bar_vis_config';
-import { createEchartsGaugeConfig } from './echarts_gauge/echarts_gauge_vis_config';
-import { createEchartsMetricConfig } from './echarts_metric/echarts_metric_vis_config';
 
 /**
  * Registry for visualization rules and configurations.
@@ -180,13 +176,13 @@ export class VisualizationRegistry {
       case 'histogram':
         return createHistogramConfig();
       case 'echarts_line':
-        return createEchartsLineConfig();
+        return createLineConfig();
       case 'echarts_bar':
-        return createEchartsBarConfig();
+        return createBarConfig();
       case 'echarts_gauge':
-        return createEchartsGaugeConfig();
+        return createGaugeConfig();
       case 'echarts_metric':
-        return createEchartsMetricConfig();
+        return createMetricConfig();
       default:
         return;
     }

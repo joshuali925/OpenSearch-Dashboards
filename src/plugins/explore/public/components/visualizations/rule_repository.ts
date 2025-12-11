@@ -64,10 +64,6 @@ import { createEchartsLineSpec } from './echarts_line/to_spec';
 import { createEchartsBarSpec } from './echarts_bar/to_spec';
 import { createEchartsGaugeSpec } from './echarts_gauge/to_spec';
 import { createEchartsMetricSpec } from './echarts_metric/to_spec';
-import { EchartsLineChartStyle } from './echarts_line/echarts_line_vis_config';
-import { EchartsBarChartStyle } from './echarts_bar/echarts_bar_vis_config';
-import { EchartsGaugeChartStyle } from './echarts_gauge/echarts_gauge_vis_config';
-import { EchartsMetricChartStyle } from './echarts_metric/echarts_metric_vis_config';
 
 type RuleMatchIndex = [number, number, number];
 
@@ -170,7 +166,7 @@ const oneMetricOneDateRule: VisualizationRule = {
           numericalColumns,
           categoricalColumns,
           dateColumns,
-          styleOptions as EchartsLineChartStyle,
+          styleOptions as LineChartStyle,
           axisColumnMappings,
           timeRange
         );
@@ -180,7 +176,7 @@ const oneMetricOneDateRule: VisualizationRule = {
           numericalColumns,
           categoricalColumns,
           dateColumns,
-          styleOptions as EchartsBarChartStyle,
+          styleOptions as BarChartStyle,
           axisColumnMappings,
           timeRange
         );
@@ -190,7 +186,7 @@ const oneMetricOneDateRule: VisualizationRule = {
           numericalColumns,
           categoricalColumns,
           dateColumns,
-          styleOptions as EchartsMetricChartStyle,
+          styleOptions as MetricChartStyle,
           axisColumnMappings
         );
       default:
@@ -278,7 +274,7 @@ const twoMetricOneDateRule: VisualizationRule = {
           numericalColumns,
           categoricalColumns,
           dateColumns,
-          styleOptions as EchartsLineChartStyle,
+          styleOptions as LineChartStyle,
           axisColumnMappings,
           timeRange
         );
@@ -288,7 +284,7 @@ const twoMetricOneDateRule: VisualizationRule = {
           numericalColumns,
           categoricalColumns,
           dateColumns,
-          styleOptions as EchartsBarChartStyle,
+          styleOptions as BarChartStyle,
           axisColumnMappings,
           timeRange
         );
@@ -377,7 +373,7 @@ const oneMetricOneCateOneDateRule: VisualizationRule = {
           numericalColumns,
           categoricalColumns,
           dateColumns,
-          styleOptions as EchartsLineChartStyle,
+          styleOptions as LineChartStyle,
           axisColumnMappings,
           timeRange
         );
@@ -387,7 +383,7 @@ const oneMetricOneCateOneDateRule: VisualizationRule = {
           numericalColumns,
           categoricalColumns,
           dateColumns,
-          styleOptions as EchartsBarChartStyle,
+          styleOptions as BarChartStyle,
           axisColumnMappings,
           timeRange
         );
@@ -711,7 +707,7 @@ const oneMetricOneCateRule: VisualizationRule = {
           numericalColumns,
           categoricalColumns,
           dateColumns,
-          styleOptions as EchartsBarChartStyle,
+          styleOptions as BarChartStyle,
           axisColumnMappings
         );
       case 'echarts_line':
@@ -720,7 +716,7 @@ const oneMetricOneCateRule: VisualizationRule = {
           numericalColumns,
           categoricalColumns,
           dateColumns,
-          styleOptions as EchartsLineChartStyle,
+          styleOptions as LineChartStyle,
           axisColumnMappings
         );
       default:
@@ -775,7 +771,7 @@ const oneMetricRule: VisualizationRule = {
           numericalColumns,
           categoricalColumns,
           dateColumns,
-          styleOptions as EchartsMetricChartStyle,
+          styleOptions as MetricChartStyle,
           axisColumnMappings
         );
       case 'gauge':
@@ -800,7 +796,7 @@ const oneMetricRule: VisualizationRule = {
           numericalColumns,
           categoricalColumns,
           dateColumns,
-          styleOptions as EchartsGaugeChartStyle,
+          styleOptions as GaugeChartStyle,
           axisColumnMappings
         );
       default:

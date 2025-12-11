@@ -3,10 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EchartsGaugeChartStyle } from './echarts_gauge_vis_config';
-import { VisColumn, AxisColumnMappings, AxisRole, GaugeThresholdMode, Threshold } from '../types';
+import { GaugeChartStyle } from '../gauge/gauge_vis_config';
+import { VisColumn, AxisColumnMappings, AxisRole, Threshold, ThresholdMode } from '../types';
 import { calculateValue } from '../utils/calculation';
 import { getColors } from '../theme/default_colors';
+
+// Default values for ECharts-specific gauge options not present in GaugeChartStyle
+const ECHARTS_GAUGE_DEFAULTS = {
+  splitNumber: 10,
+  showPointer: true,
+  pointerWidth: 6,
+  showProgress: true,
+  progressWidth: 10,
+};
 
 /**
  * Create an ECharts gauge chart spec
@@ -16,7 +25,7 @@ export const createEchartsGaugeSpec = (
   numericalColumns: VisColumn[],
   categoricalColumns: VisColumn[],
   dateColumns: VisColumn[],
-  styles: EchartsGaugeChartStyle,
+  styles: GaugeChartStyle,
   axisColumnMappings?: AxisColumnMappings
 ): any => {
   const valueColumn = axisColumnMappings?.[AxisRole.Value];
@@ -32,25 +41,19 @@ export const createEchartsGaugeSpec = (
   const max = styles.max ?? Math.max(100, calculatedValue * 1.2);
 
   // Get threshold options with defaults
+  // GaugeChartStyle uses ThresholdOptions which has thresholdStyle instead of mode
   const thresholdOptions = styles.thresholdOptions ?? {
-    mode: GaugeThresholdMode.Absolute,
     thresholds: [],
     baseColor: getColors().statusGreen,
   };
-  const thresholdMode = thresholdOptions.mode;
   const thresholds = thresholdOptions.thresholds ?? [];
   const baseColor = thresholdOptions.baseColor ?? getColors().statusGreen;
 
   /**
-   * Convert threshold value to absolute value based on mode
-   * - Absolute mode: value is used as-is
-   * - Percentage mode: value is a percentage of (max - min) range
+   * Convert threshold value to absolute value
+   * GaugeChartStyle thresholds are always absolute values
    */
   const getAbsoluteThresholdValue = (threshold: Threshold): number => {
-    if (thresholdMode === GaugeThresholdMode.Percentage) {
-      // Convert percentage (0-100) to absolute value
-      return min + (threshold.value / 100) * (max - min);
-    }
     return threshold.value;
   };
 
@@ -78,29 +81,33 @@ export const createEchartsGaugeSpec = (
     colorStops.push([1, baseColor]);
   }
 
+  // Use default values for ECharts-specific options
+  const { splitNumber, showPointer, pointerWidth, showProgress, progressWidth } =
+    ECHARTS_GAUGE_DEFAULTS;
+
   // Build the gauge series configuration
   const gaugeSeries: any = {
     type: 'gauge',
     min,
     max,
-    splitNumber: styles.splitNumber,
+    splitNumber,
     progress: {
-      show: styles.showProgress,
-      width: styles.progressWidth,
+      show: showProgress,
+      width: progressWidth,
     },
     pointer: {
-      show: styles.showPointer,
-      width: styles.pointerWidth,
+      show: showPointer,
+      width: pointerWidth,
     },
     axisLine: {
       lineStyle: {
-        width: styles.progressWidth,
+        width: progressWidth,
         color: colorStops,
       },
     },
     axisTick: {
       show: true,
-      distance: -styles.progressWidth,
+      distance: -progressWidth,
       length: 8,
       lineStyle: {
         color: '#999',
@@ -108,21 +115,20 @@ export const createEchartsGaugeSpec = (
       },
     },
     splitLine: {
-      distance: -styles.progressWidth,
-      length: styles.progressWidth,
+      distance: -progressWidth,
+      length: progressWidth,
       lineStyle: {
         color: '#999',
         width: 2,
       },
     },
     axisLabel: {
-      distance: styles.progressWidth + 10,
+      distance: progressWidth + 10,
       color: '#999',
       fontSize: 12,
-      formatter: styles.unit ? `{value} ${styles.unit}` : '{value}',
     },
     anchor: {
-      show: styles.showPointer,
+      show: showPointer,
       showAbove: true,
       size: 20,
       itemStyle: {
@@ -138,7 +144,6 @@ export const createEchartsGaugeSpec = (
       valueAnimation: true,
       fontSize: 24,
       offsetCenter: [0, '50%'],
-      formatter: styles.unit ? `{value} ${styles.unit}` : '{value}',
     },
     data: [
       {
@@ -148,28 +153,12 @@ export const createEchartsGaugeSpec = (
     ],
   };
 
-  // Adjust for ring type
-  if (styles.gaugeType === 'ring') {
-    gaugeSeries.startAngle = styles.startAngle ?? 90;
-    gaugeSeries.endAngle = styles.endAngle ?? -270;
-    gaugeSeries.pointer.show = false;
-    gaugeSeries.axisTick.show = false;
-    gaugeSeries.splitLine.show = false;
-    gaugeSeries.axisLabel.show = false;
-    gaugeSeries.progress.roundCap = true;
-    gaugeSeries.itemStyle = {
-      borderWidth: 0,
-      borderColor: 'transparent',
-    };
-  }
-
   // Build the ECharts option
+  // GaugeChartStyle uses showTitle and title directly (not titleOptions)
   const option: any = {
-    // Mark this as an ECharts spec
-    __echarts__: true,
-    title: styles.titleOptions?.show
+    title: styles.showTitle
       ? {
-          text: styles.titleOptions?.titleName || `${valueName}`,
+          text: styles.title || `${valueName}`,
           left: 'center',
         }
       : undefined,

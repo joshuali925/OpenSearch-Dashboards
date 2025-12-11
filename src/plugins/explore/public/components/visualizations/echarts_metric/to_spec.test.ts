@@ -4,10 +4,7 @@
  */
 
 import { createEchartsMetricSpec } from './to_spec';
-import {
-  defaultEchartsMetricChartStyles,
-  EchartsMetricChartStyle,
-} from './echarts_metric_vis_config';
+import { defaultMetricChartStyles, MetricChartStyle } from '../metric/metric_vis_config';
 import { VisColumn, VisFieldType, AxisRole } from '../types';
 
 describe('echarts_metric to_spec', () => {
@@ -42,14 +39,11 @@ describe('echarts_metric to_spec', () => {
         [mockNumericalColumn],
         [],
         [],
-        defaultEchartsMetricChartStyles,
+        defaultMetricChartStyles,
         {
           [AxisRole.Value]: mockNumericalColumn,
         }
       );
-
-      // Check ECharts marker
-      expect(spec.__echarts__).toBe(true);
 
       // Check graphic elements
       expect(spec.graphic).toBeDefined();
@@ -65,7 +59,7 @@ describe('echarts_metric to_spec', () => {
         [mockNumericalColumn],
         [],
         [],
-        defaultEchartsMetricChartStyles,
+        defaultMetricChartStyles,
         {
           [AxisRole.Value]: mockNumericalColumn,
         }
@@ -82,8 +76,8 @@ describe('echarts_metric to_spec', () => {
     });
 
     test('applies title options', () => {
-      const styles: EchartsMetricChartStyle = {
-        ...defaultEchartsMetricChartStyles,
+      const styles: MetricChartStyle = {
+        ...defaultMetricChartStyles,
         showTitle: true,
         title: 'Custom Metric',
       };
@@ -100,8 +94,8 @@ describe('echarts_metric to_spec', () => {
     });
 
     test('hides title when showTitle is false', () => {
-      const styles: EchartsMetricChartStyle = {
-        ...defaultEchartsMetricChartStyles,
+      const styles: MetricChartStyle = {
+        ...defaultMetricChartStyles,
         showTitle: false,
         title: 'Should Not Show',
       };
@@ -118,8 +112,8 @@ describe('echarts_metric to_spec', () => {
     });
 
     test('shows percentage when enabled', () => {
-      const styles: EchartsMetricChartStyle = {
-        ...defaultEchartsMetricChartStyles,
+      const styles: MetricChartStyle = {
+        ...defaultMetricChartStyles,
         showPercentage: true,
       };
 
@@ -135,8 +129,8 @@ describe('echarts_metric to_spec', () => {
     });
 
     test('hides percentage when disabled', () => {
-      const styles: EchartsMetricChartStyle = {
-        ...defaultEchartsMetricChartStyles,
+      const styles: MetricChartStyle = {
+        ...defaultMetricChartStyles,
         showPercentage: false,
       };
 
@@ -157,7 +151,7 @@ describe('echarts_metric to_spec', () => {
         [mockNumericalColumn],
         [],
         [mockDateColumn],
-        defaultEchartsMetricChartStyles,
+        defaultMetricChartStyles,
         {
           [AxisRole.Value]: mockNumericalColumn,
           [AxisRole.Time]: mockDateColumn,
@@ -170,13 +164,74 @@ describe('echarts_metric to_spec', () => {
       expect(spec.series[0].areaStyle).toBeDefined();
     });
 
+    test('adds tooltip when sparkline is present', () => {
+      const spec = createEchartsMetricSpec(
+        mockData,
+        [mockNumericalColumn],
+        [],
+        [mockDateColumn],
+        defaultMetricChartStyles,
+        {
+          [AxisRole.Value]: mockNumericalColumn,
+          [AxisRole.Time]: mockDateColumn,
+        }
+      );
+
+      // Should have tooltip configuration
+      expect(spec.tooltip).toBeDefined();
+      expect(spec.tooltip.show).toBe(true);
+      expect(spec.tooltip.trigger).toBe('axis');
+      expect(spec.tooltip.formatter).toBeInstanceOf(Function);
+    });
+
+    test('tooltip formatter displays date and value correctly', () => {
+      const spec = createEchartsMetricSpec(
+        mockData,
+        [mockNumericalColumn],
+        [],
+        [mockDateColumn],
+        defaultMetricChartStyles,
+        {
+          [AxisRole.Value]: mockNumericalColumn,
+          [AxisRole.Time]: mockDateColumn,
+        }
+      );
+
+      // Test the formatter function
+      const mockParams = {
+        value: [new Date('2023-01-02T00:00:00Z').getTime(), 60],
+      };
+      const result = spec.tooltip.formatter(mockParams);
+
+      // Should contain both date and value
+      expect(result).toContain('Date');
+      expect(result).toContain('Value');
+      expect(result).toContain('60');
+    });
+
+    test('no tooltip when no sparkline', () => {
+      const spec = createEchartsMetricSpec(
+        mockData,
+        [mockNumericalColumn],
+        [],
+        [],
+        defaultMetricChartStyles,
+        {
+          [AxisRole.Value]: mockNumericalColumn,
+        }
+      );
+
+      // Should not have tooltip configuration
+      expect(spec.tooltip).toBeUndefined();
+    });
+
     test('no sparkline when no date column', () => {
       const spec = createEchartsMetricSpec(
         mockData,
         [mockNumericalColumn],
         [],
         [],
-        defaultEchartsMetricChartStyles,
+        defaultMetricChartStyles,
         {
           [AxisRole.Value]: mockNumericalColumn,
         }
@@ -187,8 +242,8 @@ describe('echarts_metric to_spec', () => {
     });
 
     test('applies custom font sizes', () => {
-      const styles: EchartsMetricChartStyle = {
-        ...defaultEchartsMetricChartStyles,
+      const styles: MetricChartStyle = {
+        ...defaultMetricChartStyles,
         fontSize: 80,
         titleSize: 30,
       };
@@ -205,8 +260,8 @@ describe('echarts_metric to_spec', () => {
     });
 
     test('applies threshold color to value', () => {
-      const styles: EchartsMetricChartStyle = {
-        ...defaultEchartsMetricChartStyles,
+      const styles: MetricChartStyle = {
+        ...defaultMetricChartStyles,
         useThresholdColor: true,
         thresholdOptions: {
           thresholds: [{ value: 60, color: '#FF0000' }],
@@ -232,7 +287,7 @@ describe('echarts_metric to_spec', () => {
         [mockNumericalColumn],
         [],
         [],
-        defaultEchartsMetricChartStyles,
+        defaultMetricChartStyles,
         {
           [AxisRole.Value]: mockNumericalColumn,
         }

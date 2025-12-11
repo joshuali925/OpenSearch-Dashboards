@@ -4,7 +4,7 @@
  */
 
 import { createEchartsLineSpec } from './to_spec';
-import { defaultEchartsLineChartStyles, EchartsLineChartStyle } from './echarts_line_vis_config';
+import { defaultLineChartStyles, LineChartStyle } from '../line/line_vis_config';
 import { VisColumn, VisFieldType, AxisRole, Positions } from '../types';
 
 describe('echarts_line to_spec', () => {
@@ -57,15 +57,14 @@ describe('echarts_line to_spec', () => {
         [mockNumericalColumn],
         [mockCategoricalColumn],
         [],
-        defaultEchartsLineChartStyles,
+        defaultLineChartStyles,
         {
           [AxisRole.X]: mockCategoricalColumn,
           [AxisRole.Y]: mockNumericalColumn,
         }
       );
 
-      // Check ECharts marker
-      expect(spec.__echarts__).toBe(true);
+      // Check metadata for brush functionality
       expect(spec.__metadata__).toBeDefined();
       expect(spec.__metadata__.isXTemporal).toBe(false);
 
@@ -93,7 +92,7 @@ describe('echarts_line to_spec', () => {
         [mockNumericalColumn],
         [mockCategoricalColumn, mockColorColumn],
         [],
-        defaultEchartsLineChartStyles,
+        defaultLineChartStyles,
         {
           [AxisRole.X]: mockCategoricalColumn,
           [AxisRole.Y]: mockNumericalColumn,
@@ -108,8 +107,8 @@ describe('echarts_line to_spec', () => {
     });
 
     test('applies smooth line mode', () => {
-      const styles: EchartsLineChartStyle = {
-        ...defaultEchartsLineChartStyles,
+      const styles: LineChartStyle = {
+        ...defaultLineChartStyles,
         lineMode: 'smooth',
       };
 
@@ -129,8 +128,8 @@ describe('echarts_line to_spec', () => {
     });
 
     test('applies stepped line mode', () => {
-      const styles: EchartsLineChartStyle = {
-        ...defaultEchartsLineChartStyles,
+      const styles: LineChartStyle = {
+        ...defaultLineChartStyles,
         lineMode: 'stepped',
       };
 
@@ -149,59 +148,13 @@ describe('echarts_line to_spec', () => {
       expect(spec.series[0].step).toBe('middle');
     });
 
-    test('applies area style', () => {
-      const styles: EchartsLineChartStyle = {
-        ...defaultEchartsLineChartStyles,
-        areaStyle: true,
-        areaOpacity: 0.5,
-      };
-
-      const spec = createEchartsLineSpec(
-        mockData,
-        [mockNumericalColumn],
-        [mockCategoricalColumn],
-        [],
-        styles,
-        {
-          [AxisRole.X]: mockCategoricalColumn,
-          [AxisRole.Y]: mockNumericalColumn,
-        }
-      );
-
-      expect(spec.series[0].areaStyle).toBeDefined();
-      expect(spec.series[0].areaStyle.opacity).toBe(0.5);
-    });
-
-    test('shows symbols when enabled', () => {
-      const styles: EchartsLineChartStyle = {
-        ...defaultEchartsLineChartStyles,
-        showSymbol: true,
-        symbolSize: 10,
-      };
-
-      const spec = createEchartsLineSpec(
-        mockData,
-        [mockNumericalColumn],
-        [mockCategoricalColumn],
-        [],
-        styles,
-        {
-          [AxisRole.X]: mockCategoricalColumn,
-          [AxisRole.Y]: mockNumericalColumn,
-        }
-      );
-
-      expect(spec.series[0].showSymbol).toBe(true);
-      expect(spec.series[0].symbolSize).toBe(10);
-    });
-
     test('handles temporal x-axis with brush configuration', () => {
       const spec = createEchartsLineSpec(
         mockData,
         [mockNumericalColumn],
         [],
         [mockDateColumn],
-        defaultEchartsLineChartStyles,
+        defaultLineChartStyles,
         {
           [AxisRole.X]: mockDateColumn,
           [AxisRole.Y]: mockNumericalColumn,
@@ -218,8 +171,8 @@ describe('echarts_line to_spec', () => {
     });
 
     test('applies title options', () => {
-      const stylesWithTitle: EchartsLineChartStyle = {
-        ...defaultEchartsLineChartStyles,
+      const stylesWithTitle: LineChartStyle = {
+        ...defaultLineChartStyles,
         titleOptions: {
           show: true,
           titleName: 'Custom Line Chart',
@@ -248,7 +201,7 @@ describe('echarts_line to_spec', () => {
         [mockNumericalColumn],
         [mockCategoricalColumn],
         [],
-        defaultEchartsLineChartStyles,
+        defaultLineChartStyles,
         {
           [AxisRole.X]: mockCategoricalColumn,
           [AxisRole.Y]: mockNumericalColumn,
@@ -259,8 +212,8 @@ describe('echarts_line to_spec', () => {
     });
 
     test('applies legend options', () => {
-      const stylesWithLegend: EchartsLineChartStyle = {
-        ...defaultEchartsLineChartStyles,
+      const stylesWithLegend: LineChartStyle = {
+        ...defaultLineChartStyles,
         addLegend: true,
         legendPosition: Positions.RIGHT,
       };
@@ -283,8 +236,8 @@ describe('echarts_line to_spec', () => {
     });
 
     test('applies line width', () => {
-      const stylesWithLineWidth: EchartsLineChartStyle = {
-        ...defaultEchartsLineChartStyles,
+      const stylesWithLineWidth: LineChartStyle = {
+        ...defaultLineChartStyles,
         lineWidth: 3,
       };
 
@@ -303,13 +256,16 @@ describe('echarts_line to_spec', () => {
       expect(spec.series[0].lineStyle.width).toBe(3);
     });
 
-    test('applies thresholds as markLine', () => {
-      const stylesWithThresholds: EchartsLineChartStyle = {
-        ...defaultEchartsLineChartStyles,
-        thresholds: [
-          { value: 15, color: '#FF0000' },
-          { value: 25, color: '#00FF00' },
-        ],
+    test('applies thresholds as markLine from thresholdOptions', () => {
+      const stylesWithThresholds: LineChartStyle = {
+        ...defaultLineChartStyles,
+        thresholdOptions: {
+          ...defaultLineChartStyles.thresholdOptions,
+          thresholds: [
+            { value: 15, color: '#FF0000' },
+            { value: 25, color: '#00FF00' },
+          ],
+        },
       };
 
       const spec = createEchartsLineSpec(

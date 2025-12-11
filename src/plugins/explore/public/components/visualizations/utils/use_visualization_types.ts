@@ -23,22 +23,6 @@ import {
 } from '../state_timeline/state_timeline_config';
 import { BarGaugeChartStyle, BarGaugeChartStyleOptions } from '../bar_gauge/bar_gauge_vis_config';
 import { HistogramChartStyle, HistogramChartStyleOptions } from '../histogram/histogram_vis_config';
-import {
-  EchartsLineChartStyle,
-  EchartsLineChartStyleOptions,
-} from '../echarts_line/echarts_line_vis_config';
-import {
-  EchartsBarChartStyle,
-  EchartsBarChartStyleOptions,
-} from '../echarts_bar/echarts_bar_vis_config';
-import {
-  EchartsGaugeChartStyle,
-  EchartsGaugeChartStyleOptions,
-} from '../echarts_gauge/echarts_gauge_vis_config';
-import {
-  EchartsMetricChartStyle,
-  EchartsMetricChartStyleOptions,
-} from '../echarts_metric/echarts_metric_vis_config';
 
 export type ChartType =
   | 'line'
@@ -71,10 +55,12 @@ export interface ChartStylesMapping {
   state_timeline: StateTimeLineChartStyle;
   bar_gauge: BarGaugeChartStyle;
   histogram: HistogramChartStyle;
-  echarts_line: EchartsLineChartStyle;
-  echarts_bar: EchartsBarChartStyle;
-  echarts_gauge: EchartsGaugeChartStyle;
-  echarts_metric: EchartsMetricChartStyle;
+  // ECharts types use the same styles as their Vega counterparts
+  // This enables transparent renderer switching
+  echarts_line: LineChartStyle;
+  echarts_bar: BarChartStyle;
+  echarts_gauge: GaugeChartStyle;
+  echarts_metric: MetricChartStyle;
 }
 
 export type StyleOptions =
@@ -89,11 +75,7 @@ export type StyleOptions =
   | GaugeChartStyleOptions
   | StateTimeLineChartStyleOptions
   | BarGaugeChartStyleOptions
-  | HistogramChartStyleOptions
-  | EchartsLineChartStyleOptions
-  | EchartsBarChartStyleOptions
-  | EchartsGaugeChartStyleOptions
-  | EchartsMetricChartStyleOptions;
+  | HistogramChartStyleOptions;
 
 export type ChartStyles = ChartStylesMapping[ChartType];
 

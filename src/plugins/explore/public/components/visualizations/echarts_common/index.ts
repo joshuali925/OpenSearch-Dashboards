@@ -77,11 +77,10 @@ export const buildGridConfig = (options: {
 };
 
 /**
- * Creates the ECharts metadata marker object
+ * Creates the ECharts metadata object for time range brush functionality
  */
 export const createEchartsMetadata = (isXTemporal: boolean, xField?: string, xValues?: number[]) => {
   return {
-    __echarts__: true,
     __metadata__: {
       isXTemporal,
       xField,

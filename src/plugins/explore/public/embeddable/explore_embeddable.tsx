@@ -52,7 +52,7 @@ import {
 import { normalizeResultRows } from '../components/visualizations/utils/normalize_result_rows';
 import { visualizationRegistry } from '../components/visualizations/visualization_registry';
 import { prepareQueryForLanguage } from '../application/utils/languages';
-import { isEchartsSpec } from '../components/visualizations/echarts_renderer';
+import { getRendererType } from '../components/visualizations/chart_renderer';
 
 export interface SearchProps {
   description?: string;
@@ -424,9 +424,9 @@ export class ExploreEmbeddable
             axesMapping
           );
 
-          // Check if this is an ECharts spec - if so, store it directly
-          // Otherwise, convert to Vega expression
-          if (isEchartsSpec(spec)) {
+          // Determine renderer type based on chart type, not spec marker
+          // e.g., 'echarts_line' -> ECharts, 'line' -> Vega
+          if (getRendererType(selectedChartType) === 'echarts') {
             this.searchProps.echartsSpec = spec;
             this.searchProps.expression = undefined;
           } else {

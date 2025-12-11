@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EchartsBarChartStyle } from './echarts_bar_vis_config';
+import { BarChartStyle } from '../bar/bar_vis_config';
 import { VisColumn, AxisColumnMappings, AxisRole, Positions } from '../types';
 import {
   buildLegendConfig,
@@ -11,6 +11,17 @@ import {
   buildGridConfig,
   buildTooltipConfig,
 } from '../echarts_common';
+
+// Default values for ECharts-specific bar options not present in BarChartStyle
+const ECHARTS_BAR_DEFAULTS = {
+  orientation: 'vertical' as const,
+  stackMode: 'none' as const,
+  showBarLabel: false,
+  barLabelPosition: 'top' as const,
+  barGap: '30%',
+  showXAxisLabel: true,
+  showYAxisLabel: true,
+};
 
 /**
  * Create an ECharts bar chart spec
@@ -20,7 +31,7 @@ export const createEchartsBarSpec = (
   numericalColumns: VisColumn[],
   categoricalColumns: VisColumn[],
   dateColumns: VisColumn[],
-  styles: EchartsBarChartStyle,
+  styles: BarChartStyle,
   axisColumnMappings?: AxisColumnMappings,
   timeRange?: { from: string; to: string }
 ): any => {
@@ -71,26 +82,42 @@ export const createEchartsBarSpec = (
     seriesData = [{ name: metricName || 'Value', data }];
   }
 
-  // Determine stack property based on stackMode
+  // Use default values for ECharts-specific options
+  const {
+    orientation,
+    stackMode,
+    showBarLabel,
+    barLabelPosition,
+    barGap,
+    showXAxisLabel,
+    showYAxisLabel,
+  } = ECHARTS_BAR_DEFAULTS;
+
+  // Determine stack property based on stackMode (using default)
   const getStack = () => {
-    if (styles.stackMode === 'stacked' || styles.stackMode === 'percent') {
+    if (stackMode === 'stacked' || stackMode === 'percent') {
       return 'total';
     }
     return undefined;
   };
 
   // Build series configuration
+  // BarChartStyle has barWidth but it's a ratio (0-1), ECharts expects pixels
+  // Convert barWidth ratio to percentage string if it's less than 1
+  const echartsBarWidth =
+    styles.barWidth && styles.barWidth <= 1 ? `${styles.barWidth * 100}%` : styles.barWidth;
+
   const series = seriesData.map((s) => ({
     name: s.name,
     type: 'bar',
     data: s.data,
     stack: getStack(),
-    barWidth: styles.barWidth,
-    barGap: styles.barGap,
+    barWidth: echartsBarWidth,
+    barGap,
     label: {
-      show: styles.showBarLabel,
-      position: styles.barLabelPosition,
-      formatter: styles.stackMode === 'percent' ? '{c}%' : '{c}',
+      show: showBarLabel,
+      position: barLabelPosition,
+      formatter: stackMode === 'percent' ? '{c}%' : '{c}',
     },
   }));
 
@@ -98,37 +125,39 @@ export const createEchartsBarSpec = (
   const legendPosition = styles.legendPosition || Positions.BOTTOM;
   const legendConfig = buildLegendConfig(styles.addLegend, legendPosition);
 
-  // Determine axis configuration based on orientation
-  const isHorizontal = styles.orientation === 'horizontal';
+  // Determine axis configuration based on orientation (using default - vertical)
+  const isHorizontal = orientation === 'horizontal';
+
+  // Get axis titles from standardAxes if available
+  const xAxisTitle = styles.standardAxes?.find((a) => a.axisRole === AxisRole.X)?.title?.text;
+  const yAxisTitle = styles.standardAxes?.find((a) => a.axisRole === AxisRole.Y)?.title?.text;
 
   const categoryAxisConfig = {
     type: 'category',
     data: xValues.map((v) => (isXTemporal ? new Date(v).toLocaleString() : String(v))),
-    name: isHorizontal ? styles.yAxisTitle || metricName : styles.xAxisTitle || xName,
+    name: isHorizontal ? yAxisTitle || metricName : xAxisTitle || xName,
     nameLocation: 'middle',
     nameGap: 30,
     axisLabel: {
-      show: isHorizontal ? styles.showYAxisLabel : styles.showXAxisLabel,
+      show: isHorizontal ? showYAxisLabel : showXAxisLabel,
       rotate: isHorizontal ? 0 : 45,
     },
   };
 
   const valueAxisConfig = {
     type: 'value',
-    name: isHorizontal ? styles.xAxisTitle || xName : styles.yAxisTitle || metricName,
+    name: isHorizontal ? xAxisTitle || xName : yAxisTitle || metricName,
     nameLocation: 'middle',
     nameGap: 50,
     axisLabel: {
-      show: isHorizontal ? styles.showXAxisLabel : styles.showYAxisLabel,
-      formatter: styles.stackMode === 'percent' ? '{value}%' : '{value}',
+      show: isHorizontal ? showXAxisLabel : showYAxisLabel,
+      formatter: stackMode === 'percent' ? '{value}%' : '{value}',
     },
-    ...(styles.stackMode === 'percent' && { max: 100 }),
+    ...(stackMode === 'percent' && { max: 100 }),
   };
 
   // Build the ECharts option
   const option: any = {
-    // Mark this as an ECharts spec
-    __echarts__: true,
     // Store metadata for time range brush functionality
     __metadata__: {
       isXTemporal,
@@ -144,7 +173,7 @@ export const createEchartsBarSpec = (
         type: 'shadow',
       },
       formatter:
-        styles.stackMode === 'percent'
+        stackMode === 'percent'
           ? (params: any) => {
               const items = Array.isArray(params) ? params : [params];
               let result = items[0]?.axisValueLabel || '';
@@ -193,4 +222,3 @@ export const createEchartsBarSpec = (
 
   return option;
 };
-

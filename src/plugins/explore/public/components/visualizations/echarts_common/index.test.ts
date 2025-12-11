@@ -184,7 +184,6 @@ describe('echarts_common utilities', () => {
     test('returns metadata for non-temporal x-axis', () => {
       const result = createEchartsMetadata(false, 'category');
       expect(result).toEqual({
-        __echarts__: true,
         __metadata__: {
           isXTemporal: false,
           xField: 'category',
@@ -196,7 +195,6 @@ describe('echarts_common utilities', () => {
       const xValues = [1609459200000, 1609545600000];
       const result = createEchartsMetadata(true, 'timestamp', xValues);
       expect(result).toEqual({
-        __echarts__: true,
         __metadata__: {
           isXTemporal: true,
           xField: 'timestamp',
@@ -208,7 +206,6 @@ describe('echarts_common utilities', () => {
     test('returns metadata for temporal x-axis without xValues', () => {
       const result = createEchartsMetadata(true, 'timestamp');
       expect(result).toEqual({
-        __echarts__: true,
         __metadata__: {
           isXTemporal: true,
           xField: 'timestamp',

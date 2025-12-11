@@ -4,7 +4,7 @@
  */
 
 import { createEchartsBarSpec } from './to_spec';
-import { defaultEchartsBarChartStyles, EchartsBarChartStyle } from './echarts_bar_vis_config';
+import { defaultBarChartStyles, BarChartStyle } from '../bar/bar_vis_config';
 import { VisColumn, VisFieldType, AxisRole, Positions } from '../types';
 
 describe('echarts_bar to_spec', () => {
@@ -57,15 +57,14 @@ describe('echarts_bar to_spec', () => {
         [mockNumericalColumn],
         [mockCategoricalColumn],
         [],
-        defaultEchartsBarChartStyles,
+        defaultBarChartStyles,
         {
           [AxisRole.X]: mockCategoricalColumn,
           [AxisRole.Y]: mockNumericalColumn,
         }
       );
 
-      // Check ECharts marker
-      expect(spec.__echarts__).toBe(true);
+      // Check metadata for brush functionality
       expect(spec.__metadata__).toBeDefined();
       expect(spec.__metadata__.isXTemporal).toBe(false);
 
@@ -93,7 +92,7 @@ describe('echarts_bar to_spec', () => {
         [mockNumericalColumn],
         [mockCategoricalColumn, mockColorColumn],
         [],
-        defaultEchartsBarChartStyles,
+        defaultBarChartStyles,
         {
           [AxisRole.X]: mockCategoricalColumn,
           [AxisRole.Y]: mockNumericalColumn,
@@ -107,88 +106,13 @@ describe('echarts_bar to_spec', () => {
       expect(spec.series[1].name).toBe('blue');
     });
 
-    test('applies horizontal orientation', () => {
-      const styles: EchartsBarChartStyle = {
-        ...defaultEchartsBarChartStyles,
-        orientation: 'horizontal',
-      };
-
-      const spec = createEchartsBarSpec(
-        mockData,
-        [mockNumericalColumn],
-        [mockCategoricalColumn],
-        [],
-        styles,
-        {
-          [AxisRole.X]: mockCategoricalColumn,
-          [AxisRole.Y]: mockNumericalColumn,
-        }
-      );
-
-      // In horizontal mode, xAxis should be value and yAxis should be category
-      expect(spec.xAxis.type).toBe('value');
-      expect(spec.yAxis.type).toBe('category');
-    });
-
-    test('applies stacked mode', () => {
-      const styles: EchartsBarChartStyle = {
-        ...defaultEchartsBarChartStyles,
-        stackMode: 'stacked',
-      };
-
-      const dataWithColor = [
-        { count: 10, category: 'A', color: 'red' },
-        { count: 20, category: 'A', color: 'blue' },
-      ];
-
-      const spec = createEchartsBarSpec(
-        dataWithColor,
-        [mockNumericalColumn],
-        [mockCategoricalColumn, mockColorColumn],
-        [],
-        styles,
-        {
-          [AxisRole.X]: mockCategoricalColumn,
-          [AxisRole.Y]: mockNumericalColumn,
-          [AxisRole.COLOR]: mockColorColumn,
-        }
-      );
-
-      // All series should have stack property
-      expect(spec.series[0].stack).toBe('total');
-      expect(spec.series[1].stack).toBe('total');
-    });
-
-    test('applies percent stacked mode', () => {
-      const styles: EchartsBarChartStyle = {
-        ...defaultEchartsBarChartStyles,
-        stackMode: 'percent',
-      };
-
-      const spec = createEchartsBarSpec(
-        mockData,
-        [mockNumericalColumn],
-        [mockCategoricalColumn],
-        [],
-        styles,
-        {
-          [AxisRole.X]: mockCategoricalColumn,
-          [AxisRole.Y]: mockNumericalColumn,
-        }
-      );
-
-      // Y-axis should have max: 100 for percent mode
-      expect(spec.yAxis.max).toBe(100);
-      expect(spec.series[0].label.formatter).toBe('{c}%');
-    });
-
     test('handles temporal x-axis with brush configuration', () => {
       const spec = createEchartsBarSpec(
         mockData,
         [mockNumericalColumn],
         [],
         [mockDateColumn],
-        defaultEchartsBarChartStyles,
+        defaultBarChartStyles,
         {
           [AxisRole.X]: mockDateColumn,
           [AxisRole.Y]: mockNumericalColumn,
@@ -207,8 +131,8 @@ describe('echarts_bar to_spec', () => {
     });
 
     test('applies title options', () => {
-      const stylesWithTitle: EchartsBarChartStyle = {
-        ...defaultEchartsBarChartStyles,
+      const stylesWithTitle: BarChartStyle = {
+        ...defaultBarChartStyles,
         titleOptions: {
           show: true,
           titleName: 'Custom Bar Chart',
@@ -232,8 +156,8 @@ describe('echarts_bar to_spec', () => {
     });
 
     test('hides title when show is false', () => {
-      const stylesNoTitle: EchartsBarChartStyle = {
-        ...defaultEchartsBarChartStyles,
+      const stylesNoTitle: BarChartStyle = {
+        ...defaultBarChartStyles,
         titleOptions: {
           show: false,
           titleName: '',
@@ -256,8 +180,8 @@ describe('echarts_bar to_spec', () => {
     });
 
     test('applies tooltip options', () => {
-      const stylesWithTooltip: EchartsBarChartStyle = {
-        ...defaultEchartsBarChartStyles,
+      const stylesWithTooltip: BarChartStyle = {
+        ...defaultBarChartStyles,
         tooltipOptions: {
           mode: 'hidden',
         },
@@ -279,8 +203,8 @@ describe('echarts_bar to_spec', () => {
     });
 
     test('applies legend options', () => {
-      const stylesWithLegend: EchartsBarChartStyle = {
-        ...defaultEchartsBarChartStyles,
+      const stylesWithLegend: BarChartStyle = {
+        ...defaultBarChartStyles,
         addLegend: true,
         legendPosition: Positions.TOP,
       };
@@ -301,12 +225,10 @@ describe('echarts_bar to_spec', () => {
       expect(spec.legend.top).toBe(0);
     });
 
-    test('applies bar styling options', () => {
-      const stylesWithBarOptions: EchartsBarChartStyle = {
-        ...defaultEchartsBarChartStyles,
-        barWidth: 50,
-        showBarLabel: true,
-        barLabelPosition: 'top',
+    test('applies bar width from BarChartStyle', () => {
+      const stylesWithBarWidth: BarChartStyle = {
+        ...defaultBarChartStyles,
+        barWidth: 0.5, // BarChartStyle uses ratio 0-1
       };
 
       const spec = createEchartsBarSpec(
@@ -314,16 +236,15 @@ describe('echarts_bar to_spec', () => {
         [mockNumericalColumn],
         [mockCategoricalColumn],
         [],
-        stylesWithBarOptions,
+        stylesWithBarWidth,
         {
           [AxisRole.X]: mockCategoricalColumn,
           [AxisRole.Y]: mockNumericalColumn,
         }
       );
 
-      expect(spec.series[0].barWidth).toBe(50);
-      expect(spec.series[0].label.show).toBe(true);
-      expect(spec.series[0].label.position).toBe('top');
+      // Should be converted to percentage string
+      expect(spec.series[0].barWidth).toBe('50%');
     });
   });
 });

@@ -146,9 +146,8 @@ export const EchartsRenderer: React.FC<EchartsRendererProps> = ({
         brushHandlerRef.current = null;
       }
 
-      // Remove the __echarts__ marker and metadata before setting options
+      // Remove the metadata before setting options (used for brush selection)
       const cleanOption = { ...option };
-      delete cleanOption.__echarts__;
       delete cleanOption.__metadata__;
 
       chart.setOption(cleanOption, true);
@@ -189,7 +188,6 @@ export const EchartsRenderer: React.FC<EchartsRendererProps> = ({
 
     if (option) {
       const cleanOption = { ...option };
-      delete cleanOption.__echarts__;
       delete cleanOption.__metadata__;
       chart.setOption(cleanOption, true);
 
@@ -251,9 +249,3 @@ export const EchartsRenderer: React.FC<EchartsRendererProps> = ({
   );
 };
 
-/**
- * Check if a spec is an ECharts spec
- */
-export const isEchartsSpec = (spec: any): boolean => {
-  return spec && spec.__echarts__ === true;
-};

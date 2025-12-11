@@ -3,14 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EchartsLineChartStyle } from './echarts_line_vis_config';
-import { VisColumn, AxisColumnMappings, AxisRole, Positions } from '../types';
+import { LineChartStyle } from '../line/line_vis_config';
+import { VisColumn, AxisColumnMappings, AxisRole, Positions, Threshold } from '../types';
 import {
   buildLegendConfig,
   buildTitleConfig,
   buildGridConfig,
   buildTooltipConfig,
 } from '../echarts_common';
+
+// Default values for ECharts-specific line options not present in LineChartStyle
+const ECHARTS_LINE_DEFAULTS = {
+  showSymbol: true,
+  symbolSize: 4,
+  areaStyle: false,
+  areaOpacity: 0.3,
+  showXAxisLabel: true,
+  showYAxisLabel: true,
+};
 
 /**
  * Create an ECharts line chart spec
@@ -20,7 +30,7 @@ export const createEchartsLineSpec = (
   numericalColumns: VisColumn[],
   categoricalColumns: VisColumn[],
   dateColumns: VisColumn[],
-  styles: EchartsLineChartStyle,
+  styles: LineChartStyle,
   axisColumnMappings?: AxisColumnMappings,
   timeRange?: { from: string; to: string }
 ): any => {
@@ -82,9 +92,14 @@ export const createEchartsLineSpec = (
     return styles.lineMode === 'stepped' ? 'middle' : false;
   };
 
+  // Use default values for ECharts-specific options
+  const { showSymbol, symbolSize, areaStyle, areaOpacity, showXAxisLabel, showYAxisLabel } =
+    ECHARTS_LINE_DEFAULTS;
+
   // Build markLine configuration for threshold lines
+  // LineChartStyle uses thresholdOptions.thresholds
   const buildMarkLine = () => {
-    const thresholds = styles.thresholds ?? [];
+    const thresholds: Threshold[] = styles.thresholdOptions?.thresholds ?? [];
     if (thresholds.length === 0) {
       return undefined;
     }
@@ -121,11 +136,11 @@ export const createEchartsLineSpec = (
     lineStyle: {
       width: styles.lineWidth,
     },
-    showSymbol: styles.showSymbol,
-    symbolSize: styles.symbolSize,
-    ...(styles.areaStyle && {
+    showSymbol,
+    symbolSize,
+    ...(areaStyle && {
       areaStyle: {
-        opacity: styles.areaOpacity,
+        opacity: areaOpacity,
       },
     }),
     // Only add markLine to the first series to avoid duplicates
@@ -138,8 +153,6 @@ export const createEchartsLineSpec = (
 
   // Build the ECharts option
   const option: any = {
-    // Mark this as an ECharts spec
-    __echarts__: true,
     // Store metadata for time range brush functionality
     __metadata__: {
       isXTemporal,
@@ -175,21 +188,23 @@ export const createEchartsLineSpec = (
     }),
     xAxis: {
       type: isXTemporal ? 'time' : 'category',
-      name: styles.xAxisTitle || xName,
+      // LineChartStyle uses categoryAxes[0].title.text for x-axis title
+      name: styles.categoryAxes?.[0]?.title?.text || xName,
       nameLocation: 'middle',
       nameGap: 30,
       axisLabel: {
-        show: styles.showXAxisLabel,
+        show: showXAxisLabel,
         rotate: isXTemporal ? 0 : 45,
       },
     },
     yAxis: {
       type: 'value',
-      name: styles.yAxisTitle || metricName,
+      // LineChartStyle uses valueAxes[0].title.text for y-axis title
+      name: styles.valueAxes?.[0]?.title?.text || metricName,
       nameLocation: 'middle',
       nameGap: 50,
       axisLabel: {
-        show: styles.showYAxisLabel,
+        show: showYAxisLabel,
       },
     },
     series,

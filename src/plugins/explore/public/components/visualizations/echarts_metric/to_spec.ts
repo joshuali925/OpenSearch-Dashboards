@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EchartsMetricChartStyle } from './echarts_metric_vis_config';
+import { MetricChartStyle } from '../metric/metric_vis_config';
 import { VisColumn, AxisColumnMappings, AxisRole, Threshold } from '../types';
 import { calculateValue, calculatePercentage } from '../utils/calculation';
 import { getColors } from '../theme/default_colors';
@@ -13,6 +13,7 @@ import {
   getMaxAndMinBase,
 } from '../style_panel/threshold/threshold_utils';
 import { DEFAULT_OPACITY } from '../constants';
+import { timeUnitToFormat, inferTimeUnitFromTimestamps } from '../utils/utils';
 
 /**
  * Create an ECharts metric chart spec
@@ -22,7 +23,7 @@ export const createEchartsMetricSpec = (
   numericalColumns: VisColumn[],
   categoricalColumns: VisColumn[],
   dateColumns: VisColumn[],
-  styles: EchartsMetricChartStyle,
+  styles: MetricChartStyle,
   axisColumnMappings?: AxisColumnMappings
 ): any => {
   const colorPalette = getColors();
@@ -117,9 +118,15 @@ export const createEchartsMetricSpec = (
       ? `${percentage >= 0 ? '+' : ''}${(percentage * 100).toFixed(2)}%`
       : '-';
 
+  // Get date field name for tooltip
+  const dateFieldName = dateColumn?.name;
+
+  // Infer time unit for tooltip formatting
+  const timeUnit = dateField ? inferTimeUnitFromTimestamps(transformedData, dateField) : null;
+  const dateFormat = timeUnit ? timeUnitToFormat[timeUnit] : '%b %d, %Y %H:%M:%S';
+
   // Build the ECharts option
   const option: any = {
-    __echarts__: true,
     grid: {
       left: '3%',
       right: '3%',
@@ -130,6 +137,43 @@ export const createEchartsMetricSpec = (
     graphic: {
       elements: [] as any[],
     },
+    // Add tooltip for sparkline
+    ...(dateField && {
+      tooltip: {
+        show: true,
+        trigger: 'axis',
+        axisPointer: {
+          type: 'cross',
+        },
+        formatter: (params: any) => {
+          const data = Array.isArray(params) ? params[0] : params;
+          if (!data || data.value === undefined) return '';
+
+          const [timestamp, value] = data.value;
+          const date = new Date(timestamp);
+
+          // Format date based on inferred time unit
+          const formatDate = (d: Date, format: string): string => {
+            const pad = (n: number) => n.toString().padStart(2, '0');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            return format
+              .replace('%Y', d.getFullYear().toString())
+              .replace('%b', months[d.getMonth()])
+              .replace('%d', pad(d.getDate()))
+              .replace('%H', pad(d.getHours()))
+              .replace('%M', pad(d.getMinutes()))
+              .replace('%S', pad(d.getSeconds()))
+              .replace('%L', d.getMilliseconds().toString().padStart(3, '0'));
+          };
+
+          const formattedDate = formatDate(date, dateFormat);
+          const formattedValue = typeof value === 'number' ? value.toLocaleString() : value;
+
+          return `<strong>${dateFieldName || 'Time'}</strong>: ${formattedDate}<br/><strong>${numericFieldName || 'Value'}</strong>: ${formattedValue}`;
+        },
+      },
+    }),
     xAxis: dateField
       ? {
           type: 'time',

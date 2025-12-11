@@ -4,7 +4,13 @@
  */
 
 import { EchartsLineChartStyle } from './echarts_line_vis_config';
-import { VisColumn, AxisColumnMappings, AxisRole } from '../types';
+import { VisColumn, AxisColumnMappings, AxisRole, Positions } from '../types';
+import {
+  buildLegendConfig,
+  buildTitleConfig,
+  buildGridConfig,
+  buildTooltipConfig,
+} from '../echarts_common';
 
 /**
  * Create an ECharts line chart spec
@@ -127,17 +133,8 @@ export const createEchartsLineSpec = (
   }));
 
   // Build legend configuration
-  const legendPosition = styles.legendPosition || 'bottom';
-  const legendConfig = styles.addLegend
-    ? {
-        show: true,
-        type: 'scroll',
-        ...(legendPosition === 'bottom' && { bottom: 0 }),
-        ...(legendPosition === 'top' && { top: 0 }),
-        ...(legendPosition === 'left' && { left: 0, orient: 'vertical' }),
-        ...(legendPosition === 'right' && { right: 0, orient: 'vertical' }),
-      }
-    : { show: false };
+  const legendPosition = styles.legendPosition || Positions.BOTTOM;
+  const legendConfig = buildLegendConfig(styles.addLegend, legendPosition);
 
   // Build the ECharts option
   const option: any = {
@@ -148,27 +145,14 @@ export const createEchartsLineSpec = (
       isXTemporal,
       xField,
     },
-    title: styles.titleOptions?.show
-      ? {
-          text: styles.titleOptions?.titleName || `${metricName} Chart`,
-          left: 'center',
-        }
-      : undefined,
-    tooltip: {
-      show: styles.tooltipOptions?.mode !== 'hidden',
-      trigger: 'axis',
-      axisPointer: {
-        type: 'cross',
-      },
-    },
+    title: buildTitleConfig(styles.titleOptions, `${metricName} Chart`),
+    tooltip: buildTooltipConfig(styles.tooltipOptions, 'axis', 'cross'),
     legend: legendConfig,
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: styles.addLegend && legendPosition === 'bottom' ? '15%' : '3%',
-      top: styles.titleOptions?.show ? '15%' : '10%',
-      containLabel: true,
-    },
+    grid: buildGridConfig({
+      addLegend: styles.addLegend,
+      legendPosition,
+      showTitle: styles.titleOptions?.show,
+    }),
     // Add dataZoom for brush selection on temporal x-axis
     ...(isXTemporal && {
       dataZoom: [
@@ -218,26 +202,3 @@ export const createEchartsLineSpec = (
   return option;
 };
 
-/**
- * Create a multi-line ECharts chart spec
- */
-export const createEchartsMultiLineSpec = (
-  transformedData: Array<Record<string, any>>,
-  numericalColumns: VisColumn[],
-  categoricalColumns: VisColumn[],
-  dateColumns: VisColumn[],
-  styles: EchartsLineChartStyle,
-  axisColumnMappings?: AxisColumnMappings,
-  timeRange?: { from: string; to: string }
-): any => {
-  // Delegate to the main function which handles grouping
-  return createEchartsLineSpec(
-    transformedData,
-    numericalColumns,
-    categoricalColumns,
-    dateColumns,
-    styles,
-    axisColumnMappings,
-    timeRange
-  );
-};

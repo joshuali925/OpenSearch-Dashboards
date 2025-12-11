@@ -645,7 +645,6 @@ const oneMetricOneCateRule: VisualizationRule = {
     { ...CHART_METADATA.bar, priority: 100 },
     { ...CHART_METADATA.echarts_bar, priority: 95 },
     { ...CHART_METADATA.bar_gauge, priority: 80 },
-    { ...CHART_METADATA.echarts_gauge, priority: 75 },
     { ...CHART_METADATA.pie, priority: 60 },
     { ...CHART_METADATA.line, priority: 40 },
     { ...CHART_METADATA.echarts_line, priority: 35 },
@@ -722,15 +721,6 @@ const oneMetricOneCateRule: VisualizationRule = {
           categoricalColumns,
           dateColumns,
           styleOptions as EchartsLineChartStyle,
-          axisColumnMappings
-        );
-      case 'echarts_gauge':
-        return createEchartsGaugeSpec(
-          transformedData,
-          numericalColumns,
-          categoricalColumns,
-          dateColumns,
-          styleOptions as EchartsGaugeChartStyle,
           axisColumnMappings
         );
       default:

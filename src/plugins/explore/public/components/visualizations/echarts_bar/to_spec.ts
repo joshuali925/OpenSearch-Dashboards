@@ -4,7 +4,13 @@
  */
 
 import { EchartsBarChartStyle } from './echarts_bar_vis_config';
-import { VisColumn, AxisColumnMappings, AxisRole } from '../types';
+import { VisColumn, AxisColumnMappings, AxisRole, Positions } from '../types';
+import {
+  buildLegendConfig,
+  buildTitleConfig,
+  buildGridConfig,
+  buildTooltipConfig,
+} from '../echarts_common';
 
 /**
  * Create an ECharts bar chart spec
@@ -89,17 +95,8 @@ export const createEchartsBarSpec = (
   }));
 
   // Build legend configuration
-  const legendPosition = styles.legendPosition || 'bottom';
-  const legendConfig = styles.addLegend
-    ? {
-        show: true,
-        type: 'scroll',
-        ...(legendPosition === 'bottom' && { bottom: 0 }),
-        ...(legendPosition === 'top' && { top: 0 }),
-        ...(legendPosition === 'left' && { left: 0, orient: 'vertical' }),
-        ...(legendPosition === 'right' && { right: 0, orient: 'vertical' }),
-      }
-    : { show: false };
+  const legendPosition = styles.legendPosition || Positions.BOTTOM;
+  const legendConfig = buildLegendConfig(styles.addLegend, legendPosition);
 
   // Determine axis configuration based on orientation
   const isHorizontal = styles.orientation === 'horizontal';
@@ -139,12 +136,7 @@ export const createEchartsBarSpec = (
       // Store original timestamp values for mapping brush selection back to time range
       xValues: isXTemporal ? xValues.map((v) => new Date(v).getTime()) : undefined,
     },
-    title: styles.titleOptions?.show
-      ? {
-          text: styles.titleOptions?.titleName || `${metricName} Chart`,
-          left: 'center',
-        }
-      : undefined,
+    title: buildTitleConfig(styles.titleOptions, `${metricName} Chart`),
     tooltip: {
       show: styles.tooltipOptions?.mode !== 'hidden',
       trigger: 'axis',
@@ -164,13 +156,11 @@ export const createEchartsBarSpec = (
           : undefined,
     },
     legend: legendConfig,
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: styles.addLegend && legendPosition === 'bottom' ? '15%' : '3%',
-      top: styles.titleOptions?.show ? '15%' : '10%',
-      containLabel: true,
-    },
+    grid: buildGridConfig({
+      addLegend: styles.addLegend,
+      legendPosition,
+      showTitle: styles.titleOptions?.show,
+    }),
     // Add dataZoom for brush selection on temporal x-axis (only for vertical bars)
     ...(isXTemporal &&
       !isHorizontal && {
@@ -204,26 +194,3 @@ export const createEchartsBarSpec = (
   return option;
 };
 
-/**
- * Create a stacked bar ECharts chart spec
- */
-export const createEchartsStackedBarSpec = (
-  transformedData: Array<Record<string, any>>,
-  numericalColumns: VisColumn[],
-  categoricalColumns: VisColumn[],
-  dateColumns: VisColumn[],
-  styles: EchartsBarChartStyle,
-  axisColumnMappings?: AxisColumnMappings,
-  timeRange?: { from: string; to: string }
-): any => {
-  // Create bar spec with stacked mode
-  return createEchartsBarSpec(
-    transformedData,
-    numericalColumns,
-    categoricalColumns,
-    dateColumns,
-    { ...styles, stackMode: 'stacked' },
-    axisColumnMappings,
-    timeRange
-  );
-};

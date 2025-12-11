@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import * as echarts from 'echarts';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../types';
@@ -17,6 +17,77 @@ interface EchartsRendererProps {
   onChartReady?: (chart: echarts.ECharts) => void;
   onSelectTimeRange?: (timeRange?: TimeRange) => void;
 }
+
+/**
+ * Creates a brush end handler for temporal x-axis charts
+ */
+const createBrushEndHandler = (
+  chart: echarts.ECharts,
+  xValues: number[] | undefined,
+  onSelectTimeRangeRef: React.MutableRefObject<((timeRange?: TimeRange) => void) | undefined>
+) => {
+  return (params: any) => {
+    const areas = params.areas;
+    if (!areas || areas.length === 0) return;
+
+    const area = areas[0];
+    if (!area || !area.coordRange) return;
+
+    const [startValue, endValue] = area.coordRange;
+
+    if (onSelectTimeRangeRef.current) {
+      let from: string;
+      let to: string;
+
+      // For category axis with temporal data, coordRange contains indices
+      // Map indices to actual timestamps using xValues from metadata
+      if (xValues && Array.isArray(xValues)) {
+        const startIdx = Math.max(0, Math.floor(startValue));
+        const endIdx = Math.min(xValues.length - 1, Math.floor(endValue));
+        from = new Date(xValues[startIdx]).toISOString();
+        to = new Date(xValues[endIdx]).toISOString();
+      } else {
+        // For time axis, coordRange contains timestamps directly
+        from = new Date(startValue).toISOString();
+        to = new Date(endValue).toISOString();
+      }
+      onSelectTimeRangeRef.current({ from, to });
+    }
+
+    // Clear brush selection after a short delay for visual feedback
+    setTimeout(() => {
+      chart.dispatchAction({
+        type: 'brush',
+        areas: [],
+      });
+    }, 200);
+  };
+};
+
+/**
+ * Sets up brush selection for temporal x-axis charts
+ */
+const setupBrushSelection = (
+  chart: echarts.ECharts,
+  xValues: number[] | undefined,
+  onSelectTimeRangeRef: React.MutableRefObject<((timeRange?: TimeRange) => void) | undefined>,
+  brushHandlerRef: React.MutableRefObject<((params: any) => void) | null>
+) => {
+  // Activate brush mode
+  chart.dispatchAction({
+    type: 'takeGlobalCursor',
+    key: 'brush',
+    brushOption: {
+      brushType: 'lineX',
+      brushMode: 'single',
+    },
+  });
+
+  // Create and store brush end handler
+  const onBrushEnd = createBrushEndHandler(chart, xValues, onSelectTimeRangeRef);
+  brushHandlerRef.current = onBrushEnd;
+  chart.on('brushEnd', onBrushEnd);
+};
 
 export const EchartsRenderer: React.FC<EchartsRendererProps> = ({
   option,
@@ -84,62 +155,7 @@ export const EchartsRenderer: React.FC<EchartsRendererProps> = ({
 
       // Set up brush for temporal x-axis charts
       if (isXTemporal) {
-        // Activate brush mode
-        chart.dispatchAction({
-          type: 'takeGlobalCursor',
-          key: 'brush',
-          brushOption: {
-            brushType: 'lineX',
-            brushMode: 'single',
-          },
-        });
-
-        // Create brush end handler
-        const onBrushEnd = (params: any) => {
-          // brushEnd event has areas directly in params
-          const areas = params.areas;
-          if (!areas || areas.length === 0) return;
-
-          const area = areas[0];
-          if (!area || !area.coordRange) return;
-
-          // coordRange for lineX brush is [startValue, endValue] on x-axis
-          const [startValue, endValue] = area.coordRange;
-
-          // Update time range if callback is provided
-          if (onSelectTimeRangeRef.current) {
-            let from: string;
-            let to: string;
-
-            // For category axis with temporal data, coordRange contains indices
-            // Map indices to actual timestamps using xValues from metadata
-            if (xValues && Array.isArray(xValues)) {
-              const startIdx = Math.max(0, Math.floor(startValue));
-              const endIdx = Math.min(xValues.length - 1, Math.floor(endValue));
-              from = new Date(xValues[startIdx]).toISOString();
-              to = new Date(xValues[endIdx]).toISOString();
-            } else {
-              // For time axis, coordRange contains timestamps directly
-              from = new Date(startValue).toISOString();
-              to = new Date(endValue).toISOString();
-            }
-            onSelectTimeRangeRef.current({ from, to });
-          }
-
-          // Clear brush selection after a short delay for visual feedback
-          setTimeout(() => {
-            chart.dispatchAction({
-              type: 'brush',
-              areas: [],
-            });
-          }, 200);
-        };
-
-        // Store handler ref for cleanup
-        brushHandlerRef.current = onBrushEnd;
-
-        // Listen for brushEnd event
-        chart.on('brushEnd', onBrushEnd);
+        setupBrushSelection(chart, xValues, onSelectTimeRangeRef, brushHandlerRef);
       }
     }
 
@@ -179,54 +195,7 @@ export const EchartsRenderer: React.FC<EchartsRendererProps> = ({
 
       // Re-setup brush for temporal x-axis charts
       if (isXTemporal) {
-        chart.dispatchAction({
-          type: 'takeGlobalCursor',
-          key: 'brush',
-          brushOption: {
-            brushType: 'lineX',
-            brushMode: 'single',
-          },
-        });
-
-        // Re-create brush end handler
-        const onBrushEnd = (params: any) => {
-          const areas = params.areas;
-          if (!areas || areas.length === 0) return;
-
-          const area = areas[0];
-          if (!area || !area.coordRange) return;
-
-          const [startValue, endValue] = area.coordRange;
-
-          if (onSelectTimeRangeRef.current) {
-            let from: string;
-            let to: string;
-
-            // For category axis with temporal data, coordRange contains indices
-            // Map indices to actual timestamps using xValues from metadata
-            if (xValues && Array.isArray(xValues)) {
-              const startIdx = Math.max(0, Math.floor(startValue));
-              const endIdx = Math.min(xValues.length - 1, Math.floor(endValue));
-              from = new Date(xValues[startIdx]).toISOString();
-              to = new Date(xValues[endIdx]).toISOString();
-            } else {
-              // For time axis, coordRange contains timestamps directly
-              from = new Date(startValue).toISOString();
-              to = new Date(endValue).toISOString();
-            }
-            onSelectTimeRangeRef.current({ from, to });
-          }
-
-          setTimeout(() => {
-            chart.dispatchAction({
-              type: 'brush',
-              areas: [],
-            });
-          }, 200);
-        };
-
-        brushHandlerRef.current = onBrushEnd;
-        chart.on('brushEnd', onBrushEnd);
+        setupBrushSelection(chart, xValues, onSelectTimeRangeRef, brushHandlerRef);
       }
     }
 

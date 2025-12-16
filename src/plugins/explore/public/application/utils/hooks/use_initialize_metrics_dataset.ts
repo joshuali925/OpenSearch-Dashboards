@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useEffectOnce } from 'react-use';
 import { DataStructure } from '../../../../../data/common';
 import { ExploreServices } from '../../../types';
 import { setQueryWithHistory } from '../state_management/slices';
@@ -23,10 +23,15 @@ export const useInitializeMetricsDataset = ({
   const dispatch = useDispatch();
   const currentQuery = useSelector(selectQuery);
 
-  useEffect(() => {
+  useEffectOnce(() => {
     const initializeDataset = async () => {
       if (savedExplore || (currentQuery.dataset && currentQuery.dataset.type === 'PROMETHEUS')) {
         return;
+      }
+
+      if (currentQuery.dataset && currentQuery.dataset.type !== 'PROMETHEUS') {
+        const clearedQuery = { ...currentQuery, dataset: undefined };
+        dispatch(setQueryWithHistory(clearedQuery));
       }
 
       try {
@@ -66,5 +71,5 @@ export const useInitializeMetricsDataset = ({
     };
 
     initializeDataset();
-  }, [currentQuery.dataset, savedExplore, services, dispatch]);
+  });
 };

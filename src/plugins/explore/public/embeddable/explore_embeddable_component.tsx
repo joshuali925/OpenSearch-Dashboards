@@ -17,6 +17,7 @@ import { TableVis } from '../components/visualizations/table/table_vis';
 import { TableChartStyle } from '../components/visualizations/table/table_vis_config';
 import { getLegacyDisplayedColumns } from '../helpers/data_table_helper';
 import { SAMPLE_SIZE_SETTING } from '../../common';
+import { EchartsRenderer } from '../components/visualizations/echarts_renderer';
 
 interface ExploreEmbeddableProps {
   searchProps: SearchProps;
@@ -115,6 +116,11 @@ export const ExploreEmbeddableComponent = ({ searchProps }: ExploreEmbeddablePro
           disableActions={true}
         />
       );
+    }
+
+    // Render ECharts directly if we have an echarts spec
+    if (searchProps.echartsSpec) {
+      return <EchartsRenderer option={searchProps.echartsSpec} height="100%" width="100%" />;
     }
 
     return (

@@ -6,6 +6,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { i18n } from '@osd/i18n';
 import moment from 'moment';
+import { IUiSettingsClient } from 'opensearch-dashboards/public';
 import {
   IBucketDateHistogramAggConfig,
   Query,
@@ -13,7 +14,7 @@ import {
   IndexPatternField,
 } from '../../../../../../../../src/plugins/data/common';
 import { QueryExecutionStatus } from '../types';
-import { setResults, ISearchResult } from '../slices';
+import { setResults, ISearchResult, IPrometheusSearchResult } from '../slices';
 import { setIndividualQueryStatus } from '../slices/query_editor/query_editor_slice';
 import { ExploreServices } from '../../../../types';
 import {
@@ -45,6 +46,16 @@ import {
   processRawResultsForHistogram,
   createHistogramConfigWithInterval,
 } from './utils';
+import { getCurrentFlavor } from '../../../../helpers/get_flavor_from_app_id';
+import { ExploreFlavor } from '../../../../../common';
+import { TRACES_CHART_BAR_TARGET } from '../constants';
+import { createTraceAggregationConfig } from './trace_aggregation_builder';
+import {
+  prepareTraceCacheKeys,
+  executeRequestCountQuery,
+  executeErrorCountQuery,
+  executeLatencyQuery,
+} from './trace_query_actions';
 
 // Module-level storage for abort controllers keyed by cacheKey
 const activeQueryAbortControllers = new Map<string, AbortController>();
@@ -67,10 +78,26 @@ export const defaultPrepareQueryString = (query: Query): string => {
   switch (query.language) {
     case 'PPL':
       return defaultPreparePplQuery(query).query;
+    case 'PROMQL':
+      return query.query as string;
     default:
       throw new Error(
         `defaultPrepareQueryString encountered unhandled language: ${query.language}`
       );
+  }
+};
+
+/**
+ * Checks if query execution should be skipped for the given query.
+ * This provides a centralized place to add language-specific skip conditions.
+ */
+export const shouldSkipQueryExecution = (query: Query): boolean => {
+  switch (query.language) {
+    case 'PROMQL':
+      // Skip empty PROMQL queries (would return 400 from backend)
+      return !query.query?.toString().trim();
+    default:
+      return false;
   }
 };
 
@@ -178,14 +205,15 @@ export const histogramResultsProcessor: HistogramDataProcessor = (
   rawResults: ISearchResult,
   dataset: DataView,
   data: DataPublicPluginStart,
-  interval: string
+  interval: string,
+  uiSettings: IUiSettingsClient
 ): ProcessedSearchResults => {
   const result = defaultResultsProcessor(rawResults, dataset);
 
   data.dataViews.saveToCache(dataset.id!, dataset); // Updating the cache
 
   const histogramConfigs = dataset.timeFieldName
-    ? createHistogramConfigs(dataset, interval, data)
+    ? createHistogramConfigs(dataset, interval, data, uiSettings)
     : undefined;
 
   if (histogramConfigs) {
@@ -238,12 +266,18 @@ export const executeQueries = createAsyncThunk<
   const dataTableQueryStatus = state.queryEditor.queryStatusMap[dataTableCacheKey];
   const histogramQueryStatus = state.queryEditor.queryStatusMap[histogramCacheKey];
 
+  // Early exit if query should be skipped
+  if (shouldSkipQueryExecution(query)) {
+    return;
+  }
+
   const needsDataTableQuery =
     !results[dataTableCacheKey] ||
     dataTableQueryStatus?.status === QueryExecutionStatus.UNINITIALIZED;
   const needsHistogramQuery =
-    !results[histogramCacheKey] ||
-    histogramQueryStatus?.status === QueryExecutionStatus.UNINITIALIZED;
+    query.language !== 'PROMQL' &&
+    (!results[histogramCacheKey] ||
+      histogramQueryStatus?.status === QueryExecutionStatus.UNINITIALIZED);
 
   const promises = [];
   // Execute query without aggregations
@@ -271,6 +305,70 @@ export const executeQueries = createAsyncThunk<
         })
       )
     );
+  }
+
+  const flavorId = await getCurrentFlavor(services);
+
+  if (flavorId === ExploreFlavor.Traces) {
+    const dataset = query.dataset
+      ? await services.data.dataViews.get(query.dataset.id, query.dataset.type !== 'INDEX_PATTERN')
+      : await services.data.dataViews.getDefault();
+
+    if (dataset?.timeFieldName) {
+      const rawInterval = state.legacy?.interval || 'auto';
+
+      const histogramConfig = createHistogramConfigWithInterval(
+        dataset,
+        rawInterval,
+        services,
+        getState,
+        TRACES_CHART_BAR_TARGET
+      );
+      const calculatedInterval = histogramConfig?.finalInterval || '5m';
+
+      const { requestCacheKey, errorCacheKey, latencyCacheKey } = prepareTraceCacheKeys(query);
+
+      const baseQuery = defaultPrepareQueryString(query);
+
+      const config = createTraceAggregationConfig(
+        dataset.timeFieldName,
+        calculatedInterval,
+        breakdownField
+      );
+
+      promises.push(
+        dispatch(
+          executeRequestCountQuery({
+            services,
+            cacheKey: requestCacheKey,
+            baseQuery,
+            config,
+          })
+        )
+      );
+
+      promises.push(
+        dispatch(
+          executeErrorCountQuery({
+            services,
+            cacheKey: errorCacheKey,
+            baseQuery,
+            config,
+          })
+        )
+      );
+
+      promises.push(
+        dispatch(
+          executeLatencyQuery({
+            services,
+            cacheKey: latencyCacheKey,
+            baseQuery,
+            config,
+          })
+        )
+      );
+    }
   }
 
   // Handle tab queries as before (keeping existing tab logic)
@@ -485,11 +583,29 @@ const executeQueryBase = async (
       .ok({ json: rawResults });
 
     // Store RAW results in cache
-    let rawResultsWithMeta: ISearchResult = {
+    const dataFrame = searchSource.getDataFrame();
+    let rawResultsWithMeta: ISearchResult | IPrometheusSearchResult = {
       ...rawResults,
       elapsedMs: inspectorRequest.getTime()!,
-      fieldSchema: searchSource.getDataFrame()?.schema,
+      fieldSchema: dataFrame?.schema,
     };
+
+    // Prometheus table uses instant query results, visualization uses range query results
+    if (query.language === 'PROMQL' && dataFrame?.meta?.instantData) {
+      const instantData = dataFrame.meta.instantData;
+      const instantHits = instantData.rows.map((row: Record<string, unknown>) => ({
+        _index: dataFrame.name,
+        _source: row,
+      }));
+      rawResultsWithMeta = {
+        ...rawResultsWithMeta,
+        instantHits: {
+          hits: instantHits,
+          total: instantHits.length,
+        },
+        instantFieldSchema: instantData.schema,
+      };
+    }
 
     if (isHistogramQuery && histogramConfig) {
       rawResultsWithMeta = processRawResultsForHistogram(

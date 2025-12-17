@@ -28,30 +28,80 @@ export interface MetricsRawTableProps {
 interface RawTableRow {
   id: number;
   metricString: string;
-  value: string | number;
+  values: Array<{ label: string; value: string | number | null }>;
 }
-
-const RESERVED_FIELDS = ['Time', 'Value', '__name__'];
 
 const emptyHits: NonNullable<IPrometheusSearchResult['instantHits']>['hits'] = [];
 
 /**
- * Formats a Prometheus metric in the raw format:
- * metric_name{label1="value1", label2="value2"} value
- *
- * In expanded mode:
- * metric_name{
- *     label1="value1",
- *     label2="value2"
- * }
+ * Extracts value columns from the source object
+ * Returns array of { label, value } for columns like "Value #A", "Value #B"
+ */
+const extractValueColumns = (
+  source: Record<string, unknown>
+): Array<{ label: string; value: string | number | null }> => {
+  const valueColumns: Array<{ label: string; value: string | number | null }> = [];
+
+  // Check for multi-query format (Value #A, Value #B, etc.)
+  const valueKeys = Object.keys(source).filter((key) => key.startsWith('Value #'));
+
+  if (valueKeys.length > 0) {
+    // Multi-query format
+    valueKeys.sort().forEach((key) => {
+      const label = key.replace('Value ', ''); // "Value #A" -> "#A"
+      const val = source[key];
+      valueColumns.push({
+        label,
+        value: val !== undefined && val !== null ? (val as string | number) : null,
+      });
+    });
+  } else if (source.Value !== undefined) {
+    // Single query format
+    valueColumns.push({
+      label: '',
+      value: source.Value as string | number,
+    });
+  }
+
+  return valueColumns;
+};
+
+/**
+ * Formats the metric string, handling both old and new schema formats
+ * New format: source.Metric already contains the formatted string
+ * Old format: construct from __name__ and individual label fields
  */
 const formatMetricString = (source: Record<string, unknown>, expanded: boolean): string => {
+  // New schema: Metric field already contains the formatted string
+  if (source.Metric !== undefined) {
+    const metric = source.Metric as string;
+    if (!expanded) {
+      return metric;
+    }
+    // For expanded mode, reformat the metric string
+    const match = metric.match(/^([^{]*)\{(.*)\}$/);
+    if (match) {
+      const [, metricName, labelsStr] = match;
+      const labels = labelsStr.split(', ');
+      const indent = '    ';
+      return `${metricName}{\n${indent}${labels.join(',\n' + indent)}\n}`;
+    }
+    return metric;
+  }
+
+  // Legacy schema: construct from __name__ and labels
   const metricName = (source.__name__ as string) || '';
   const labels: string[] = [];
+  const RESERVED_FIELDS = ['Time', 'Value', '__name__'];
 
-  // Collect all labels (non-reserved fields)
   Object.entries(source).forEach(([key, val]) => {
-    if (!RESERVED_FIELDS.includes(key) && val !== undefined && val !== null) {
+    if (
+      !RESERVED_FIELDS.includes(key) &&
+      !key.startsWith('Value #') &&
+      val !== undefined &&
+      val !== null &&
+      val !== ''
+    ) {
       labels.push(`${key}="${String(val)}"`);
     }
   });
@@ -74,19 +124,27 @@ export const MetricsRawTable: React.FC<MetricsRawTableProps> = ({ searchResult }
 
   const rows = searchResult?.instantHits?.hits || emptyHits;
 
+  // Determine value column labels from first row (or schema if available)
+  const valueColumnLabels = useMemo(() => {
+    if (rows.length === 0) return [''];
+    const firstSource = rows[0]._source || {};
+    const valueColumns = extractValueColumns(firstSource);
+    return valueColumns.map((vc) => vc.label);
+  }, [rows]);
+
   const tableData: RawTableRow[] = useMemo(() => {
     return rows.map((hit, index) => {
       const source = hit._source || {};
       return {
         id: index,
         metricString: formatMetricString(source, expanded),
-        value: source.Value !== undefined ? source.Value : '—',
+        values: extractValueColumns(source),
       };
     });
   }, [rows, expanded]);
 
-  const columns: Array<EuiBasicTableColumn<RawTableRow>> = useMemo(
-    () => [
+  const columns: Array<EuiBasicTableColumn<RawTableRow>> = useMemo(() => {
+    const baseColumns: Array<EuiBasicTableColumn<RawTableRow>> = [
       {
         field: 'metricString',
         name: i18n.translate('explore.metricsRawTable.metricColumn', {
@@ -117,22 +175,39 @@ export const MetricsRawTable: React.FC<MetricsRawTableProps> = ({ searchResult }
           </EuiFlexGroup>
         ),
       },
-      {
-        field: 'value',
-        name: i18n.translate('explore.metricsRawTable.valueColumn', {
-          defaultMessage: 'Value',
-        }),
+    ];
+
+    // Add value columns dynamically based on query labels
+    valueColumnLabels.forEach((label, index) => {
+      const columnName = label
+        ? i18n.translate('explore.metricsRawTable.valueColumnWithLabel', {
+            defaultMessage: 'Value {label}',
+            values: { label },
+          })
+        : i18n.translate('explore.metricsRawTable.valueColumn', {
+            defaultMessage: 'Value',
+          });
+
+      baseColumns.push({
+        field: 'values',
+        name: columnName,
         align: 'right',
         style: { verticalAlign: 'top' },
-        render: (value: string | number) => (
-          <EuiText size="s">
-            <code>{value}</code>
-          </EuiText>
-        ),
-      },
-    ],
-    []
-  );
+        render: (values: Array<{ label: string; value: string | number | null }>) => {
+          const valueEntry = values[index];
+          const displayValue =
+            valueEntry?.value !== null && valueEntry?.value !== undefined ? valueEntry.value : '—';
+          return (
+            <EuiText size="s">
+              <code>{displayValue}</code>
+            </EuiText>
+          );
+        },
+      });
+    });
+
+    return baseColumns;
+  }, [valueColumnLabels]);
 
   const paginatedData = useMemo(() => {
     const start = pagination.pageIndex * pagination.pageSize;
@@ -168,7 +243,7 @@ export const MetricsRawTable: React.FC<MetricsRawTableProps> = ({ searchResult }
       <EuiSpacer size="s" />
       <div className="metricsRawTable">
         <div className="metricsRawTable__tableContainer">
-          <EuiBasicTable items={paginatedData} columns={columns} />
+          <EuiBasicTable items={paginatedData} columns={columns} tableLayout="auto" />
         </div>
         {tableData.length > 0 && (
           <div className="metricsRawTable__pagination">

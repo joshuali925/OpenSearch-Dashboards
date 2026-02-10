@@ -62,23 +62,23 @@ describe('trace_utils', () => {
   });
 
   describe('isOnTracesPage', () => {
-    it('should return true when pathname includes /explore/traces', () => {
-      mockLocation.pathname = '/app/explore/traces';
+    it('should return true when pathname includes /agenticObservability/traces', () => {
+      mockLocation.pathname = '/app/agenticObservability/traces';
       expect(isOnTracesPage()).toBe(true);
     });
 
-    it('should return true when hash includes /explore/traces', () => {
-      mockLocation.hash = '#/explore/traces';
+    it('should return true when hash includes /agenticObservability/traces', () => {
+      mockLocation.hash = '#/agenticObservability/traces';
       expect(isOnTracesPage()).toBe(true);
     });
 
-    it('should return true when both pathname and hash include /explore/traces', () => {
-      mockLocation.pathname = '/app/explore/traces';
-      mockLocation.hash = '#/explore/traces/details';
+    it('should return true when both pathname and hash include /agenticObservability/traces', () => {
+      mockLocation.pathname = '/app/agenticObservability/traces';
+      mockLocation.hash = '#/agenticObservability/traces/details';
       expect(isOnTracesPage()).toBe(true);
     });
 
-    it('should return false when neither pathname nor hash include /explore/traces', () => {
+    it('should return false when neither pathname nor hash include /agenticObservability/traces', () => {
       mockLocation.pathname = '/app/discover';
       mockLocation.hash = '#/discover';
       expect(isOnTracesPage()).toBe(false);
@@ -91,7 +91,7 @@ describe('trace_utils', () => {
     });
 
     it('should handle partial matches correctly', () => {
-      mockLocation.pathname = '/app/explore/trace'; // missing 's'
+      mockLocation.pathname = '/app/agenticObservability/trace'; // missing 's'
       expect(isOnTracesPage()).toBe(false);
     });
   });
@@ -312,7 +312,7 @@ describe('trace_utils', () => {
 
   describe('buildTraceDetailsUrl', () => {
     beforeEach(() => {
-      mockLocation.pathname = '/app/explore/traces';
+      mockLocation.pathname = '/app/agenticObservability/traces';
     });
 
     it('should build URL with span ID and trace ID', () => {
@@ -324,7 +324,7 @@ describe('trace_utils', () => {
       const result = buildTraceDetailsUrl('span-123', 'trace-456', dataset);
 
       expect(result).toBe(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
       );
     });
 
@@ -337,7 +337,7 @@ describe('trace_utils', () => {
       const result = buildTraceDetailsUrl('span-123', '', dataset);
 
       expect(result).toBe(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123')"
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123')"
       );
     });
 
@@ -345,7 +345,7 @@ describe('trace_utils', () => {
       const result = buildTraceDetailsUrl('span-123', 'trace-456', null as any);
 
       expect(result).toBe(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'default-dataset-id',title:'otel-v1-apm-span-*',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'default-dataset-id',title:'otel-v1-apm-span-*',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
       );
     });
 
@@ -354,12 +354,12 @@ describe('trace_utils', () => {
       const result = buildTraceDetailsUrl('span-123', 'trace-456', dataset);
 
       expect(result).toBe(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'default-dataset-id',title:'otel-v1-apm-span-*',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'default-dataset-id',title:'otel-v1-apm-span-*',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
       );
     });
 
     it('should handle base path correctly', () => {
-      mockLocation.pathname = '/custom-base/app/explore/traces';
+      mockLocation.pathname = '/custom-base/app/agenticObservability/traces';
       const dataset = {
         id: 'test-dataset',
         title: 'test-title',
@@ -368,12 +368,12 @@ describe('trace_utils', () => {
       const result = buildTraceDetailsUrl('span-123', 'trace-456', dataset);
 
       expect(result).toBe(
-        "http://localhost:5601/custom-base/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
+        "http://localhost:5601/custom-base/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
       );
     });
 
     it('should handle no base path', () => {
-      mockLocation.pathname = '/app/explore/traces';
+      mockLocation.pathname = '/app/agenticObservability/traces';
       const dataset = {
         id: 'test-dataset',
         title: 'test-title',
@@ -382,7 +382,7 @@ describe('trace_utils', () => {
       const result = buildTraceDetailsUrl('span-123', 'trace-456', dataset);
 
       expect(result).toBe(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
       );
     });
 
@@ -395,7 +395,7 @@ describe('trace_utils', () => {
       const result = buildTraceDetailsUrl('span-123', 'trace-456', dataset);
 
       expect(result).toBe(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset-with-special-chars',title:'test title with spaces',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset-with-special-chars',title:'test title with spaces',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')"
       );
     });
 
@@ -408,7 +408,7 @@ describe('trace_utils', () => {
       const result = buildTraceDetailsUrl('', 'trace-456', dataset);
 
       expect(result).toBe(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'',traceId:'trace-456')"
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'',traceId:'trace-456')"
       );
     });
 
@@ -422,7 +422,7 @@ describe('trace_utils', () => {
       const result = buildTraceDetailsUrl('span-123', 'trace-456', dataset);
 
       expect(result).toBe(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN',timeFieldName:'endTime'),spanId:'span-123',traceId:'trace-456')"
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN',timeFieldName:'endTime'),spanId:'span-123',traceId:'trace-456')"
       );
     });
 
@@ -441,7 +441,7 @@ describe('trace_utils', () => {
       const result = buildTraceDetailsUrl('span-123', 'trace-456', dataset);
 
       expect(result).toBe(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN',timeFieldName:'endTime',dataSource:(id:'external-datasource-id',title:'external',type:'OpenSearch')),spanId:'span-123',traceId:'trace-456')"
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN',timeFieldName:'endTime',dataSource:(id:'external-datasource-id',title:'external',type:'OpenSearch')),spanId:'span-123',traceId:'trace-456')"
       );
     });
 
@@ -459,14 +459,14 @@ describe('trace_utils', () => {
       const result = buildTraceDetailsUrl('span-123', 'trace-456', dataset);
 
       expect(result).toBe(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN',dataSource:(id:'external-datasource-id',title:'external',type:'OpenSearch')),spanId:'span-123',traceId:'trace-456')"
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN',dataSource:(id:'external-datasource-id',title:'external',type:'OpenSearch')),spanId:'span-123',traceId:'trace-456')"
       );
     });
   });
 
   describe('handleSpanIdNavigation', () => {
     beforeEach(() => {
-      mockLocation.pathname = '/app/explore/traces';
+      mockLocation.pathname = '/app/agenticObservability/traces';
     });
 
     it('should open new window with correct URL', () => {
@@ -480,7 +480,7 @@ describe('trace_utils', () => {
       handleSpanIdNavigation(rowData, dataset);
 
       expect(mockOpen).toHaveBeenCalledWith(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')",
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')",
         '_blank'
       );
     });
@@ -496,7 +496,7 @@ describe('trace_utils', () => {
       handleSpanIdNavigation(rowData, dataset);
 
       expect(mockOpen).toHaveBeenCalledWith(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')",
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')",
         '_blank'
       );
     });
@@ -512,7 +512,7 @@ describe('trace_utils', () => {
       handleSpanIdNavigation(rowData, dataset);
 
       expect(mockOpen).toHaveBeenCalledWith(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123')",
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123')",
         '_blank'
       );
     });
@@ -528,7 +528,7 @@ describe('trace_utils', () => {
       handleSpanIdNavigation(rowData, dataset);
 
       expect(mockOpen).toHaveBeenCalledWith(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'')",
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'')",
         '_blank'
       );
     });
@@ -540,7 +540,7 @@ describe('trace_utils', () => {
       handleSpanIdNavigation(rowData, dataset);
 
       expect(mockOpen).toHaveBeenCalledWith(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'default-dataset-id',title:'otel-v1-apm-span-*',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')",
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'default-dataset-id',title:'otel-v1-apm-span-*',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')",
         '_blank'
       );
     });
@@ -556,7 +556,7 @@ describe('trace_utils', () => {
       handleSpanIdNavigation(rowData, dataset);
 
       expect(mockOpen).toHaveBeenCalledWith(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'',traceId:'trace-456')",
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'',traceId:'trace-456')",
         '_blank'
       );
     });
@@ -564,7 +564,7 @@ describe('trace_utils', () => {
 
   describe('SpanIdLink', () => {
     beforeEach(() => {
-      mockLocation.pathname = '/app/explore/traces';
+      mockLocation.pathname = '/app/agenticObservability/traces';
     });
 
     const validRowData = {
@@ -617,7 +617,7 @@ describe('trace_utils', () => {
       fireEvent.click(link);
 
       expect(mockOpen).toHaveBeenCalledWith(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')",
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset',title:'test-title',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')",
         '_blank'
       );
     });
@@ -675,7 +675,7 @@ describe('trace_utils', () => {
       fireEvent.click(link);
 
       expect(mockOpen).toHaveBeenCalledWith(
-        "http://localhost:5601/app/explore/traces/traceDetails#/?_a=(dataset:(id:'default-dataset-id',title:'otel-v1-apm-span-*',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')",
+        "http://localhost:5601/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'default-dataset-id',title:'otel-v1-apm-span-*',type:'INDEX_PATTERN'),spanId:'span-123',traceId:'trace-456')",
         '_blank'
       );
     });

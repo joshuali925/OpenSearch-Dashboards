@@ -7,7 +7,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { ExploreTabs } from './tabs';
+import { AgenticObservabilityTabs } from './tabs';
 import { OpenSearchDashboardsContextProvider } from '../../../../opensearch_dashboards_react/public';
 import { uiReducer } from '../../application/utils/state_management/slices';
 import { queryReducer } from '../../application/utils/state_management/slices';
@@ -18,7 +18,7 @@ import {
 } from '../../application/utils/state_management/slices';
 import { executeTabQuery } from '../../application/utils/state_management/actions/query_actions';
 import { useFlavorId } from '../../helpers/use_flavor_id';
-import { ExploreFlavor } from '../../../common';
+import { AgenticObservabilityFlavor } from '../../../common';
 
 jest.mock('../../helpers/use_flavor_id', () => ({
   useFlavorId: jest.fn(() => 'logs'),
@@ -56,7 +56,7 @@ const mockExecuteTabQuery = executeTabQuery as jest.MockedFunction<typeof execut
 
 const mockUseFlavorId = useFlavorId as jest.MockedFunction<typeof useFlavorId>;
 
-describe('ExploreTabsComponent', () => {
+describe('AgenticObservabilityTabsComponent', () => {
   const mockServices = {
     tabRegistry: {
       getAllTabs: jest.fn(() => [
@@ -64,13 +64,13 @@ describe('ExploreTabsComponent', () => {
           id: 'logs_tab',
           label: 'Logs',
           component: () => <div>Logs Content</div>,
-          flavor: [ExploreFlavor.Logs],
+          flavor: [AgenticObservabilityFlavor.Logs],
         },
         {
-          id: 'explore_visualization_tab',
+          id: 'agentic_observability_visualization_tab',
           label: 'Visualization',
           component: () => <div>Visualization Content</div>,
-          flavor: [ExploreFlavor.Logs],
+          flavor: [AgenticObservabilityFlavor.Logs],
         },
       ]),
       getTab: jest.fn((id: string) => ({
@@ -78,7 +78,7 @@ describe('ExploreTabsComponent', () => {
         label: id === 'logs' ? 'Logs' : 'Visualization',
         component: () => <div>{id} Content</div>,
         prepareQuery: undefined,
-        flavor: [ExploreFlavor.Logs],
+        flavor: [AgenticObservabilityFlavor.Logs],
       })),
     },
   };
@@ -116,7 +116,7 @@ describe('ExploreTabsComponent', () => {
     render(
       <Provider store={store}>
         <OpenSearchDashboardsContextProvider services={mockServices}>
-          <ExploreTabs />
+          <AgenticObservabilityTabs />
         </OpenSearchDashboardsContextProvider>
       </Provider>
     );
@@ -137,7 +137,7 @@ describe('ExploreTabsComponent', () => {
     render(
       <Provider store={store}>
         <OpenSearchDashboardsContextProvider services={mockServices}>
-          <ExploreTabs />
+          <AgenticObservabilityTabs />
         </OpenSearchDashboardsContextProvider>
       </Provider>
     );
@@ -145,7 +145,7 @@ describe('ExploreTabsComponent', () => {
     const visualizationTab = screen.getByText('Visualization');
     fireEvent.click(visualizationTab);
 
-    expect(mockSetActiveTab).toHaveBeenCalledWith('explore_visualization_tab');
+    expect(mockSetActiveTab).toHaveBeenCalledWith('agentic_observability_visualization_tab');
     expect(mockClearQueryStatusMapByKey).toHaveBeenCalled();
     expect(mockExecuteTabQuery).toHaveBeenCalled();
   });
@@ -167,7 +167,7 @@ describe('ExploreTabsComponent', () => {
     render(
       <Provider store={store}>
         <OpenSearchDashboardsContextProvider services={mockServices}>
-          <ExploreTabs />
+          <AgenticObservabilityTabs />
         </OpenSearchDashboardsContextProvider>
       </Provider>
     );
@@ -175,7 +175,7 @@ describe('ExploreTabsComponent', () => {
     const visualizationTab = screen.getByText('Visualization');
     fireEvent.click(visualizationTab);
 
-    expect(mockSetActiveTab).toHaveBeenCalledWith('explore_visualization_tab');
+    expect(mockSetActiveTab).toHaveBeenCalledWith('agentic_observability_visualization_tab');
     expect(mockClearQueryStatusMapByKey).not.toHaveBeenCalled();
     expect(mockExecuteTabQuery).not.toHaveBeenCalled();
   });
@@ -183,7 +183,7 @@ describe('ExploreTabsComponent', () => {
   it('should render selected tab content when activeTabId is set', () => {
     const store = createMockStore({
       ui: {
-        activeTabId: 'explore_visualization_tab',
+        activeTabId: 'agentic_observability_visualization_tab',
         showHistogram: true,
       },
     });
@@ -191,7 +191,7 @@ describe('ExploreTabsComponent', () => {
     render(
       <Provider store={store}>
         <OpenSearchDashboardsContextProvider services={mockServices}>
-          <ExploreTabs />
+          <AgenticObservabilityTabs />
         </OpenSearchDashboardsContextProvider>
       </Provider>
     );
@@ -206,13 +206,13 @@ describe('ExploreTabsComponent', () => {
     const { container } = render(
       <Provider store={store}>
         <OpenSearchDashboardsContextProvider services={mockServices}>
-          <ExploreTabs />
+          <AgenticObservabilityTabs />
         </OpenSearchDashboardsContextProvider>
       </Provider>
     );
 
     expect(container.firstChild).toBeNull();
-    mockUseFlavorId.mockReturnValue(ExploreFlavor.Logs); // Reset for other tests
+    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Logs); // Reset for other tests
   });
 
   it('should fallback to first tab when activeTabId is empty', () => {
@@ -226,7 +226,7 @@ describe('ExploreTabsComponent', () => {
     render(
       <Provider store={store}>
         <OpenSearchDashboardsContextProvider services={mockServices}>
-          <ExploreTabs />
+          <AgenticObservabilityTabs />
         </OpenSearchDashboardsContextProvider>
       </Provider>
     );

@@ -12,18 +12,18 @@ import {
   setUiState,
 } from '../../slices';
 import { getPreloadedState } from '../../utils/redux_persistence';
-import { ExploreServices } from '../../../../../types';
+import { AgenticObservabilityServices } from '../../../../../types';
 import { executeQueries } from '../query_actions';
 import { AppDispatch } from '../../store';
 import { detectAndSetOptimalTab } from '../detect_optimal_tab';
 import { useClearEditors } from '../../../../hooks';
 
 /**
- * Redux Thunk for resetting the Explore state to its preloaded state.
+ * Redux Thunk for resetting the Agentic Observability state to its preloaded state.
  * This is useful for resetting the application to a known state, such as when clicking on the "new search" button.
  */
-export const resetExploreStateActionCreator = (
-  services: ExploreServices,
+export const resetAgenticObservabilityStateActionCreator = (
+  services: AgenticObservabilityServices,
   clearEditors: ReturnType<typeof useClearEditors>
 ) => async (dispatch: AppDispatch) => {
   const state = await getPreloadedState(services);

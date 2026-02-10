@@ -40,7 +40,7 @@ import { coreMock } from 'opensearch-dashboards/public/mocks';
 import { getStubDataView } from '../../../../data/public/data_views/data_view.stub';
 import { OpenSearchSearchHit } from '../../types/doc_views_types';
 import * as fieldFilter from './lib/field_filter';
-import { ExploreFlavor } from '../../../common';
+import { AgenticObservabilityFlavor } from '../../../common';
 import * as useFlavorIdModule from '../../helpers/use_flavor_id';
 
 jest.mock('../../application/legacy/discover/opensearch_dashboards_services', () => ({
@@ -200,7 +200,7 @@ describe('discover sidebar', function () {
   });
 
   it('should show faceted fields when flavor is Traces', function () {
-    mockUseFlavorId.mockReturnValue(ExploreFlavor.Traces);
+    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Traces);
     const props = getCompProps();
     render(<DiscoverSidebar {...props} />);
 
@@ -209,7 +209,7 @@ describe('discover sidebar', function () {
   });
 
   it('should not show faceted fields when flavor is not Traces', function () {
-    mockUseFlavorId.mockReturnValue(ExploreFlavor.Logs);
+    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Logs);
     const props = getCompProps();
     render(<DiscoverSidebar {...props} />);
 

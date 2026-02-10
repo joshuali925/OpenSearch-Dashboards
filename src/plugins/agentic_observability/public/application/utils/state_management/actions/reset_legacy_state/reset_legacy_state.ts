@@ -5,13 +5,13 @@
 
 import { setLegacyState } from '../../slices';
 import { getPreloadedLegacyState } from '../../utils/redux_persistence';
-import { ExploreServices } from '../../../../../types';
+import { AgenticObservabilityServices } from '../../../../../types';
 import { AppDispatch } from '../../store';
 
 /**
  * Action creator for resetting the Legacy state to its preloaded state.
  */
-export const resetLegacyStateActionCreator = (services: ExploreServices) => async (
+export const resetLegacyStateActionCreator = (services: AgenticObservabilityServices) => async (
   dispatch: AppDispatch
 ) => {
   const state = await getPreloadedLegacyState(services);

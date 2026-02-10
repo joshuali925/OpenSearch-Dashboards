@@ -13,7 +13,7 @@ import {
   QueryPanelActionsRegistryService,
   QueryPanelActionConfig,
 } from '../../../../services/query_panel_actions_registry';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { useQueryPanelActionDependencies } from './use_query_panel_action_dependencies';
 import './query_panel_actions.scss';
 
@@ -25,7 +25,7 @@ export const QueryPanelActions = ({ registry }: QueryPanelActionsProps) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [openFlyoutId, setOpenFlyoutId] = useState<string | null>(null);
 
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
 
   // Get all dependencies for actions
   const dependencies = useQueryPanelActionDependencies();

@@ -4,16 +4,16 @@
  */
 
 import { createTimefilterSyncMiddleware } from './timefilter_sync_middleware';
-import { createMockExploreServices, createMockStore, MockStore } from '../__mocks__';
+import { createMockAgenticObservabilityServices, createMockStore, MockStore } from '../__mocks__';
 
 describe('createTimefilterSyncMiddleware', () => {
-  let mockServices: ReturnType<typeof createMockExploreServices>;
+  let mockServices: ReturnType<typeof createMockAgenticObservabilityServices>;
   let mockStore: MockStore;
   let mockNext: jest.MockedFunction<(action: any) => any>;
   let middleware: (action: any) => any;
 
   beforeEach(() => {
-    mockServices = createMockExploreServices();
+    mockServices = createMockAgenticObservabilityServices();
     // Add setTime method to the timefilter mock
     mockServices.data.query.timefilter.timefilter.setTime = jest.fn();
 

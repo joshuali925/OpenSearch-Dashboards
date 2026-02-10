@@ -8,7 +8,7 @@ import { ISearchSource } from '../../../data/public';
 
 export type SortDirection = 'asc' | 'desc';
 export type SortOrder = [string, SortDirection];
-export interface SavedExplore
+export interface SavedAgenticObservability
   extends Pick<
     SavedObject,
     | 'id'
@@ -36,7 +36,7 @@ export interface SavedExplore
   columns?: string[];
 }
 
-export interface SavedExploreAttributes {
+export interface SavedAgenticObservabilityAttributes {
   id?: string;
   title: string;
   description?: string;
@@ -48,7 +48,7 @@ export interface SavedExploreAttributes {
     searchSourceJSON: string;
   };
 }
-export interface SavedExploreLoader {
-  get: (id: string) => Promise<SavedExplore>;
+export interface SavedAgenticObservabilityLoader {
+  get: (id: string) => Promise<SavedAgenticObservability>;
   urlFor: (id: string) => string;
 }

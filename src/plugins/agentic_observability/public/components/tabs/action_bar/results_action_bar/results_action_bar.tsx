@@ -44,9 +44,9 @@ export const DiscoverResultsActionBar = ({
   rowsCountOverride,
 }: DiscoverResultsActionBarProps) => {
   const currentTab = useSelector(selectActiveTabId);
-  const shouldShowAddToDashboardButton = currentTab !== 'explore_patterns_tab';
-  const shouldShowExportButton = currentTab !== 'explore_patterns_tab';
-  const showTabSpecificSettings = currentTab === 'explore_patterns_tab';
+  const shouldShowAddToDashboardButton = currentTab !== 'agentic_observability_patterns_tab';
+  const shouldShowExportButton = currentTab !== 'agentic_observability_patterns_tab';
+  const showTabSpecificSettings = currentTab === 'agentic_observability_patterns_tab';
   const visualizationBuilder = getVisualizationBuilder();
   const visConfig = useObservable(visualizationBuilder.visConfig$);
   const showRawTable = useObservable(visualizationBuilder.showRawTable$);
@@ -84,7 +84,7 @@ export const DiscoverResultsActionBar = ({
               onClick={inspectionHanlder}
               data-test-subj="openInspectorButton"
             >
-              {i18n.translate('agenticObservability.explore.discover.topNav.discoverInspectorButtonLabel', {
+              {i18n.translate('agenticObservability.discover.topNav.discoverInspectorButtonLabel', {
                 defaultMessage: 'Explain',
               })}
             </EuiButtonEmpty>
@@ -123,7 +123,7 @@ export const DiscoverResultsActionBar = ({
                 {shouldShowExportButton && (
                   <EuiFlexItem
                     grow={false}
-                    className="agenticObs-results-action-bar__explore-download-csv-flex-item"
+                    className="agenticObs-results-action-bar__agenticObs-download-csv-flex-item"
                   >
                     <DiscoverDownloadCsv indexPattern={dataset} rows={rows} hits={hits} />
                   </EuiFlexItem>

@@ -15,7 +15,7 @@ import {
 } from '../../application/utils/state_management/slices';
 import { selectColumns } from '../../application/utils/state_management/selectors';
 import { DiscoverSidebar } from '.';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import { buildColumns } from '../../application/legacy/discover/application/utils/columns';
 import { useDatasetContext } from '../../application/context';
 import {
@@ -29,7 +29,7 @@ export interface IDiscoverPanelProps {
 }
 
 export function DiscoverPanel({ collapsePanel }: IDiscoverPanelProps) {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const { uiSettings } = services;
 
   const { onAddFilter } = useChangeQueryEditor();

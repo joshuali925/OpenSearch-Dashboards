@@ -6,7 +6,7 @@
 import { Middleware } from '@reduxjs/toolkit';
 import { isEqual } from 'lodash';
 import { RootState } from '../store';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 
 /**
  * Middleware to sync Redux dateRange state with global timefilter service
@@ -14,7 +14,7 @@ import { ExploreServices } from '../../../../types';
  * timefilter is synchronized with the Redux dateRange state before queries execute.
  */
 export const createTimefilterSyncMiddleware = (
-  services: ExploreServices
+  services: AgenticObservabilityServices
 ): Middleware<{}, RootState> => {
   return (store) => (next) => (action) => {
     const result = next(action);

@@ -12,7 +12,7 @@ import { IndexPatternField } from 'src/plugins/data/common';
 import { setPatternsField } from '../../../../application/utils/state_management/slices/tab/tab_slice';
 import { executeQueries } from '../../../../application/utils/state_management/actions/query_actions';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { selectPatternsField } from '../../../../application/utils/state_management/selectors';
 import { useDatasetContext } from '../../../../application/context/dataset_context/dataset_context';
 import './patterns_settings_popover_content.scss';
@@ -51,7 +51,7 @@ const gatherOptions = (dataset?: DataView) => {
 export const PatternsSettingsPopoverContent = ({
   fieldChange,
 }: PatternsSettingsPopoverContentProps) => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const dispatch = useDispatch();
   const patternsField = useSelector(selectPatternsField);
   const { dataset, isLoading, error } = useDatasetContext();

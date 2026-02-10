@@ -19,13 +19,13 @@ export const MODIFY_COLUMNS_ON_SWITCH = 'discover:modifyColumnsOnSwitch';
 export const DEFAULT_TRACE_COLUMNS_SETTING = 'agenticObservability:defaultTraceColumns';
 export const DEFAULT_LOGS_COLUMNS_SETTING = 'agenticObservability:defaultLogsColumns';
 export const ENABLE_EXPERIMENTAL_SETTING = 'agenticObservability:experimental';
-export const EXPLORE_DEFAULT_LANGUAGE = 'PPL';
-export const EXPLORE_LOGS_TAB_ID = 'logs';
-export const EXPLORE_PATTERNS_TAB_ID = 'explore_patterns_tab';
-export const EXPLORE_VISUALIZATION_TAB_ID = 'explore_visualization_tab';
-export const EXPLORE_FIELD_STATS_TAB_ID = 'explore_field_stats_tab';
+export const AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE = 'PPL';
+export const AGENTIC_OBSERVABILITY_LOGS_TAB_ID = 'logs';
+export const AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID = 'agentic_observability_patterns_tab';
+export const AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID = 'agentic_observability_visualization_tab';
+export const AGENTIC_OBSERVABILITY_FIELD_STATS_TAB_ID = 'agentic_observability_field_stats_tab';
 
-export enum ExploreFlavor {
+export enum AgenticObservabilityFlavor {
   Logs = 'logs',
   Traces = 'traces',
   Metrics = 'metrics',

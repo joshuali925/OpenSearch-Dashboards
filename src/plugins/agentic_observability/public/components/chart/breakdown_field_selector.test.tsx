@@ -15,7 +15,7 @@ import {
   queryEditorReducer,
   resultsReducer,
 } from '../../application/utils/state_management/slices';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import { useDatasetContext } from '../../application/context/dataset_context/dataset_context';
 
 jest.mock('../../application/context/dataset_context/dataset_context', () => ({
@@ -50,7 +50,7 @@ describe('BreakdownFieldSelector', () => {
     uiSettings: {
       get: jest.fn(),
     },
-  } as unknown) as ExploreServices;
+  } as unknown) as AgenticObservabilityServices;
 
   const createMockStore = (breakdownField?: string, queryStatusMap = {}) => {
     return configureStore({

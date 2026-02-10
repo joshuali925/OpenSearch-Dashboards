@@ -20,10 +20,10 @@ import {
   defaultPrepareQueryString,
   prepareHistogramCacheKey,
 } from '../../application/utils/state_management/actions/query_actions';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 
 export interface BreakdownFieldSelectorProps {
-  services: ExploreServices;
+  services: AgenticObservabilityServices;
 }
 
 export const BreakdownFieldSelector: React.FC<BreakdownFieldSelectorProps> = ({ services }) => {

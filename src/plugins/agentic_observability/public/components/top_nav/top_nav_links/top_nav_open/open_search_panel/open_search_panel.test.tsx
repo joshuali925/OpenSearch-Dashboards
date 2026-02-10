@@ -59,13 +59,13 @@ jest.mock('../../../../../../../saved_objects/public', () => ({
       </button>
       <button
         onClick={() =>
-          onChoose('test-agenticObs-id', 'explore', null, {
+          onChoose('test-agenticObs-id', 'agenticObservability', null, {
             attributes: { type: 'logs' },
           })
         }
-        data-test-subj="choose-explore"
+        data-test-subj="choose-agentic-observability"
       >
-        Choose Explore
+        Choose Agentic Observability
       </button>
     </div>
   ),
@@ -101,15 +101,19 @@ describe('OpenSearchPanel', () => {
     expect(mockOnClose).toHaveBeenCalled();
   });
 
-  it('handles explore selection and navigates to explore', () => {
+  it('handles agentic observability selection and navigates', () => {
     render(<OpenSearchPanel onClose={mockOnClose} />);
 
-    fireEvent.click(screen.getByTestId('choose-explore'));
+    fireEvent.click(screen.getByTestId('choose-agentic-observability'));
 
     expect(mockSetAppFilters).toHaveBeenCalledWith([]);
     expect(mockClearQuery).toHaveBeenCalled();
-    expect(mockDispatch).toHaveBeenCalledWith({ type: 'logs/incrementSaveExploreLoadCount' });
-    expect(mockNavigateToUrl).toHaveBeenCalledWith('/app/explore/logs#/view/test-agenticObs-id');
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: 'logs/incrementSaveAgenticObservabilityLoadCount',
+    });
+    expect(mockNavigateToUrl).toHaveBeenCalledWith(
+      '/app/agenticObservability/logs#/view/test-agenticObs-id'
+    );
     expect(mockOnClose).toHaveBeenCalled();
   });
 

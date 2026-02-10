@@ -19,7 +19,7 @@ jest.mock('@osd/i18n', () => ({
 const mockWindowLocation = {
   protocol: 'https:',
   host: 'localhost:5601',
-  pathname: '/workspace/app/explore',
+  pathname: '/workspace/app/agenticObservability',
   href: '',
 };
 
@@ -50,7 +50,7 @@ describe('CorrelationEmptyState', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockWindowLocation.href = '';
-    mockWindowLocation.pathname = '/workspace/app/explore';
+    mockWindowLocation.pathname = '/workspace/app/agenticObservability';
     mockWindowLocation.protocol = 'https:';
     mockWindowLocation.host = 'localhost:5601';
   });
@@ -80,12 +80,12 @@ describe('CorrelationEmptyState', () => {
 
   describe.each([
     {
-      pathname: '/workspace/app/explore',
+      pathname: '/workspace/app/agenticObservability',
       expected:
         'https://localhost:5601/workspace/app/datasets/patterns/test-dataset-id#/?_a=(tab:correlatedDatasets)',
     },
     {
-      pathname: '/app/explore',
+      pathname: '/app/agenticObservability',
       expected:
         'https://localhost:5601/app/datasets/patterns/test-dataset-id#/?_a=(tab:correlatedDatasets)',
     },

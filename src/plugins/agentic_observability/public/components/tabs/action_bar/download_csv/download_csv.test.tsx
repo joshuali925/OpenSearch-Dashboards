@@ -167,7 +167,7 @@ describe('DiscoverDownloadCsv', () => {
 
       expect(mockUseKeyboardShortcut).toHaveBeenCalledWith({
         id: 'download_csv',
-        pluginId: 'explore',
+        pluginId: 'agenticObservability',
         name: 'Download CSV',
         category: 'Data actions',
         keys: 'e',

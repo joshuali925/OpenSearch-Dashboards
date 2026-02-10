@@ -16,7 +16,10 @@ import { IndexPattern } from '../../../opensearch_dashboards_services';
 import { TableHeaderColumn } from './table_header_column';
 import { LegacyDisplayedColumn } from './helper';
 import { getDefaultSort } from '../../../../../../helpers/view_component_utils/get_default_sort';
-import { SortDirection, SortOrder } from '../../../../../../types/saved_explore_types';
+import {
+  SortDirection,
+  SortOrder,
+} from '../../../../../../types/saved_agentic_observability_types';
 
 interface Props {
   displayedColumns: LegacyDisplayedColumn[];

@@ -7,7 +7,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { ExploreLogsChart } from './explore_logs_chart';
+import { AgenticObservabilityLogsChart } from './agentic_observability_logs_chart';
 import {
   legacyReducer,
   uiReducer,
@@ -18,7 +18,7 @@ import {
 } from '../../application/utils/state_management/slices';
 import { IUiSettingsClient } from 'opensearch-dashboards/public';
 import { DataPublicPluginStart } from '../../../../data/public';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 
 // Mock the usage collector
 jest.mock('../../services/usage_collector', () => ({
@@ -99,7 +99,7 @@ describe('DiscoverChart', () => {
         },
       },
     },
-  } as unknown) as ExploreServices;
+  } as unknown) as AgenticObservabilityServices;
 
   const mockStore = configureStore({
     reducer: {
@@ -172,7 +172,7 @@ describe('DiscoverChart', () => {
   const renderComponent = (props = {}) => {
     return render(
       <Provider store={mockStore}>
-        <ExploreLogsChart {...defaultProps} {...props} />
+        <AgenticObservabilityLogsChart {...defaultProps} {...props} />
       </Provider>
     );
   };

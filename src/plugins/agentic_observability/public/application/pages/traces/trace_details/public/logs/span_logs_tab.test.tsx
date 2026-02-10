@@ -11,7 +11,7 @@ import { Dataset } from '../../../../../../../../data/common';
 import * as urlBuilder from './url_builder';
 
 jest.mock('./url_builder', () => ({
-  buildExploreLogsUrl: jest.fn(() => 'https://example.com/logs?span=span-1'),
+  buildAgenticObservabilityLogsUrl: jest.fn(() => 'https://example.com/logs?span=span-1'),
   getTimeRangeFromTraceData: jest.fn(() => ({
     from: '2023-01-01T09:30:00.000Z',
     to: '2023-01-01T10:30:00.000Z',
@@ -148,7 +148,7 @@ describe('SpanLogsTab', () => {
       expect(urlBuilder.getTimeRangeFromTraceData).toHaveBeenCalledWith(expectedFilteredLogs);
 
       // URL builder called with the right payload
-      expect(urlBuilder.buildExploreLogsUrl).toHaveBeenCalledWith(
+      expect(urlBuilder.buildAgenticObservabilityLogsUrl).toHaveBeenCalledWith(
         expect.objectContaining({
           traceId: 'trace-1',
           spanId: 'span-1',

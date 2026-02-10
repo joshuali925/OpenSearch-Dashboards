@@ -7,14 +7,17 @@ import { i18n } from '@osd/i18n';
 import { DataView as Dataset, IndexPattern } from 'src/plugins/data/common';
 import { InvalidJSONProperty } from '../../../opensearch_dashboards_utils/public';
 import { LegacyState } from '../application/utils/state_management/slices';
-import { SavedExplore, SavedExploreAttributes } from '../types/saved_explore_types';
+import {
+  SavedAgenticObservability,
+  SavedAgenticObservabilityAttributes,
+} from '../types/saved_agentic_observability_types';
 import { TabDefinition } from '../services/tab_registry/tab_registry_service';
 import {
   ChartType,
   StyleOptions,
 } from '../components/visualizations/utils/use_visualization_types';
 
-export interface ExploreState {
+export interface AgenticObservabilityState {
   legacy: LegacyState;
   ui: Record<string, unknown>; // UI state for panels, layout, etc.
   query: Record<string, unknown>; // Query state for filters, time range, etc.
@@ -27,13 +30,13 @@ interface VisState {
 }
 
 export const saveStateToSavedObject = (
-  obj: SavedExplore,
+  obj: SavedAgenticObservability,
   flavorId: string,
   tabDefinition: TabDefinition,
   visState?: VisState,
   dataset?: IndexPattern | Dataset,
   activeTabId?: string
-): SavedExplore => {
+): SavedAgenticObservability => {
   // Serialize the state into the saved object
   obj.type = flavorId;
   obj.visualization = JSON.stringify({
@@ -55,13 +58,16 @@ export const saveStateToSavedObject = (
   return obj;
 };
 
-export interface ExploreSavedVis extends Pick<SavedExploreAttributes, 'title' | 'description'> {
+export interface AgenticObservabilitySavedVis
+  extends Pick<SavedAgenticObservabilityAttributes, 'title' | 'description'> {
   id?: string;
-  state: ExploreState;
+  state: AgenticObservabilityState;
   searchSourceFields?: Record<string, unknown>;
 }
 
-export const getStateFromSavedObject = (obj: SavedExploreAttributes): ExploreSavedVis => {
+export const getStateFromSavedObject = (
+  obj: SavedAgenticObservabilityAttributes
+): AgenticObservabilitySavedVis => {
   const { id, title, description, kibanaSavedObjectMeta } = obj;
 
   try {
@@ -91,8 +97,10 @@ export const getStateFromSavedObject = (obj: SavedExploreAttributes): ExploreSav
 };
 
 // Helper function to extract legacy properties from serialized state
-export const getLegacyPropertiesFromSavedObject = (savedExplore: SavedExplore) => {
-  if (!savedExplore.legacyState) {
+export const getLegacyPropertiesFromSavedObject = (
+  savedAgenticObservability: SavedAgenticObservability
+) => {
+  if (!savedAgenticObservability.legacyState) {
     return {
       columns: [],
       sort: [],
@@ -100,7 +108,7 @@ export const getLegacyPropertiesFromSavedObject = (savedExplore: SavedExplore) =
   }
 
   try {
-    const legacyState = JSON.parse(savedExplore.legacyState) as LegacyState;
+    const legacyState = JSON.parse(savedAgenticObservability.legacyState) as LegacyState;
     return {
       columns: legacyState.columns || [],
       sort: legacyState.sort || [],
@@ -115,12 +123,12 @@ export const getLegacyPropertiesFromSavedObject = (savedExplore: SavedExplore) =
 
 // Helper function to update legacy properties in serialized state
 export const updateLegacyPropertiesInSavedObject = (
-  savedExplore: SavedExplore,
+  savedAgenticObservability: SavedAgenticObservability,
   updates: Partial<LegacyState>
-): SavedExplore => {
+): SavedAgenticObservability => {
   try {
-    const currentLegacyState = savedExplore.legacyState
-      ? (JSON.parse(savedExplore.legacyState) as LegacyState)
+    const currentLegacyState = savedAgenticObservability.legacyState
+      ? (JSON.parse(savedAgenticObservability.legacyState) as LegacyState)
       : ({} as LegacyState);
 
     const updatedLegacyState = {
@@ -128,9 +136,9 @@ export const updateLegacyPropertiesInSavedObject = (
       ...updates,
     };
 
-    savedExplore.legacyState = JSON.stringify(updatedLegacyState);
-    return savedExplore;
+    savedAgenticObservability.legacyState = JSON.stringify(updatedLegacyState);
+    return savedAgenticObservability;
   } catch (error) {
-    return savedExplore;
+    return savedAgenticObservability;
   }
 };

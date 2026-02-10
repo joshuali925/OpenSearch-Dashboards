@@ -145,7 +145,7 @@ jest.doMock('../../../../helpers/use_flavor_id', () => ({
 }));
 
 jest.doMock('../../../../../common', () => ({
-  ExploreFlavor: {
+  AgenticObservabilityFlavor: {
     Logs: 'logs',
     Metrics: 'metrics',
     Traces: 'traces',

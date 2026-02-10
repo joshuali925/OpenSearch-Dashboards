@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 
 /**
- * Creates a mock ExploreServices object for testing
+ * Creates a mock AgenticObservabilityServices object for testing
  */
-export const createMockExploreServices = (
-  overrides: Partial<ExploreServices> = {}
-): ExploreServices =>
+export const createMockAgenticObservabilityServices = (
+  overrides: Partial<AgenticObservabilityServices> = {}
+): AgenticObservabilityServices =>
   ({
     data: {
       query: {
@@ -31,4 +31,4 @@ export const createMockExploreServices = (
       },
     },
     ...overrides,
-  } as ExploreServices);
+  } as AgenticObservabilityServices);

@@ -5,7 +5,7 @@
 
 /*
 TODO: This file needs to be updated.
--  loading saved explore breaks the top nav. I don't think we should use URL to update it
+-  loading saved agentic observability breaks the top nav. I don't think we should use URL to update it
 - classic saved searches do not show up in the panel
 - this file needs unit tests once above has been resolved.
  */
@@ -24,11 +24,11 @@ import {
   EuiFlyoutBody,
   EuiText,
 } from '@elastic/eui';
-import { ExploreFlavor } from '../../../../../../common';
+import { AgenticObservabilityFlavor } from '../../../../../../common';
 import { SavedObjectFinderUi } from '../../../../../../../saved_objects/public';
-import { SAVED_OBJECT_TYPE } from '../../../../../saved_explore/_saved_explore';
+import { SAVED_OBJECT_TYPE } from '../../../../../saved_agentic_observability/_saved_agentic_observability';
 import { useOpenSearchDashboards } from '../../../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../../../types';
+import { AgenticObservabilityServices } from '../../../../../types';
 
 export interface OpenSearchPanelProps {
   onClose: () => void;
@@ -47,8 +47,8 @@ const savedObjectMetadata = [
   {
     type: SAVED_OBJECT_TYPE,
     getIconForSavedObject: () => 'integrationSearch',
-    name: i18n.translate('agenticObservability.savedExplore.savedObjectName', {
-      defaultMessage: 'Saved explore',
+    name: i18n.translate('agenticObservability.savedAgenticObservability.savedObjectName', {
+      defaultMessage: 'Saved agentic observability',
     }),
     includeFields: ['kibanaSavedObjectMeta', 'type'],
   },
@@ -63,7 +63,7 @@ export const OpenSearchPanel = ({ onClose }: OpenSearchPanelProps) => {
       filterManager,
       store,
     },
-  } = useOpenSearchDashboards<ExploreServices>();
+  } = useOpenSearchDashboards<AgenticObservabilityServices>();
 
   return (
     <EuiFlyout ownFocus onClose={onClose} data-test-subj="loadSearchForm">
@@ -91,27 +91,29 @@ export const OpenSearchPanel = ({ onClose }: OpenSearchPanelProps) => {
             filterManager.setAppFilters([]);
             data.query.queryString.clearQuery();
             if (type === 'search') {
-              // Explore will still show saved searches for backwards
+              // Agentic Observability will still show saved searches for backwards
               // compatibility, but they should open in classic Discover.
               application.navigateToApp('discover', { path: `#/view/${id}` });
             } else {
               // In classic Discover, URL goes from
               // app/data-explorer/discover#/ -> app/discover#/view/uuid ->
               // app/data-explorer/discover#/view/uuid, the appId change causes
-              // a new store to be created using URL. In Explore, URL goes from
-              // app/explore/logs#/ -> app/explore/logs#/view/uuid. There is no
+              // a new store to be created using URL. In Agentic Observability, URL goes from
+              // app/agenticObservability/logs#/ -> app/agenticObservability/logs#/view/uuid. There is no
               // appId change and no new store created, so we need to dispatch
               // the state change.
-              store.dispatch({ type: 'logs/incrementSaveExploreLoadCount' });
+              store.dispatch({ type: 'logs/incrementSaveAgenticObservabilityLoadCount' });
               // TODO: Nav link is generated in runtime. Different from discover, if using navigateToApp, top nav would disappear.
               // Address once flavor and view route are finalized.
-              const flavor = savedObject.attributes.type ?? ExploreFlavor.Logs;
-              // application.navigateToApp('explore', {
+              const flavor = savedObject.attributes.type ?? AgenticObservabilityFlavor.Logs;
+              // application.navigateToApp('agenticObservability', {
               //   // TODO:finalize this until flavor and view route are finalized
               //   path: `${flavor}#/view/${id}`,
               // });
               // NOTE: Use this for now instead of navigateToApp to avoid the top nav disappearing
-              const url = application.getUrlForApp(`explore/${flavor}`, { path: `#/view/${id}` });
+              const url = application.getUrlForApp(`agenticObservability/${flavor}`, {
+                path: `#/view/${id}`,
+              });
               application.navigateToUrl(url);
             }
             onClose();

@@ -9,7 +9,7 @@ import { i18n } from '@osd/i18n';
 import { isEmpty } from 'lodash';
 
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import { ResultsSummaryContent } from './results_summary_content';
 import { RootState } from '../../application/utils/state_management/store';
 import {
@@ -32,7 +32,7 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({
   setSummary,
   reportCountMetric,
 }) => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const { http } = services;
 
   const queryState = useSelector((state: RootState) => state.query);

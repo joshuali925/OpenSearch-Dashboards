@@ -5,7 +5,7 @@
 
 /**
  * TODO:
- * - make this file work correctly with the new saved explore
+ * - make this file work correctly with the new saved agentic observability
  * - write unit tests
  */
 
@@ -13,19 +13,19 @@ import { i18n } from '@osd/i18n';
 import React from 'react';
 import { DataView as Dataset } from 'src/plugins/data/common';
 import { TopNavMenuIconRun, TopNavMenuIconUIData } from '../types';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { ExecutionContextSearch } from '../../../../../../expressions';
-import { SavedExplore } from '../../../../types/saved_explore_types';
+import { SavedAgenticObservability } from '../../../../types/saved_agentic_observability_types';
 import {
   OnSaveProps,
   SavedObjectSaveModal,
   SaveResult,
   showSaveModal,
 } from '../../../../../../saved_objects/public';
-import { saveSavedExplore } from '../../../../helpers/save_explore';
+import { saveSavedAgenticObservability } from '../../../../helpers/save_agentic_observability';
 import { TabState } from '../../../../application/utils/state_management/slices';
 import { TabDefinition } from '../../../../services/tab_registry/tab_registry_service';
-import { saveStateToSavedObject } from '../../../../saved_explore/transforms';
+import { saveStateToSavedObject } from '../../../../saved_agentic_observability/transforms';
 import { getVisualizationBuilder } from '../../../visualizations/visualization_builder';
 
 export const saveTopNavData: TopNavMenuIconUIData = {
@@ -49,13 +49,13 @@ export interface SaveStateProps {
 }
 
 export const getSaveButtonRun = (
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   startSyncingQueryStateWithUrl: () => void,
   searchContext: ExecutionContextSearch,
   saveStateProps: SaveStateProps,
-  savedExplore?: SavedExplore
+  savedAgenticObservability?: SavedAgenticObservability
 ): TopNavMenuIconRun => () => {
-  if (!savedExplore) return;
+  if (!savedAgenticObservability) return;
 
   const onSave = async ({
     newTitle,
@@ -66,16 +66,16 @@ export const getSaveButtonRun = (
     const visualizationBuilder = getVisualizationBuilder();
     const visConfig = visualizationBuilder.visConfig$.value;
     const axesMapping = visConfig?.axesMapping;
-    const savedExploreWithState = saveStateToSavedObject(
-      savedExplore,
+    const savedAgenticObservabilityWithState = saveStateToSavedObject(
+      savedAgenticObservability,
       saveStateProps.flavorId ?? 'logs',
       saveStateProps.tabDefinition!,
       { axesMapping, chartType: visConfig?.type, styleOptions: visConfig?.styles },
       saveStateProps.dataset,
       saveStateProps.activeTabId
     );
-    const result = await saveSavedExplore({
-      savedExplore: savedExploreWithState,
+    const result = await saveSavedAgenticObservability({
+      savedAgenticObservability: savedAgenticObservabilityWithState,
       newTitle,
       saveOptions: { isTitleDuplicateConfirmed, onTitleDuplicate },
       searchContext,
@@ -91,9 +91,9 @@ export const getSaveButtonRun = (
     <SavedObjectSaveModal
       onSave={onSave}
       onClose={() => {}}
-      title={savedExplore.title ?? ''}
-      showCopyOnSave={!!savedExplore.id}
-      // TODO: Does this need to be type "explore"?
+      title={savedAgenticObservability.title ?? ''}
+      showCopyOnSave={!!savedAgenticObservability.id}
+      // TODO: Does this need to be type "agenticObservability"?
       objectType="discover"
       description={i18n.translate('agenticObservability.localMenu.saveSaveSearchDescription', {
         defaultMessage:

@@ -21,7 +21,9 @@ jest.mock('react-redux', () => ({
 }));
 
 jest.mock('../../../tabs/tabs', () => ({
-  ExploreTabs: () => <div data-test-subj="agenticObs-tabs">Explore Tabs</div>,
+  AgenticObservabilityTabs: () => (
+    <div data-test-subj="agenticObs-tabs">Agentic Observability Tabs</div>
+  ),
 }));
 
 jest.mock('../../../visualizations/style_panel_render', () => ({
@@ -52,7 +54,7 @@ describe('<ResizableVisControlAndTabs />', () => {
       services: {
         tabRegistry: {
           getTab: jest.fn().mockReturnValue({
-            id: 'explore_visualization_tab',
+            id: 'agentic_observability_visualization_tab',
             label: 'Visualization',
             component: () => <div>Visualization Component</div>,
             flavor: ['logs'],
@@ -74,22 +76,22 @@ describe('<ResizableVisControlAndTabs />', () => {
   });
 
   test('it should display StylePanel if the current active tab is visualization', () => {
-    mockUseSelector.mockReturnValue('explore_visualization_tab');
+    mockUseSelector.mockReturnValue('agentic_observability_visualization_tab');
     render(<ResizableVisControlAndTabs />);
     expect(screen.getByTestId('agenticObs-tabs')).toBeInTheDocument();
     expect(screen.getByTestId('style-panel')).toBeInTheDocument();
   });
 
   test('it should NOT display StylePanel if the current active tab is visualization but no data', () => {
-    mockUseSelector.mockReturnValue('explore_visualization_tab');
+    mockUseSelector.mockReturnValue('agentic_observability_visualization_tab');
     jest.spyOn(ReactUse, 'useObservable').mockReturnValue(undefined);
     render(<ResizableVisControlAndTabs />);
     expect(screen.getByTestId('agenticObs-tabs')).toBeInTheDocument();
     expect(screen.queryByTestId('style-panel')).not.toBeInTheDocument();
   });
 
-  test('it should display only ExploreTabs when visualization tab has error', () => {
-    mockUseSelector.mockReturnValue('explore_visualization_tab');
+  test('it should display only AgenticObservabilityTabs when visualization tab has error', () => {
+    mockUseSelector.mockReturnValue('agentic_observability_visualization_tab');
     mockUseTabError.mockReturnValue({
       statusCode: 400,
       error: 'Bad Request',

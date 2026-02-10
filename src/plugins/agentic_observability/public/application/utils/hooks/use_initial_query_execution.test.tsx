@@ -8,7 +8,7 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { useInitialQueryExecution } from './use_initial_query_execution';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import {
   queryReducer,
   uiInitialState,
@@ -21,7 +21,7 @@ import { executeQueries } from '../state_management/actions/query_actions';
 import { clearResults } from '../state_management/slices';
 import { detectAndSetOptimalTab } from '../state_management/actions/detect_optimal_tab';
 import { MockStore } from '../state_management/__mocks__';
-import * as CurrentExploreIdHook from './use_current_explore_id';
+import * as CurrentAgenticObservabilityIdHook from './use_current_agentic_observability_id';
 import * as DatasetContextHook from '../../context';
 
 // Mock DatasetContext
@@ -65,7 +65,7 @@ interface MockRootState {
 }
 
 describe('useInitialQueryExecution', () => {
-  let mockServices: ExploreServices;
+  let mockServices: AgenticObservabilityServices;
   let mockStore: MockStore;
   let mockDispatch: jest.Mock;
 
@@ -80,7 +80,9 @@ describe('useInitialQueryExecution', () => {
       return action;
     });
 
-    jest.spyOn(CurrentExploreIdHook, 'useCurrentExploreId').mockReturnValue(undefined);
+    jest
+      .spyOn(CurrentAgenticObservabilityIdHook, 'useCurrentAgenticObservabilityId')
+      .mockReturnValue(undefined);
 
     // Mock useDatasetContext to return dataset loaded state
     jest.spyOn(DatasetContextHook, 'useDatasetContext').mockReturnValue({
@@ -151,7 +153,7 @@ describe('useInitialQueryExecution', () => {
   });
 
   const renderHookWithProvider = (
-    services: ExploreServices,
+    services: AgenticObservabilityServices,
     initialState?: Partial<MockRootState>
   ) => {
     if (initialState) {
@@ -244,7 +246,9 @@ describe('useInitialQueryExecution', () => {
 
   describe('when current loading a saved search', () => {
     beforeEach(() => {
-      jest.spyOn(CurrentExploreIdHook, 'useCurrentExploreId').mockReturnValue('mock-id');
+      jest
+        .spyOn(CurrentAgenticObservabilityIdHook, 'useCurrentAgenticObservabilityId')
+        .mockReturnValue('mock-id');
     });
 
     it('should not execute query or add to history', () => {

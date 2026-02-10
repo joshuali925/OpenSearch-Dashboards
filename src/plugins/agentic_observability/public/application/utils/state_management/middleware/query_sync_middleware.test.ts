@@ -5,16 +5,16 @@
 
 import { createQuerySyncMiddleware } from './query_sync_middleware';
 import { setQueryState, setQueryWithHistory, setQueryStringWithHistory } from '../slices';
-import { createMockExploreServices, createMockStore, MockStore } from '../__mocks__';
+import { createMockAgenticObservabilityServices, createMockStore, MockStore } from '../__mocks__';
 
 describe('createQuerySyncMiddleware', () => {
-  let mockServices: ReturnType<typeof createMockExploreServices>;
+  let mockServices: ReturnType<typeof createMockAgenticObservabilityServices>;
   let mockStore: MockStore;
   let mockNext: jest.MockedFunction<(action: any) => any>;
   let middleware: (action: any) => any;
 
   beforeEach(() => {
-    mockServices = createMockExploreServices();
+    mockServices = createMockAgenticObservabilityServices();
     mockStore = createMockStore();
     mockNext = jest.fn().mockImplementation((action) => action);
     middleware = createQuerySyncMiddleware(mockServices)(mockStore)(mockNext);

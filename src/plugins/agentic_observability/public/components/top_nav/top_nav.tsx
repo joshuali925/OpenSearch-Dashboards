@@ -11,7 +11,7 @@ import { useSyncQueryStateWithUrl } from '../../../../data/public';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
 import { TopNavMenuItemRenderType } from '../../../../navigation/public';
 import { PLUGIN_ID } from '../../../common';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import { useDatasetContext } from '../../application/context';
 import { ExecutionContextSearch } from '../../../../expressions/common';
 import {
@@ -25,7 +25,7 @@ import { useFlavorId } from '../../helpers/use_flavor_id';
 import { getTopNavLinks } from './top_nav_links';
 import { getOpenButtonRun } from './top_nav_links/top_nav_open/top_nav_open';
 import { getSaveButtonRun } from './top_nav_links/top_nav_save/top_nav_save';
-import { SavedExplore } from '../../saved_explore';
+import { SavedAgenticObservability } from '../../saved_agentic_observability';
 import {
   setDateRange,
   setHasUserInitiatedQuery,
@@ -40,12 +40,15 @@ import { Query, TimeRange } from '../../../../data/common';
 import { QueryExecutionStatus } from '../../application/utils/state_management/types';
 
 export interface TopNavProps {
-  savedExplore?: SavedExplore;
+  savedAgenticObservability?: SavedAgenticObservability;
   setHeaderActionMenu?: AppMountParameters['setHeaderActionMenu'];
 }
 
-export const TopNav = ({ setHeaderActionMenu = () => {}, savedExplore }: TopNavProps) => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+export const TopNav = ({
+  setHeaderActionMenu = () => {},
+  savedAgenticObservability,
+}: TopNavProps) => {
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const clearEditors = useClearEditors();
   const editorRef = useEditorRef();
   const { keyboardShortcut } = services;
@@ -117,10 +120,10 @@ export const TopNav = ({ setHeaderActionMenu = () => {}, savedExplore }: TopNavP
         activeTabId: uiState.activeTabId,
       },
       clearEditors,
-      savedExplore
+      savedAgenticObservability
     );
   }, [
-    savedExplore,
+    savedAgenticObservability,
     dataset,
     searchContext,
     tabState,
@@ -134,9 +137,10 @@ export const TopNav = ({ setHeaderActionMenu = () => {}, savedExplore }: TopNavP
 
   useEffect(() => {
     setScreenTitle(
-      'Agentic Observability' + (savedExplore?.title ? `: ${savedExplore?.title}` : '')
+      'Agentic Observability' +
+        (savedAgenticObservability?.title ? `: ${savedAgenticObservability?.title}` : '')
     );
-  }, [savedExplore?.title]);
+  }, [savedAgenticObservability?.title]);
 
   const showDatePicker = useMemo(() => {
     return dataset?.isTimeBased() ?? false;
@@ -186,7 +190,7 @@ export const TopNav = ({ setHeaderActionMenu = () => {}, savedExplore }: TopNavP
   }, [services]);
 
   const handleSaveShortcut = useCallback(() => {
-    if (savedExplore) {
+    if (savedAgenticObservability) {
       const saveButtonRun = getSaveButtonRun(
         services,
         startSyncingQueryStateWithUrl,
@@ -198,7 +202,7 @@ export const TopNav = ({ setHeaderActionMenu = () => {}, savedExplore }: TopNavP
           tabDefinition,
           activeTabId: uiState.activeTabId,
         },
-        savedExplore
+        savedAgenticObservability
       );
       saveButtonRun({} as HTMLElement);
     }
@@ -211,12 +215,12 @@ export const TopNav = ({ setHeaderActionMenu = () => {}, savedExplore }: TopNavP
     flavorId,
     tabDefinition,
     uiState.activeTabId,
-    savedExplore,
+    savedAgenticObservability,
   ]);
 
   keyboardShortcut?.useKeyboardShortcut({
     id: 'saved_search',
-    pluginId: 'explore',
+    pluginId: 'agenticObservability',
     name: i18n.translate('agenticObservability.topNav.savedSearchShortcut', {
       defaultMessage: 'Saved search',
     }),
@@ -229,7 +233,7 @@ export const TopNav = ({ setHeaderActionMenu = () => {}, savedExplore }: TopNavP
 
   keyboardShortcut?.useKeyboardShortcut({
     id: 'save_search',
-    pluginId: 'explore',
+    pluginId: 'agenticObservability',
     name: i18n.translate('agenticObservability.topNav.saveSearchShortcut', {
       defaultMessage: 'Save discover search',
     }),
@@ -242,7 +246,7 @@ export const TopNav = ({ setHeaderActionMenu = () => {}, savedExplore }: TopNavP
 
   keyboardShortcut?.useKeyboardShortcut({
     id: 'refresh_query',
-    pluginId: 'explore',
+    pluginId: 'agenticObservability',
     name: i18n.translate('agenticObservability.topNav.refreshResultsShortcut', {
       defaultMessage: 'Refresh results',
     }),

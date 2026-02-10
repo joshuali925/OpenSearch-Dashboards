@@ -54,7 +54,10 @@ const isOnTracesFlavor = (): boolean => {
   const currentPath = window.location.pathname;
   const currentHash = window.location.hash;
 
-  return currentPath.includes('/explore/traces') || currentHash.includes('/explore/traces');
+  return (
+    currentPath.includes('/agenticObservability/traces') ||
+    currentHash.includes('/agenticObservability/traces')
+  );
 };
 
 // Trace Details view component for the doc viewer accordion - Timeline only

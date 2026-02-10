@@ -15,7 +15,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { DataPublicPluginStart, search } from '../../../../data/public';
 import { TimechartHeader, TimechartHeaderBucketInterval } from './timechart_header';
 import { DiscoverHistogram } from './histogram/histogram';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import { Chart } from './utils';
 import {
   setInterval,
@@ -42,23 +42,23 @@ import { useMetrics } from '../results_summary/use_metrics';
 import { ToggleButtonGroup } from './timechart_header/toggle_button_group';
 import { ActionButtons } from '../results_summary/action_buttons';
 
-interface ExploreLogsChartProps {
+interface AgenticObservabilityLogsChartProps {
   bucketInterval?: TimechartHeaderBucketInterval;
   chartData?: Chart;
   config: IUiSettingsClient;
   data: DataPublicPluginStart;
-  services: ExploreServices;
+  services: AgenticObservabilityServices;
   showHistogram: boolean;
 }
 
-export const ExploreLogsChart = ({
+export const AgenticObservabilityLogsChart = ({
   bucketInterval,
   chartData,
   config,
   data,
   services,
   showHistogram,
-}: ExploreLogsChartProps) => {
+}: AgenticObservabilityLogsChartProps) => {
   const { from, to } = data.query.timefilter.timefilter.getTime();
   const timeRange = useMemo(() => {
     return {

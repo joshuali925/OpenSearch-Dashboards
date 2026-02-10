@@ -13,7 +13,7 @@ import {
   toMountPoint,
   useOpenSearchDashboards,
 } from '../../../../opensearch_dashboards_react/public';
-import { SavedExplore } from '../../saved_explore';
+import { SavedAgenticObservability } from '../../saved_agentic_observability';
 import { AddToDashboardModal } from './add_to_dashboard_modal';
 import { selectUIState } from '../../application/utils/state_management/selectors';
 import {
@@ -21,13 +21,13 @@ import {
   IndexPattern,
   useSyncQueryStateWithUrl,
 } from '../../../../data/public';
-import { saveStateToSavedObject } from '../../saved_explore/transforms';
+import { saveStateToSavedObject } from '../../saved_agentic_observability/transforms';
 import { addToDashboard } from './utils/add_to_dashboard';
-import { saveSavedExplore } from '../../helpers/save_explore';
-import { useCurrentExploreId } from '../../application/utils/hooks/use_current_explore_id';
+import { saveSavedAgenticObservability } from '../../helpers/save_agentic_observability';
+import { useCurrentAgenticObservabilityId } from '../../application/utils/hooks/use_current_agentic_observability_id';
 import { useFlavorId } from '../../../public/helpers/use_flavor_id';
 import { useSearchContext } from '../query_panel/utils/use_search_context';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import { getVisualizationBuilder } from './visualization_builder';
 
 interface DashboardAttributes {
@@ -36,7 +36,7 @@ interface DashboardAttributes {
 export type DashboardInterface = SimpleSavedObject<DashboardAttributes>;
 
 export interface OnSaveProps {
-  savedExplore: SavedExplore;
+  savedAgenticObservability: SavedAgenticObservability;
   newTitle: string;
   isTitleDuplicateConfirmed: boolean;
   onTitleDuplicate: () => void;
@@ -46,7 +46,7 @@ export interface OnSaveProps {
 }
 
 export const SaveAndAddButtonWithModal = ({ dataset }: { dataset?: IndexPattern | Dataset }) => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const {
     core,
     dashboard,
@@ -68,7 +68,7 @@ export const SaveAndAddButtonWithModal = ({ dataset }: { dataset?: IndexPattern 
 
   keyboardShortcut?.useKeyboardShortcut({
     id: 'addToDashboard',
-    pluginId: 'explore',
+    pluginId: 'agenticObservability',
     name: i18n.translate('agenticObservability.addToDashboard.addToDashboardShortcut', {
       defaultMessage: 'Add to dashboard',
     }),
@@ -91,13 +91,13 @@ export const SaveAndAddButtonWithModal = ({ dataset }: { dataset?: IndexPattern 
   const uiState = useSelector(selectUIState);
   const tabDefinition = services.tabRegistry?.getTab?.(uiState.activeTabId);
 
-  const savedExploreIdFromUrl = useCurrentExploreId();
+  const savedAgenticObservabilityIdFromUrl = useCurrentAgenticObservabilityId();
   const flavorId = useFlavorId();
 
   const saveObjectsClient = savedObjects.client;
 
   const handleSave = async ({
-    savedExplore,
+    savedAgenticObservability,
     newTitle,
     isTitleDuplicateConfirmed,
     onTitleDuplicate,
@@ -105,8 +105,8 @@ export const SaveAndAddButtonWithModal = ({ dataset }: { dataset?: IndexPattern 
     selectDashboard,
     newDashboardName,
   }: OnSaveProps) => {
-    const savedExploreWithState = saveStateToSavedObject(
-      savedExplore,
+    const savedAgenticObservabilityWithState = saveStateToSavedObject(
+      savedAgenticObservability,
       flavorId ?? 'logs',
       tabDefinition!,
       {
@@ -122,9 +122,9 @@ export const SaveAndAddButtonWithModal = ({ dataset }: { dataset?: IndexPattern 
       onTitleDuplicate,
     };
     try {
-      // by passing newCopyOnSave as true, to ensure every time add to dashboard will create a new explore
-      const result = await saveSavedExplore({
-        savedExplore: savedExploreWithState,
+      // by passing newCopyOnSave as true, to ensure every time add to dashboard will create a new agentic observability
+      const result = await saveSavedAgenticObservability({
+        savedAgenticObservability: savedAgenticObservabilityWithState,
         newTitle,
         saveOptions,
         searchContext,
@@ -149,7 +149,12 @@ export const SaveAndAddButtonWithModal = ({ dataset }: { dataset?: IndexPattern 
             existingDashboardId: selectDashboard!.id,
           };
         }
-        dashboardId = await addToDashboard(dashboard, { id, type: 'explore' }, mode, props);
+        dashboardId = await addToDashboard(
+          dashboard,
+          { id, type: 'agenticObservability' },
+          mode,
+          props
+        );
       }
 
       if (dashboardId) {
@@ -165,7 +170,7 @@ export const SaveAndAddButtonWithModal = ({ dataset }: { dataset?: IndexPattern 
                   {i18n.translate(
                     'agenticObservability.addToDashboard.notification.success.message',
                     {
-                      defaultMessage: `Explore '{newTitle}' is successfully added to the dashboard.`,
+                      defaultMessage: `Agentic Observability '{newTitle}' is successfully added to the dashboard.`,
                       values: { newTitle },
                     }
                   )}
@@ -248,7 +253,7 @@ export const SaveAndAddButtonWithModal = ({ dataset }: { dataset?: IndexPattern 
       </EuiButtonEmpty>
       {showAddToDashboardModal && (
         <AddToDashboardModal
-          savedExploreId={savedExploreIdFromUrl}
+          savedAgenticObservabilityId={savedAgenticObservabilityIdFromUrl}
           savedObjectsClient={saveObjectsClient}
           onCancel={() => setShowAddToDashboardModal(false)}
           onConfirm={handleSave}

@@ -277,7 +277,7 @@ describe('timechart header', function () {
         data: {},
         uiSettings: {
           get: jest.fn().mockImplementation((setting) => {
-            if (setting === 'explore:experimental') return true;
+            if (setting === 'agenticObservability:experimental') return true;
           }),
         },
       };

@@ -88,7 +88,7 @@ export interface TimechartHeaderProps {
    */
   additionalControl?: React.JSX.Element;
   /**
-   * Explore services for executing queries
+   * Agentic Observability services for executing queries
    */
   services?: any;
   /**
@@ -190,13 +190,13 @@ export function TimechartHeader({
                               bucketsDescription:
                                 bucketInterval!.scale && bucketInterval!.scale > 1
                                   ? i18n.translate(
-                                      'agenticObservability.explore.discover.bucketIntervalTooltip.tooLargeBucketsText',
+                                      'agenticObservability.discover.bucketIntervalTooltip.tooLargeBucketsText',
                                       {
                                         defaultMessage: 'buckets that are too large',
                                       }
                                     )
                                   : i18n.translate(
-                                      'agenticObservability.explore.discover.bucketIntervalTooltip.tooManyBucketsText',
+                                      'agenticObservability.discover.bucketIntervalTooltip.tooManyBucketsText',
                                       {
                                         defaultMessage: 'too many buckets',
                                       }

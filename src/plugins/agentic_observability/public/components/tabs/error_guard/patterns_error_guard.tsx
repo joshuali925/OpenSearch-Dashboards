@@ -30,7 +30,7 @@ import { setPatternsField } from '../../../application/utils/state_management/sl
 import { selectPatternsField } from '../../../application/utils/state_management/selectors';
 import { useDatasetContext } from '../../../application/context/dataset_context/dataset_context';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 
 const detailsText = i18n.translate('agenticObservability.patternsErrorPanel.details', {
   defaultMessage: 'Details',
@@ -77,7 +77,7 @@ export interface PatternsErrorGuardProps {
 
 export const PatternsErrorGuard = ({ registryTab }: PatternsErrorGuardProps) => {
   const dispatch = useDispatch();
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const query = useSelector((state: RootState) => state.query);
   const patternsField = useSelector(selectPatternsField);
   const { dataset } = useDatasetContext();

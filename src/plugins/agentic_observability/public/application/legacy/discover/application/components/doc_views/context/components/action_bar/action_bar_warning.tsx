@@ -43,7 +43,7 @@ export function ActionBarWarning({ docCount, type }: { docCount: number; type: S
         title={
           docCount === 0 ? (
             <FormattedMessage
-              id="agenticObservability.explore.discover.context.newerDocumentsWarningZero"
+              id="agenticObservability.discover.context.newerDocumentsWarningZero"
               defaultMessage="No documents newer than the anchor could be found."
             />
           ) : (
@@ -67,7 +67,7 @@ export function ActionBarWarning({ docCount, type }: { docCount: number; type: S
       title={
         docCount === 0 ? (
           <FormattedMessage
-            id="agenticObservability.explore.discover.context.olderDocumentsWarningZero"
+            id="agenticObservability.discover.context.olderDocumentsWarningZero"
             defaultMessage="No documents older than the anchor could be found."
           />
         ) : (

@@ -9,7 +9,7 @@ import { i18n } from '@osd/i18n';
 import { useDispatch } from 'react-redux';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
 import { useSelector } from '../../../application/legacy/discover/application/utils/state_management';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import {
   setQueryExecutionButtonStatus,
   QueryExecutionButtonStatus,
@@ -40,7 +40,7 @@ export const QueryExecutionButton: React.FC<QueryExecutionButtonProps> = ({
   onClick,
   onCancel,
 }) => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const dispatch = useDispatch();
   const dateRange = useSelector(selectDateRange);
   const timefilter = services?.data?.query?.timefilter?.timefilter;

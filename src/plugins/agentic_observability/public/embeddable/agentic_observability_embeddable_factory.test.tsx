@@ -3,27 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ExploreEmbeddableFactory } from './explore_embeddable_factory';
-import { EXPLORE_EMBEDDABLE_TYPE } from './constants';
+import { AgenticObservabilityEmbeddableFactory } from './agentic_observability_embeddable_factory';
+import { AGENTIC_OBSERVABILITY_EMBEDDABLE_TYPE } from './constants';
 import { ErrorEmbeddable } from '../../../embeddable/public';
-import { ExploreEmbeddable } from './explore_embeddable';
+import { AgenticObservabilityEmbeddable } from './agentic_observability_embeddable';
 import * as OsdServices from '../application/legacy/discover/opensearch_dashboards_services';
 
-jest.mock('./explore_embeddable', () => {
+jest.mock('./agentic_observability_embeddable', () => {
   return {
-    ExploreEmbeddable: jest.fn().mockImplementation(() => {
+    AgenticObservabilityEmbeddable: jest.fn().mockImplementation(() => {
       return {};
     }),
   };
 });
 
-describe('ExploreEmbeddableFactory', () => {
-  let factory: ExploreEmbeddableFactory;
+describe('AgenticObservabilityEmbeddableFactory', () => {
+  let factory: AgenticObservabilityEmbeddableFactory;
   const mockedGetServicesResults = {
-    getSavedExploreUrlById: jest.fn().mockResolvedValue('saved-agenticObs-url'),
-    getSavedExploreById: jest.fn().mockResolvedValue({
+    getSavedAgenticObservabilityUrlById: jest.fn().mockResolvedValue('saved-agenticObs-url'),
+    getSavedAgenticObservabilityById: jest.fn().mockResolvedValue({
       id: 'test-id',
-      title: 'Test Explore',
+      title: 'Test Agentic Observability',
       description: 'Test description',
       searchSource: {
         getField: jest.fn((field) => {
@@ -61,7 +61,7 @@ describe('ExploreEmbeddableFactory', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    factory = new ExploreEmbeddableFactory(
+    factory = new AgenticObservabilityEmbeddableFactory(
       jest.fn().mockResolvedValue(mockStartServices),
       mockVisualizationRegistryService as any
     );
@@ -69,7 +69,7 @@ describe('ExploreEmbeddableFactory', () => {
   });
 
   test('has the correct type', () => {
-    expect(factory.type).toBe(EXPLORE_EMBEDDABLE_TYPE);
+    expect(factory.type).toBe(AGENTIC_OBSERVABILITY_EMBEDDABLE_TYPE);
   });
 
   test('has the correct display name', () => {
@@ -116,7 +116,7 @@ describe('ExploreEmbeddableFactory', () => {
       id: 'test',
       timeRange: { from: 'now-15m', to: 'now' },
       attributes: {
-        title: 'Test Explore',
+        title: 'Test Agentic Observability',
         description: 'Test description',
         type: 'logs',
         columns: ['column1'],
@@ -132,11 +132,11 @@ describe('ExploreEmbeddableFactory', () => {
 
     const result = await factory.create(input as any);
 
-    expect(ExploreEmbeddable).toHaveBeenCalledWith(
+    expect(AgenticObservabilityEmbeddable).toHaveBeenCalledWith(
       expect.objectContaining({
-        savedExplore: expect.objectContaining({
+        savedAgenticObservability: expect.objectContaining({
           id: 'test',
-          title: 'Test Explore',
+          title: 'Test Agentic Observability',
         }),
         editUrl: '',
         editPath: '',
@@ -168,7 +168,7 @@ describe('ExploreEmbeddableFactory', () => {
       id: 'test',
       timeRange: { from: 'now-15m', to: 'now' },
       attributes: {
-        title: 'Test Explore',
+        title: 'Test Agentic Observability',
         type: 'logs',
         kibanaSavedObjectMeta: {
           searchSourceJSON: JSON.stringify({ query: { query: '', language: 'PPL' } }),
@@ -179,7 +179,7 @@ describe('ExploreEmbeddableFactory', () => {
 
     const result = await factory.create(input as any);
 
-    expect(ExploreEmbeddable).toHaveBeenCalledWith(
+    expect(AgenticObservabilityEmbeddable).toHaveBeenCalledWith(
       expect.objectContaining({
         indexPatterns: [],
       }),
@@ -205,7 +205,7 @@ describe('ExploreEmbeddableFactory', () => {
       id: 'test',
       timeRange: { from: 'now-15m', to: 'now' },
       attributes: {
-        title: 'Test Explore',
+        title: 'Test Agentic Observability',
         type: 'logs',
         kibanaSavedObjectMeta: {
           searchSourceJSON: JSON.stringify({ query: { query: '', language: 'PPL' } }),
@@ -218,21 +218,21 @@ describe('ExploreEmbeddableFactory', () => {
     expect(result).toBeInstanceOf(ErrorEmbeddable);
   });
 
-  test('createFromSavedObject creates an ExploreEmbeddable', async () => {
+  test('createFromSavedObject creates an AgenticObservabilityEmbeddable', async () => {
     const input = { id: 'test', timeRange: { from: 'now-15m', to: 'now' } };
 
     await factory.createFromSavedObject('test-id', input as any);
-    expect(ExploreEmbeddable).toHaveBeenCalledWith(
+    expect(AgenticObservabilityEmbeddable).toHaveBeenCalledWith(
       expect.objectContaining({
-        savedExplore: expect.objectContaining({
+        savedAgenticObservability: expect.objectContaining({
           id: 'test-id',
-          title: 'Test Explore',
+          title: 'Test Agentic Observability',
         }),
-        editUrl: '/base/app/explore/logs/saved-agenticObs-url',
+        editUrl: '/base/app/agenticObservability/logs/saved-agenticObs-url',
         editPath: 'saved-agenticObs-url',
         editable: true,
         indexPatterns: [{ id: 'test-index' }],
-        editApp: 'explore/logs',
+        editApp: 'agenticObservability/logs',
       }),
       input,
       mockStartServices.executeTriggerActions,
@@ -243,7 +243,7 @@ describe('ExploreEmbeddableFactory', () => {
   test('createFromSavedObject returns error object when saved object not found', async () => {
     jest.spyOn(OsdServices, 'getServices').mockReturnValue({
       ...mockedGetServicesResults,
-      getSavedExploreById: jest.fn().mockResolvedValue(null),
+      getSavedAgenticObservabilityById: jest.fn().mockResolvedValue(null),
     } as any);
 
     const input = { id: 'test', timeRange: { from: 'now-15m', to: 'now' } };
@@ -256,7 +256,7 @@ describe('ExploreEmbeddableFactory', () => {
   test('createFromSavedObject returns error object on error', async () => {
     jest.spyOn(OsdServices, 'getServices').mockReturnValue({
       ...mockedGetServicesResults,
-      getSavedExploreById: jest.fn().mockRejectedValueOnce(new Error('Test error')),
+      getSavedAgenticObservabilityById: jest.fn().mockRejectedValueOnce(new Error('Test error')),
     } as any);
 
     const input = { id: 'test', timeRange: { from: 'now-15m', to: 'now' } };
@@ -302,7 +302,7 @@ describe('ExploreEmbeddableFactory', () => {
   test('createFromSavedObject returns error object when exception thrown', async () => {
     jest.spyOn(OsdServices, 'getServices').mockReturnValue({
       ...mockedGetServicesResults,
-      getSavedExploreById: jest.fn().mockImplementation(() => {
+      getSavedAgenticObservabilityById: jest.fn().mockImplementation(() => {
         throw new Error('fail');
       }),
     } as any);
@@ -314,8 +314,8 @@ describe('ExploreEmbeddableFactory', () => {
   test('createFromSavedObject works when indexPattern is null', async () => {
     jest.spyOn(OsdServices, 'getServices').mockReturnValue({
       ...mockedGetServicesResults,
-      getSavedExploreById: jest.fn().mockResolvedValue({
-        ...mockedGetServicesResults.getSavedExploreById(),
+      getSavedAgenticObservabilityById: jest.fn().mockResolvedValue({
+        ...mockedGetServicesResults.getSavedAgenticObservabilityById(),
         searchSource: {
           getField: jest.fn(() => null),
         },
@@ -323,7 +323,7 @@ describe('ExploreEmbeddableFactory', () => {
     } as any);
     const input = { id: 'test', timeRange: { from: 'now-15m', to: 'now' } };
     await factory.createFromSavedObject('test-id', input as any);
-    expect(ExploreEmbeddable).toHaveBeenCalledWith(
+    expect(AgenticObservabilityEmbeddable).toHaveBeenCalledWith(
       expect.objectContaining({
         indexPatterns: [],
       }),

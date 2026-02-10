@@ -20,8 +20,8 @@ import {
 
 export const isOnTracesPage = (): boolean => {
   return (
-    window.location.pathname.includes('/explore/traces') ||
-    window.location.hash.includes('/explore/traces')
+    window.location.pathname.includes('/agenticObservability/traces') ||
+    window.location.hash.includes('/agenticObservability/traces')
   );
 };
 
@@ -69,7 +69,7 @@ export const buildTraceDetailsUrl = (
   const urlParams = `${datasetParams},spanId:'${spanIdValue}'`;
   const urlParamsWithTrace = traceIdValue ? `${urlParams},traceId:'${traceIdValue}'` : urlParams;
 
-  return `${origin}${basePath}/app/explore/traces/traceDetails#/?_a=(${urlParamsWithTrace})`;
+  return `${origin}${basePath}/app/agenticObservability/traces/traceDetails#/?_a=(${urlParamsWithTrace})`;
 };
 
 export const getTraceDetailsUrlParams = (

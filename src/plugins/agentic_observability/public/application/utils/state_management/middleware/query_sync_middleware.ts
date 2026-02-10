@@ -6,7 +6,7 @@
 import { Middleware } from '@reduxjs/toolkit';
 import { isEqual } from 'lodash';
 import { RootState } from '../store';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { prepareQueryForLanguage } from '../../languages';
 
 /**
@@ -15,7 +15,9 @@ import { prepareQueryForLanguage } from '../../languages';
  * before any search operations occur. It also manages query history for
  * user-initiated query executions.
  */
-export const createQuerySyncMiddleware = (services: ExploreServices): Middleware<{}, RootState> => {
+export const createQuerySyncMiddleware = (
+  services: AgenticObservabilityServices
+): Middleware<{}, RootState> => {
   return (store) => (next) => (action) => {
     const result = next(action);
 

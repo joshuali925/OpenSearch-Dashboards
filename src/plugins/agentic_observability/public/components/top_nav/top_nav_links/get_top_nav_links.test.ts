@@ -18,7 +18,7 @@ const mockServices = (overrides: any = {}) => ({
 const startSyncingQueryStateWithUrl = jest.fn();
 const searchContext = {} as any;
 const indexPattern = {} as any;
-const savedExplore = {} as any;
+const savedAgenticObservability = {} as any;
 const clearEditors = jest.fn();
 
 const mockDataset = {} as any;
@@ -39,7 +39,7 @@ describe('getTopNavLinks', () => {
         activeTabId: 'logs',
       },
       clearEditors,
-      savedExplore
+      savedAgenticObservability
     );
     expect(links).toHaveLength(4);
     expect(links[0]).toMatchObject(saveTopNavData);
@@ -66,7 +66,7 @@ describe('getTopNavLinks', () => {
         activeTabId: 'logs',
       },
       clearEditors,
-      savedExplore
+      savedAgenticObservability
     );
     expect(links).toHaveLength(3);
     expect(links[0]).toMatchObject(openTopNavData);
@@ -88,7 +88,7 @@ describe('getTopNavLinks', () => {
         activeTabId: 'logs',
       },
       clearEditors,
-      savedExplore
+      savedAgenticObservability
     );
     expect(links).toHaveLength(3);
     expect(links[0]).toMatchObject(saveTopNavData);
@@ -113,7 +113,7 @@ describe('getTopNavLinks', () => {
         activeTabId: 'logs',
       },
       clearEditors,
-      savedExplore
+      savedAgenticObservability
     );
     expect(links).toHaveLength(2);
     expect(links[0]).toMatchObject(openTopNavData);

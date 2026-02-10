@@ -5,14 +5,14 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Query } from '../../../../../../../data/common';
-import { EXPLORE_DEFAULT_LANGUAGE } from '../../../../../../common';
+import { AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE } from '../../../../../../common';
 import { QueryWithQueryAsString } from '../../../languages';
 
 export type QueryState = QueryWithQueryAsString;
 
 const initialState: QueryState = {
   query: '',
-  language: EXPLORE_DEFAULT_LANGUAGE,
+  language: AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE,
   dataset: undefined,
 };
 

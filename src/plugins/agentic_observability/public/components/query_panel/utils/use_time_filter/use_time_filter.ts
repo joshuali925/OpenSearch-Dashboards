@@ -7,7 +7,7 @@ import { useDispatch } from 'react-redux';
 import { OnTimeChangeProps } from '@elastic/eui';
 import { useCallback } from 'react';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import {
   clearResults,
   clearQueryStatusMap,
@@ -15,7 +15,7 @@ import {
 import { executeQueries } from '../../../../application/utils/state_management/actions/query_actions';
 
 export const useTimeFilter = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const dispatch = useDispatch();
 
   const timeFilter = services.data.query.timefilter.timefilter;

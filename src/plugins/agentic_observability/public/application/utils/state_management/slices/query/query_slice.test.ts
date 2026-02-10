@@ -11,7 +11,7 @@ import {
   QueryState,
   queryInitialState,
 } from './query_slice';
-import { EXPLORE_DEFAULT_LANGUAGE } from '../../../../../../common';
+import { AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE } from '../../../../../../common';
 import { Query } from '../../../../../../../data/common';
 
 describe('querySlice reducers', () => {
@@ -113,7 +113,7 @@ describe('querySlice reducers', () => {
       it('should have correct initial state', () => {
         expect(queryInitialState).toEqual({
           query: '',
-          language: EXPLORE_DEFAULT_LANGUAGE,
+          language: AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE,
           dataset: undefined,
         });
       });
@@ -143,7 +143,7 @@ describe('querySlice reducers', () => {
       it('should handle empty query string in setQueryStringWithHistory', () => {
         const state = queryReducer(initialState, setQueryStringWithHistory(''));
         expect(state.query).toBe('');
-        expect(state.language).toBe(EXPLORE_DEFAULT_LANGUAGE);
+        expect(state.language).toBe(AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE);
         expect(state.dataset).toBeUndefined();
       });
 

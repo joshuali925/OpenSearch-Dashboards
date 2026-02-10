@@ -16,7 +16,7 @@ import {
   setUsingRegexPatterns,
 } from '../slices';
 import { clearQueryStatusMap } from '../slices/query_editor/query_editor_slice';
-import { createMockExploreServices, createMockStore, MockStore } from '../__mocks__';
+import { createMockAgenticObservabilityServices, createMockStore, MockStore } from '../__mocks__';
 import { DEFAULT_DATA } from '../../../../../../data/common';
 import { getPromptModeIsAvailable } from '../../get_prompt_mode_is_available';
 import { getSummaryAgentIsAvailable } from '../../get_summary_agent_is_available';
@@ -57,7 +57,7 @@ const mockedResetLegacyStateActionCreator = resetLegacyStateActions.resetLegacyS
 >;
 
 describe('createDatasetChangeMiddleware', () => {
-  let mockServices: ReturnType<typeof createMockExploreServices>;
+  let mockServices: ReturnType<typeof createMockAgenticObservabilityServices>;
   let mockStore: MockStore;
   let mockNext: jest.MockedFunction<(action: any) => any>;
   let middleware: (action: any) => any;
@@ -66,7 +66,7 @@ describe('createDatasetChangeMiddleware', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCacheDataset = jest.fn();
-    mockServices = createMockExploreServices();
+    mockServices = createMockAgenticObservabilityServices();
     mockServices.data.query.queryString.getDatasetService = jest.fn().mockReturnValue({
       cacheDataset: mockCacheDataset,
     });

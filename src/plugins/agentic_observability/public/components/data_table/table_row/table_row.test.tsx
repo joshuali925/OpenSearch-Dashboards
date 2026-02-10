@@ -188,7 +188,7 @@ describe('TableRow', () => {
       description: 'Expanded row Entry from data table',
       value: mockRow._source,
       label: 'Row Entry',
-      categories: ['explore', 'chat', 'dynamic'],
+      categories: ['agenticObservability', 'chat', 'dynamic'],
     });
   });
 
@@ -302,7 +302,7 @@ describe('TableRow', () => {
       description: 'Expanded row 3 from data table',
       value: mockRow._source,
       label: 'Row 3',
-      categories: ['explore', 'chat', 'dynamic'],
+      categories: ['agenticObservability', 'chat', 'dynamic'],
     });
   });
 
@@ -319,7 +319,7 @@ describe('TableRow', () => {
       description: 'Expanded row 6 from data table',
       value: rowWithoutId._source,
       label: 'Row 6',
-      categories: ['explore', 'chat', 'dynamic'],
+      categories: ['agenticObservability', 'chat', 'dynamic'],
     });
   });
 
@@ -335,7 +335,7 @@ describe('TableRow', () => {
       description: 'Expanded row Entry from data table',
       value: mockRow._source,
       label: 'Row Entry',
-      categories: ['explore', 'chat', 'dynamic'],
+      categories: ['agenticObservability', 'chat', 'dynamic'],
     });
   });
 

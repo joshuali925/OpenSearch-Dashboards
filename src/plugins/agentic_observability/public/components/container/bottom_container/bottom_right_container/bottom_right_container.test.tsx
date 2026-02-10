@@ -43,7 +43,9 @@ jest.mock(
 
 jest.mock('./resizable_vis_control_and_tabs', () => ({
   ResizableVisControlAndTabs: () => (
-    <div data-test-subj="agenticObs-tabs-vis-style-panel">Explore Tabs and Style Panel</div>
+    <div data-test-subj="agenticObs-tabs-vis-style-panel">
+      Agentic Observability Tabs and Style Panel
+    </div>
   ),
 }));
 
@@ -78,7 +80,7 @@ import { QueryExecutionStatus } from '../../../../application/utils/state_manage
 import { useDatasetContext } from '../../../../application/context';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { useFlavorId } from '../../../../helpers/use_flavor_id';
-import { ExploreFlavor } from '../../../../../common';
+import { AgenticObservabilityFlavor } from '../../../../../common';
 
 const mockUseDatasetContext = useDatasetContext as jest.MockedFunction<typeof useDatasetContext>;
 const mockUseOpenSearchDashboards = useOpenSearchDashboards as jest.MockedFunction<
@@ -134,7 +136,7 @@ describe('BottomRightContainer', () => {
     mockUseOpenSearchDashboards.mockReturnValue({
       services: mockServices,
     } as any);
-    mockUseFlavorId.mockReturnValue(ExploreFlavor.Logs);
+    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Logs);
   });
 
   const renderComponent = (status: QueryExecutionStatus = QueryExecutionStatus.UNINITIALIZED) => {
@@ -286,7 +288,7 @@ describe('BottomRightContainer', () => {
       isLoading: false,
       error: null,
     });
-    mockUseFlavorId.mockReturnValue(ExploreFlavor.Traces);
+    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Traces);
 
     renderComponent(QueryExecutionStatus.READY);
 
@@ -300,7 +302,7 @@ describe('BottomRightContainer', () => {
       isLoading: false,
       error: null,
     });
-    mockUseFlavorId.mockReturnValue(ExploreFlavor.Logs);
+    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Logs);
 
     renderComponent(QueryExecutionStatus.READY);
 

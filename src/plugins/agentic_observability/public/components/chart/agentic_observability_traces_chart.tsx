@@ -24,7 +24,7 @@ import { euiThemeVars } from '@osd/ui-shared-deps/theme';
 import { DataPublicPluginStart, search } from '../../../../data/public';
 import { TimechartHeader, TimechartHeaderBucketInterval } from './timechart_header';
 import { DiscoverHistogram } from './histogram/histogram';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import { Chart } from './utils';
 import {
   setInterval,
@@ -113,7 +113,7 @@ interface ChartQueryError {
   originalErrorMessage: string;
 }
 
-interface ExploreTracesChartProps {
+interface AgenticObservabilityTracesChartProps {
   bucketInterval?: TimechartHeaderBucketInterval;
   requestChartData?: Chart;
   errorChartData?: Chart;
@@ -124,11 +124,11 @@ interface ExploreTracesChartProps {
   timeFieldName?: string;
   config: IUiSettingsClient;
   data: DataPublicPluginStart;
-  services: ExploreServices;
+  services: AgenticObservabilityServices;
   showHistogram: boolean;
 }
 
-export const ExploreTracesChart = ({
+export const AgenticObservabilityTracesChart = ({
   bucketInterval,
   requestChartData,
   errorChartData,
@@ -141,7 +141,7 @@ export const ExploreTracesChart = ({
   data,
   services,
   showHistogram,
-}: ExploreTracesChartProps) => {
+}: AgenticObservabilityTracesChartProps) => {
   const { from, to } = data.query.timefilter.timefilter.getTime();
   const timeRange = useMemo(() => {
     return {

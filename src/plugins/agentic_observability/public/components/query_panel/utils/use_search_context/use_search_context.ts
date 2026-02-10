@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { useState, useEffect } from 'react';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExecutionContextSearch } from '../../../../../../expressions/common/';
 
 export const useSearchContext = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const [searchContext, setSearchContext] = useState<ExecutionContextSearch>({
     query: services.data.query.queryString.getQuery(),
     filters: services.data.query.filterManager.getFilters(),

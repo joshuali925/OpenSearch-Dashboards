@@ -5,7 +5,7 @@
 
 import { useDispatch } from 'react-redux';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { loadQueryActionCreator } from '../../../application/utils/state_management/actions/query_editor/load_query';
 import { useSetEditorTextWithQuery } from '../../../application/hooks';
 import { QueryExecutionStatus } from '../../../application/utils/state_management/types';
@@ -24,13 +24,13 @@ const NOOP_ASSISTANT_ACTION_HOOK = (_action: any) => {};
 
 /**
  * Wait for query execution to complete and return the result status
- * @param services - Explore services containing the Redux store
+ * @param services - Agentic Observability services containing the Redux store
  * @param cacheKey - The cache key for the query
  * @param timeoutMs - Maximum time to wait in milliseconds
  * @returns The query result status or null if timeout
  */
 async function waitForQueryExecution(
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   cacheKey: string,
   timeoutMs: number
 ): Promise<{
@@ -104,7 +104,7 @@ async function waitForQueryExecution(
 export function usePPLExecuteQueryAction(
   setEditorTextWithQuery: ReturnType<typeof useSetEditorTextWithQuery>
 ) {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const dispatch = useDispatch();
   const useAssistantAction =
     services.contextProvider?.hooks?.useAssistantAction || NOOP_ASSISTANT_ACTION_HOOK;

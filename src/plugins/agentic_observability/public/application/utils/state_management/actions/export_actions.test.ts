@@ -4,7 +4,7 @@
  */
 
 import { exportToCsv, exportMaxSizeCsv } from './export_actions';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { saveAs } from 'file-saver';
 import { AppDispatch, RootState } from '../store';
 
@@ -24,7 +24,7 @@ jest.mock('../../../../helpers/use_displayed_columns', () => ({
 }));
 
 describe('export_actions', () => {
-  let mockServices: jest.Mocked<ExploreServices>;
+  let mockServices: jest.Mocked<AgenticObservabilityServices>;
   let mockDispatch: jest.MockedFunction<AppDispatch>;
   let mockGetState: jest.MockedFunction<() => RootState>;
   let mockState: RootState;
@@ -146,7 +146,7 @@ describe('export_actions', () => {
 
       expect(saveAs).toHaveBeenCalledWith(
         expect.any(Blob),
-        expect.stringMatching(/explore_export_.*\.csv/)
+        expect.stringMatching(/agentic_observability_export_.*\.csv/)
       );
     });
 

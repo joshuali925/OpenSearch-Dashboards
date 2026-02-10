@@ -4,7 +4,7 @@
  */
 
 import { i18n } from '@osd/i18n';
-import { saveSavedExplore } from './save_explore'; // adjust path
+import { saveSavedAgenticObservability } from './save_agentic_observability'; // adjust path
 import { setSavedSearch } from '../application/utils/state_management/slices';
 
 jest.mock('../application/utils/state_management/slices', () => ({
@@ -40,14 +40,14 @@ const createMockServices = () => ({
   },
 });
 
-describe('saveSavedExplore', () => {
-  let savedExplore: any;
+describe('saveSavedAgenticObservability', () => {
+  let savedAgenticObservability: any;
   let services: any;
   let searchContext: any;
   let saveOptions: any;
 
   beforeEach(() => {
-    savedExplore = {
+    savedAgenticObservability = {
       id: '123',
       title: 'Old Title',
       save: jest.fn(),
@@ -68,9 +68,9 @@ describe('saveSavedExplore', () => {
   });
 
   it('should save and update title (same id)', async () => {
-    savedExplore.save.mockResolvedValue('123');
-    const result = await saveSavedExplore({
-      savedExplore,
+    savedAgenticObservability.save.mockResolvedValue('123');
+    const result = await saveSavedAgenticObservability({
+      savedAgenticObservability,
       newTitle: 'New Title',
       saveOptions,
       searchContext,
@@ -80,17 +80,17 @@ describe('saveSavedExplore', () => {
       newCopyOnSave: false,
     });
 
-    expect(savedExplore.title).toBe('New Title');
-    expect(savedExplore.save).toHaveBeenCalledTimes(1);
-    expect(savedExplore.save).toHaveBeenCalledWith(saveOptions);
+    expect(savedAgenticObservability.title).toBe('New Title');
+    expect(savedAgenticObservability.save).toHaveBeenCalledTimes(1);
+    expect(savedAgenticObservability.save).toHaveBeenCalledWith(saveOptions);
     expect(result).toEqual({ id: '123' });
   });
 
-  it('should save a new save explore and redirect if id changes', async () => {
-    savedExplore.save.mockResolvedValue('456');
+  it('should save a new save agentic observability and redirect if id changes', async () => {
+    savedAgenticObservability.save.mockResolvedValue('456');
 
-    const result = await saveSavedExplore({
-      savedExplore,
+    const result = await saveSavedAgenticObservability({
+      savedAgenticObservability,
       newTitle: 'Updated Title',
       saveOptions,
       searchContext,
@@ -103,7 +103,7 @@ describe('saveSavedExplore', () => {
     expect(services.toastNotifications.addSuccess).toHaveBeenCalledWith(
       expect.objectContaining({
         title: i18n.translate('agenticObservability.saveSuccessTitle', {
-          defaultMessage: 'Explore saved',
+          defaultMessage: 'Agentic Observability saved',
         }),
       })
     );
@@ -111,10 +111,10 @@ describe('saveSavedExplore', () => {
   });
 
   it('should handle save failure', async () => {
-    savedExplore.save.mockRejectedValue(new Error('Save failed'));
+    savedAgenticObservability.save.mockRejectedValue(new Error('Save failed'));
 
-    await saveSavedExplore({
-      savedExplore,
+    await saveSavedAgenticObservability({
+      savedAgenticObservability,
       newTitle: 'Failed Title',
       saveOptions,
       searchContext,
@@ -129,6 +129,6 @@ describe('saveSavedExplore', () => {
         text: 'Save failed',
       })
     );
-    expect(savedExplore.title).toBe('Old Title'); // title restored
+    expect(savedAgenticObservability.title).toBe('Old Title'); // title restored
   });
 });

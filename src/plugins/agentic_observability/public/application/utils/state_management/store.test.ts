@@ -4,7 +4,7 @@
  */
 
 import { configurePreloadedStore, getPreloadedStore, RootState } from './store';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { loadReduxState } from './utils/redux_persistence';
 import { normalizeStateForComparison } from './utils/state_comparison';
 
@@ -49,7 +49,7 @@ import { createTimefilterSyncMiddleware } from './middleware/timefilter_sync_mid
 import { createOverallStatusMiddleware } from './middleware/overall_status_middleware';
 
 describe('store', () => {
-  let mockServices: jest.Mocked<ExploreServices>;
+  let mockServices: jest.Mocked<AgenticObservabilityServices>;
   let mockPreloadedState: RootState;
   let mockHistoryListen: jest.Mock;
   let mockOsdUrlStateStorageGet: jest.Mock;

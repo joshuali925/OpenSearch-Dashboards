@@ -86,7 +86,7 @@ export const addToDashboard = async (
   let dashboardUrl;
   if (mode === 'new') {
     dashboard.title = options.newDashboardName;
-    dashboard.description = 'The dashboard was created from explore';
+    dashboard.description = 'The dashboard was created from agentic observability';
     const state: DashboardUrlGeneratorState = {};
     dashboardUrl = await dashboardUrlGenerator?.createUrl(state);
     if (!dashboardUrl) {

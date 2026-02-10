@@ -36,7 +36,7 @@ import {
   setLastExecutedTranslatedQuery,
 } from '../../../../slices';
 import { runQueryActionCreator } from '../../run_query';
-import { ExploreServices } from '../../../../../../../types';
+import { AgenticObservabilityServices } from '../../../../../../../types';
 import { AppDispatch } from '../../../../store';
 import {
   AgentError,
@@ -68,7 +68,7 @@ const mockRunQueryActionCreator = runQueryActionCreator as jest.MockedFunction<
 >;
 
 describe('callAgentActionCreator', () => {
-  let mockServices: ExploreServices;
+  let mockServices: AgenticObservabilityServices;
   let mockDispatch: jest.MockedFunction<AppDispatch>;
   const testEditorText = 'What are the top 10 users?';
 
@@ -105,7 +105,7 @@ describe('callAgentActionCreator', () => {
           addError: jest.fn(),
         },
       },
-    } as unknown) as ExploreServices;
+    } as unknown) as AgenticObservabilityServices;
 
     // Mock return values for action creators
     mockSetPromptToQueryIsLoading.mockReturnValue({

@@ -9,7 +9,7 @@ import { Router, Route, Switch } from 'react-router-dom';
 import { Provider as ReduxProvider } from 'react-redux';
 import { Store } from 'redux';
 import { AppMountParameters } from '../../../../core/public';
-import { ExploreServices } from '../types';
+import { AgenticObservabilityServices } from '../types';
 import {
   OpenSearchDashboardsContextProvider,
   useOpenSearchDashboards,
@@ -21,16 +21,16 @@ import { TraceDetails } from './pages/traces/trace_details/trace_view';
 
 const NOOP_PAGE_CONTEXT_HOOK = (_options?: any): string => '';
 
-// Component that handles page context for all Explore flavors
-const ExplorePageContextProvider: React.FC<{
+// Component that handles page context for all Agentic Observability flavors
+const AgenticObservabilityPageContextProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const usePageContext = services.contextProvider?.hooks?.usePageContext || NOOP_PAGE_CONTEXT_HOOK;
   usePageContext({
-    description: 'Explore application page context',
+    description: 'Agentic Observability application page context',
     convert: (urlState: any) => ({
-      appId: 'explore',
+      appId: 'agenticObservability',
       timeRange: urlState._g?.time,
       query: {
         query: urlState._q?.query || '',
@@ -46,7 +46,7 @@ const ExplorePageContextProvider: React.FC<{
 
 export const renderApp = (
   { element, history, setHeaderActionMenu }: AppMountParameters,
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   store: Store
 ) => {
   const root = createRoot(element);
@@ -57,7 +57,7 @@ export const renderApp = (
           <EditorContextProvider>
             <DatasetProvider>
               <services.core.i18n.Context>
-                <ExplorePageContextProvider>
+                <AgenticObservabilityPageContextProvider>
                   <Switch>
                     {/* View route for saved searches */}
                     <Route path="/view/:id" exact>
@@ -72,7 +72,7 @@ export const renderApp = (
                       <TracesPage setHeaderActionMenu={setHeaderActionMenu} />
                     </Route>
                   </Switch>
-                </ExplorePageContextProvider>
+                </AgenticObservabilityPageContextProvider>
               </services.core.i18n.Context>
             </DatasetProvider>
           </EditorContextProvider>

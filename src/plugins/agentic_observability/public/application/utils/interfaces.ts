@@ -7,7 +7,7 @@ import { Duration, Moment } from 'moment';
 import { IUiSettingsClient } from 'opensearch-dashboards/public';
 import { DataView as Dataset, DataPublicPluginStart } from '../../../../data/public';
 import { QueryState, ISearchResult } from './state_management/slices';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 
 /**
  * Interface for chart data bucket
@@ -161,7 +161,7 @@ export interface PreparedQuery {
  */
 export interface QueryExecutionOptions {
   clearCache?: boolean;
-  services?: ExploreServices;
+  services?: AgenticObservabilityServices;
   reason?: 'user_action' | 'tab_switch' | 'dataset_change';
   preparedQueries?: PreparedQuery[];
 }
@@ -171,7 +171,7 @@ export interface QueryExecutionOptions {
  */
 export interface TabQueryExecutionOptions {
   clearCache?: boolean;
-  services?: ExploreServices;
+  services?: AgenticObservabilityServices;
   tabId?: string;
   preparedQuery?: PreparedQuery;
   cacheKey?: string;

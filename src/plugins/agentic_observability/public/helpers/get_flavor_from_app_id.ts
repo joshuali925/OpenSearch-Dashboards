@@ -4,27 +4,31 @@
  */
 
 import { take } from 'rxjs/operators';
-import { ExploreFlavor, PLUGIN_ID } from '../../common';
-import { ExploreServices } from '../types';
+import { AgenticObservabilityFlavor, PLUGIN_ID } from '../../common';
+import { AgenticObservabilityServices } from '../types';
 
 /**
  * Extracts the flavor ID from an app ID string
- * App ID format: "explore/{flavor}" -> returns the flavor part
+ * App ID format: "agenticObservability/{flavor}" -> returns the flavor part
  * For agenticObservability without a flavor suffix, defaults to Traces
  */
-export const getFlavorFromAppId = (appId: string | undefined): ExploreFlavor | null => {
+export const getFlavorFromAppId = (
+  appId: string | undefined
+): AgenticObservabilityFlavor | null => {
   // For agenticObservability plugin, default to Traces flavor
   if (appId === PLUGIN_ID) {
-    return ExploreFlavor.Traces;
+    return AgenticObservabilityFlavor.Traces;
   }
   const flavorFromAppId = appId?.split('/')?.[1];
-  return flavorFromAppId ? (flavorFromAppId as ExploreFlavor) : null;
+  return flavorFromAppId ? (flavorFromAppId as AgenticObservabilityFlavor) : null;
 };
 
 /**
  * Gets the current app ID from the application service
  */
-export const getCurrentAppId = async (services: ExploreServices): Promise<string | undefined> => {
+export const getCurrentAppId = async (
+  services: AgenticObservabilityServices
+): Promise<string | undefined> => {
   return services.core.application.currentAppId$.pipe(take(1)).toPromise();
 };
 
@@ -32,8 +36,8 @@ export const getCurrentAppId = async (services: ExploreServices): Promise<string
  * Gets the current flavor ID by reading the app ID and extracting the flavor part
  */
 export const getCurrentFlavor = async (
-  services: ExploreServices
-): Promise<ExploreFlavor | null> => {
+  services: AgenticObservabilityServices
+): Promise<AgenticObservabilityFlavor | null> => {
   const currentAppId = await getCurrentAppId(services);
   return getFlavorFromAppId(currentAppId);
 };

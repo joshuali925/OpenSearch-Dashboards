@@ -9,11 +9,14 @@ import {
   determineOptimalTab,
 } from './detect_optimal_tab';
 import { setActiveTab } from '../../slices';
-import { ExploreServices } from '../../../../../types';
+import { AgenticObservabilityServices } from '../../../../../types';
 import { defaultPrepareQueryString } from '../query_actions';
 import { VisualizationRegistry } from '../../../../../components/visualizations/visualization_registry';
 import { QueryExecutionStatus } from '../../types';
-import { EXPLORE_LOGS_TAB_ID, EXPLORE_VISUALIZATION_TAB_ID } from '../../../../../../common';
+import {
+  AGENTIC_OBSERVABILITY_LOGS_TAB_ID,
+  AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID,
+} from '../../../../../../common';
 
 jest.mock('../../slices');
 jest.mock('../query_actions');
@@ -25,7 +28,7 @@ const mockDefaultPrepareQueryString = defaultPrepareQueryString as jest.MockedFu
 >;
 
 describe('detect_optimal_tab', () => {
-  let mockServices: ExploreServices;
+  let mockServices: AgenticObservabilityServices;
   let mockDispatch: jest.Mock;
   let mockGetState: jest.Mock;
 
@@ -40,8 +43,8 @@ describe('detect_optimal_tab', () => {
       tabRegistry: {
         getTab: jest.fn(),
         getAllTabs: jest.fn().mockReturnValue([
-          { id: EXPLORE_LOGS_TAB_ID, label: 'Logs' },
-          { id: EXPLORE_VISUALIZATION_TAB_ID, label: 'Visualization' },
+          { id: AGENTIC_OBSERVABILITY_LOGS_TAB_ID, label: 'Logs' },
+          { id: AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID, label: 'Visualization' },
         ]),
       },
     } as any;
@@ -157,7 +160,9 @@ describe('detect_optimal_tab', () => {
         fieldSchema: [{ name: 'test', type: 'string' }],
       };
 
-      expect(determineOptimalTab(results, mockServices)).toBe(EXPLORE_VISUALIZATION_TAB_ID);
+      expect(determineOptimalTab(results, mockServices)).toBe(
+        AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID
+      );
       spy.mockRestore();
     });
 
@@ -171,7 +176,7 @@ describe('detect_optimal_tab', () => {
         fieldSchema: [{ name: 'test', type: 'string' }],
       };
 
-      expect(determineOptimalTab(results, mockServices)).toBe(EXPLORE_LOGS_TAB_ID);
+      expect(determineOptimalTab(results, mockServices)).toBe(AGENTIC_OBSERVABILITY_LOGS_TAB_ID);
       spy.mockRestore();
     });
   });
@@ -188,7 +193,10 @@ describe('detect_optimal_tab', () => {
         },
       });
 
-      const mockAction = { type: 'setActiveTab', payload: EXPLORE_VISUALIZATION_TAB_ID };
+      const mockAction = {
+        type: 'setActiveTab',
+        payload: AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID,
+      };
       mockSetActiveTab.mockReturnValue(mockAction);
 
       const thunk = detectAndSetOptimalTab({
@@ -197,8 +205,10 @@ describe('detect_optimal_tab', () => {
 
       await thunk(mockDispatch, mockGetState, undefined);
 
-      expect(mockServices.tabRegistry!.getTab).toHaveBeenCalledWith(EXPLORE_VISUALIZATION_TAB_ID);
-      expect(mockSetActiveTab).toHaveBeenCalledWith(EXPLORE_VISUALIZATION_TAB_ID);
+      expect(mockServices.tabRegistry!.getTab).toHaveBeenCalledWith(
+        AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID
+      );
+      expect(mockSetActiveTab).toHaveBeenCalledWith(AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID);
       expect(mockDispatch).toHaveBeenCalledWith(mockAction);
       spy.mockRestore();
     });
@@ -267,7 +277,10 @@ describe('detect_optimal_tab', () => {
         },
       });
 
-      const mockAction = { type: 'setActiveTab', payload: EXPLORE_VISUALIZATION_TAB_ID };
+      const mockAction = {
+        type: 'setActiveTab',
+        payload: AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID,
+      };
       mockSetActiveTab.mockReturnValue(mockAction);
 
       const thunk = detectAndSetOptimalTab({
@@ -279,7 +292,7 @@ describe('detect_optimal_tab', () => {
       expect(mockDefaultPrepareQueryString).toHaveBeenCalledWith({
         query: 'SELECT * FROM logs',
       });
-      expect(mockSetActiveTab).toHaveBeenCalledWith(EXPLORE_VISUALIZATION_TAB_ID);
+      expect(mockSetActiveTab).toHaveBeenCalledWith(AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID);
       spy.mockRestore();
     });
 
@@ -288,7 +301,7 @@ describe('detect_optimal_tab', () => {
         .spyOn(VisualizationRegistry.prototype, 'findBestMatch')
         .mockReturnValue(null);
 
-      const mockAction = { type: 'setActiveTab', payload: EXPLORE_LOGS_TAB_ID };
+      const mockAction = { type: 'setActiveTab', payload: AGENTIC_OBSERVABILITY_LOGS_TAB_ID };
       mockSetActiveTab.mockReturnValue(mockAction);
 
       const thunk = detectAndSetOptimalTab({
@@ -297,7 +310,7 @@ describe('detect_optimal_tab', () => {
 
       await thunk(mockDispatch, mockGetState, undefined);
 
-      expect(mockSetActiveTab).toHaveBeenCalledWith(EXPLORE_LOGS_TAB_ID);
+      expect(mockSetActiveTab).toHaveBeenCalledWith(AGENTIC_OBSERVABILITY_LOGS_TAB_ID);
       expect(mockDispatch).toHaveBeenCalledWith(mockAction);
       spy.mockRestore();
     });
@@ -321,7 +334,10 @@ describe('detect_optimal_tab', () => {
       };
       mockGetState.mockReturnValue(mockStateWithError);
 
-      const mockAction = { type: 'setActiveTab', payload: EXPLORE_VISUALIZATION_TAB_ID };
+      const mockAction = {
+        type: 'setActiveTab',
+        payload: AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID,
+      };
       mockSetActiveTab.mockReturnValue(mockAction);
 
       const thunk = detectAndSetOptimalTab({
@@ -330,7 +346,7 @@ describe('detect_optimal_tab', () => {
 
       await thunk(mockDispatch, mockGetState, undefined);
 
-      expect(mockSetActiveTab).toHaveBeenCalledWith(EXPLORE_VISUALIZATION_TAB_ID);
+      expect(mockSetActiveTab).toHaveBeenCalledWith(AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID);
       expect(mockDispatch).toHaveBeenCalledWith(mockAction);
     });
   });

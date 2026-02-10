@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 
 const AGENT_EXISTS_API = '/api/assistant/agent_config/_exists';
 
 export const getSummaryAgentIsAvailable = async (
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   dataSourceId: string
 ) => {
   try {

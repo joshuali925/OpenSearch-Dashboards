@@ -4,7 +4,7 @@
  */
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { SortOrder } from '../../../../../types/saved_explore_types';
+import { SortOrder } from '../../../../../types/saved_agentic_observability_types';
 
 /**
  * Legacy state interface

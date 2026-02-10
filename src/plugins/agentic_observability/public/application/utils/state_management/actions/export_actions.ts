@@ -5,7 +5,7 @@
 
 import { Dispatch } from 'redux';
 import { saveAs } from 'file-saver';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { AppDispatch, RootState } from '../store';
 import { processDisplayedColumnNames } from '../../../../helpers/use_displayed_columns';
 import { defaultResultsProcessor, defaultPrepareQueryString } from './query_actions';
@@ -17,7 +17,7 @@ import { defaultResultsProcessor, defaultPrepareQueryString } from './query_acti
 export const getFilteredDisplayedColumnNames = (
   state: RootState,
   dataset: any,
-  services: ExploreServices
+  services: AgenticObservabilityServices
 ): string[] => {
   const columns = state.legacy?.columns || [];
   const query = state.query;
@@ -34,7 +34,9 @@ export const getFilteredDisplayedColumnNames = (
  * Redux Thunk for exporting data to CSV
  * Uses existing results from the Redux store
  */
-export const exportToCsv = (options: { fileName?: string; services?: ExploreServices } = {}) => {
+export const exportToCsv = (
+  options: { fileName?: string; services?: AgenticObservabilityServices } = {}
+) => {
   return (dispatch: AppDispatch, getState: () => RootState) => {
     const state = getState();
     const { activeTabId } = state.ui;
@@ -73,7 +75,8 @@ export const exportToCsv = (options: { fileName?: string; services?: ExploreServ
     const csv = generateCsv(rows, indexPattern, columns);
 
     // Download CSV
-    const fileName = options.fileName || `explore_export_${new Date().toISOString()}.csv`;
+    const fileName =
+      options.fileName || `agentic_observability_export_${new Date().toISOString()}.csv`;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     saveAs(blob, fileName);
   };
@@ -113,7 +116,7 @@ function generateCsv(rows: any[], indexPattern: any, columns: string[]) {
  * Creates a new SearchSource to fetch more data than is in the cache
  */
 export const exportMaxSizeCsv = (
-  options: { maxSize?: number; fileName?: string; services?: ExploreServices } = {}
+  options: { maxSize?: number; fileName?: string; services?: AgenticObservabilityServices } = {}
 ) => {
   return async (dispatch: Dispatch, getState: () => any) => {
     const state = getState();
@@ -162,7 +165,8 @@ export const exportMaxSizeCsv = (
       const csv = generateCsv(rows, indexPattern, columns);
 
       // Download CSV
-      const fileName = options.fileName || `explore_export_${new Date().toISOString()}.csv`;
+      const fileName =
+        options.fileName || `agentic_observability_export_${new Date().toISOString()}.csv`;
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
       saveAs(blob, fileName);
     } catch (error) {

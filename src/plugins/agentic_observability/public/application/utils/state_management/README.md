@@ -1,8 +1,8 @@
-# Explore Plugin State Management
+# Agentic Observability Plugin State Management
 
 ## Overview
 
-The Explore plugin uses Redux Toolkit with a slice architecture for state management, featuring middleware-based persistence and logical separation of UI and infrastructure state.
+The Agentic Observability plugin uses Redux Toolkit with a slice architecture for state management, featuring middleware-based persistence and logical separation of UI and infrastructure state.
 
 ## State Architecture
 

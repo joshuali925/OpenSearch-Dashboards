@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import '../explore_page.scss';
+import '../agentic_observability_page.scss';
 
 import React from 'react';
 import { EuiErrorBoundary, EuiPage, EuiPageBody } from '@elastic/eui';
@@ -11,7 +11,7 @@ import { AppMountParameters, HeaderVariant } from 'opensearch-dashboards/public'
 import { useDispatch } from 'react-redux';
 import { i18n } from '@osd/i18n';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { QueryPanel } from '../../../components/query_panel';
 import { useInitialQueryExecution } from '../../utils/hooks/use_initial_query_execution';
 import { useUrlStateSync } from '../../utils/hooks/use_url_state_sync';
@@ -21,25 +21,28 @@ import { NewExperienceBanner } from '../../../components/experience_banners/new_
 import { BottomContainer } from '../../../components/container/bottom_container';
 import { TopNav } from '../../../components/top_nav/top_nav';
 import { useInitPage } from '../../../application/utils/hooks/use_page_initialization';
-import { EXPLORE_PATTERNS_TAB_ID, EXPLORE_VISUALIZATION_TAB_ID } from '../../../../common';
+import {
+  AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID,
+  AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID,
+} from '../../../../common';
 import { setActiveTab } from '../../utils/state_management/slices';
 import { TraceFlyout } from './trace_flyout/trace_flyout';
 import { TraceFlyoutProvider } from './trace_flyout/trace_flyout_context';
 /**
- * Main application component for the Explore plugin
+ * Main application component for the Agentic Observability plugin
  * @experimental
  */
 export const TracesPage: React.FC<Partial<Pick<AppMountParameters, 'setHeaderActionMenu'>>> = ({
   setHeaderActionMenu,
 }) => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
-  const { savedExplore } = useInitPage();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
+  const { savedAgenticObservability } = useInitPage();
   const { keyboardShortcut } = services;
   const dispatch = useDispatch();
 
   keyboardShortcut?.useKeyboardShortcut({
     id: 'switchToPatternsTabTraces',
-    pluginId: 'explore',
+    pluginId: 'agenticObservability',
     name: i18n.translate('agenticObservability.tracesPage.switchToPatternsTabShortcut', {
       defaultMessage: 'Switch to patterns tab',
     }),
@@ -47,12 +50,12 @@ export const TracesPage: React.FC<Partial<Pick<AppMountParameters, 'setHeaderAct
       defaultMessage: 'Navigation',
     }),
     keys: 'shift+p',
-    execute: () => dispatch(setActiveTab(EXPLORE_PATTERNS_TAB_ID)),
+    execute: () => dispatch(setActiveTab(AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID)),
   });
 
   keyboardShortcut?.useKeyboardShortcut({
     id: 'switchToVisualizationTabTraces',
-    pluginId: 'explore',
+    pluginId: 'agenticObservability',
     name: i18n.translate('agenticObservability.tracesPage.switchToVisualizationTabShortcut', {
       defaultMessage: 'Switch to visualization tab',
     }),
@@ -60,7 +63,7 @@ export const TracesPage: React.FC<Partial<Pick<AppMountParameters, 'setHeaderAct
       defaultMessage: 'Navigation',
     }),
     keys: 'shift+v',
-    execute: () => dispatch(setActiveTab(EXPLORE_VISUALIZATION_TAB_ID)),
+    execute: () => dispatch(setActiveTab(AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID)),
   });
 
   useInitialQueryExecution(services);
@@ -74,7 +77,10 @@ export const TracesPage: React.FC<Partial<Pick<AppMountParameters, 'setHeaderAct
         <div className="mainPage">
           <EuiPage className="agenticObs-layout" paddingSize="none" grow={false}>
             <EuiPageBody className="agenticObs-layout__page-body">
-              <TopNav setHeaderActionMenu={setHeaderActionMenu} savedExplore={savedExplore} />
+              <TopNav
+                setHeaderActionMenu={setHeaderActionMenu}
+                savedAgenticObservability={savedAgenticObservability}
+              />
               <NewExperienceBanner />
 
               <div className="dscCanvas__queryPanel">

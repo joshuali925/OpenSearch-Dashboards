@@ -6,12 +6,12 @@ import React, { memo, useMemo } from 'react';
 import { useObservable } from 'react-use';
 import { of } from 'rxjs';
 import { DiscoverResultsActionBar } from './results_action_bar/results_action_bar';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
 import { useSelector } from '../../../application/legacy/discover/application/utils/state_management';
 import { selectSavedSearch } from '../../../application/utils/state_management/selectors';
 import { useDatasetContext } from '../../../application/context';
-import { ExploreFlavor } from '../../../../common';
+import { AgenticObservabilityFlavor } from '../../../../common';
 import { useTabResults } from '../../../application/utils/hooks/use_tab_results';
 import { useHistogramResults } from '../../../application/utils/hooks/use_histogram_results';
 
@@ -24,7 +24,7 @@ interface ActionBarProps {
  * Uses legacy components from discover and handles all content states
  */
 const ActionBarComponent = ({ filteredRowsCount }: ActionBarProps = {}) => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const { dataset } = useDatasetContext();
   const { results } = useTabResults();
   const { results: histogramResults } = useHistogramResults();
@@ -53,8 +53,8 @@ const ActionBarComponent = ({ filteredRowsCount }: ActionBarProps = {}) => {
       hits={totalHits}
       showResetButton={!!savedSearch}
       resetQuery={() => {
-        core.application.navigateToApp('explore', {
-          path: `${ExploreFlavor.Logs}#/view/${savedSearch}`,
+        core.application.navigateToApp('agenticObservability', {
+          path: `${AgenticObservabilityFlavor.Logs}#/view/${savedSearch}`,
         });
       }}
       rows={rows}

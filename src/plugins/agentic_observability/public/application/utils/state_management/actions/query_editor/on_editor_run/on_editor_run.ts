@@ -4,7 +4,7 @@
  */
 
 import { i18n } from '@osd/i18n';
-import { ExploreServices } from '../../../../../../types';
+import { AgenticObservabilityServices } from '../../../../../../types';
 import { AppDispatch, RootState } from '../../../store';
 import { EditorMode } from '../../../types';
 import { callAgentActionCreator } from './call_agent';
@@ -13,10 +13,10 @@ import { clearLastExecutedData } from '../../../slices';
 import { setHasUserInitiatedQuery } from '../../../slices/query_editor/query_editor_slice';
 
 // This is used when user submits a query or a prompt. This called runQueryActionCreator under the hood
-export const onEditorRunActionCreator = (services: ExploreServices, editorText: string) => (
-  dispatch: AppDispatch,
-  getState: () => RootState
-) => {
+export const onEditorRunActionCreator = (
+  services: AgenticObservabilityServices,
+  editorText: string
+) => (dispatch: AppDispatch, getState: () => RootState) => {
   const {
     queryEditor: { editorMode, promptModeIsAvailable, queryExecutionButtonStatus },
   } = getState();

@@ -19,16 +19,16 @@ import {
 import { PanelDirection } from '@elastic/eui/src/components/resizable_container/types';
 
 import { getVisualizationBuilder } from '../../../visualizations/visualization_builder';
-import { ExploreTabs } from '../../../tabs/tabs';
+import { AgenticObservabilityTabs } from '../../../tabs/tabs';
 import { selectActiveTab } from '../../../../application/utils/state_management/selectors';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { useTabError } from '../../../../application/utils/hooks/use_tab_error';
-import { ExploreServices } from '../../../../types';
-import { EXPLORE_VISUALIZATION_TAB_ID } from '../../../../../common';
+import { AgenticObservabilityServices } from '../../../../types';
+import { AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID } from '../../../../../common';
 
 export const ResizableVisControlAndTabs = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
-  const visualizationTab = services.tabRegistry.getTab(EXPLORE_VISUALIZATION_TAB_ID);
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
+  const visualizationTab = services.tabRegistry.getTab(AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID);
   const visualizationTabError = useTabError(visualizationTab);
   const visualizationBuilder = getVisualizationBuilder();
   const data = useObservable(visualizationBuilder.data$);
@@ -39,13 +39,13 @@ export const ResizableVisControlAndTabs = () => {
     collapseFn.current(panelId, 'right');
   };
 
-  if (activeTabId !== EXPLORE_VISUALIZATION_TAB_ID) {
-    return <ExploreTabs />;
+  if (activeTabId !== AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID) {
+    return <AgenticObservabilityTabs />;
   }
 
   // Do not display style panel if there are errors
-  if (activeTabId === EXPLORE_VISUALIZATION_TAB_ID && !!visualizationTabError) {
-    return <ExploreTabs />;
+  if (activeTabId === AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID && !!visualizationTabError) {
+    return <AgenticObservabilityTabs />;
   }
 
   return (
@@ -56,12 +56,12 @@ export const ResizableVisControlAndTabs = () => {
         return (
           <>
             <EuiResizablePanel
-              id="explore_tabs"
+              id="agentic_observability_tabs"
               className="tabsPanel"
               initialSize={77.5}
               paddingSize="none"
             >
-              <ExploreTabs />
+              <AgenticObservabilityTabs />
             </EuiResizablePanel>
 
             <EuiResizableButton />

@@ -11,7 +11,7 @@ import { EuiErrorBoundary, EuiFlexGroup, EuiIcon, EuiTitle } from '@elastic/eui'
 import { ErrorCodeBlock } from './error_code_block';
 import { TabDefinition } from '../../../services/tab_registry/tab_registry_service';
 import { useTabError } from '../../../application/utils/hooks/use_tab_error';
-import { EXPLORE_PATTERNS_TAB_ID } from '../../../../common';
+import { AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID } from '../../../../common';
 import { PatternsErrorGuard } from './patterns_error_guard';
 
 const errorDefaultTitle = i18n.translate('agenticObservability.errorPanel.defaultTitle', {
@@ -36,7 +36,7 @@ export const ErrorGuard = ({ registryTab, children }: ErrorGuardProps): JSX.Elem
     return <EuiErrorBoundary>{children}</EuiErrorBoundary>;
   }
 
-  return registryTab.id === EXPLORE_PATTERNS_TAB_ID ? (
+  return registryTab.id === AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID ? (
     <PatternsErrorGuard registryTab={registryTab} />
   ) : (
     <EuiErrorBoundary>

@@ -13,7 +13,7 @@ import {
   EuiFlexItem,
 } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import { LogActionItemProps } from '../../types/log_actions';
 import { ChatServiceStart } from '../../../../../core/public';
 
@@ -30,7 +30,7 @@ export const AskAIActionItem: React.FC<AskAIActionItemProps> = ({
   onResult,
   chatService,
 }) => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const isMountedRef = useRef(true);
@@ -51,10 +51,10 @@ export const AskAIActionItem: React.FC<AskAIActionItemProps> = ({
 
     const data = {
       id: `ask-ai-action-${documentId}`,
-      description: `Selected log entry from Explore data table for AI analysis`,
+      description: `Selected log entry from Agentic Observability data table for AI analysis`,
       value: context.document,
       label: rowLabel,
-      categories: ['explore', 'chat', 'dynamic'],
+      categories: ['agenticObservability', 'chat', 'dynamic'],
     };
 
     return data;

@@ -29,7 +29,7 @@
  */
 
 import { IndexPattern } from '../../application/legacy/discover/opensearch_dashboards_services';
-import { SortOrder } from '../../types/saved_explore_types';
+import { SortOrder } from '../../types/saved_agentic_observability_types';
 // @ts-ignore
 import { isSortable } from './get_sort';
 

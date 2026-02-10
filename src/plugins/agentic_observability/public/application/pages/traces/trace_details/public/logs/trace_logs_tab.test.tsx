@@ -28,7 +28,7 @@ jest.mock('./dataset_logs_table', () => ({
 }));
 
 jest.mock('./url_builder', () => ({
-  buildExploreLogsUrl: jest.fn(() => 'https://example.com/logs'),
+  buildAgenticObservabilityLogsUrl: jest.fn(() => 'https://example.com/logs'),
   getTimeRangeFromTraceData: jest.fn(() => ({
     from: '2023-01-01T09:30:00.000Z',
     to: '2023-01-01T10:30:00.000Z',
@@ -144,12 +144,12 @@ describe('TraceLogsTab', () => {
       render(<TraceLogsTab {...defaultProps} logDatasets={[]} />);
 
       expect(screen.queryByText('View in Discover Logs')).not.toBeInTheDocument();
-      expect(urlBuilder.buildExploreLogsUrl).not.toHaveBeenCalled();
+      expect(urlBuilder.buildAgenticObservabilityLogsUrl).not.toHaveBeenCalled();
     });
 
     it('should handle URL generation errors', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      (urlBuilder.buildExploreLogsUrl as jest.Mock).mockImplementationOnce(() => {
+      (urlBuilder.buildAgenticObservabilityLogsUrl as jest.Mock).mockImplementationOnce(() => {
         throw new Error('URL generation failed');
       });
 

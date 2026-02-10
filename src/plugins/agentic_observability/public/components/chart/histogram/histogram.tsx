@@ -57,13 +57,13 @@ import { i18n } from '@osd/i18n';
 import { IUiSettingsClient } from 'opensearch-dashboards/public';
 import { combineLatest } from 'rxjs';
 import { Chart as IChart } from '../utils/point_series';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 
 export interface DiscoverHistogramProps {
   chartData: IChart;
   chartType: 'HistogramBar' | 'Line';
   timefilterUpdateHandler: (ranges: { from: number; to: number }) => void;
-  services: ExploreServices;
+  services: AgenticObservabilityServices;
   showYAxisLabel?: boolean;
   customChartsTheme?: Record<string, any>;
   /**

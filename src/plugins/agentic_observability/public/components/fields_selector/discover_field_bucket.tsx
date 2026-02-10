@@ -63,7 +63,7 @@ export function DiscoverFieldBucket({ field, bucket, onAddFilter }: Props) {
     }
   );
   const addLabel = i18n.translate(
-    'agenticObservability.explore.discover.fieldChooser.detailViews.filterValueButtonAriaLabel',
+    'agenticObservability.discover.fieldChooser.detailViews.filterValueButtonAriaLabel',
     {
       defaultMessage: 'Filter for {field}: "{value}"',
       values: { value: bucket.value, field: field.name },
@@ -76,7 +76,7 @@ export function DiscoverFieldBucket({ field, bucket, onAddFilter }: Props) {
     }
   );
   const removeLabel = i18n.translate(
-    'agenticObservability.explore.discover.fieldChooser.detailViews.filterOutValueButtonAriaLabel',
+    'agenticObservability.discover.fieldChooser.detailViews.filterOutValueButtonAriaLabel',
     {
       defaultMessage: 'Filter out {field}: "{value}"',
       values: { value: bucket.value, field: field.name },

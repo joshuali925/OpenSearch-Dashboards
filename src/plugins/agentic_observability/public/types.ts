@@ -44,7 +44,10 @@ import { DataSourcePluginSetup } from '../../data_source/public';
 import { DataSourceManagementPluginSetup } from '../../data_source_management/public';
 import { Storage, IOsdUrlStateStorage } from '../../opensearch_dashboards_utils/public';
 import { ScopedHistory } from '../../../core/public';
-import { SavedExploreLoader, SavedExplore } from './saved_explore';
+import {
+  SavedAgenticObservabilityLoader,
+  SavedAgenticObservability,
+} from './saved_agentic_observability';
 import { TabRegistryService } from './services/tab_registry/tab_registry_service';
 
 import {
@@ -60,10 +63,10 @@ import {
 import { SlotRegistryService, SlotRegistryServiceStart } from './services/slot_registry';
 
 // ============================================================================
-// PLUGIN INTERFACES - What Explore provides to other plugins
+// PLUGIN INTERFACES - What Agentic Observability provides to other plugins
 // ============================================================================
 
-export interface ExplorePluginSetup {
+export interface AgenticObservabilityPluginSetup {
   visualizationRegistry: VisualizationRegistryServiceSetup;
   queryPanelActionsRegistry: QueryPanelActionsRegistryServiceSetup;
   logActionRegistry: {
@@ -77,22 +80,22 @@ export interface ExplorePluginSetup {
   };
 }
 
-export interface ExplorePluginStart {
+export interface AgenticObservabilityPluginStart {
   visualizationRegistry: VisualizationRegistryServiceStart;
-  urlGenerator?: UrlGeneratorContract<'EXPLORE_APP_URL_GENERATOR'>;
-  savedSearchLoader: SavedExploreLoader;
-  savedExploreLoader: SavedExploreLoader;
+  urlGenerator?: UrlGeneratorContract<'AGENTIC_OBSERVABILITY_APP_URL_GENERATOR'>;
+  savedSearchLoader: SavedAgenticObservabilityLoader;
+  savedAgenticObservabilityLoader: SavedAgenticObservabilityLoader;
   slotRegistry: SlotRegistryServiceStart;
 }
 
 // ============================================================================
-// PLUGIN DEPENDENCIES - What Explore needs from other plugins
+// PLUGIN DEPENDENCIES - What Agentic Observability needs from other plugins
 // ============================================================================
 
 /**
  * @internal
  */
-export interface ExploreSetupDependencies {
+export interface AgenticObservabilitySetupDependencies {
   navigation: NavigationStart;
   share?: SharePluginSetup;
   uiActions: UiActionsSetup;
@@ -115,7 +118,7 @@ export interface ExploreSetupDependencies {
 /**
  * @internal
  */
-export interface ExploreStartDependencies {
+export interface AgenticObservabilityStartDependencies {
   uiActions: UiActionsStart;
   embeddable: EmbeddableStart;
   navigation: NavigationStart;
@@ -132,15 +135,15 @@ export interface ExploreStartDependencies {
 }
 
 // ============================================================================
-// INTERNAL SERVICES - For Explore's internal components
+// INTERNAL SERVICES - For Agentic Observability's internal components
 // ============================================================================
 
 /**
- * Services interface for the Explore plugin's internal components
- * Based on DiscoverViewServices (DiscoverServices & DataExplorerServices) plus Explore-specific services
+ * Services interface for the Agentic Observability plugin's internal components
+ * Based on DiscoverViewServices (DiscoverServices & DataExplorerServices) plus Agentic Observability-specific services
  * Since Explore incorporates DataExplorer functionality directly, it needs all DataExplorer services
  */
-export interface ExploreServices {
+export interface AgenticObservabilityServices {
   // From DiscoverServices
   addBasePath: (path: string) => string;
   capabilities: Capabilities;
@@ -164,8 +167,8 @@ export interface ExploreServices {
   urlForwarding: UrlForwardingStart;
   timefilter: TimefilterContract;
   toastNotifications: ToastsStart;
-  getSavedExploreById: (id?: string) => Promise<SavedExplore>;
-  getSavedExploreUrlById: (id: string) => Promise<string>;
+  getSavedAgenticObservabilityById: (id?: string) => Promise<SavedAgenticObservability>;
+  getSavedAgenticObservabilityUrlById: (id: string) => Promise<string>;
   uiSettings: IUiSettingsClient;
   visualizations: VisualizationsStart;
   storage: Storage;
@@ -185,7 +188,7 @@ export interface ExploreServices {
   scopedHistory?: ScopedHistory; // ScopedHistory
   osdUrlStateStorage?: IOsdUrlStateStorage; // IOsdUrlStateStorage
 
-  // Explore-specific services
+  // Agentic Observability-specific services
   tabRegistry: TabRegistryService;
   visualizationRegistry: VisualizationRegistryService;
   queryPanelActionsRegistry: QueryPanelActionsRegistryService;

@@ -16,7 +16,7 @@ import { useSearchContext } from '../query_panel/utils/use_search_context';
 import { getVisualizationBuilder } from './visualization_builder';
 import { TimeRange } from '../../../../data/common';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import {
   clearQueryStatusMap,
   clearResults,
@@ -44,7 +44,7 @@ export interface UpdateVisualizationProps {
 // };
 
 export const VisualizationContainer = React.memo(() => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const { results } = useTabResults();
   const searchContext = useSearchContext();
   const dispatch = useDispatch();

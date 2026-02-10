@@ -57,9 +57,9 @@ jest.mock('@elastic/eui', () => ({
 }));
 
 // Import after mocks
-import { ExploreTracesChart } from './explore_traces_chart';
+import { AgenticObservabilityTracesChart } from './agentic_observability_traces_chart';
 
-describe('ExploreTracesChart - Field Missing Error Messages', () => {
+describe('AgenticObservabilityTracesChart - Field Missing Error Messages', () => {
   const mockStore = configureStore({
     reducer: {
       legacy: legacyReducer,
@@ -144,7 +144,7 @@ describe('ExploreTracesChart - Field Missing Error Messages', () => {
 
     render(
       <Provider store={mockStore}>
-        <ExploreTracesChart
+        <AgenticObservabilityTracesChart
           {...defaultProps}
           requestChartData={{ values: [], xAxisOrderedValues: [] } as any}
           errorChartData={{ values: [], xAxisOrderedValues: [] } as any}
@@ -178,7 +178,7 @@ describe('ExploreTracesChart - Field Missing Error Messages', () => {
 
     render(
       <Provider store={mockStore}>
-        <ExploreTracesChart
+        <AgenticObservabilityTracesChart
           {...defaultProps}
           requestChartData={{ values: [], xAxisOrderedValues: [] } as any}
           errorChartData={undefined}
@@ -210,7 +210,7 @@ describe('ExploreTracesChart - Field Missing Error Messages', () => {
 
     render(
       <Provider store={mockStore}>
-        <ExploreTracesChart
+        <AgenticObservabilityTracesChart
           {...defaultProps}
           requestChartData={undefined}
           errorChartData={{ values: [], xAxisOrderedValues: [] } as any}
@@ -243,7 +243,7 @@ describe('ExploreTracesChart - Field Missing Error Messages', () => {
 
     render(
       <Provider store={mockStore}>
-        <ExploreTracesChart
+        <AgenticObservabilityTracesChart
           {...defaultProps}
           requestChartData={undefined}
           errorChartData={{ values: [], xAxisOrderedValues: [] } as any}
@@ -296,7 +296,7 @@ describe('ExploreTracesChart - Field Missing Error Messages', () => {
 
     render(
       <Provider store={mockStore}>
-        <ExploreTracesChart
+        <AgenticObservabilityTracesChart
           {...defaultProps}
           requestChartData={undefined}
           errorChartData={undefined}
@@ -334,7 +334,7 @@ describe('ExploreTracesChart - Field Missing Error Messages', () => {
 
     render(
       <Provider store={mockStore}>
-        <ExploreTracesChart
+        <AgenticObservabilityTracesChart
           {...defaultProps}
           requestChartData={undefined}
           errorChartData={{ values: [], xAxisOrderedValues: [] } as any}
@@ -356,7 +356,7 @@ describe('ExploreTracesChart - Field Missing Error Messages', () => {
   it('renders charts normally when no errors are present', () => {
     render(
       <Provider store={mockStore}>
-        <ExploreTracesChart
+        <AgenticObservabilityTracesChart
           {...defaultProps}
           requestChartData={{ values: [{ x: 1, y: 10 }], xAxisOrderedValues: [] } as any}
           errorChartData={{ values: [{ x: 1, y: 2 }], xAxisOrderedValues: [] } as any}

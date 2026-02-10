@@ -11,11 +11,14 @@ import {
 import React from 'react';
 import { map, take } from 'rxjs/operators';
 import { QueryEditorExtensionConfig } from '../../../../data/public';
-import { ExplorePluginStart, ExploreStartDependencies } from '../../types';
+import {
+  AgenticObservabilityPluginStart,
+  AgenticObservabilityStartDependencies,
+} from '../../types';
 import { ExperienceBannerWrapper } from './experience_banner_wrapper';
 
 export const createQueryEditorExtensionConfig = (
-  core: CoreSetup<ExploreStartDependencies, ExplorePluginStart>
+  core: CoreSetup<AgenticObservabilityStartDependencies, AgenticObservabilityPluginStart>
 ): QueryEditorExtensionConfig => {
   return {
     id: 'agenticObs-plugin-extension',
@@ -37,8 +40,8 @@ export const createQueryEditorExtensionConfig = (
 
         return {
           showClassicExperienceBanner: currentAppId === 'data-explorer',
-          navigateToExplore: () => {
-            coreStart.application.navigateToApp('explore', { replace: true });
+          navigateToAgenticObservability: () => {
+            coreStart.application.navigateToApp('agenticObservability', { replace: true });
           },
         };
       };

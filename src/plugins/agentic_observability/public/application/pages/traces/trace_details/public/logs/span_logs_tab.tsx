@@ -16,7 +16,11 @@ import {
 import { i18n } from '@osd/i18n';
 import { LogHit } from '../../server/ppl_request_logs';
 import { Dataset } from '../../../../../../../../data/common';
-import { buildExploreLogsUrl, getTimeRangeFromTraceData, filterLogsBySpanId } from './url_builder';
+import {
+  buildAgenticObservabilityLogsUrl,
+  getTimeRangeFromTraceData,
+  filterLogsBySpanId,
+} from './url_builder';
 import { DatasetAccordionList } from './dataset_accordion_list';
 
 export interface SpanLogsTabProps {
@@ -53,11 +57,11 @@ export const SpanLogsTab: React.FC<SpanLogsTabProps> = ({
     return filtered;
   }, [datasetLogs, spanId, logDatasets]);
 
-  const handleViewInExplore = (logDataset: Dataset, logs: LogHit[]) => {
+  const handleViewInAgenticObservability = (logDataset: Dataset, logs: LogHit[]) => {
     try {
       const timeRange = getTimeRangeFromTraceData(logs);
 
-      const url = buildExploreLogsUrl({
+      const url = buildAgenticObservabilityLogsUrl({
         traceId,
         spanId, // Include span ID for filtering
         logDataset,
@@ -123,7 +127,7 @@ export const SpanLogsTab: React.FC<SpanLogsTabProps> = ({
         <DatasetAccordionList
           logDatasets={logDatasets}
           datasetLogs={spanFilteredDatasetLogs}
-          onViewInExplore={handleViewInExplore}
+          onViewInAgenticObservability={handleViewInAgenticObservability}
           testSubjPrefix="span-logs"
           traceDataset={traceDataset}
         />

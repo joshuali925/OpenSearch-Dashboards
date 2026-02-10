@@ -7,7 +7,7 @@ import React, { useMemo, useCallback } from 'react';
 import { SurrDocType } from './context/api/context';
 import { ActionBar } from './context/components/action_bar/action_bar';
 import { CONTEXT_STEP_SETTING } from '../../../../../../../common/legacy/discover';
-import { ExploreServices } from '../../../../../../types';
+import { AgenticObservabilityServices } from '../../../../../../types';
 import { useOpenSearchDashboards } from '../../../../../../../../opensearch_dashboards_react/public';
 import { LOADING_STATUS } from './context/utils/context_query_state';
 import { SortDirection } from '../../../../../../../../data/public';
@@ -15,7 +15,7 @@ import { DataGridTable } from '../data_grid/data_grid_table';
 import { DocViewFilterFn } from '../../doc_views/doc_views_types';
 import { IndexPattern } from '../../../opensearch_dashboards_services';
 import { AppState } from './context/utils/context_state';
-import { SortOrder } from '../../../../../../types/saved_explore_types';
+import { SortOrder } from '../../../../../../types/saved_agentic_observability_types';
 
 export interface Props {
   onAddFilter: DocViewFilterFn;
@@ -38,7 +38,7 @@ export function ContextApp({
   contextQueryState,
   appState,
 }: Props) {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const { uiSettings } = services;
   const defaultStepSize = useMemo(() => parseInt(uiSettings.get(CONTEXT_STEP_SETTING), 10), [
     uiSettings,

@@ -7,34 +7,37 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { createQueryEditorExtensionConfig } from './create_query_editor_extension_config';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { CoreSetup, WorkspaceObject } from 'opensearch-dashboards/public';
-import { ExplorePluginStart, ExploreStartDependencies } from '../../types';
+import {
+  AgenticObservabilityPluginStart,
+  AgenticObservabilityStartDependencies,
+} from '../../types';
 import { take } from 'rxjs/operators';
 
 const agenticObsEnabledWorkspace = {
   features: ['use-case-observability'],
 } as WorkspaceObject;
 
-const nonExploreEnabledWorkspace = {
+const nonAgenticObservabilityEnabledWorkspace = {
   features: ['some-weird-feature'],
 } as WorkspaceObject;
 
 const currentWorkspace$ = new BehaviorSubject(agenticObsEnabledWorkspace);
 const agenticObsObservable = new Observable((subscriber) => {
-  subscriber.next('explore');
+  subscriber.next('agenticObservability');
 });
 const dataExplorerObservable = new Observable((subscriber) => {
   subscriber.next('data-explorer');
 });
 const mockNavigateToApp = jest.fn();
 
-const coreMockWithExploreId = ({
+const coreMockWithAgenticObservabilityId = ({
   workspaces: {
     currentWorkspace$,
   },
   getStartServices: async () => [
     { application: { currentAppId$: agenticObsObservable, navigateToApp: mockNavigateToApp } },
   ],
-} as unknown) as CoreSetup<ExploreStartDependencies, ExplorePluginStart>;
+} as unknown) as CoreSetup<AgenticObservabilityStartDependencies, AgenticObservabilityPluginStart>;
 const coreMockWithDataExplorerId = ({
   workspaces: {
     currentWorkspace$,
@@ -42,29 +45,29 @@ const coreMockWithDataExplorerId = ({
   getStartServices: async () => [
     { application: { currentAppId$: dataExplorerObservable, navigateToApp: mockNavigateToApp } },
   ],
-} as unknown) as CoreSetup<ExploreStartDependencies, ExplorePluginStart>;
+} as unknown) as CoreSetup<AgenticObservabilityStartDependencies, AgenticObservabilityPluginStart>;
 
 describe('createQueryEditorExtensionConfig', () => {
   it('returns the correct id and order', () => {
-    const result = createQueryEditorExtensionConfig(coreMockWithExploreId);
+    const result = createQueryEditorExtensionConfig(coreMockWithAgenticObservabilityId);
     expect(result.id).toBe('agenticObs-plugin-extension');
     expect(result.order).toBe(1);
   });
 
-  it('returns the correct isEnabled$ for explore enabled workspace', async () => {
+  it('returns the correct isEnabled$ for agentic observability enabled workspace', async () => {
     currentWorkspace$.next(agenticObsEnabledWorkspace);
-    const isEnabled = createQueryEditorExtensionConfig(coreMockWithExploreId).isEnabled$(
-      undefined as any
-    );
+    const isEnabled = createQueryEditorExtensionConfig(
+      coreMockWithAgenticObservabilityId
+    ).isEnabled$(undefined as any);
     const isEnabledValue = await isEnabled.pipe(take(1)).toPromise();
     expect(isEnabledValue).toBeTruthy();
   });
 
-  it('returns the correct isEnabled$ for non-explore enabled workspace', async () => {
-    currentWorkspace$.next(nonExploreEnabledWorkspace);
-    const isEnabled = createQueryEditorExtensionConfig(coreMockWithExploreId).isEnabled$(
-      undefined as any
-    );
+  it('returns the correct isEnabled$ for non-agentic-observability enabled workspace', async () => {
+    currentWorkspace$.next(nonAgenticObservabilityEnabledWorkspace);
+    const isEnabled = createQueryEditorExtensionConfig(
+      coreMockWithAgenticObservabilityId
+    ).isEnabled$(undefined as any);
     const isEnabledValue = await isEnabled.pipe(take(1)).toPromise();
     expect(isEnabledValue).toBeFalsy();
   });

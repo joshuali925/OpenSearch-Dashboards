@@ -3,19 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import './explore_data_table.scss';
+import './agentic_observability_data_table.scss';
 
 import { i18n } from '@osd/i18n';
 import React, { useCallback, useMemo, useRef, memo } from 'react';
 import { EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
 import { useDispatch, useSelector } from 'react-redux';
-import { ExploreFlavor, SAMPLE_SIZE_SETTING } from '../../../common';
+import { AgenticObservabilityFlavor, SAMPLE_SIZE_SETTING } from '../../../common';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
 import { UI_SETTINGS } from '../../../../data/public';
 import { DocViewFilterFn } from '../../types/doc_views_types';
 import { DataTable } from './data_table';
 import { getDocViewsRegistry } from '../../application/legacy/discover/opensearch_dashboards_services';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import { selectSavedSearch } from '../../application/utils/state_management/selectors';
 import { RootState } from '../../application/utils/state_management/store';
 import { defaultPrepareQueryString } from '../../application/utils/state_management/actions/query_actions';
@@ -25,8 +25,8 @@ import { addColumn, removeColumn } from '../../application/utils/state_managemen
 import { useFlavorId } from '../../helpers/use_flavor_id';
 import { useDisplayedColumns } from '../../helpers/use_displayed_columns';
 
-const ExploreDataTableComponent = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+const AgenticObservabilityDataTableComponent = () => {
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const { uiSettings } = services;
 
   const { onAddFilter } = useChangeQueryEditor();
@@ -42,7 +42,7 @@ const ExploreDataTableComponent = () => {
 
   const flavorId = useFlavorId();
   const expandedTableHeader = useMemo(() => {
-    if (flavorId === ExploreFlavor.Traces) {
+    if (flavorId === AgenticObservabilityFlavor.Traces) {
       return i18n.translate('agenticObservability.dataTable.expandedRow.spanHeading', {
         defaultMessage: 'Expanded span',
       });
@@ -116,4 +116,4 @@ const ExploreDataTableComponent = () => {
   );
 };
 
-export const ExploreDataTable = memo(ExploreDataTableComponent);
+export const AgenticObservabilityDataTable = memo(AgenticObservabilityDataTableComponent);

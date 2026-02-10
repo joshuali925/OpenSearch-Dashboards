@@ -29,7 +29,7 @@ import { createTimefilterSyncMiddleware } from './middleware/timefilter_sync_mid
 import { createPersistenceMiddleware } from './middleware/persistence_middleware';
 import { createOverallStatusMiddleware } from './middleware/overall_status_middleware';
 import { createDatasetChangeMiddleware } from './middleware/dataset_change_middleware';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 
 const resetState = createAction<RootState>('app/resetState');
 const hydrateState = createAction<RootState>('app/hydrateState');
@@ -60,7 +60,7 @@ export type AppDispatch = AppStore['dispatch'];
 
 export const configurePreloadedStore = (
   preloadedState: PreloadedState<RootState>,
-  services?: ExploreServices
+  services?: AgenticObservabilityServices
 ) => {
   return configureStore({
     reducer: rootReducer,
@@ -86,7 +86,7 @@ export const configurePreloadedStore = (
   });
 };
 
-export const getPreloadedStore = async (services: ExploreServices) => {
+export const getPreloadedStore = async (services: AgenticObservabilityServices) => {
   try {
     const preloadedState = await loadReduxState(services);
     const store = configurePreloadedStore(preloadedState, services);

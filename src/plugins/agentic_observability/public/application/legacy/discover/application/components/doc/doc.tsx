@@ -116,7 +116,7 @@ export function Doc(props: DocProps) {
                 target="_blank"
               >
                 <FormattedMessage
-                  id="agenticObservability.explore.discover.doc.somethingWentWrongDescriptionAddon"
+                  id="agenticObservability.discover.doc.somethingWentWrongDescriptionAddon"
                   defaultMessage="Please ensure the index exists."
                 />
               </EuiLink>

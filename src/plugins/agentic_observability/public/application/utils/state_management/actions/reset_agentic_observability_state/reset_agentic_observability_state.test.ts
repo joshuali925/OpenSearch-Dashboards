@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { resetExploreStateActionCreator } from './reset_explore_state';
+import { resetAgenticObservabilityStateActionCreator } from './reset_agentic_observability_state';
 import {
   setLegacyState,
   setQueryEditorState,
@@ -21,7 +21,7 @@ jest.mock('../../slices');
 jest.mock('../query_actions');
 jest.mock('../detect_optimal_tab');
 
-describe('resetExploreStateActionCreator', () => {
+describe('resetAgenticObservabilityStateActionCreator', () => {
   const services = {} as any;
   const mockDispatch = jest.fn();
   const clearEditors = jest.fn();
@@ -51,7 +51,7 @@ describe('resetExploreStateActionCreator', () => {
   });
 
   it('dispatches actions in correct order with preloaded state', async () => {
-    await resetExploreStateActionCreator(services, clearEditors)(mockDispatch);
+    await resetAgenticObservabilityStateActionCreator(services, clearEditors)(mockDispatch);
 
     expect(getPreloadedState).toHaveBeenCalledWith(services);
     expect(clearEditors).toHaveBeenCalled();

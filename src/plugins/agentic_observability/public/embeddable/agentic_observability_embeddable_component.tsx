@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
-import { SearchProps } from './explore_embeddable';
+import { SearchProps } from './agentic_observability_embeddable';
 import { VisualizationNoResults } from '../../../visualizations/public';
 // TODO: refactor it to now use legacy getServices
 import {
@@ -19,11 +19,13 @@ import { getLegacyDisplayedColumns } from '../helpers/data_table_helper';
 import { SAMPLE_SIZE_SETTING } from '../../common';
 import { EchartsRender } from '../components/visualizations/echarts_render';
 
-interface ExploreEmbeddableProps {
+interface AgenticObservabilityEmbeddableProps {
   searchProps: SearchProps;
 }
 
-export const ExploreEmbeddableComponent = ({ searchProps }: ExploreEmbeddableProps) => {
+export const AgenticObservabilityEmbeddableComponent = ({
+  searchProps,
+}: AgenticObservabilityEmbeddableProps) => {
   const services = getServices();
   const {
     expressions: { ReactExpressionRenderer },
@@ -141,9 +143,9 @@ export const ExploreEmbeddableComponent = ({ searchProps }: ExploreEmbeddablePro
       gutterSize="xs"
       direction="column"
       responsive={false}
-      data-test-subj="embeddedSavedExplore"
+      data-test-subj="embeddedSavedAgenticObservability"
     >
-      <EuiFlexItem style={{ minHeight: 0 }} data-test-subj="osdExploreContainer">
+      <EuiFlexItem style={{ minHeight: 0 }} data-test-subj="osdAgenticObservabilityContainer">
         {getEmbeddableContent()}
       </EuiFlexItem>
     </EuiFlexGroup>

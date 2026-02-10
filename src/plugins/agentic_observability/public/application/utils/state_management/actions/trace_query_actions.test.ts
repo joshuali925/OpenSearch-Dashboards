@@ -56,7 +56,7 @@ import {
 } from './trace_query_actions';
 import { QueryExecutionStatus } from '../types';
 import { Query, DataView } from 'src/plugins/data/common';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { SAMPLE_SIZE_SETTING } from '../../../../../common';
 
 // Mock dependencies
@@ -147,7 +147,7 @@ global.AbortController = jest.fn().mockImplementation(() => ({
 }));
 
 describe('Trace Query Actions - Test Suite', () => {
-  let mockServices: ExploreServices;
+  let mockServices: AgenticObservabilityServices;
   let mockDataView: DataView;
   let mockSearchSource: any;
   let mockInspectorRequest: any;

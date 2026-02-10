@@ -16,7 +16,7 @@ import {
 import { QueryExecutionStatus } from '../types';
 import { setResults, ISearchResult, IPrometheusSearchResult } from '../slices';
 import { setIndividualQueryStatus } from '../slices/query_editor/query_editor_slice';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import {
   DataPublicPluginStart,
   indexPatterns as indexPatternUtils,
@@ -47,7 +47,7 @@ import {
   createHistogramConfigWithInterval,
 } from './utils';
 import { getCurrentFlavor } from '../../../../helpers/get_flavor_from_app_id';
-import { ExploreFlavor } from '../../../../../common';
+import { AgenticObservabilityFlavor } from '../../../../../common';
 import { TRACES_CHART_BAR_TARGET } from '../constants';
 import { createTraceAggregationConfig } from './trace_aggregation_builder';
 import {
@@ -256,7 +256,7 @@ export const histogramResultsProcessor: HistogramDataProcessor = (
  */
 export const executeQueries = createAsyncThunk<
   void,
-  { services: ExploreServices },
+  { services: AgenticObservabilityServices },
   { state: RootState }
 >('query/executeQueries', async ({ services }, { getState, dispatch }) => {
   const state = getState();
@@ -320,7 +320,7 @@ export const executeQueries = createAsyncThunk<
   }
 
   // Handle tab queries as before (keeping existing tab logic)
-  const visualizationTab = services.tabRegistry.getTab('explore_visualization_tab');
+  const visualizationTab = services.tabRegistry.getTab('agentic_observability_visualization_tab');
   let visualizationTabPrepareQuery = defaultPrepareQueryString;
   if (visualizationTab?.prepareQuery) {
     const prepareQuery = visualizationTab.prepareQuery;
@@ -401,7 +401,7 @@ export const executeQueries = createAsyncThunk<
   // After main queries complete, check if we should execute trace aggregation queries
   const flavorId = await getCurrentFlavor(services);
 
-  if (flavorId === ExploreFlavor.Traces) {
+  if (flavorId === AgenticObservabilityFlavor.Traces) {
     // Get the latest results from state after the data table query has completed
     const latestState = getState();
     const dataTableResults = latestState.results[dataTableCacheKey];
@@ -473,7 +473,7 @@ export const executeQueries = createAsyncThunk<
  */
 const executeQueryBase = async (
   params: {
-    services: ExploreServices;
+    services: AgenticObservabilityServices;
     cacheKey: string;
     queryString: string;
     includeHistogram: boolean;
@@ -727,7 +727,7 @@ const executeQueryBase = async (
 const createSearchSourceWithQuery = async (
   preparedQuery: any,
   dataView: DataView,
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   includeHistogram: boolean = false,
   customInterval?: string,
   sizeParam?: number
@@ -782,7 +782,7 @@ const createSearchSourceWithQuery = async (
 export const executeHistogramQuery = createAsyncThunk<
   any,
   {
-    services: ExploreServices;
+    services: AgenticObservabilityServices;
     cacheKey: string;
     queryString: string;
     interval?: string;
@@ -807,7 +807,7 @@ export const executeHistogramQuery = createAsyncThunk<
 export const executeTabQuery = createAsyncThunk<
   any,
   {
-    services: ExploreServices;
+    services: AgenticObservabilityServices;
     cacheKey: string;
     queryString: string;
   },
@@ -848,7 +848,7 @@ export const executeTabQuery = createAsyncThunk<
 export const executeDataTableQuery = createAsyncThunk<
   any,
   {
-    services: ExploreServices;
+    services: AgenticObservabilityServices;
     cacheKey: string;
     queryString: string;
   },

@@ -5,7 +5,7 @@
 
 import { useLocation } from 'react-router-dom';
 
-export const useCurrentExploreId = () => {
+export const useCurrentAgenticObservabilityId = () => {
   const location = useLocation();
   const hash = location.hash;
 

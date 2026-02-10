@@ -41,7 +41,7 @@ export function registerFeature(home: HomePublicPluginSetup) {
       defaultMessage: 'Search and find insights.',
     }),
     description: i18n.translate('agenticObservability.discover.discoverDescription', {
-      defaultMessage: 'Interactively explore your data by querying and filtering raw documents.',
+      defaultMessage: 'Interactively search your data by querying and filtering raw documents.',
     }),
     icon: 'discoverApp',
     path: '/app/discover#/',

@@ -3,10 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ExplorePlugin } from './plugin';
+import { AgenticObservabilityPlugin } from './plugin';
 import { coreMock } from '../../../core/public/mocks';
 import { CoreSetup, CoreStart } from 'opensearch-dashboards/public';
-import { ExplorePluginStart, ExploreSetupDependencies, ExploreStartDependencies } from './types';
+import {
+  AgenticObservabilityPluginStart,
+  AgenticObservabilitySetupDependencies,
+  AgenticObservabilityStartDependencies,
+} from './types';
 import { DataPublicPluginSetup, DataPublicPluginStart } from '../../data/public';
 import { UrlForwardingSetup, UrlForwardingStart } from '../../url_forwarding/public';
 import { EmbeddableSetup, EmbeddableStart } from '../../embeddable/public';
@@ -49,13 +53,13 @@ jest.mock('../../opensearch_dashboards_utils/public', () => ({
   })),
 }));
 
-describe('ExplorePlugin', () => {
-  let plugin: ExplorePlugin;
+describe('AgenticObservabilityPlugin', () => {
+  let plugin: AgenticObservabilityPlugin;
   let initializerContext: ReturnType<typeof createMockInitializerContext>;
-  let coreSetup: CoreSetup<ExploreStartDependencies, ExplorePluginStart>;
+  let coreSetup: CoreSetup<AgenticObservabilityStartDependencies, AgenticObservabilityPluginStart>;
   let coreStart: CoreStart;
-  let setupDeps: ExploreSetupDependencies;
-  let startDeps: ExploreStartDependencies;
+  let setupDeps: AgenticObservabilitySetupDependencies;
+  let startDeps: AgenticObservabilityStartDependencies;
   let mockCapabilities: any;
 
   function createMockInitializerContext() {
@@ -83,7 +87,7 @@ describe('ExplorePlugin', () => {
     };
   }
 
-  function createMockSetupDeps(): ExploreSetupDependencies {
+  function createMockSetupDeps(): AgenticObservabilitySetupDependencies {
     return {
       data: ({
         __enhance: jest.fn(),
@@ -117,7 +121,7 @@ describe('ExplorePlugin', () => {
     };
   }
 
-  function createMockStartDeps(): ExploreStartDependencies {
+  function createMockStartDeps(): AgenticObservabilityStartDependencies {
     return {
       data: ({
         indexPatterns: {},
@@ -219,9 +223,9 @@ describe('ExplorePlugin', () => {
       configurable: true,
     });
 
-    // Add capabilities mock with explore feature flags (mutable for tests)
+    // Add capabilities mock with agentic observability feature flags (mutable for tests)
     mockCapabilities = {
-      explore: {
+      agenticObservability: {
         discoverTracesEnabled: false,
         discoverMetricsEnabled: false,
       },
@@ -256,7 +260,7 @@ describe('ExplorePlugin', () => {
     // Mock start dependencies
     startDeps = createMockStartDeps();
 
-    plugin = new ExplorePlugin(initializerContext as any);
+    plugin = new AgenticObservabilityPlugin(initializerContext as any);
   });
 
   afterEach(() => {
@@ -264,31 +268,31 @@ describe('ExplorePlugin', () => {
   });
 
   describe('setup', () => {
-    it('should register explore applications', () => {
+    it('should register agentic observability applications', () => {
       plugin.setup(coreSetup as any, setupDeps as any);
 
       expect(coreSetup.application.register).toHaveBeenCalledTimes(4);
       expect(coreSetup.application.register).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 'explore/logs',
+          id: 'agenticObservability/logs',
           title: 'Logs',
         })
       );
       expect(coreSetup.application.register).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 'explore/traces',
+          id: 'agenticObservability/traces',
           title: 'Traces',
         })
       );
       expect(coreSetup.application.register).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 'explore/metrics',
+          id: 'agenticObservability/metrics',
           title: 'Metrics',
         })
       );
       expect(coreSetup.application.register).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 'explore',
+          id: 'agenticObservability',
           title: 'Discover',
         })
       );
@@ -298,7 +302,7 @@ describe('ExplorePlugin', () => {
       plugin.setup(coreSetup, setupDeps);
 
       expect(setupDeps.embeddable.registerEmbeddableFactory).toHaveBeenCalledWith(
-        'explore',
+        'agenticObservability',
         expect.any(Object)
       );
     });
@@ -309,7 +313,7 @@ describe('ExplorePlugin', () => {
       expect(setupDeps.visualizations.registerAlias).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'DiscoverVisualization',
-          aliasApp: 'explore',
+          aliasApp: 'agenticObservability',
           title: expect.any(String),
         })
       );
@@ -321,7 +325,7 @@ describe('ExplorePlugin', () => {
       // Verify Traces app has updater$
       expect(coreSetup.application.register).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 'explore/traces',
+          id: 'agenticObservability/traces',
           title: 'Traces',
           updater$: expect.any(Object),
         })
@@ -330,7 +334,7 @@ describe('ExplorePlugin', () => {
       // Verify Metrics app has updater$
       expect(coreSetup.application.register).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 'explore/metrics',
+          id: 'agenticObservability/metrics',
           title: 'Metrics',
           updater$: expect.any(Object),
         })
@@ -344,10 +348,10 @@ describe('ExplorePlugin', () => {
       expect(coreSetup.chrome.navGroup.addNavLinksToGroup).toHaveBeenCalledWith(
         expect.any(Object),
         expect.arrayContaining([
-          expect.objectContaining({ id: 'explore' }),
-          expect.objectContaining({ id: 'explore/logs' }),
-          expect.objectContaining({ id: 'explore/traces' }),
-          expect.objectContaining({ id: 'explore/metrics' }),
+          expect.objectContaining({ id: 'agenticObservability' }),
+          expect.objectContaining({ id: 'agenticObservability/logs' }),
+          expect.objectContaining({ id: 'agenticObservability/traces' }),
+          expect.objectContaining({ id: 'agenticObservability/metrics' }),
         ])
       );
     });
@@ -357,17 +361,17 @@ describe('ExplorePlugin', () => {
 
       expect(setupDeps.urlForwarding.forwardApp).toHaveBeenCalledWith(
         'doc',
-        'explore',
+        'agenticObservability',
         expect.any(Function)
       );
       expect(setupDeps.urlForwarding.forwardApp).toHaveBeenCalledWith(
         'context',
-        'explore',
+        'agenticObservability',
         expect.any(Function)
       );
       expect(setupDeps.urlForwarding.forwardApp).toHaveBeenCalledWith(
         'discover',
-        'explore',
+        'agenticObservability',
         expect.any(Function)
       );
     });
@@ -378,12 +382,12 @@ describe('ExplorePlugin', () => {
       plugin.setup(coreSetup, setupDeps);
     });
 
-    it('should create saved explore loader', () => {
+    it('should create saved agentic observability loader', () => {
       const result = plugin.start(coreStart, startDeps);
 
-      expect(result.savedExploreLoader).toBeDefined();
+      expect(result.savedAgenticObservabilityLoader).toBeDefined();
       expect(result.savedSearchLoader).toBeDefined();
-      expect(result.savedSearchLoader).toBe(result.savedExploreLoader);
+      expect(result.savedSearchLoader).toBe(result.savedAgenticObservabilityLoader);
     });
 
     it('should return visualization and slot registries', () => {
@@ -395,7 +399,7 @@ describe('ExplorePlugin', () => {
 
     it('should hide Traces and Metrics nav links when capabilities are disabled', () => {
       // Set capabilities to disabled (default from beforeEach)
-      mockCapabilities.explore = {
+      mockCapabilities.agenticObservability = {
         discoverTracesEnabled: false,
         discoverMetricsEnabled: false,
       };
@@ -403,13 +407,17 @@ describe('ExplorePlugin', () => {
       plugin.start(coreStart, startDeps);
 
       // The AppUpdaters should be called during start
-      expect(coreStart.application.capabilities.explore?.discoverTracesEnabled).toBe(false);
-      expect(coreStart.application.capabilities.explore?.discoverMetricsEnabled).toBe(false);
+      expect(coreStart.application.capabilities.agenticObservability?.discoverTracesEnabled).toBe(
+        false
+      );
+      expect(coreStart.application.capabilities.agenticObservability?.discoverMetricsEnabled).toBe(
+        false
+      );
     });
 
     it('should show Traces nav link when capability is enabled', () => {
       // Enable traces capability
-      mockCapabilities.explore = {
+      mockCapabilities.agenticObservability = {
         discoverTracesEnabled: true,
         discoverMetricsEnabled: false,
       };
@@ -417,13 +425,17 @@ describe('ExplorePlugin', () => {
       plugin.start(coreStart, startDeps);
 
       // Verify traces is enabled, metrics is disabled
-      expect(coreStart.application.capabilities.explore?.discoverTracesEnabled).toBe(true);
-      expect(coreStart.application.capabilities.explore?.discoverMetricsEnabled).toBe(false);
+      expect(coreStart.application.capabilities.agenticObservability?.discoverTracesEnabled).toBe(
+        true
+      );
+      expect(coreStart.application.capabilities.agenticObservability?.discoverMetricsEnabled).toBe(
+        false
+      );
     });
 
     it('should show Metrics nav link when capability is enabled', () => {
       // Enable metrics capability
-      mockCapabilities.explore = {
+      mockCapabilities.agenticObservability = {
         discoverTracesEnabled: false,
         discoverMetricsEnabled: true,
       };
@@ -431,13 +443,17 @@ describe('ExplorePlugin', () => {
       plugin.start(coreStart, startDeps);
 
       // Verify metrics is enabled, traces is disabled
-      expect(coreStart.application.capabilities.explore?.discoverTracesEnabled).toBe(false);
-      expect(coreStart.application.capabilities.explore?.discoverMetricsEnabled).toBe(true);
+      expect(coreStart.application.capabilities.agenticObservability?.discoverTracesEnabled).toBe(
+        false
+      );
+      expect(coreStart.application.capabilities.agenticObservability?.discoverMetricsEnabled).toBe(
+        true
+      );
     });
 
     it('should show both Traces and Metrics nav links when both capabilities are enabled', () => {
       // Enable both capabilities
-      mockCapabilities.explore = {
+      mockCapabilities.agenticObservability = {
         discoverTracesEnabled: true,
         discoverMetricsEnabled: true,
       };
@@ -445,8 +461,12 @@ describe('ExplorePlugin', () => {
       plugin.start(coreStart, startDeps);
 
       // Verify both are enabled
-      expect(coreStart.application.capabilities.explore?.discoverTracesEnabled).toBe(true);
-      expect(coreStart.application.capabilities.explore?.discoverMetricsEnabled).toBe(true);
+      expect(coreStart.application.capabilities.agenticObservability?.discoverTracesEnabled).toBe(
+        true
+      );
+      expect(coreStart.application.capabilities.agenticObservability?.discoverMetricsEnabled).toBe(
+        true
+      );
     });
   });
 

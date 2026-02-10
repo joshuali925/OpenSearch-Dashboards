@@ -15,11 +15,11 @@ import {
 } from '../../application/utils/state_management/actions/query_actions';
 import { selectActiveTab } from '../../application/utils/state_management/selectors';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import { RootState } from '../../application/utils/state_management/store';
 import { useFlavorId } from '../../helpers/use_flavor_id';
 import { ErrorGuard } from './error_guard/error_guard';
-import { EXPLORE_PATTERNS_TAB_ID } from '../../../common';
+import { AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID } from '../../../common';
 import { DEFAULT_DATA } from '../../../../data/common';
 
 /**
@@ -28,9 +28,9 @@ import { DEFAULT_DATA } from '../../../../data/common';
  * A view can contain a React `component`, or any JS framework by using
  * a `render` function.
  */
-export const ExploreTabs = () => {
+export const AgenticObservabilityTabs = () => {
   const dispatch = useDispatch();
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const flavorId = useFlavorId();
   const registryTabs = services.tabRegistry.getAllTabs();
   const query = useSelector((state: RootState) => state.query);
@@ -74,7 +74,7 @@ export const ExploreTabs = () => {
         : registryTabs
             .filter((registryTab) => {
               const registeredFlavor = registryTab.flavor.includes(flavorId);
-              const isPatternsTab = registryTab.id === EXPLORE_PATTERNS_TAB_ID;
+              const isPatternsTab = registryTab.id === AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID;
               const isDefaultDataset =
                 query?.dataset &&
                 (query.dataset.type === DEFAULT_DATA.SET_TYPES.INDEX_PATTERN ||

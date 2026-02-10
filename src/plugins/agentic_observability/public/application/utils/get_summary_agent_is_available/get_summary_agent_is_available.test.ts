@@ -4,10 +4,10 @@
  */
 
 import { getSummaryAgentIsAvailable } from './get_summary_agent_is_available';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 
 describe('getSummaryAgentIsAvailable', () => {
-  let services: jest.Mocked<ExploreServices>;
+  let services: jest.Mocked<AgenticObservabilityServices>;
   const dataSourceId = 'test-datasource-id';
 
   beforeEach(() => {

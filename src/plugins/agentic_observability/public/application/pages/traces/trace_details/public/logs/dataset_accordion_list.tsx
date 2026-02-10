@@ -21,7 +21,7 @@ import { Dataset } from '../../../../../../../../data/common';
 export interface DatasetAccordionListProps {
   logDatasets: Dataset[];
   datasetLogs: Record<string, LogHit[]>;
-  onViewInExplore: (dataset: Dataset, logs: LogHit[]) => void;
+  onViewInAgenticObservability: (dataset: Dataset, logs: LogHit[]) => void;
   onSpanClick?: (spanId: string) => void;
   testSubjPrefix?: string;
   traceDataset?: Dataset;
@@ -30,7 +30,7 @@ export interface DatasetAccordionListProps {
 export const DatasetAccordionList: React.FC<DatasetAccordionListProps> = ({
   logDatasets,
   datasetLogs,
-  onViewInExplore,
+  onViewInAgenticObservability,
   onSpanClick,
   testSubjPrefix = 'dataset',
   traceDataset,
@@ -84,7 +84,7 @@ export const DatasetAccordionList: React.FC<DatasetAccordionListProps> = ({
                         iconType="popout"
                         onClick={(event: React.MouseEvent) => {
                           event.stopPropagation();
-                          onViewInExplore(dataset, logs);
+                          onViewInAgenticObservability(dataset, logs);
                         }}
                         data-test-subj={`${testSubjPrefix}-view-in-agenticObs-button-${dataset.id}`}
                       >

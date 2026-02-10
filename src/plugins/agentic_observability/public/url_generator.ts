@@ -4,13 +4,13 @@
  */
 
 import { TimeRange, RefreshInterval, QueryState as DataQueryState } from '../../data/public';
-import { QueryState as ExploreQueryState } from './application/utils/state_management/slices';
+import { QueryState as AgenticObservabilityQueryState } from './application/utils/state_management/slices';
 import { setStateToOsdUrl } from '../../opensearch_dashboards_utils/public';
 import { UrlGeneratorsDefinition } from '../../share/public';
 
-export const EXPLORE_APP_URL_GENERATOR = 'EXPLORE_APP_URL_GENERATOR';
+export const AGENTIC_OBSERVABILITY_APP_URL_GENERATOR = 'AGENTIC_OBSERVABILITY_APP_URL_GENERATOR';
 
-export interface ExploreUrlGeneratorState {
+export interface AgenticObservabilityUrlGeneratorState {
   /**
    * Optionally set saved search ID.
    */
@@ -35,7 +35,7 @@ export interface ExploreUrlGeneratorState {
    * Optionally set a query. NOTE: if given and used in conjunction with `dashboardId`, and the
    * saved dashboard has a query saved with it, this will _replace_ that query.
    */
-  query?: ExploreQueryState;
+  query?: AgenticObservabilityQueryState;
 
   /**
    * If not given, will use the uiSettings configuration for `storeInSessionStorage`. useHash determines
@@ -54,11 +54,11 @@ interface Params {
   useHash: boolean;
 }
 
-export class ExploreUrlGenerator
-  implements UrlGeneratorsDefinition<typeof EXPLORE_APP_URL_GENERATOR> {
+export class AgenticObservabilityUrlGenerator
+  implements UrlGeneratorsDefinition<typeof AGENTIC_OBSERVABILITY_APP_URL_GENERATOR> {
   constructor(private readonly params: Params) {}
 
-  public readonly id = EXPLORE_APP_URL_GENERATOR;
+  public readonly id = AGENTIC_OBSERVABILITY_APP_URL_GENERATOR;
 
   public readonly createUrl = async ({
     indexPatternId,
@@ -68,10 +68,10 @@ export class ExploreUrlGenerator
     timeRange,
     useHash = this.params.useHash,
     savedQuery,
-  }: ExploreUrlGeneratorState): Promise<string> => {
+  }: AgenticObservabilityUrlGeneratorState): Promise<string> => {
     const savedSearchPath = savedObjectId ? encodeURIComponent(savedObjectId) : '';
     const appState: {
-      query?: ExploreQueryState;
+      query?: AgenticObservabilityQueryState;
       index?: string;
       savedQuery?: string;
     } = {};

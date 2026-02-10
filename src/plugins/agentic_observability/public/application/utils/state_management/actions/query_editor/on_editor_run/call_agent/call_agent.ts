@@ -6,7 +6,7 @@
 import { i18n } from '@osd/i18n';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import moment from 'moment';
-import { ExploreServices } from '../../../../../../../types';
+import { AgenticObservabilityServices } from '../../../../../../../types';
 import { AppDispatch } from '../../../../store';
 import {
   QueryAssistParameters,
@@ -27,7 +27,7 @@ import { generatePromQLWithAgUi } from '../../../../../query_assist';
 export const callAgentActionCreator = createAsyncThunk<
   void,
   {
-    services: ExploreServices;
+    services: AgenticObservabilityServices;
     editorText: string;
   },
   { dispatch: AppDispatch }

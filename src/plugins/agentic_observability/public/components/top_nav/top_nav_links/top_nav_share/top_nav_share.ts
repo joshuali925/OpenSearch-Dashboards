@@ -5,8 +5,8 @@
 
 import { i18n } from '@osd/i18n';
 import { TopNavMenuIconRun, TopNavMenuIconUIData } from '../types';
-import { ExploreServices } from '../../../../types';
-import { SavedExplore } from '../../../../types/saved_explore_types';
+import { AgenticObservabilityServices } from '../../../../types';
+import { SavedAgenticObservability } from '../../../../types/saved_agentic_observability_types';
 import { unhashUrl } from '../../../../../../opensearch_dashboards_utils/public';
 import { getSharingData } from './helpers';
 
@@ -23,15 +23,15 @@ export const shareTopNavData: TopNavMenuIconUIData = {
 };
 
 export const getShareButtonRun = (
-  services: ExploreServices,
-  savedExplore?: SavedExplore
+  services: AgenticObservabilityServices,
+  savedAgenticObservability?: SavedAgenticObservability
 ): TopNavMenuIconRun => async (anchorElement) => {
   const { share, store } = services;
-  if (!savedExplore || !share) return;
+  if (!savedAgenticObservability || !share) return;
 
   const legacyState = store.getState().legacy;
   const sharingData = await getSharingData({
-    searchSource: savedExplore.searchSource,
+    searchSource: savedAgenticObservability.searchSource,
     state: legacyState,
     services,
   });
@@ -46,12 +46,12 @@ export const getShareButtonRun = (
     allowEmbed: false,
     allowShortUrl: services.capabilities.discover?.createShortUrl as boolean,
     shareableUrl: unhashUrl(window.location.href),
-    objectId: savedExplore.id,
+    objectId: savedAgenticObservability.id,
     objectType: 'search',
     sharingData: {
       ...sharingData,
-      title: savedExplore.title,
+      title: savedAgenticObservability.title,
     },
-    isDirty: !savedExplore.id || legacyState.isDirty || false,
+    isDirty: !savedAgenticObservability.id || legacyState.isDirty || false,
   });
 };

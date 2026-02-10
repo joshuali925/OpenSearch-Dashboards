@@ -16,7 +16,7 @@ import {
   DocViewsRegistry,
   OpenSearchSearchHit,
 } from '../../../types/doc_views_types';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
 import { ExpandedTableRow } from './expanded_table_row/expanded_table_row';
 import { TableRowContent } from './table_row_content';
@@ -52,7 +52,7 @@ export const TableRowUI = ({
   docViewsRegistry,
   expandedTableHeader,
 }: TableRowProps) => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const [isExpanded, setIsExpanded] = useState(false);
   const handleExpanding = useCallback(() => setIsExpanded((prevState) => !prevState), [
     setIsExpanded,
@@ -69,7 +69,7 @@ export const TableRowUI = ({
       description: `Expanded row ${index !== undefined ? index + 1 : 'Entry'} from data table`,
       value: row._source,
       label: `Row ${index !== undefined ? index + 1 : 'Entry'}`,
-      categories: ['explore', 'chat', 'dynamic'],
+      categories: ['agenticObservability', 'chat', 'dynamic'],
     };
   }, [isExpanded, index, row._source, row._id]);
 

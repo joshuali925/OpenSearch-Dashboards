@@ -5,8 +5,8 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { ExploreEmbeddableComponent } from './explore_embeddable_component';
-import { SearchProps } from './explore_embeddable';
+import { AgenticObservabilityEmbeddableComponent } from './agentic_observability_embeddable_component';
+import { SearchProps } from './agentic_observability_embeddable';
 
 // Mock the services
 jest.mock('../application/legacy/discover/opensearch_dashboards_services', () => ({
@@ -65,7 +65,7 @@ jest.mock('../../../visualizations/public', () => ({
   VisualizationNoResults: jest.fn(() => <div data-test-subj="mockNoResults">No results</div>),
 }));
 
-describe('ExploreEmbeddableComponent', () => {
+describe('AgenticObservabilityEmbeddableComponent', () => {
   const mockSearchProps: SearchProps = {
     columns: ['column1', 'column2'],
     indexPattern: { id: 'test-index' } as any,
@@ -84,7 +84,7 @@ describe('ExploreEmbeddableComponent', () => {
     displayTimeColumn: true,
     services: {} as any,
     hits: 2,
-    title: 'Test Explore',
+    title: 'Test Agentic Observability',
     description: 'Test description',
     activeTab: 'logs',
   };
@@ -94,7 +94,7 @@ describe('ExploreEmbeddableComponent', () => {
   });
 
   test('renders data grid table when activeTab is logs and rows exist', () => {
-    render(<ExploreEmbeddableComponent searchProps={mockSearchProps} />);
+    render(<AgenticObservabilityEmbeddableComponent searchProps={mockSearchProps} />);
 
     // Check if the data grid table is rendered
     expect(screen.getByTestId('mockDataGridTable')).toBeInTheDocument();
@@ -114,7 +114,7 @@ describe('ExploreEmbeddableComponent', () => {
       },
     };
 
-    render(<ExploreEmbeddableComponent searchProps={visualizationProps} />);
+    render(<AgenticObservabilityEmbeddableComponent searchProps={visualizationProps} />);
 
     // Check if the expression renderer is rendered
     expect(screen.getByTestId('mockExpressionRenderer')).toBeInTheDocument();
@@ -128,18 +128,18 @@ describe('ExploreEmbeddableComponent', () => {
       rows: [],
     };
 
-    render(<ExploreEmbeddableComponent searchProps={noResultsProps} />);
+    render(<AgenticObservabilityEmbeddableComponent searchProps={noResultsProps} />);
 
     // Check if the no results component is rendered
     expect(screen.getByTestId('mockNoResults')).toBeInTheDocument();
   });
 
   test('renders wreith the correct data-test-subj attributes', () => {
-    render(<ExploreEmbeddableComponent searchProps={mockSearchProps} />);
+    render(<AgenticObservabilityEmbeddableComponent searchProps={mockSearchProps} />);
 
     // Check if the container has the correct data-test-subj
-    expect(screen.getByTestId('embeddedSavedExplore')).toBeInTheDocument();
-    expect(screen.getByTestId('osdExploreContainer')).toBeInTheDocument();
+    expect(screen.getByTestId('embeddedSavedAgenticObservability')).toBeInTheDocument();
+    expect(screen.getByTestId('osdAgenticObservabilityContainer')).toBeInTheDocument();
   });
 
   test('renders expression renderer with empty expression', () => {
@@ -153,7 +153,7 @@ describe('ExploreEmbeddableComponent', () => {
         timeRange: { from: 'now-15m', to: 'now' },
       },
     };
-    render(<ExploreEmbeddableComponent searchProps={emptyExpProps} />);
+    render(<AgenticObservabilityEmbeddableComponent searchProps={emptyExpProps} />);
     expect(screen.getByTestId('mockExpressionRenderer')).toBeInTheDocument();
     expect(screen.getByTestId('mockExpression')).toHaveTextContent('');
   });
@@ -165,7 +165,7 @@ describe('ExploreEmbeddableComponent', () => {
       title: 'Minimal',
       rows: [{ _id: '1' }],
     };
-    render(<ExploreEmbeddableComponent searchProps={minimalProps as any} />);
-    expect(screen.getByTestId('osdExploreContainer')).toBeInTheDocument();
+    render(<AgenticObservabilityEmbeddableComponent searchProps={minimalProps as any} />);
+    expect(screen.getByTestId('osdAgenticObservabilityContainer')).toBeInTheDocument();
   });
 });

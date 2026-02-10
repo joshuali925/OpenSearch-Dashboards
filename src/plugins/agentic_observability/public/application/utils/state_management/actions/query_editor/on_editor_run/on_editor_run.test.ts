@@ -8,7 +8,7 @@ import { callAgentActionCreator } from './call_agent';
 import { runQueryActionCreator } from '../run_query';
 import { clearLastExecutedData } from '../../../slices';
 import { EditorMode } from '../../../types';
-import { ExploreServices } from '../../../../../../types';
+import { AgenticObservabilityServices } from '../../../../../../types';
 import { AppDispatch, RootState } from '../../../store';
 import { createMockRootState } from '../../../__mocks__/store';
 import { QueryExecutionButtonStatus } from '../../../slices/query_editor/query_editor_slice';
@@ -37,7 +37,7 @@ const mockRunQueryActionCreator = runQueryActionCreator as jest.MockedFunction<
 >;
 
 describe('onEditorRunActionCreator', () => {
-  let mockServices: ExploreServices;
+  let mockServices: AgenticObservabilityServices;
   let mockDispatch: jest.MockedFunction<AppDispatch>;
   let mockGetState: jest.MockedFunction<() => RootState>;
   const testEditorText = 'Show me all users';
@@ -92,7 +92,7 @@ describe('onEditorRunActionCreator', () => {
           },
         },
       },
-    } as unknown) as ExploreServices;
+    } as unknown) as AgenticObservabilityServices;
 
     // Default state with REFRESH status
     setMockState();

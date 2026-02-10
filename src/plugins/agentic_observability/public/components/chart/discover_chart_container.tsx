@@ -6,10 +6,10 @@
 import './discover_chart_container.scss';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { ExploreFlavor } from '../../../common';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityFlavor } from '../../../common';
+import { AgenticObservabilityServices } from '../../types';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import { ExploreLogsChart } from './explore_logs_chart';
+import { AgenticObservabilityLogsChart } from './agentic_observability_logs_chart';
 import { useDatasetContext } from '../../application/context/dataset_context/dataset_context';
 import {
   histogramResultsProcessor,
@@ -21,7 +21,7 @@ import { selectShowHistogram } from '../../application/utils/state_management/se
 import { Chart, createHistogramConfigs } from './utils';
 import { useFlavorId } from '../../helpers/use_flavor_id';
 import { processTraceAggregationResults } from '../../application/utils/state_management/actions/processors/trace_aggregation_processor';
-import { ExploreTracesChart } from './explore_traces_chart';
+import { AgenticObservabilityTracesChart } from './agentic_observability_traces_chart';
 import {
   ProcessedSearchResults,
   TracesChartProcessedResults,
@@ -29,7 +29,7 @@ import {
 import { TRACES_CHART_BAR_TARGET } from '../../application/utils/state_management/constants';
 
 export const DiscoverChartContainer = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const { uiSettings, data } = services;
   const flavorId = useFlavorId();
 
@@ -76,7 +76,7 @@ export const DiscoverChartContainer = () => {
   }, [hasBreakdownError, breakdownCacheKey, standardResult, breakdownResult]);
 
   const { requestCacheKey, errorCacheKey, latencyCacheKey } = useMemo(() => {
-    if (flavorId !== ExploreFlavor.Traces || !dataset || !services?.data) {
+    if (flavorId !== AgenticObservabilityFlavor.Traces || !dataset || !services?.data) {
       return { requestCacheKey: null, errorCacheKey: null, latencyCacheKey: null };
     }
     // Cache keys use base query only (like Logs) - interval changes overwrite results
@@ -109,7 +109,7 @@ export const DiscoverChartContainer = () => {
   }, [dataset]);
 
   const actualInterval = useMemo(() => {
-    if (flavorId === ExploreFlavor.Traces && dataset && services?.data && interval) {
+    if (flavorId === AgenticObservabilityFlavor.Traces && dataset && services?.data && interval) {
       const histogramConfigs = createHistogramConfigs(
         dataset,
         interval,
@@ -128,7 +128,7 @@ export const DiscoverChartContainer = () => {
   const processedResults = useMemo<
     ProcessedSearchResults | TracesChartProcessedResults | null
   >(() => {
-    if (flavorId === ExploreFlavor.Traces) {
+    if (flavorId === AgenticObservabilityFlavor.Traces) {
       if (!requestResults || !dataset) {
         return null;
       }
@@ -170,7 +170,7 @@ export const DiscoverChartContainer = () => {
     return null;
   }
 
-  if (flavorId === ExploreFlavor.Traces) {
+  if (flavorId === AgenticObservabilityFlavor.Traces) {
     if (!(processedResults as TracesChartProcessedResults).requestChartData) {
       return null;
     }
@@ -182,8 +182,8 @@ export const DiscoverChartContainer = () => {
 
   return (
     <div className="dscCanvas__chart">
-      {flavorId === ExploreFlavor.Logs && (
-        <ExploreLogsChart
+      {flavorId === AgenticObservabilityFlavor.Logs && (
+        <AgenticObservabilityLogsChart
           bucketInterval={processedResults.bucketInterval}
           chartData={(processedResults as ProcessedSearchResults).chartData as Chart}
           config={uiSettings}
@@ -192,8 +192,8 @@ export const DiscoverChartContainer = () => {
           showHistogram={showHistogram}
         />
       )}
-      {flavorId === ExploreFlavor.Traces && (
-        <ExploreTracesChart
+      {flavorId === AgenticObservabilityFlavor.Traces && (
+        <AgenticObservabilityTracesChart
           bucketInterval={processedResults.bucketInterval}
           requestChartData={
             (processedResults as TracesChartProcessedResults).requestChartData as Chart

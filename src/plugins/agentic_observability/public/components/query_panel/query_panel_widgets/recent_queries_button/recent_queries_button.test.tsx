@@ -257,7 +257,7 @@ describe('RecentQueriesButton', () => {
       expect(mockUseKeyboardShortcut).toHaveBeenCalledTimes(1);
       expect(mockUseKeyboardShortcut).toHaveBeenCalledWith({
         id: 'recent_queries',
-        pluginId: 'explore',
+        pluginId: 'agenticObservability',
         name: expect.any(String),
         category: expect.any(String),
         keys: 'shift+q',

@@ -5,10 +5,10 @@
 
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useCurrentExploreId } from './use_current_explore_id';
-import { useSavedExplore } from './use_saved_explore';
+import { useCurrentAgenticObservabilityId } from './use_current_agentic_observability_id';
+import { useSavedAgenticObservability } from './use_saved_agentic_observability';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import {
   setSavedSearch,
   setQueryState,
@@ -20,32 +20,32 @@ import {
   setUsingRegexPatterns,
 } from '../state_management/slices';
 import { executeQueries } from '../state_management/actions/query_actions';
-import { ExploreFlavor } from '../../../../common';
+import { AgenticObservabilityFlavor } from '../../../../common';
 import { useSetEditorText } from '../../hooks';
 import { EditorMode } from '../state_management/types';
 import { getVisualizationBuilder } from '../../../components/visualizations/visualization_builder';
 
 export const useInitPage = () => {
   const dispatch = useDispatch();
-  const { services } = useOpenSearchDashboards<ExploreServices>();
-  const agenticObsId = useCurrentExploreId();
-  const { savedExplore, error } = useSavedExplore(agenticObsId);
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
+  const agenticObsId = useCurrentAgenticObservabilityId();
+  const { savedAgenticObservability, error } = useSavedAgenticObservability(agenticObsId);
   const setEditorText = useSetEditorText();
   const { chrome, data } = services;
   const visualizationBuilder = getVisualizationBuilder();
 
   useEffect(() => {
-    if (savedExplore && !error) {
-      if (savedExplore.id) {
+    if (savedAgenticObservability && !error) {
+      if (savedAgenticObservability.id) {
         // Deserialize state from saved object
-        const { title } = savedExplore;
+        const { title } = savedAgenticObservability;
 
         // Update browser title and breadcrumbs
         chrome.docTitle.change(title);
-        chrome.setBreadcrumbs([{ text: 'Explore', href: '#/' }, { text: title }]);
+        chrome.setBreadcrumbs([{ text: 'Agentic Observability', href: '#/' }, { text: title }]);
 
-        // Sync query from saved object to data plugin (explore doesn't use filters)
-        const searchSourceFields = savedExplore.kibanaSavedObjectMeta;
+        // Sync query from saved object to data plugin (agentic observability doesn't use filters)
+        const searchSourceFields = savedAgenticObservability.kibanaSavedObjectMeta;
         const queryFromUrl = services.osdUrlStateStorage?.get('_q') ?? {};
         if (searchSourceFields?.searchSourceJSON) {
           const searchSource = JSON.parse(searchSourceFields.searchSourceJSON);
@@ -63,11 +63,11 @@ export const useInitPage = () => {
 
         // Update savedSearch to store just the ID (like discover)
         // TODO: remove this once legacy state is not consumed any more
-        dispatch(setSavedSearch(savedExplore.id));
+        dispatch(setSavedSearch(savedAgenticObservability.id));
 
         // Init vis state and ui state
-        const visualization = savedExplore.visualization;
-        const uiState = savedExplore.uiState;
+        const visualization = savedAgenticObservability.visualization;
+        const uiState = savedAgenticObservability.uiState;
         if (visualization) {
           const { chartType, params, axesMapping } = JSON.parse(visualization);
           visualizationBuilder.setVisConfig({ type: chartType, styles: params, axesMapping });
@@ -79,10 +79,12 @@ export const useInitPage = () => {
 
         // Add to recently accessed
         chrome.recentlyAccessed.add(
-          `/app/explore/${savedExplore.type ?? ExploreFlavor.Logs}#/view/${savedExplore.id}`,
+          `/app/agenticObservability/${
+            savedAgenticObservability.type ?? AgenticObservabilityFlavor.Logs
+          }#/view/${savedAgenticObservability.id}`,
           title,
-          savedExplore.id,
-          { type: 'explore' }
+          savedAgenticObservability.id,
+          { type: 'agenticObservability' }
         );
 
         dispatch(clearLastExecutedData());
@@ -95,9 +97,9 @@ export const useInitPage = () => {
     }
     if (error) {
       // Navigate to management page for invalid IDs
-      // TODO: need to confirm the UI behavior for invalid ID, the current logic is copied from useSavedExplore hook
+      // TODO: need to confirm the UI behavior for invalid ID, the current logic is copied from useSavedAgenticObservability hook
       if (error.includes('Not found')) {
-        chrome.setBreadcrumbs([{ text: 'Explore', href: '#/' }, { text: 'Error' }]);
+        chrome.setBreadcrumbs([{ text: 'Agentic Observability', href: '#/' }, { text: 'Error' }]);
       }
     }
   }, [
@@ -105,13 +107,13 @@ export const useInitPage = () => {
     data.query.queryString,
     dispatch,
     error,
-    savedExplore,
+    savedAgenticObservability,
     services,
     setEditorText,
     visualizationBuilder,
   ]);
 
-  const pageContext = { savedExplore };
+  const pageContext = { savedAgenticObservability };
 
   return pageContext;
 };

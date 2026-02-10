@@ -3,7 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { buildExploreLogsUrl, getTimeRangeFromTraceData, filterLogsBySpanId } from './url_builder';
+import {
+  buildAgenticObservabilityLogsUrl,
+  getTimeRangeFromTraceData,
+  filterLogsBySpanId,
+} from './url_builder';
 import { Dataset } from '../../../../../../../../data/common';
 import { LogHit } from '../../server/ppl_request_logs';
 
@@ -25,7 +29,7 @@ jest.mock('moment', () => {
 describe('url_builder', () => {
   const mockLocation = {
     origin: 'https://example.com',
-    pathname: '/app/explore',
+    pathname: '/app/agenticObservability',
   };
 
   beforeEach(() => {
@@ -35,7 +39,7 @@ describe('url_builder', () => {
     });
   });
 
-  describe('buildExploreLogsUrl', () => {
+  describe('buildAgenticObservabilityLogsUrl', () => {
     const mockLogDataset: Dataset = {
       id: 'logs-dataset-id',
       title: 'logs-*',
@@ -55,9 +59,9 @@ describe('url_builder', () => {
         timeRange: mockTimeRange,
       };
 
-      const result = buildExploreLogsUrl(params);
+      const result = buildAgenticObservabilityLogsUrl(params);
 
-      expect(result).toContain('https://example.com/app/explore/logs/#/');
+      expect(result).toContain('https://example.com/app/agenticObservability/logs/#/');
       expect(result).toContain('test-trace-id');
       expect(result).toContain("id:'logs-dataset-id'");
       expect(result).toContain("title:'logs-*'");
@@ -74,14 +78,14 @@ describe('url_builder', () => {
         timeRange: mockTimeRange,
       };
 
-      const result = buildExploreLogsUrl(params);
+      const result = buildAgenticObservabilityLogsUrl(params);
 
       expect(result).toContain('test-trace-id');
       expect(result).toContain('test-span-id');
     });
 
     it('should handle custom base path', () => {
-      mockLocation.pathname = '/custom-base/app/explore';
+      mockLocation.pathname = '/custom-base/app/agenticObservability';
 
       const params = {
         traceId: 'test-trace-id',
@@ -89,9 +93,9 @@ describe('url_builder', () => {
         timeRange: mockTimeRange,
       };
 
-      const result = buildExploreLogsUrl(params);
+      const result = buildAgenticObservabilityLogsUrl(params);
 
-      expect(result).toContain('https://example.com/custom-base/app/explore/logs/#/');
+      expect(result).toContain('https://example.com/custom-base/app/agenticObservability/logs/#/');
     });
 
     it('should handle dataset with custom time field', () => {
@@ -106,7 +110,7 @@ describe('url_builder', () => {
         timeRange: mockTimeRange,
       };
 
-      const result = buildExploreLogsUrl(params);
+      const result = buildAgenticObservabilityLogsUrl(params);
 
       expect(result).toContain("timeFieldName:'custom_timestamp'");
     });
@@ -124,7 +128,7 @@ describe('url_builder', () => {
         timeRange: mockTimeRange,
       };
 
-      const result = buildExploreLogsUrl(params);
+      const result = buildAgenticObservabilityLogsUrl(params);
 
       expect(result).toContain("timeFieldName:'time'");
     });
@@ -150,7 +154,7 @@ describe('url_builder', () => {
         timeRange: mockTimeRange,
       };
 
-      const result = buildExploreLogsUrl(params);
+      const result = buildAgenticObservabilityLogsUrl(params);
 
       // Should use custom field names from schema mappings
       expect(result).toContain('custom_trace_id');
@@ -167,7 +171,7 @@ describe('url_builder', () => {
         timeRange: mockTimeRange,
       };
 
-      const result = buildExploreLogsUrl(params);
+      const result = buildAgenticObservabilityLogsUrl(params);
 
       // Should use default field names when no schema mappings
       expect(result).toContain('traceId');
@@ -197,7 +201,7 @@ describe('url_builder', () => {
         timeRange: mockTimeRange,
       };
 
-      const result = buildExploreLogsUrl(params);
+      const result = buildAgenticObservabilityLogsUrl(params);
 
       // Should use custom traceId but default spanId
       expect(result).toContain('custom_trace_id');

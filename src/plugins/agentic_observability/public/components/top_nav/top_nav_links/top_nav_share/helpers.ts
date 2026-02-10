@@ -5,7 +5,7 @@
 
 import { ISearchSource } from '../../../../../../data/common';
 import { LegacyState } from '../../../../application/utils/state_management/slices';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import {
   DOC_HIDE_TIME_COLUMN_SETTING,
   SORT_DEFAULT_ORDER_SETTING,
@@ -62,7 +62,7 @@ export const getSharingData = async ({
 }: {
   searchSource: ISearchSource;
   state: LegacyState;
-  services: ExploreServices;
+  services: AgenticObservabilityServices;
 }) => {
   const searchSourceInstance = searchSource.createCopy();
   const indexPattern = await searchSourceInstance.getField('index');

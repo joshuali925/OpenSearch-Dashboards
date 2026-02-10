@@ -29,7 +29,7 @@
  */
 
 import { coreMock } from 'opensearch-dashboards/public/mocks';
-import { ExplorePluginSetup, ExplorePluginStart } from '../../../types';
+import { AgenticObservabilityPluginSetup, AgenticObservabilityPluginStart } from '../../../types';
 import { chartPluginMock } from '../../../../../charts/public/mocks';
 import { dataPluginMock } from '../../../../../data/public/mocks';
 import { embeddablePluginMock } from '../../../../../embeddable/public/mocks';
@@ -39,14 +39,14 @@ import { opensearchDashboardsLegacyPluginMock } from '../../../../../opensearch_
 import { uiActionsPluginMock } from '../../../../../ui_actions/public/mocks';
 import { urlForwardingPluginMock } from '../../../../../url_forwarding/public/mocks';
 import { visualizationsPluginMock } from '../../../../../visualizations/public/mocks';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { buildServices } from '../../../build_services';
 import { VisualizationRegistry } from '../../../components/visualizations/visualization_registry';
 import { expressionsPluginMock } from '../../../../../expressions/public/mocks';
 import { dashboardPluginMock } from '../../../../../dashboard/public/mocks';
 
-export type Setup = jest.Mocked<ExplorePluginSetup>;
-export type Start = jest.Mocked<ExplorePluginStart>;
+export type Setup = jest.Mocked<AgenticObservabilityPluginSetup>;
+export type Start = jest.Mocked<AgenticObservabilityPluginStart>;
 
 const createSetupContract = (): Setup => {
   const setupContract: Setup = {
@@ -63,7 +63,7 @@ const createSetupContract = (): Setup => {
 
 const createStartContract = (): Start => {
   const startContract: Start = {
-    savedExploreLoader: {} as any,
+    savedAgenticObservabilityLoader: {} as any,
     savedSearchLoader: {} as any,
     visualizationRegistry: {} as VisualizationRegistry,
     urlGenerator: {
@@ -73,7 +73,7 @@ const createStartContract = (): Start => {
   return startContract;
 };
 
-const createExploreServicesMock = (): ExploreServices =>
+const createAgenticObservabilityServicesMock = (): AgenticObservabilityServices =>
   buildServices(
     coreMock.createStart(),
     {
@@ -95,7 +95,7 @@ const createExploreServicesMock = (): ExploreServices =>
   );
 
 export const discoverPluginMock = {
-  createExploreServicesMock,
+  createAgenticObservabilityServicesMock,
   createSetupContract,
   createStartContract,
 };

@@ -9,7 +9,7 @@ import { QueryWithQueryAsString } from '../../application/utils/languages';
 import { QueryResultStatus } from '../../application/utils/state_management/types';
 import { Dataset } from '../../../../../data/common';
 import { TimeRange } from '../../../../../data/public';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 
 // Please update the doc when updating this
 export interface QueryPanelActionDependencies {
@@ -43,7 +43,7 @@ export interface FlyoutComponentProps {
   /**
    * OpenSearch Dashboards services
    */
-  services: ExploreServices;
+  services: AgenticObservabilityServices;
 }
 
 /**

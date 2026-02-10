@@ -7,23 +7,23 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { ExperienceBannerWrapper } from './experience_banner_wrapper';
 
-const mockNavigateToExplore = jest.fn();
+const mockNavigateToAgenticObservability = jest.fn();
 const mockInitializeBannerWrapperToTrue = async () => {
   return {
     showClassicExperienceBanner: true,
-    navigateToExplore: mockNavigateToExplore,
+    navigateToAgenticObservability: mockNavigateToAgenticObservability,
   };
 };
 const mockInitializeBannerWrapperToFalse = async () => {
   return {
     showClassicExperienceBanner: false,
-    navigateToExplore: mockNavigateToExplore,
+    navigateToAgenticObservability: mockNavigateToAgenticObservability,
   };
 };
 
 describe('ExperienceBannerWrapper', () => {
   afterEach(() => {
-    mockNavigateToExplore.mockReset();
+    mockNavigateToAgenticObservability.mockReset();
   });
 
   it('should render nothing initially', () => {
@@ -49,6 +49,6 @@ describe('ExperienceBannerWrapper', () => {
     render(<ExperienceBannerWrapper initializeBannerWrapper={mockInitializeBannerWrapperToTrue} />);
     await screen.findByTestId('agenticObsClassicExperienceBanner');
     fireEvent.click(screen.getByTestId('agenticObsClassicExperienceBanner__newExperienceButton'));
-    expect(mockNavigateToExplore).toHaveBeenCalled();
+    expect(mockNavigateToAgenticObservability).toHaveBeenCalled();
   });
 });

@@ -20,7 +20,7 @@ import { promptEditorOptions, queryEditorOptions } from './editor_options';
 import { useEditorRef } from '../../../../application/hooks';
 import { useLanguageSwitch } from '../../../../application/hooks/editor_hooks/use_switch_language';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { getEffectiveLanguageForAutoComplete } from '../../../../../../data/public';
 import { onEditorRunActionCreator } from '../../../../application/utils/state_management/actions/query_editor';
 import { getCommandEnterAction } from './command_enter_action';
@@ -77,7 +77,7 @@ export interface UseQueryPanelEditorReturnType {
 export const useQueryPanelEditor = (): UseQueryPanelEditorReturnType => {
   const { promptIsTyping, handleChangeForPromptIsTyping } = usePromptIsTyping();
   const promptModeIsAvailable = useSelector(selectPromptModeIsAvailable);
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const { keyboardShortcut } = services;
   const userQueryString = useSelector(selectQueryString);
   const [editorText, setEditorText] = useState<string>(userQueryString);
@@ -124,7 +124,7 @@ export const useQueryPanelEditor = (): UseQueryPanelEditorReturnType => {
 
   keyboardShortcut?.useKeyboardShortcut({
     id: 'focus_query_bar',
-    pluginId: 'explore',
+    pluginId: 'agenticObservability',
     name: i18n.translate('agenticObservability.queryPanelEditor.focusQueryBarShortcut', {
       defaultMessage: 'Focus query bar',
     }),
@@ -174,10 +174,10 @@ export const useQueryPanelEditor = (): UseQueryPanelEditorReturnType => {
         return { suggestions: [], incomplete: false };
       }
       try {
-        // Get the effective language for autocomplete (PPL -> PPL_Simplified for explore app)
+        // Get the effective language for autocomplete (PPL -> PPL_Simplified for agentic observability app)
         const effectiveLanguage = getEffectiveLanguageForAutoComplete(
           isPromptModeRef.current ? 'AI' : queryLanguage,
-          'explore'
+          'agenticObservability'
         );
 
         // Get the current dataset from Query Service to avoid stale closure values
@@ -205,7 +205,7 @@ export const useQueryPanelEditor = (): UseQueryPanelEditorReturnType => {
           indexPattern: currentDataView,
           datasetType: currentDataset?.type,
           position: new monaco.Position(autocompleteCtx.lineNumber, autocompleteCtx.column),
-          services: services as any, // ExploreServices storage type incompatible with IDataPluginServices.DataStorage
+          services: services as any, // AgenticObservabilityServices storage type incompatible with IDataPluginServices.DataStorage
         });
 
         // current completion item range being given as last 'word' at pos

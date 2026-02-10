@@ -8,13 +8,17 @@ import './index.scss';
 
 import { AgenticObservabilityPlugin } from './plugin';
 
-export { SavedExplore, SavedExploreLoader, createSavedExploreLoader } from './saved_explore';
+export {
+  SavedAgenticObservability,
+  SavedAgenticObservabilityLoader,
+  createSavedAgenticObservabilityLoader,
+} from './saved_agentic_observability';
 
 export function plugin(initializerContext: PluginInitializerContext) {
   return new AgenticObservabilityPlugin(initializerContext);
 }
 
-export { ExplorePluginSetup, ExplorePluginStart } from './types';
+export { AgenticObservabilityPluginSetup, AgenticObservabilityPluginStart } from './types';
 
 // Export trace auto-detection utilities for use by other plugins
 export { detectTraceData, DetectionResult } from './utils/auto_detect_trace_data';

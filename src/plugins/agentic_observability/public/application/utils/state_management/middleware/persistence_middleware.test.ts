@@ -5,7 +5,7 @@
 
 import { createPersistenceMiddleware } from './persistence_middleware';
 import { persistReduxState } from '../utils/redux_persistence';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { RootState } from '../store';
 import { MockStore } from '../__mocks__';
 
@@ -15,7 +15,7 @@ jest.mock('../utils/redux_persistence', () => ({
 }));
 
 describe('persistence_middleware', () => {
-  let mockServices: jest.Mocked<ExploreServices>;
+  let mockServices: jest.Mocked<AgenticObservabilityServices>;
   let mockStore: MockStore;
   let mockNext: jest.MockedFunction<any>;
   let mockState: RootState;

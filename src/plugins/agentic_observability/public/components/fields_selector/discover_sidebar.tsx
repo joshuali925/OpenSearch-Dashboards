@@ -20,7 +20,7 @@ import { DiscoverFieldHeader } from './discover_field_header';
 import { FieldList } from './field_list';
 import { FacetList } from './facet_list';
 import { useFlavorId } from '../../helpers/use_flavor_id';
-import { ExploreFlavor } from '../../../common';
+import { AgenticObservabilityFlavor } from '../../../common';
 
 export interface DiscoverSidebarProps {
   /**
@@ -97,7 +97,7 @@ export function DiscoverSidebar(props: DiscoverSidebarProps) {
   );
 
   const { facetedFields, selectedFields, queryFields, discoveredFields } = useMemo(() => {
-    const showFacetedFields = flavorId === ExploreFlavor.Traces;
+    const showFacetedFields = flavorId === AgenticObservabilityFlavor.Traces;
     return groupFields(
       fields as DataViewField[],
       columns,

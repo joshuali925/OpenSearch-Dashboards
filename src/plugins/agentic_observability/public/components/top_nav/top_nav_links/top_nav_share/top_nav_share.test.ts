@@ -36,7 +36,7 @@ describe('getShareButtonRun', () => {
     capabilities: { discover: { createShortUrl: true } },
   } as any;
 
-  const savedExplore = {
+  const savedAgenticObservability = {
     id: '123',
     title: 'Test Search',
     searchSource: {},
@@ -47,20 +47,20 @@ describe('getShareButtonRun', () => {
     (window as any).location = { href: 'http://localhost/test' };
   });
 
-  it('should do nothing if savedExplore is missing', async () => {
+  it('should do nothing if savedAgenticObservability is missing', async () => {
     const run = getShareButtonRun(baseServices, undefined);
     await run({} as never);
     expect(mockToggleShareContextMenu).not.toHaveBeenCalled();
   });
 
   it('should do nothing if share service is missing', async () => {
-    const run = getShareButtonRun({ ...baseServices, share: undefined }, savedExplore);
+    const run = getShareButtonRun({ ...baseServices, share: undefined }, savedAgenticObservability);
     await run({} as never);
     expect(mockToggleShareContextMenu).not.toHaveBeenCalled();
   });
 
   it('should call toggleShareContextMenu with correct params', async () => {
-    const run = getShareButtonRun(baseServices, savedExplore);
+    const run = getShareButtonRun(baseServices, savedAgenticObservability);
     await run({} as never);
 
     expect(mockToggleShareContextMenu).toHaveBeenCalledWith(
@@ -79,8 +79,8 @@ describe('getShareButtonRun', () => {
     );
   });
 
-  it('should set isDirty true if savedExplore.id is missing', async () => {
-    const run = getShareButtonRun(baseServices, { ...savedExplore, id: undefined });
+  it('should set isDirty true if savedAgenticObservability.id is missing', async () => {
+    const run = getShareButtonRun(baseServices, { ...savedAgenticObservability, id: undefined });
     await run({} as never);
     expect(mockToggleShareContextMenu).toHaveBeenCalledWith(
       expect.objectContaining({ isDirty: true })
@@ -89,7 +89,7 @@ describe('getShareButtonRun', () => {
 
   it('should set isDirty true if legacyState.isDirty is true', async () => {
     mockGetState.mockReturnValueOnce({ legacy: { isDirty: true } });
-    const run = getShareButtonRun(baseServices, savedExplore);
+    const run = getShareButtonRun(baseServices, savedAgenticObservability);
     await run({} as never);
     expect(mockToggleShareContextMenu).toHaveBeenCalledWith(
       expect.objectContaining({ isDirty: true })

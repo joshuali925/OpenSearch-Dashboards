@@ -6,13 +6,13 @@
 import { Middleware } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 import { persistReduxState } from '../utils/redux_persistence';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 
 /**
  * Persistence middleware that only triggers on specific action types
  * This replaces the store subscription approach for better performance
  */
-export const createPersistenceMiddleware = (services: ExploreServices): Middleware => {
+export const createPersistenceMiddleware = (services: AgenticObservabilityServices): Middleware => {
   return (store) => (next) => (action) => {
     const result = next(action);
 

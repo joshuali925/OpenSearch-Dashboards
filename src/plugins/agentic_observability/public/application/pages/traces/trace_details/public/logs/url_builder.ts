@@ -13,7 +13,7 @@ export interface TimeRange {
   to: string;
 }
 
-export function buildExploreLogsUrl(params: {
+export function buildAgenticObservabilityLogsUrl(params: {
   traceId: string;
   spanId?: string;
   logDataset: Dataset;
@@ -37,7 +37,7 @@ export function buildExploreLogsUrl(params: {
     pplQuery += `%20%7C%20where%20${spanIdFieldName}%20%3D%20!'${spanId}!'`;
   }
 
-  const baseUrl = `${origin}${basePath}/app/explore/logs/#/`;
+  const baseUrl = `${origin}${basePath}/app/agenticObservability/logs/#/`;
 
   const timeFieldName = logDataset.timeFieldName || 'time';
 

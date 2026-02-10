@@ -54,10 +54,10 @@ jest.mock('../../../components/container/bottom_container', () => ({
       <div data-test-subj="discover-panel">Discover Panel</div>
       <div data-test-subj="discover-chart-container">Chart Container</div>
       <div data-test-subj="agenticObs-tabs">
-        <div data-test-subj="tab-explore_logs_tab">
+        <div data-test-subj="tab-agentic_observability_logs_tab">
           <div data-test-subj="agenticObs-data-table">Data Table</div>
         </div>
-        <div data-test-subj="tab-explore_visualization_tab">
+        <div data-test-subj="tab-agentic_observability_visualization_tab">
           <div data-test-subj="visualization-container">Visualization Container</div>
         </div>
       </div>
@@ -117,7 +117,7 @@ jest.mock('../../context', () => ({
 
 jest.mock('../../../application/utils/hooks/use_page_initialization', () => ({
   useInitPage: jest.fn().mockReturnValue({
-    savedExplore: { id: 'test-id', title: 'Test Explore' },
+    savedAgenticObservability: { id: 'test-id', title: 'Test Agentic Observability' },
   }),
 }));
 
@@ -184,7 +184,7 @@ describe('TracesPage', () => {
   };
 
   beforeEach(() => {
-    const agenticObsServices = discoverPluginMock.createExploreServicesMock();
+    const agenticObsServices = discoverPluginMock.createAgenticObservabilityServicesMock();
     const agenticObsServicesMock = agenticObsServices as jest.MaybeMockedDeep<
       typeof agenticObsServices
     >;
@@ -271,7 +271,7 @@ describe('TracesPage', () => {
 
       expect(mockUseKeyboardShortcut).toHaveBeenCalledWith({
         id: 'switchToPatternsTabTraces',
-        pluginId: 'explore',
+        pluginId: 'agenticObservability',
         name: 'Switch to patterns tab',
         category: 'Navigation',
         keys: 'shift+p',
@@ -280,7 +280,7 @@ describe('TracesPage', () => {
 
       expect(mockUseKeyboardShortcut).toHaveBeenCalledWith({
         id: 'switchToVisualizationTabTraces',
-        pluginId: 'explore',
+        pluginId: 'agenticObservability',
         name: 'Switch to visualization tab',
         category: 'Navigation',
         keys: 'shift+v',
@@ -312,7 +312,7 @@ describe('TracesPage', () => {
       expect(dispatchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           type: expect.stringContaining('setActiveTab'),
-          payload: 'explore_patterns_tab',
+          payload: 'agentic_observability_patterns_tab',
         })
       );
 
@@ -320,7 +320,7 @@ describe('TracesPage', () => {
       expect(dispatchSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           type: expect.stringContaining('setActiveTab'),
-          payload: 'explore_visualization_tab',
+          payload: 'agentic_observability_visualization_tab',
         })
       );
     });

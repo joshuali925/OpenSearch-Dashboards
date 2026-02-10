@@ -22,7 +22,7 @@ import {
   setDateRange,
   setSavedQuery,
 } from '../../../../application/utils/state_management/slices';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { setQueryState } from '../../../../application/utils/state_management/slices';
 import { loadQueryActionCreator } from '../../../../application/utils/state_management/actions/query_editor';
 import { useTimeFilter } from '../../utils';
@@ -33,7 +33,7 @@ import { useEditorText, useSetEditorTextWithQuery } from '../../../../applicatio
 import './save_query.scss';
 
 export const SaveQueryButton = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const { timeFilter } = useTimeFilter();
   const query = useSelector(selectQuery);
   const getEditorText = useEditorText();
@@ -194,7 +194,7 @@ export const SaveQueryButton = () => {
         onLoad={handleLoadSavedQuery}
         onClearSavedQuery={handleClearSavedQuery}
         closeMenuPopover={() => setIsPopoverOpen(false)}
-        showSaveQuery={!!services.capabilities?.explore?.saveQuery}
+        showSaveQuery={!!services.capabilities?.agenticObservability?.saveQuery}
         saveQuery={handleSaveQuery}
         useNewSavedQueryUI={true}
         saveQueryIsDisabled={saveButtonIsDisabled}

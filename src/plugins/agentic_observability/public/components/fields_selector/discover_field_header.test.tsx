@@ -58,7 +58,7 @@ describe('DiscoverFieldHeader', () => {
       expect(mockUseKeyboardShortcut).toHaveBeenCalledTimes(1);
       expect(mockUseKeyboardShortcut).toHaveBeenCalledWith({
         id: 'ToggleFieldsPanel',
-        pluginId: 'explore',
+        pluginId: 'agenticObservability',
         name: 'Toggle fields panel',
         category: 'Panel / layout',
         keys: 'shift+f',
@@ -130,7 +130,7 @@ describe('DiscoverFieldHeader', () => {
       expect(mockUseKeyboardShortcut).toHaveBeenCalledTimes(1);
       expect(mockUseKeyboardShortcut).toHaveBeenCalledWith({
         id: 'ToggleFieldsPanel',
-        pluginId: 'explore',
+        pluginId: 'agenticObservability',
         name: 'Toggle fields panel',
         category: 'Panel / layout',
         keys: 'shift+f',

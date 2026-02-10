@@ -21,7 +21,7 @@ import {
   IFieldType,
 } from '../../../data/public';
 import { Container, Embeddable, IEmbeddable } from '../../../embeddable/public';
-import { ExploreInput, ExploreOutput } from './types';
+import { AgenticObservabilityInput, AgenticObservabilityOutput } from './types';
 import {
   getRequestInspectorStats,
   getResponseInspectorStats,
@@ -29,11 +29,11 @@ import {
   IndexPattern,
   ISearchSource,
 } from '../application/legacy/discover/opensearch_dashboards_services';
-import { EXPLORE_EMBEDDABLE_TYPE } from './constants';
-import { SortOrder } from '../types/saved_explore_types';
-import { SavedExplore } from '../saved_explore';
-import { ExploreEmbeddableComponent } from './explore_embeddable_component';
-import { ExploreServices } from '../types';
+import { AGENTIC_OBSERVABILITY_EMBEDDABLE_TYPE } from './constants';
+import { SortOrder } from '../types/saved_agentic_observability_types';
+import { SavedAgenticObservability } from '../saved_agentic_observability';
+import { AgenticObservabilityEmbeddableComponent } from './agentic_observability_embeddable_component';
+import { AgenticObservabilityServices } from '../types';
 import { ExpressionRendererEvent, ExpressionRenderError } from '../../../expressions/public';
 import { VisColumn } from '../components/visualizations/types';
 import { toExpression } from '../components/visualizations/utils/to_expression';
@@ -63,7 +63,7 @@ export interface SearchProps {
   indexPattern?: IndexPattern;
   hits?: number;
   isLoading?: boolean;
-  services: ExploreServices;
+  services: AgenticObservabilityServices;
   spec?: any;
   expression?: string;
   sharedItemTitle?: string;
@@ -93,31 +93,31 @@ export interface SearchProps {
   };
 }
 
-interface ExploreEmbeddableConfig {
-  savedExplore: SavedExplore;
+interface AgenticObservabilityEmbeddableConfig {
+  savedAgenticObservability: SavedAgenticObservability;
   editUrl: string;
   editPath: string;
   indexPatterns?: IndexPattern[];
   editable: boolean;
   filterManager: FilterManager;
-  services: ExploreServices;
+  services: AgenticObservabilityServices;
   editApp: string;
 }
 
-export class ExploreEmbeddable
-  extends Embeddable<ExploreInput, ExploreOutput>
-  implements IEmbeddable<ExploreInput, ExploreOutput> {
+export class AgenticObservabilityEmbeddable
+  extends Embeddable<AgenticObservabilityInput, AgenticObservabilityOutput>
+  implements IEmbeddable<AgenticObservabilityInput, AgenticObservabilityOutput> {
   private abortController?: AbortController;
-  private readonly savedExplore: SavedExplore;
+  private readonly savedAgenticObservability: SavedAgenticObservability;
   private inspectorAdaptors: Adapters;
   private searchProps?: SearchProps;
   private filtersSearchSource?: ISearchSource;
   private subscription: Subscription;
   private autoRefreshFetchSubscription?: Subscription;
-  public readonly type = EXPLORE_EMBEDDABLE_TYPE;
+  public readonly type = AGENTIC_OBSERVABILITY_EMBEDDABLE_TYPE;
   private panelTitle: string = '';
   private filterManager: FilterManager;
-  private services: ExploreServices;
+  private services: AgenticObservabilityServices;
   private prevState = {
     filters: undefined as Filter[] | undefined,
     query: undefined as Query | undefined,
@@ -128,7 +128,7 @@ export class ExploreEmbeddable
 
   constructor(
     {
-      savedExplore,
+      savedAgenticObservability,
       editUrl,
       editPath,
       indexPatterns,
@@ -136,15 +136,15 @@ export class ExploreEmbeddable
       filterManager,
       services,
       editApp,
-    }: ExploreEmbeddableConfig,
-    initialInput: ExploreInput,
+    }: AgenticObservabilityEmbeddableConfig,
+    initialInput: AgenticObservabilityInput,
     private readonly executeTriggerActions: UiActionsStart['executeTriggerActions'],
     parent?: Container
   ) {
     super(
       initialInput,
       {
-        defaultTitle: savedExplore.title,
+        defaultTitle: savedAgenticObservability.title,
         editUrl,
         editPath,
         editApp,
@@ -155,7 +155,7 @@ export class ExploreEmbeddable
     );
     this.services = services;
     this.filterManager = filterManager;
-    this.savedExplore = savedExplore;
+    this.savedAgenticObservability = savedAgenticObservability;
     this.inspectorAdaptors = {
       requests: new RequestAdapter(),
     };
@@ -177,17 +177,17 @@ export class ExploreEmbeddable
   }
 
   private initializeSearchProps() {
-    const { searchSource } = this.savedExplore;
+    const { searchSource } = this.savedAgenticObservability;
     const indexPattern = searchSource.getField('index');
     const searchProps: SearchProps = {
       inspectorAdapters: this.inspectorAdaptors,
       rows: [],
-      description: this.savedExplore.description,
+      description: this.savedAgenticObservability.description,
       services: this.services,
       indexPattern,
       isLoading: false,
       displayTimeColumn: this.services.uiSettings.get(DOC_HIDE_TIME_COLUMN_SETTING, false),
-      title: this.savedExplore.title,
+      title: this.savedAgenticObservability.title,
     };
     const timeRangeSearchSource = searchSource.create();
     timeRangeSearchSource.setField('filter', () => {
@@ -197,8 +197,8 @@ export class ExploreEmbeddable
     this.filtersSearchSource = searchSource.create();
     this.filtersSearchSource.setParent(timeRangeSearchSource);
     searchSource.setParent(this.filtersSearchSource);
-    const query = this.savedExplore.searchSource.getField('query');
-    const uiState = JSON.parse(this.savedExplore.uiState || '{}');
+    const query = this.savedAgenticObservability.searchSource.getField('query');
+    const uiState = JSON.parse(this.savedAgenticObservability.uiState || '{}');
     const activeTab = uiState.activeTab;
     if (query) {
       // If the active tab is logs, we need to prepare the query for the logs tab
@@ -313,8 +313,8 @@ export class ExploreEmbeddable
 
     // If there is column or sort data on the panel, that means the original columns or sort settings have
     // been overridden in a dashboard.
-    searchProps.columns = this.input.columns || this.savedExplore.columns;
-    searchProps.sort = this.input.sort || this.savedExplore.sort;
+    searchProps.columns = this.input.columns || this.savedAgenticObservability.columns;
+    searchProps.sort = this.input.sort || this.savedAgenticObservability.sort;
     searchProps.sharedItemTitle = this.panelTitle;
 
     if (needFetch) {
@@ -348,7 +348,7 @@ export class ExploreEmbeddable
 
   private fetch = async () => {
     if (!this.searchProps) return;
-    const { searchSource } = this.savedExplore;
+    const { searchSource } = this.savedAgenticObservability;
     if (this.abortController) this.abortController.abort();
     this.abortController = new AbortController();
     searchSource.setField('size', getServices().uiSettings.get(SAMPLE_SIZE_SETTING));
@@ -360,7 +360,8 @@ export class ExploreEmbeddable
     const description = i18n.translate(
       'agenticObservability.embeddable.inspectorRequestDescription',
       {
-        defaultMessage: 'This request queries OpenSearch to fetch the data for the explore.',
+        defaultMessage:
+          'This request queries OpenSearch to fetch the data for the agentic observability.',
       }
     );
     const inspectorRequest = this.inspectorAdaptors.requests.start(title, { description });
@@ -390,8 +391,8 @@ export class ExploreEmbeddable
 
     // TODO: Confirm if tab is in visualization but visualization is null, what to display?
     // const displayVis = rows?.length > 0 && visualizationData && visualizationData.ruleId;
-    const visualization = JSON.parse(this.savedExplore.visualization || '{}');
-    const uiState = JSON.parse(this.savedExplore.uiState || '{}');
+    const visualization = JSON.parse(this.savedAgenticObservability.visualization || '{}');
+    const uiState = JSON.parse(this.savedAgenticObservability.uiState || '{}');
     const selectedChartType = visualization.chartType ?? 'line';
     const vis = visualizationRegistry.getVisualizationConfig(selectedChartType);
     this.searchProps.chartType = selectedChartType;
@@ -420,7 +421,7 @@ export class ExploreEmbeddable
           );
           if (!matchedRule || !matchedRule.toSpec) {
             throw new Error(
-              `Cannot load saved visualization "${this.panelTitle}" with id ${this.savedExplore.id}`
+              `Cannot load saved visualization "${this.panelTitle}" with id ${this.savedAgenticObservability.id}`
             );
           }
           const searchContext = {
@@ -468,8 +469,12 @@ export class ExploreEmbeddable
 
   private renderComponent(node: HTMLElement, searchProps: SearchProps) {
     if (!this.searchProps || !this.root) return;
-    const MemorizedExploreEmbeddableComponent = React.memo(ExploreEmbeddableComponent);
-    this.root.render(<MemorizedExploreEmbeddableComponent searchProps={searchProps} />);
+    const MemorizedAgenticObservabilityEmbeddableComponent = React.memo(
+      AgenticObservabilityEmbeddableComponent
+    );
+    this.root.render(
+      <MemorizedAgenticObservabilityEmbeddableComponent searchProps={searchProps} />
+    );
   }
 
   public destroy() {

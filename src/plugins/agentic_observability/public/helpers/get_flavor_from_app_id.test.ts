@@ -5,28 +5,28 @@
 
 import { of } from 'rxjs';
 import { getFlavorFromAppId, getCurrentAppId, getCurrentFlavor } from './get_flavor_from_app_id';
-import { ExploreFlavor } from '../../common';
-import { ExploreServices } from '../types';
+import { AgenticObservabilityFlavor } from '../../common';
+import { AgenticObservabilityServices } from '../types';
 
-const createMockServices = (): ExploreServices =>
+const createMockServices = (): AgenticObservabilityServices =>
   ({
     core: {
       application: {
-        currentAppId$: of('explore/discover'),
+        currentAppId$: of('agenticObservability/discover'),
       },
     },
-  } as ExploreServices);
+  } as AgenticObservabilityServices);
 
 describe('getFlavorFromAppId', () => {
   it('should extract flavor from valid app ID', () => {
-    expect(getFlavorFromAppId('explore/discover')).toBe('discover');
-    expect(getFlavorFromAppId('explore/visualize')).toBe('visualize');
-    expect(getFlavorFromAppId('explore/dashboards')).toBe('dashboards');
+    expect(getFlavorFromAppId('agenticObservability/discover')).toBe('discover');
+    expect(getFlavorFromAppId('agenticObservability/visualize')).toBe('visualize');
+    expect(getFlavorFromAppId('agenticObservability/dashboards')).toBe('dashboards');
   });
 
   it('should return null for invalid app ID formats', () => {
     expect(getFlavorFromAppId('invalid')).toBeNull();
-    expect(getFlavorFromAppId('explore')).toBeNull();
+    expect(getFlavorFromAppId('agenticObservability')).toBeNull();
     expect(getFlavorFromAppId('other/flavor')).toBe('flavor');
   });
 
@@ -36,8 +36,8 @@ describe('getFlavorFromAppId', () => {
   });
 
   it('should handle edge cases', () => {
-    expect(getFlavorFromAppId('explore/')).toBeNull();
-    expect(getFlavorFromAppId('explore/flavor/extra')).toBe('flavor');
+    expect(getFlavorFromAppId('agenticObservability/')).toBeNull();
+    expect(getFlavorFromAppId('agenticObservability/flavor/extra')).toBe('flavor');
   });
 });
 
@@ -45,20 +45,20 @@ describe('getCurrentAppId', () => {
   it('should return current app ID from services', async () => {
     const services = createMockServices();
     const appId = await getCurrentAppId(services);
-    expect(appId).toBe('explore/discover');
+    expect(appId).toBe('agenticObservability/discover');
   });
 
   it('should handle different app IDs', async () => {
     const services = {
       core: {
         application: {
-          currentAppId$: of('explore/visualize'),
+          currentAppId$: of('agenticObservability/visualize'),
         },
       },
-    } as ExploreServices;
+    } as AgenticObservabilityServices;
 
     const appId = await getCurrentAppId(services);
-    expect(appId).toBe('explore/visualize');
+    expect(appId).toBe('agenticObservability/visualize');
   });
 });
 
@@ -66,7 +66,7 @@ describe('getCurrentFlavor', () => {
   it('should return current flavor from app ID', async () => {
     const services = createMockServices();
     const flavor = await getCurrentFlavor(services);
-    expect(flavor).toBe('discover' as ExploreFlavor);
+    expect(flavor).toBe('discover' as AgenticObservabilityFlavor);
   });
 
   it('should return null for invalid app ID', async () => {
@@ -76,7 +76,7 @@ describe('getCurrentFlavor', () => {
           currentAppId$: of('invalid'),
         },
       },
-    } as ExploreServices;
+    } as AgenticObservabilityServices;
 
     const flavor = await getCurrentFlavor(services);
     expect(flavor).toBeNull();
@@ -89,7 +89,7 @@ describe('getCurrentFlavor', () => {
           currentAppId$: of(undefined),
         },
       },
-    } as ExploreServices;
+    } as AgenticObservabilityServices;
 
     const flavor = await getCurrentFlavor(services);
     expect(flavor).toBeNull();

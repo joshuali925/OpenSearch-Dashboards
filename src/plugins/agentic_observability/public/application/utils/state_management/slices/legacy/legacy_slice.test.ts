@@ -18,7 +18,7 @@ import {
   setLineCount,
   LegacyState,
 } from './legacy_slice';
-import { SortOrder } from '../../../../../types/saved_explore_types';
+import { SortOrder } from '../../../../../types/saved_agentic_observability_types';
 
 describe('legacySlice reducers', () => {
   const initialState: LegacyState = {

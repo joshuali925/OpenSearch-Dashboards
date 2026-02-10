@@ -44,7 +44,7 @@ export function DocViewTableRowBtnToggleColumn({ onClick, active, disabled = fal
     return (
       <EuiButtonIcon
         aria-label={i18n.translate(
-          'agenticObservability.explore.discover.docViews.table.toggleColumnInTableButtonAriaLabel',
+          'agenticObservability.discover.docViews.table.toggleColumnInTableButtonAriaLabel',
           {
             defaultMessage: 'Toggle column in table',
           }
@@ -69,7 +69,7 @@ export function DocViewTableRowBtnToggleColumn({ onClick, active, disabled = fal
     >
       <EuiButtonIcon
         aria-label={i18n.translate(
-          'agenticObservability.explore.discover.docViews.table.toggleColumnInTableButtonAriaLabel',
+          'agenticObservability.discover.docViews.table.toggleColumnInTableButtonAriaLabel',
           {
             defaultMessage: 'Toggle column in table',
           }

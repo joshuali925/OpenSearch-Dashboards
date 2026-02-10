@@ -28,7 +28,7 @@ import {
   url,
   withNotifyOnErrors,
 } from '../../opensearch_dashboards_utils/public';
-import { ExploreFlavor, PLUGIN_ID, PLUGIN_NAME } from '../common';
+import { AgenticObservabilityFlavor, PLUGIN_ID, PLUGIN_NAME } from '../common';
 import { generateDocViewsUrl } from './application/legacy/discover/application/components/doc_views/generate_doc_views_url';
 import { DocViewsLinksRegistry } from './application/legacy/discover/application/doc_views_links/doc_views_links_registry';
 import {
@@ -50,20 +50,20 @@ import {
   createQueryEditorExtensionConfig,
   SHOW_CLASSIC_DISCOVER_LOCAL_STORAGE_KEY,
 } from './components/experience_banners';
-import { createSavedExploreLoader } from './saved_explore';
+import { createSavedAgenticObservabilityLoader } from './saved_agentic_observability';
 import { TabRegistryService } from './services/tab_registry/tab_registry_service';
 import { setUsageCollector } from './services/usage_collector';
 import { QueryPanelActionsRegistryService } from './services/query_panel_actions_registry';
 import { VisualizationRegistryService } from './services/visualization_registry_service';
 import {
-  ExplorePluginSetup,
-  ExplorePluginStart,
-  ExploreSetupDependencies,
-  ExploreStartDependencies,
+  AgenticObservabilityPluginSetup,
+  AgenticObservabilityPluginStart,
+  AgenticObservabilitySetupDependencies,
+  AgenticObservabilityStartDependencies,
 } from './types';
 import { DocViewsRegistry } from './types/doc_views_types';
-import { ExploreEmbeddableFactory } from './embeddable';
-import { SAVED_OBJECT_TYPE } from './saved_explore/_saved_explore';
+import { AgenticObservabilityEmbeddableFactory } from './embeddable';
+import { SAVED_OBJECT_TYPE } from './saved_agentic_observability/_saved_agentic_observability';
 import { DASHBOARD_ADD_PANEL_TRIGGER } from '../../dashboard/public';
 import { createAbortDataQueryAction } from './application/utils/state_management/actions/abort_controller';
 import { ABORT_DATA_QUERY_TRIGGER } from '../../ui_actions/public';
@@ -79,18 +79,20 @@ import { importDataActionConfig } from './actions/import_data_action';
 export class AgenticObservabilityPlugin
   implements
     Plugin<
-      ExplorePluginSetup,
-      ExplorePluginStart,
-      ExploreSetupDependencies,
-      ExploreStartDependencies
+      AgenticObservabilityPluginSetup,
+      AgenticObservabilityPluginStart,
+      AgenticObservabilitySetupDependencies,
+      AgenticObservabilityStartDependencies
     > {
   private stateUpdaterByApp: Partial<
-    Record<ExploreFlavor | 'explore', BehaviorSubject<AppUpdater>>
+    Record<AgenticObservabilityFlavor | 'agenticObservability', BehaviorSubject<AppUpdater>>
   > = {
-    explore: new BehaviorSubject<AppUpdater>(() => ({})),
+    agenticObservability: new BehaviorSubject<AppUpdater>(() => ({})),
   };
 
-  private stopUrlTrackingCallbackByApp: Partial<Record<ExploreFlavor | 'explore', () => void>> = {};
+  private stopUrlTrackingCallbackByApp: Partial<
+    Record<AgenticObservabilityFlavor | 'agenticObservability', () => void>
+  > = {};
   private currentHistory?: ScopedHistory;
   private readonly DISCOVER_VISUALIZATION_NAME = 'AgenticObservabilityVisualization';
 
@@ -98,13 +100,16 @@ export class AgenticObservabilityPlugin
   private docViewsRegistry: DocViewsRegistry | null = null;
   private docViewsLinksRegistry: DocViewsLinksRegistry | null = null;
   private servicesInitialized: boolean = false;
-  private urlGenerator?: import('./types').ExplorePluginStart['urlGenerator'];
-  private initializeServices?: () => { core: CoreStart; plugins: ExploreStartDependencies };
+  private urlGenerator?: import('./types').AgenticObservabilityPluginStart['urlGenerator'];
+  private initializeServices?: () => {
+    core: CoreStart;
+    plugins: AgenticObservabilityStartDependencies;
+  };
   private isDatasetManagementEnabled: boolean = false;
-  private dataImporterConfig?: import('./types').ExploreServices['dataImporterConfig'];
+  private dataImporterConfig?: import('./types').AgenticObservabilityServices['dataImporterConfig'];
   private dataSourceEnabled: boolean = false;
   private hideLocalCluster: boolean = false;
-  private dataSourceManagement?: import('./types').ExploreServices['dataSourceManagement'];
+  private dataSourceManagement?: import('./types').AgenticObservabilityServices['dataSourceManagement'];
 
   // Registries
   private tabRegistry: TabRegistryService = new TabRegistryService();
@@ -115,9 +120,9 @@ export class AgenticObservabilityPlugin
   constructor(private readonly initializerContext: PluginInitializerContext) {}
 
   public setup(
-    core: CoreSetup<ExploreStartDependencies, ExplorePluginStart>,
-    setupDeps: ExploreSetupDependencies
-  ): ExplorePluginSetup {
+    core: CoreSetup<AgenticObservabilityStartDependencies, AgenticObservabilityPluginStart>,
+    setupDeps: AgenticObservabilitySetupDependencies
+  ): AgenticObservabilityPluginSetup {
     // Check if dataset management plugin is enabled
     this.isDatasetManagementEnabled = !!setupDeps.datasetManagement;
 
@@ -131,7 +136,7 @@ export class AgenticObservabilityPlugin
 
     // Set usage collector
     setUsageCollector(setupDeps.usageCollection);
-    this.registerExploreVisualizationAlias(setupDeps);
+    this.registerAgenticObservabilityVisualizationAlias(setupDeps);
     const visualizationRegistryService = this.visualizationRegistryService.setup();
 
     // Setup query panel actions registry
@@ -154,7 +159,10 @@ export class AgenticObservabilityPlugin
         // Only show the Timeline tab when on the traces flavor
         const currentPath = window.location.pathname;
         const currentHash = window.location.hash;
-        return currentPath.includes('/explore/traces') || currentHash.includes('/explore/traces');
+        return (
+          currentPath.includes('/agenticObservability/traces') ||
+          currentHash.includes('/agenticObservability/traces')
+        );
       },
     });
 
@@ -189,14 +197,14 @@ export class AgenticObservabilityPlugin
           queryString.getLanguageService().getLanguage(queryString.getQuery().language)
             ?.showDocLinks ?? undefined;
 
-        // Note: Explore uses Redux for filter management, not filterManager
+        // Note: Agentic Observability uses Redux for filter management, not filterManager
         // So we don't include filter state in URLs for context links
         const hash = stringify(
           url.encodeQuery({
-            _g: rison.encode({}), // No global filters (explore uses Redux)
+            _g: rison.encode({}), // No global filters (agentic observability uses Redux)
             _a: rison.encode({
               columns: (renderProps as any).columns,
-              // No filters since explore uses Redux store instead of filterManager
+              // No filters since agentic observability uses Redux store instead of filterManager
             }),
           }),
           { encode: false, sort: false }
@@ -248,7 +256,9 @@ export class AgenticObservabilityPlugin
     });
 
     const createAgenticObservabilityApp = (options: Partial<App> = {}): App => {
-      const appStateUpdater = this.stateUpdaterByApp.explore as BehaviorSubject<AppUpdater>;
+      const appStateUpdater = this.stateUpdaterByApp.agenticObservability as BehaviorSubject<
+        AppUpdater
+      >;
 
       const { appMounted, appUnMounted, stop: stopUrlTracker } = createOsdUrlTracker({
         baseUrl: core.http.basePath.prepend(`/app/${PLUGIN_ID}`),
@@ -274,7 +284,7 @@ export class AgenticObservabilityPlugin
           return this.currentHistory!;
         },
       });
-      this.stopUrlTrackingCallbackByApp.explore = stopUrlTracker;
+      this.stopUrlTrackingCallbackByApp.agenticObservability = stopUrlTracker;
 
       return {
         id: PLUGIN_ID,
@@ -292,11 +302,13 @@ export class AgenticObservabilityPlugin
 
           // Get start services
           const { core: coreStart, plugins: pluginsStart } = await this.initializeServices();
-          const isExploreEnabledWorkspace = await this.getIsExploreEnabledWorkspace(coreStart);
+          const isAgenticObservabilityEnabledWorkspace = await this.getIsAgenticObservabilityEnabledWorkspace(
+            coreStart
+          );
 
           // Only show in observability-enabled workspaces
           if (
-            !isExploreEnabledWorkspace ||
+            !isAgenticObservabilityEnabledWorkspace ||
             !!localStorage.getItem(SHOW_CLASSIC_DISCOVER_LOCAL_STORAGE_KEY)
           ) {
             coreStart.application.navigateToApp('discover', { replace: true });
@@ -443,7 +455,10 @@ export class AgenticObservabilityPlugin
     };
   }
 
-  public start(core: CoreStart, plugins: ExploreStartDependencies): ExplorePluginStart {
+  public start(
+    core: CoreStart,
+    plugins: AgenticObservabilityStartDependencies
+  ): AgenticObservabilityPluginStart {
     setUiActions(plugins.uiActions);
     setDashboard(plugins.dashboard);
     const opensearchDashboardsVersion = this.initializerContext.env.packageInfo.version;
@@ -454,9 +469,9 @@ export class AgenticObservabilityPlugin
     }
 
     // Configure visualization visibility based on workspace
-    this.configureExploreVisualizationVisibility(core, plugins).catch((error) => {
+    this.configureAgenticObservabilityVisualizationVisibility(core, plugins).catch((error) => {
       // eslint-disable-next-line no-console
-      console.error('Failed to configure explore visualization visibility', error);
+      console.error('Failed to configure agentic observability visualization visibility', error);
     });
 
     this.initializeServices = () => {
@@ -493,7 +508,7 @@ export class AgenticObservabilityPlugin
     const askAiAction = createAskAiAction(core.chat);
     logActionRegistry.registerAction(askAiAction);
 
-    const savedExploreLoader = createSavedExploreLoader({
+    const savedAgenticObservabilityLoader = createSavedAgenticObservabilityLoader({
       savedObjectsClient: core.savedObjects.client,
       indexPatterns: plugins.data.indexPatterns,
       search: plugins.data.search,
@@ -503,8 +518,8 @@ export class AgenticObservabilityPlugin
 
     return {
       urlGenerator: this.urlGenerator,
-      savedSearchLoader: savedExploreLoader, // For backward compatibility
-      savedExploreLoader,
+      savedSearchLoader: savedAgenticObservabilityLoader, // For backward compatibility
+      savedAgenticObservabilityLoader,
       visualizationRegistry: this.visualizationRegistryService.start(),
       slotRegistry: this.slotRegistryService.start(),
     };
@@ -515,8 +530,8 @@ export class AgenticObservabilityPlugin
   }
 
   private registerEmbeddable(
-    core: CoreSetup<ExploreStartDependencies>,
-    plugins: ExploreSetupDependencies
+    core: CoreSetup<AgenticObservabilityStartDependencies>,
+    plugins: AgenticObservabilitySetupDependencies
   ) {
     const getStartServices = async () => {
       const [coreStart, deps] = await core.getStartServices();
@@ -526,18 +541,20 @@ export class AgenticObservabilityPlugin
       };
     };
 
-    const factory = new ExploreEmbeddableFactory(
+    const factory = new AgenticObservabilityEmbeddableFactory(
       getStartServices,
       this.visualizationRegistryService
     );
     plugins.embeddable.registerEmbeddableFactory(factory.type, factory);
   }
 
-  private registerExploreVisualizationAlias(setupDeps: ExploreSetupDependencies) {
+  private registerAgenticObservabilityVisualizationAlias(
+    setupDeps: AgenticObservabilitySetupDependencies
+  ) {
     const agenticObsVisDisplayName = i18n.translate('agenticObservability.visualization.title', {
       defaultMessage: 'Visualize with Discover',
     });
-    // Register explore visualization as visualization alias
+    // Register agentic observability visualization as visualization alias
     setupDeps.visualizations.registerAlias({
       name: this.DISCOVER_VISUALIZATION_NAME,
       aliasPath: '#/',
@@ -573,8 +590,8 @@ export class AgenticObservabilityPlugin
             }
             return {
               description: `${attributes?.description || ''}`,
-              // TODO: it should navigate to different explore flavor based on the `attributes.type`
-              editApp: `${PLUGIN_ID}/${ExploreFlavor.Logs}`,
+              // TODO: it should navigate to different agentic observability flavor based on the `attributes.type`
+              editApp: `${PLUGIN_ID}/${AgenticObservabilityFlavor.Logs}`,
               editUrl: `#/view/${encodeURIComponent(id)}`,
               icon: iconType,
               id,
@@ -590,12 +607,14 @@ export class AgenticObservabilityPlugin
     });
   }
 
-  private async configureExploreVisualizationVisibility(
+  private async configureAgenticObservabilityVisualizationVisibility(
     core: CoreStart,
-    plugins: ExploreStartDependencies
+    plugins: AgenticObservabilityStartDependencies
   ) {
-    const isExploreEnabledWorkspace = await this.getIsExploreEnabledWorkspace(core);
-    if (isExploreEnabledWorkspace) {
+    const isAgenticObservabilityEnabledWorkspace = await this.getIsAgenticObservabilityEnabledWorkspace(
+      core
+    );
+    if (isAgenticObservabilityEnabledWorkspace) {
       const dashboardVisActions = plugins.uiActions.getTriggerActions(DASHBOARD_ADD_PANEL_TRIGGER);
       const visTypes = plugins.visualizations.all();
       const aliasTypes = plugins.visualizations.getAliases();
@@ -615,7 +634,7 @@ export class AgenticObservabilityPlugin
         .getAliases()
         .find((v) => v.name === this.DISCOVER_VISUALIZATION_NAME);
 
-      // if current workspace has NO explore enabled, the explore visualization ingress should be hidden
+      // if current workspace has NO agenticObservability.enabled, the agentic observability visualization ingress should be hidden
       if (registeredVisAlias) {
         // Do not display it in the create vis modal
         registeredVisAlias.hidden = true;
@@ -623,7 +642,7 @@ export class AgenticObservabilityPlugin
     }
   }
 
-  private async getIsExploreEnabledWorkspace(core: CoreStart) {
+  private async getIsAgenticObservabilityEnabledWorkspace(core: CoreStart) {
     const features = await core.workspaces.currentWorkspace$
       .pipe(take(1))
       .toPromise()

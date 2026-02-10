@@ -5,25 +5,25 @@
 
 import { useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { RootState } from '../state_management/store';
 import { executeQueries } from '../state_management/actions/query_actions';
 import { clearResults, clearQueryStatusMap, setIsInitialized } from '../state_management/slices';
 import { detectAndSetOptimalTab } from '../state_management/actions/detect_optimal_tab';
 import { selectActiveTabId } from '../state_management/selectors';
-import { useCurrentExploreId } from './use_current_explore_id';
+import { useCurrentAgenticObservabilityId } from './use_current_agentic_observability_id';
 import { useDatasetContext } from '../../context';
 
 /**
  * Hook to handle initial query execution on page load
  * TODO: refactor this hook to combine it with useInitPage()
  */
-export const useInitialQueryExecution = (services: ExploreServices) => {
+export const useInitialQueryExecution = (services: AgenticObservabilityServices) => {
   const dispatch = useDispatch();
   const { isInitialized } = useSelector((state: RootState) => state.meta);
   const queryState = useSelector((state: RootState) => state.query);
   const activeTabId = useSelector(selectActiveTabId);
-  const agenticObsId = useCurrentExploreId();
+  const agenticObsId = useCurrentAgenticObservabilityId();
   const { dataset: datasetFromContext, isLoading: datasetLoading } = useDatasetContext();
 
   const shouldSearchOnPageLoad = useMemo(() => {

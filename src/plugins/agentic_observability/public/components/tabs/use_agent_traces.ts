@@ -6,7 +6,7 @@
 import { useMemo, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import { executeQueries } from '../../application/utils/state_management/actions/query_actions';
 import { useTabResults } from '../../application/utils/hooks/use_tab_results';
 import { QueryExecutionStatus } from '../../application/utils/state_management/types';
@@ -222,7 +222,7 @@ const buildSpanTree = (spans: AgentSpan[]): TraceRow[] => {
 };
 
 export const useAgentTraces = (): UseAgentTracesResult => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const dispatch = useDispatch();
 
   // Read tab-specific query results from Redux (uses tab's prepareQuery for cache key)

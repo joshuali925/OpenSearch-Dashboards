@@ -9,7 +9,7 @@ import { i18n } from '@osd/i18n';
 import { useDispatch } from 'react-redux';
 import { Query, RecentQueriesTable, TimeRange } from '../../../../../../data/public';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { loadQueryActionCreator } from '../../../../application/utils/state_management/actions/query_editor';
 import { useTimeFilter } from '../../utils';
 import { useSetEditorTextWithQuery } from '../../../../application/hooks';
@@ -20,7 +20,7 @@ const label = i18n.translate('agenticObservability.queryPanel.recentQueryLabel',
 });
 
 export const RecentQueriesButton = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const setEditorTextWithQuery = useSetEditorTextWithQuery();
   const { handleTimeChange } = useTimeFilter();
   const dispatch = useDispatch();
@@ -32,7 +32,7 @@ export const RecentQueriesButton = () => {
 
   keyboardShortcut?.useKeyboardShortcut({
     id: 'recent_queries',
-    pluginId: 'explore',
+    pluginId: 'agenticObservability',
     name: i18n.translate('agenticObservability.keyboardShortcut.recentQueries.name', {
       defaultMessage: 'Recent queries',
     }),

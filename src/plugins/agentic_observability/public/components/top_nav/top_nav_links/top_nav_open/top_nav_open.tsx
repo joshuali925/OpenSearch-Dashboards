@@ -6,7 +6,7 @@
 import { i18n } from '@osd/i18n';
 import React from 'react';
 import { TopNavMenuIconRun, TopNavMenuIconUIData } from '../types';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import {
   OpenSearchDashboardsContextProvider,
   toMountPoint,
@@ -25,7 +25,9 @@ export const openTopNavData: TopNavMenuIconUIData = {
   controlType: 'icon',
 };
 
-export const getOpenButtonRun = (services: ExploreServices): TopNavMenuIconRun => () => {
+export const getOpenButtonRun = (
+  services: AgenticObservabilityServices
+): TopNavMenuIconRun => () => {
   const flyoutSession = services.overlays.openFlyout(
     toMountPoint(
       <OpenSearchDashboardsContextProvider services={services}>

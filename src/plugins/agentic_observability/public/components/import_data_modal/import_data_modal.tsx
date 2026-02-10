@@ -13,11 +13,11 @@ import {
   EuiModalFooter,
 } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
-import { ExploreServices } from '../../types';
+import { AgenticObservabilityServices } from '../../types';
 import type { DataImporterPluginAppProps } from '../../../../data_importer/public';
 
 interface ImportDataModalProps {
-  services: ExploreServices;
+  services: AgenticObservabilityServices;
   isVisible: boolean;
   onClose: () => void;
 }

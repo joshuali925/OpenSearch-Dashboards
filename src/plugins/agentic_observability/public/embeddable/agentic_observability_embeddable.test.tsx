@@ -5,9 +5,9 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ExploreEmbeddable } from './explore_embeddable';
-import { ExploreInput } from './types';
-import { EXPLORE_EMBEDDABLE_TYPE } from './constants';
+import { AgenticObservabilityEmbeddable } from './agentic_observability_embeddable';
+import { AgenticObservabilityInput } from './types';
+import { AGENTIC_OBSERVABILITY_EMBEDDABLE_TYPE } from './constants';
 import { discoverPluginMock } from '../application/legacy/discover/mocks';
 import { visualizationRegistry } from '../components/visualizations/visualization_registry';
 
@@ -23,10 +23,10 @@ jest.mock('react-dom/client', () => ({
   createRoot: jest.fn(() => mockRoot),
 }));
 
-// Mock the ExploreEmbeddableComponent
-jest.mock('./explore_embeddable_component', () => ({
-  ExploreEmbeddableComponent: jest.fn(() => (
-    <div data-test-subj="mockExploreEmbeddableComponent" />
+// Mock the AgenticObservabilityEmbeddableComponent
+jest.mock('./agentic_observability_embeddable_component', () => ({
+  AgenticObservabilityEmbeddableComponent: jest.fn(() => (
+    <div data-test-subj="mockAgenticObservabilityEmbeddableComponent" />
   )),
 }));
 
@@ -86,10 +86,10 @@ jest.mock('../components/visualizations/visualization_builder_utils', () => ({
   }),
 }));
 
-describe('ExploreEmbeddable', () => {
-  let embeddable: ExploreEmbeddable;
-  let mockSavedExplore: any;
-  let mockInput: ExploreInput;
+describe('AgenticObservabilityEmbeddable', () => {
+  let embeddable: AgenticObservabilityEmbeddable;
+  let mockSavedAgenticObservability: any;
+  let mockInput: AgenticObservabilityInput;
   let mockExecuteTriggerActions: jest.Mock;
   let mockNode: HTMLElement;
 
@@ -131,10 +131,10 @@ describe('ExploreEmbeddable', () => {
       create: jest.fn().mockImplementation(() => createMockSearchSource()),
     });
 
-    // Create a mock saved explore object
-    mockSavedExplore = {
+    // Create a mock saved agentic observability object
+    mockSavedAgenticObservability = {
       id: 'test-id',
-      title: 'Test Explore',
+      title: 'Test Agentic Observability',
       description: 'Test description',
       columns: ['column1', 'column2'],
       sort: [['column1', 'asc']],
@@ -158,7 +158,7 @@ describe('ExploreEmbeddable', () => {
     mockNode = document.createElement('div');
 
     // Create mock services using the discoverPluginMock
-    const mockServices = discoverPluginMock.createExploreServicesMock();
+    const mockServices = discoverPluginMock.createAgenticObservabilityServicesMock();
 
     // Add specific mocks for the services used in the embeddable
     mockServices.data.query.queryString.getLanguageService = jest.fn().mockReturnValue({
@@ -178,16 +178,16 @@ describe('ExploreEmbeddable', () => {
     });
 
     // Create the embeddable
-    embeddable = new ExploreEmbeddable(
+    embeddable = new AgenticObservabilityEmbeddable(
       {
-        savedExplore: mockSavedExplore,
-        editUrl: '/app/explore/logs/test',
+        savedAgenticObservability: mockSavedAgenticObservability,
+        editUrl: '/app/agenticObservability/logs/test',
         editPath: 'test',
         indexPatterns: [],
         editable: true,
         filterManager: mockServices.filterManager,
         services: mockServices,
-        editApp: 'explore/logs',
+        editApp: 'agenticObservability/logs',
       },
       mockInput,
       mockExecuteTriggerActions
@@ -195,7 +195,7 @@ describe('ExploreEmbeddable', () => {
   });
 
   test('has the correct type', () => {
-    expect(embeddable.type).toBe(EXPLORE_EMBEDDABLE_TYPE);
+    expect(embeddable.type).toBe(AGENTIC_OBSERVABILITY_EMBEDDABLE_TYPE);
   });
 
   test('should have return inspector adaptors', () => {
@@ -207,7 +207,7 @@ describe('ExploreEmbeddable', () => {
     const searchProps = embeddable.searchProps;
 
     expect(searchProps).toBeDefined();
-    expect(searchProps?.title).toBe('Test Explore');
+    expect(searchProps?.title).toBe('Test Agentic Observability');
     expect(searchProps?.description).toBe('Test description');
     expect(searchProps?.displayTimeColumn).toBe(false);
   });
@@ -238,7 +238,7 @@ describe('ExploreEmbeddable', () => {
     await embeddable.fetch();
 
     // Check that fetch was called
-    expect(mockSavedExplore.searchSource.fetch).toHaveBeenCalled();
+    expect(mockSavedAgenticObservability.searchSource.fetch).toHaveBeenCalled();
 
     // Check that the output was updated
     expect(embeddable.getOutput().loading).toBe(false);
@@ -371,10 +371,10 @@ describe('ExploreEmbeddable', () => {
   });
 
   test('onFilter returns early when indexPattern is not available', async () => {
-    const mockSavedExploreNoIndex = {
-      ...mockSavedExplore,
+    const mockSavedAgenticObservabilityNoIndex = {
+      ...mockSavedAgenticObservability,
       searchSource: {
-        ...mockSavedExplore.searchSource,
+        ...mockSavedAgenticObservability.searchSource,
         getField: jest.fn().mockImplementation((field) => {
           if (field === 'index') return null;
           if (field === 'query') return { query: 'test', language: 'PPL' };
@@ -383,7 +383,7 @@ describe('ExploreEmbeddable', () => {
       },
     };
 
-    const mockServices = discoverPluginMock.createExploreServicesMock();
+    const mockServices = discoverPluginMock.createAgenticObservabilityServicesMock();
     mockServices.data.query.queryString.getLanguageService = jest.fn().mockReturnValue({
       getLanguage: jest.fn().mockReturnValue({
         fields: {
@@ -397,16 +397,16 @@ describe('ExploreEmbeddable', () => {
     });
 
     const mockExecuteTriggerActionsLocal = jest.fn();
-    const embeddableNoIndex = new ExploreEmbeddable(
+    const embeddableNoIndex = new AgenticObservabilityEmbeddable(
       {
-        savedExplore: mockSavedExploreNoIndex,
-        editUrl: '/app/explore/logs/test',
+        savedAgenticObservability: mockSavedAgenticObservabilityNoIndex,
+        editUrl: '/app/agenticObservability/logs/test',
         editPath: 'test',
         indexPatterns: [],
         editable: true,
         filterManager: mockServices.filterManager,
         services: mockServices,
-        editApp: 'explore/logs',
+        editApp: 'agenticObservability/logs',
       },
       mockInput,
       mockExecuteTriggerActionsLocal
@@ -416,7 +416,7 @@ describe('ExploreEmbeddable', () => {
     // @ts-ignore
     embeddableNoIndex.searchProps = {
       onFilter: async (field: any, value: any, operator: any) => {
-        const indexPattern = mockSavedExploreNoIndex.searchSource.getField('index');
+        const indexPattern = mockSavedAgenticObservabilityNoIndex.searchSource.getField('index');
         if (!indexPattern) return;
       },
     };
@@ -432,7 +432,7 @@ describe('ExploreEmbeddable', () => {
   });
 
   test('renders successfully even without index pattern', () => {
-    const mockServices = discoverPluginMock.createExploreServicesMock();
+    const mockServices = discoverPluginMock.createAgenticObservabilityServicesMock();
     mockServices.uiSettings.get = jest.fn().mockImplementation((key) => {
       if (key === 'doc_table:hideTimeColumn') return false;
       return 500;
@@ -446,25 +446,25 @@ describe('ExploreEmbeddable', () => {
     });
 
     // Create a new embeddable without index pattern
-    const newEmbeddable = new ExploreEmbeddable(
+    const newEmbeddable = new AgenticObservabilityEmbeddable(
       {
-        savedExplore: {
-          ...mockSavedExplore,
+        savedAgenticObservability: {
+          ...mockSavedAgenticObservability,
           searchSource: {
-            ...mockSavedExplore.searchSource,
+            ...mockSavedAgenticObservability.searchSource,
             getField: jest.fn().mockImplementation((field) => {
               if (field === 'query') return { query: 'test', language: 'PPL' };
               return null;
             }),
           },
         },
-        editUrl: '/app/explore/logs/test',
+        editUrl: '/app/agenticObservability/logs/test',
         editPath: 'test',
         indexPatterns: [],
         editable: true,
         filterManager: mockServices.filterManager,
         services: mockServices,
-        editApp: 'explore/logs',
+        editApp: 'agenticObservability/logs',
       },
       mockInput,
       mockExecuteTriggerActions
@@ -479,7 +479,7 @@ describe('ExploreEmbeddable', () => {
   });
 
   test('constructor handles missing indexPattern gracefully', () => {
-    const mockServices = discoverPluginMock.createExploreServicesMock();
+    const mockServices = discoverPluginMock.createAgenticObservabilityServicesMock();
     mockServices.uiSettings.get = jest.fn().mockImplementation((key) => {
       if (key === 'doc_table:hideTimeColumn') return false;
       return 500;
@@ -492,10 +492,10 @@ describe('ExploreEmbeddable', () => {
       }),
     });
 
-    const mockSavedExploreNoIndex = {
-      ...mockSavedExplore,
+    const mockSavedAgenticObservabilityNoIndex = {
+      ...mockSavedAgenticObservability,
       searchSource: {
-        ...mockSavedExplore.searchSource,
+        ...mockSavedAgenticObservability.searchSource,
         getField: jest.fn().mockImplementation((field) => {
           if (field === 'index') return null;
           if (field === 'query') return { query: 'test', language: 'PPL' };
@@ -503,16 +503,16 @@ describe('ExploreEmbeddable', () => {
         }),
       },
     };
-    const embeddableNoIndex = new ExploreEmbeddable(
+    const embeddableNoIndex = new AgenticObservabilityEmbeddable(
       {
-        savedExplore: mockSavedExploreNoIndex,
-        editUrl: '/app/explore/logs/test',
+        savedAgenticObservability: mockSavedAgenticObservabilityNoIndex,
+        editUrl: '/app/agenticObservability/logs/test',
         editPath: 'test',
         indexPatterns: [],
         editable: true,
         filterManager: mockServices.filterManager,
         services: mockServices,
-        editApp: 'explore/logs',
+        editApp: 'agenticObservability/logs',
       },
       mockInput,
       mockExecuteTriggerActions
@@ -587,11 +587,11 @@ describe('ExploreEmbeddable', () => {
       dateColumns: [],
     });
 
-    mockSavedExplore.visualization = JSON.stringify({
+    mockSavedAgenticObservability.visualization = JSON.stringify({
       chartType: 'line',
       axesMapping: { x: 'field1', y: 'field2' },
     });
-    mockSavedExplore.uiState = JSON.stringify({ activeTab: 'visualization' });
+    mockSavedAgenticObservability.uiState = JSON.stringify({ activeTab: 'visualization' });
 
     // @ts-ignore
     await embeddable.fetch();
@@ -614,12 +614,12 @@ describe('ExploreEmbeddable', () => {
       'adaptLegacyData'
     );
 
-    mockSavedExplore.visualization = JSON.stringify({
+    mockSavedAgenticObservability.visualization = JSON.stringify({
       chartType: 'line',
       axesMapping: { x: 'field1', y: 'field2' },
       thresholdLines: [], // deprecated style
     });
-    mockSavedExplore.uiState = JSON.stringify({ activeTab: 'visualization' });
+    mockSavedAgenticObservability.uiState = JSON.stringify({ activeTab: 'visualization' });
 
     // @ts-ignore
     await embeddable.fetch();

@@ -6,7 +6,7 @@
 import { resetLegacyStateActionCreator } from './reset_legacy_state';
 import { setLegacyState } from '../../slices';
 import { getPreloadedLegacyState } from '../../utils/redux_persistence';
-import { createMockExploreServices } from '../../__mocks__';
+import { createMockAgenticObservabilityServices } from '../../__mocks__';
 
 jest.mock('../../slices', () => ({
   setLegacyState: jest.fn(),
@@ -22,12 +22,12 @@ const mockedGetPreloadedLegacyState = getPreloadedLegacyState as jest.MockedFunc
 >;
 
 describe('resetLegacyStateActionCreator', () => {
-  let mockServices: ReturnType<typeof createMockExploreServices>;
+  let mockServices: ReturnType<typeof createMockAgenticObservabilityServices>;
   let mockDispatch: jest.MockedFunction<any>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockServices = createMockExploreServices();
+    mockServices = createMockAgenticObservabilityServices();
     mockDispatch = jest.fn();
   });
 

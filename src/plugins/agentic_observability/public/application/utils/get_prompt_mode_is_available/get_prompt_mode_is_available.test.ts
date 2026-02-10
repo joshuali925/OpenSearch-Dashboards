@@ -5,10 +5,10 @@
 
 import { of } from 'rxjs';
 import { getPromptModeIsAvailable } from './get_prompt_mode_is_available';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 
 describe('getPromptModeIsAvailable', () => {
-  let services: jest.Mocked<ExploreServices>;
+  let services: jest.Mocked<AgenticObservabilityServices>;
 
   beforeEach(() => {
     services = {

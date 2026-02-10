@@ -42,7 +42,7 @@ jest.mock('../../application/utils/state_management/selectors', () => ({
 const createMockStore = () => {
   return configureStore({
     reducer: {
-      explore: () => ({}),
+      agenticObservability: () => ({}),
     },
   });
 };

@@ -6,14 +6,17 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../../store';
 import { setActiveTab } from '../../slices';
-import { ExploreServices } from '../../../../../types';
+import { AgenticObservabilityServices } from '../../../../../types';
 import { defaultPrepareQueryString } from '../query_actions';
 import { normalizeResultRows } from '../../../../../components/visualizations/utils/normalize_result_rows';
 import { visualizationRegistry } from '../../../../../components/visualizations/visualization_registry';
 import { prepareQueryForLanguage } from '../../../languages';
 import { Query } from '../../../../../../../data/common';
 import { QueryExecutionStatus } from '../../types';
-import { EXPLORE_LOGS_TAB_ID, EXPLORE_VISUALIZATION_TAB_ID } from '../../../../../../common';
+import {
+  AGENTIC_OBSERVABILITY_LOGS_TAB_ID,
+  AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID,
+} from '../../../../../../common';
 
 /**
  * Determine if results can be visualized
@@ -43,13 +46,13 @@ const canResultsBeVisualized = (results: any): boolean => {
  * Use visualization tab if we can find a visualization type
  * Otherwise, fallback to logs tab
  */
-const determineOptimalTab = (results: any, services: ExploreServices): string => {
+const determineOptimalTab = (results: any, services: AgenticObservabilityServices): string => {
   if (canResultsBeVisualized(results)) {
-    return EXPLORE_VISUALIZATION_TAB_ID || EXPLORE_LOGS_TAB_ID;
+    return AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID || AGENTIC_OBSERVABILITY_LOGS_TAB_ID;
   }
   // TODO: Add more logic to determine optimal tab based on results
   // TODO: Check if there is a query with stats but can't visualize it
-  return EXPLORE_LOGS_TAB_ID;
+  return AGENTIC_OBSERVABILITY_LOGS_TAB_ID;
 };
 
 /**
@@ -57,7 +60,7 @@ const determineOptimalTab = (results: any, services: ExploreServices): string =>
  */
 export const detectAndSetOptimalTab = createAsyncThunk<
   void,
-  { services: ExploreServices; savedTabId?: string },
+  { services: AgenticObservabilityServices; savedTabId?: string },
   { state: RootState }
 >('ui/detectAndSetOptimalTab', async ({ services }, { getState, dispatch }) => {
   const state = getState();
@@ -66,7 +69,7 @@ export const detectAndSetOptimalTab = createAsyncThunk<
   const queryStatusMap = state.queryEditor.queryStatusMap;
 
   // Get results for visualization tab
-  const visualizationTab = services.tabRegistry.getTab('explore_visualization_tab');
+  const visualizationTab = services.tabRegistry.getTab('agentic_observability_visualization_tab');
   let visualizationTabPrepareQuery = defaultPrepareQueryString;
   if (visualizationTab?.prepareQuery) {
     const prepareQuery = visualizationTab.prepareQuery;
@@ -82,7 +85,7 @@ export const detectAndSetOptimalTab = createAsyncThunk<
   let activeTab = '';
 
   if (visualizationQueryStatus.status === QueryExecutionStatus.ERROR) {
-    activeTab = EXPLORE_VISUALIZATION_TAB_ID;
+    activeTab = AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID;
   }
 
   if (visualizationResults && visualizationResults.hits?.hits?.length > 0) {

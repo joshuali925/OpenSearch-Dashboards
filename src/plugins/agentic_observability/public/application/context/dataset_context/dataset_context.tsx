@@ -7,7 +7,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { useSelector } from 'react-redux';
 import { DataView, DEFAULT_DATA } from '../../../../../data/common';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { RootState } from '../../utils/state_management/store';
 
 interface DatasetContextValue {
@@ -29,7 +29,7 @@ const DatasetContext = createContext<DatasetContextValue>({
  * This eliminates the need for each component to independently fetch Dataset.
  */
 export const DatasetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const {
     dataViews,
     query: { queryString },

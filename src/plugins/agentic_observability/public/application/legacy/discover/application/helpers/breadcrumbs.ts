@@ -30,7 +30,7 @@
 
 import { i18n } from '@osd/i18n';
 import { EuiBreadcrumb } from '@elastic/eui';
-import { ExploreFlavor } from '../../../../../../common';
+import { AgenticObservabilityFlavor } from '../../../../../../common';
 import { getServices } from '../../opensearch_dashboards_services';
 
 export function getRootBreadcrumbs(): EuiBreadcrumb[] {
@@ -40,7 +40,10 @@ export function getRootBreadcrumbs(): EuiBreadcrumb[] {
       text: i18n.translate('agenticObservability.discover.rootBreadcrumb', {
         defaultMessage: 'Discover',
       }),
-      onClick: () => core.application.navigateToApp('explore', { path: `${ExploreFlavor.Logs}#/` }),
+      onClick: () =>
+        core.application.navigateToApp('agenticObservability', {
+          path: `${AgenticObservabilityFlavor.Logs}#/`,
+        }),
     },
   ];
 }

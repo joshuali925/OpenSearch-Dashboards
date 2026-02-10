@@ -119,7 +119,7 @@ describe('ResultsActionBar', () => {
 
   test('should hide add to dashboard button and export button if current tab is patterns', () => {
     const patternsStore = mockStore({
-      ui: { activeTabId: 'explore_patterns_tab' },
+      ui: { activeTabId: 'agentic_observability_patterns_tab' },
       tab: { patterns: { patternsField: 'message' } },
     });
     render(
@@ -133,7 +133,7 @@ describe('ResultsActionBar', () => {
 
   test('should show export button but hide add to dashboard button for visualization tab', () => {
     const visualizationStore = mockStore({
-      ui: { activeTabId: 'explore_visualization_tab' },
+      ui: { activeTabId: 'agentic_observability_visualization_tab' },
     });
     render(
       <Provider store={visualizationStore}>

@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { EuiButtonEmpty, EuiText } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { ImportDataModal } from '../../../import_data_modal';
 
 const label = i18n.translate('agenticObservability.queryPanel.importDataLabel', {
@@ -15,7 +15,7 @@ const label = i18n.translate('agenticObservability.queryPanel.importDataLabel', 
 });
 
 export const ImportDataButton = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const closeModal = () => setIsModalVisible(false);

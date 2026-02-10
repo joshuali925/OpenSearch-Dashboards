@@ -6,7 +6,7 @@
 import { loadQueryActionCreator } from './load_query';
 import { runQueryActionCreator } from '../run_query';
 import { clearLastExecutedData } from '../../../slices';
-import { ExploreServices } from '../../../../../../types';
+import { AgenticObservabilityServices } from '../../../../../../types';
 import { useSetEditorTextWithQuery } from '../../../../../hooks';
 import { AppDispatch } from '../../../store';
 
@@ -28,7 +28,7 @@ const mockClearLastExecutedData = clearLastExecutedData as jest.MockedFunction<
 
 describe('loadQueryActionCreator', () => {
   let mockDispatch: jest.MockedFunction<AppDispatch>;
-  let mockServices: ExploreServices;
+  let mockServices: AgenticObservabilityServices;
   let mockSetEditorTextWithQuery: jest.MockedFunction<ReturnType<typeof useSetEditorTextWithQuery>>;
   const testQuery = '| where field="b"';
 
@@ -42,7 +42,7 @@ describe('loadQueryActionCreator', () => {
       uiSettings: {},
       savedObjects: {},
       indexPatterns: {},
-    } as ExploreServices;
+    } as AgenticObservabilityServices;
 
     mockSetEditorTextWithQuery = jest.fn();
 

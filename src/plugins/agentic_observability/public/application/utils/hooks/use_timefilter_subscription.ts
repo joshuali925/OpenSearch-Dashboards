@@ -5,7 +5,7 @@
 
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { RootState } from '../state_management/store';
 import { executeQueries } from '../state_management/actions/query_actions';
 import { clearQueryStatusMap, clearResults } from '../state_management/slices';
@@ -13,7 +13,7 @@ import { clearQueryStatusMap, clearResults } from '../state_management/slices';
 /**
  * Hook to handle auto-refresh subscription only
  */
-export const useTimefilterSubscription = (services: ExploreServices) => {
+export const useTimefilterSubscription = (services: AgenticObservabilityServices) => {
   const dispatch = useDispatch();
   const hasDataset = useSelector((state: RootState) => !!state.query.dataset);
 

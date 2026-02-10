@@ -24,18 +24,18 @@ import React, { useState, useEffect } from 'react';
 import { SavedObjectsClientContract } from 'src/core/public';
 import { DebouncedFieldText } from './style_panel/utils';
 import { OnSaveProps } from './add_to_dashboard_button';
-import { useSavedExplore } from '../../application/utils/hooks/use_saved_explore';
+import { useSavedAgenticObservability } from '../../application/utils/hooks/use_saved_agentic_observability';
 import { useExistingDashboard } from '../../application/utils/hooks/use_existing_dashboard';
 
 interface AddToDashboardModalProps {
   savedObjectsClient: SavedObjectsClientContract;
   onConfirm: (props: OnSaveProps) => void;
   onCancel: () => void;
-  savedExploreId: string | undefined;
+  savedAgenticObservabilityId: string | undefined;
 }
 
 export const AddToDashboardModal: React.FC<AddToDashboardModalProps> = ({
-  savedExploreId,
+  savedAgenticObservabilityId,
   savedObjectsClient,
   onConfirm,
   onCancel,
@@ -48,7 +48,7 @@ export const AddToDashboardModal: React.FC<AddToDashboardModalProps> = ({
     false
   );
 
-  const { savedExplore } = useSavedExplore(savedExploreId);
+  const { savedAgenticObservability } = useSavedAgenticObservability(savedAgenticObservabilityId);
 
   const [title, setTitle] = useState<string>('');
 
@@ -77,9 +77,9 @@ export const AddToDashboardModal: React.FC<AddToDashboardModalProps> = ({
   const handleSave = async () => {
     if (isLoading) return;
     setIsLoading(true);
-    if (savedExplore) {
+    if (savedAgenticObservability) {
       await onConfirm({
-        savedExplore,
+        savedAgenticObservability,
         newTitle: title,
         isTitleDuplicateConfirmed: isTitleOrDashboardTitleDuplicate,
         onTitleDuplicate: handleTitleDuplicate,
@@ -238,9 +238,12 @@ export const AddToDashboardModal: React.FC<AddToDashboardModalProps> = ({
 
           <EuiFlexItem grow={true} style={{ width: '100%' }}>
             <EuiFormRow
-              label={i18n.translate('agenticObservability.addtoDashboardModal.saveExploreName', {
-                defaultMessage: 'Save search',
-              })}
+              label={i18n.translate(
+                'agenticObservability.addtoDashboardModal.saveAgenticObservabilityName',
+                {
+                  defaultMessage: 'Save search',
+                }
+              )}
             >
               <DebouncedFieldText
                 value={title}

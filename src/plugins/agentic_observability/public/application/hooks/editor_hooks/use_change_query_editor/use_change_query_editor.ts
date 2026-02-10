@@ -6,7 +6,7 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { useSelector } from '../../../legacy/discover/application/utils/state_management';
 import {
   selectEditorMode,
@@ -28,7 +28,7 @@ export const useChangeQueryEditor = () => {
         query: { filterManager, queryString },
       },
     },
-  } = useOpenSearchDashboards<ExploreServices>();
+  } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const { dataset } = useDatasetContext();
   const setEditorText = useSetEditorText();
   const editorMode = useSelector(selectEditorMode);

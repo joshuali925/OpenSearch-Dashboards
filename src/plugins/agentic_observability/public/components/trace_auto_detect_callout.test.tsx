@@ -9,7 +9,7 @@ import { I18nProvider } from '@osd/i18n/react';
 import { coreMock } from '../../../../core/public/mocks';
 import { TraceAutoDetectCallout } from './trace_auto_detect_callout';
 import { OpenSearchDashboardsContextProvider } from '../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../types';
+import { AgenticObservabilityServices } from '../types';
 import * as autoDetectModule from '../utils/auto_detect_trace_data';
 import * as createDatasetsModule from '../utils/create_auto_datasets';
 
@@ -27,7 +27,7 @@ jest.mock(
 
 describe('TraceAutoDetectCallout', () => {
   const mockCore = coreMock.createStart();
-  let mockServices: Partial<ExploreServices>;
+  let mockServices: Partial<AgenticObservabilityServices>;
   const mockDetectTraceDataAcrossDataSources = autoDetectModule.detectTraceDataAcrossDataSources as jest.Mock;
   const mockCreateAutoDetectedDatasets = createDatasetsModule.createAutoDetectedDatasets as jest.Mock;
 
@@ -78,7 +78,9 @@ describe('TraceAutoDetectCallout', () => {
   const renderWithContext = () => {
     return render(
       <I18nProvider>
-        <OpenSearchDashboardsContextProvider services={mockServices as ExploreServices}>
+        <OpenSearchDashboardsContextProvider
+          services={mockServices as AgenticObservabilityServices}
+        >
           <TraceAutoDetectCallout />
         </OpenSearchDashboardsContextProvider>
       </I18nProvider>
@@ -137,7 +139,7 @@ describe('TraceAutoDetectCallout', () => {
   });
 
   it('should respect localStorage dismissal', async () => {
-    localStorageMock.setItem('explore:traces:autoDetectDismissed', 'true');
+    localStorageMock.setItem('agenticObservability:traces:autoDetectDismissed', 'true');
 
     mockDetectTraceDataAcrossDataSources.mockResolvedValue([
       {
@@ -165,7 +167,7 @@ describe('TraceAutoDetectCallout', () => {
   });
 
   it('should clear dismissal if no trace datasets exist', async () => {
-    localStorageMock.setItem('explore:traces:autoDetectDismissed', 'true');
+    localStorageMock.setItem('agenticObservability:traces:autoDetectDismissed', 'true');
 
     mockDetectTraceDataAcrossDataSources.mockResolvedValue([
       {
@@ -188,7 +190,9 @@ describe('TraceAutoDetectCallout', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Trace Data Detected')).toBeInTheDocument();
-      expect(localStorageMock.getItem('explore:traces:autoDetectDismissed')).toBeNull();
+      expect(
+        localStorageMock.getItem('agenticObservability:traces:autoDetectDismissed')
+      ).toBeNull();
     });
   });
 
@@ -214,7 +218,9 @@ describe('TraceAutoDetectCallout', () => {
     fireEvent.click(dismissButton);
 
     await waitFor(() => {
-      expect(localStorageMock.getItem('explore:traces:autoDetectDismissed')).toBe('true');
+      expect(localStorageMock.getItem('agenticObservability:traces:autoDetectDismissed')).toBe(
+        'true'
+      );
       expect(screen.getByText('No Index Patterns')).toBeInTheDocument();
     });
   });
@@ -335,7 +341,7 @@ describe('TraceAutoDetectCallout', () => {
   });
 
   it('should clear dismissal flag after successful dataset creation', async () => {
-    localStorageMock.setItem('explore:traces:autoDetectDismissed', 'true');
+    localStorageMock.setItem('agenticObservability:traces:autoDetectDismissed', 'true');
 
     mockDetectTraceDataAcrossDataSources.mockResolvedValue([
       {
@@ -365,7 +371,9 @@ describe('TraceAutoDetectCallout', () => {
     fireEvent.click(createButton);
 
     await waitFor(() => {
-      expect(localStorageMock.getItem('explore:traces:autoDetectDismissed')).toBeNull();
+      expect(
+        localStorageMock.getItem('agenticObservability:traces:autoDetectDismissed')
+      ).toBeNull();
     });
   });
 

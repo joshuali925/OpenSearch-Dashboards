@@ -4,6 +4,8 @@
  */
 
 import { createGetterSetter } from '../../../opensearch_dashboards_utils/public';
-import { ExploreServices } from '../types';
+import { AgenticObservabilityServices } from '../types';
 
-export const [getServices, setServices] = createGetterSetter<ExploreServices>('ExploreServices');
+export const [getServices, setServices] = createGetterSetter<AgenticObservabilityServices>(
+  'AgenticObservabilityServices'
+);

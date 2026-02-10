@@ -13,7 +13,7 @@ jest.mock('@osd/i18n', () => ({
   },
 }));
 import { addToDashboard } from './utils/add_to_dashboard';
-import { saveSavedExplore } from '../../helpers/save_explore';
+import { saveSavedAgenticObservability } from '../../helpers/save_agentic_observability';
 import { Provider } from 'react-redux';
 import configureMockStore from 'redux-mock-store';
 import * as VB from './visualization_builder';
@@ -55,17 +55,17 @@ const mockServices = {
   },
 };
 
-jest.mock('../../helpers/save_explore', () => ({
-  saveSavedExplore: jest.fn(),
+jest.mock('../../helpers/save_agentic_observability', () => ({
+  saveSavedAgenticObservability: jest.fn(),
 }));
 jest.mock('./utils/add_to_dashboard', () => ({
   addToDashboard: jest.fn(),
 }));
-jest.mock('../../saved_explore/transforms', () => ({
+jest.mock('../../saved_agentic_observability/transforms', () => ({
   saveStateToSavedObject: jest.fn((...args) => args[0]),
 }));
-jest.mock('../../application/utils/hooks/use_current_explore_id', () => ({
-  useCurrentExploreId: jest.fn(() => 'mockExploreId'),
+jest.mock('../../application/utils/hooks/use_current_agentic_observability_id', () => ({
+  useCurrentAgenticObservabilityId: jest.fn(() => 'mockAgenticObservabilityId'),
 }));
 jest.mock('../../../public/helpers/use_flavor_id', () => ({
   useFlavorId: jest.fn(() => 'logs'),
@@ -93,8 +93,8 @@ jest.mock('./add_to_dashboard_modal', () => ({
       <button
         onClick={() =>
           onConfirm({
-            savedExplore: {},
-            newTitle: 'Test Explore',
+            savedAgenticObservability: {},
+            newTitle: 'Test Agentic Observability',
             isTitleDuplicateConfirmed: true,
             onTitleDuplicate: jest.fn(),
             mode: 'new',
@@ -139,8 +139,8 @@ describe('SaveAndAddButtonWithModal', () => {
   });
 
   it('handles save and shows success toast', async () => {
-    const mockedSaveSavedExplore = saveSavedExplore as jest.Mock;
-    mockedSaveSavedExplore.mockResolvedValue({ id: 'savedId123' });
+    const mockedSaveSavedAgenticObservability = saveSavedAgenticObservability as jest.Mock;
+    mockedSaveSavedAgenticObservability.mockResolvedValue({ id: 'savedId123' });
 
     const mockedAddToDashboard = addToDashboard as jest.Mock;
     mockedAddToDashboard.mockResolvedValue('123');
@@ -155,7 +155,7 @@ describe('SaveAndAddButtonWithModal', () => {
     fireEvent.click(screen.getByText('Confirm'));
 
     await waitFor(() => {
-      expect(saveSavedExplore).toHaveBeenCalled();
+      expect(saveSavedAgenticObservability).toHaveBeenCalled();
       expect(addToDashboard).toHaveBeenCalled();
       expect(mockToastAdd).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -167,8 +167,8 @@ describe('SaveAndAddButtonWithModal', () => {
   });
 
   it('handles save failure and shows error toast', async () => {
-    const mockedSaveSavedExplore = saveSavedExplore as jest.Mock;
-    mockedSaveSavedExplore.mockRejectedValue(new Error('Save failed'));
+    const mockedSaveSavedAgenticObservability = saveSavedAgenticObservability as jest.Mock;
+    mockedSaveSavedAgenticObservability.mockRejectedValue(new Error('Save failed'));
 
     render(
       <Provider store={store}>
@@ -199,7 +199,7 @@ describe('SaveAndAddButtonWithModal', () => {
 
       expect(mockUseKeyboardShortcut).toHaveBeenCalledWith({
         id: 'addToDashboard',
-        pluginId: 'explore',
+        pluginId: 'agenticObservability',
         name: 'Add to dashboard',
         category: 'Data actions',
         keys: 'a',

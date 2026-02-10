@@ -11,10 +11,12 @@ import {
 
 export const SAVED_OBJECT_TYPE = 'agenticObservability';
 
-export function createSavedExploreClass(services: SavedObjectOpenSearchDashboardsServices) {
+export function createSavedAgenticObservabilityClass(
+  services: SavedObjectOpenSearchDashboardsServices
+) {
   const SavedObjectClass = createSavedObjectClass(services);
 
-  class SavedExplore extends SavedObjectClass {
+  class SavedAgenticObservability extends SavedObjectClass {
     public static type: string = 'agenticObservability';
     public static mapping = {
       title: 'text',
@@ -68,5 +70,5 @@ export function createSavedExploreClass(services: SavedObjectOpenSearchDashboard
     }
   }
 
-  return SavedExplore as new (id: string) => SavedObject;
+  return SavedAgenticObservability as new (id: string) => SavedObject;
 }

@@ -6,7 +6,7 @@
 import { getSharingDataFields, getSharingData } from './helpers';
 import { ISearchSource } from '../../../../../../data/common';
 import { LegacyState } from '../../../../application/utils/state_management/slices';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 
 // Mock dependencies
 jest.mock('../../../../helpers/view_component_utils/get_sort_for_search_source', () => ({
@@ -97,7 +97,7 @@ describe('helpers', () => {
           return defaultValue;
         }),
       },
-    } as unknown) as ExploreServices;
+    } as unknown) as AgenticObservabilityServices;
 
     beforeEach(() => {
       jest.clearAllMocks();

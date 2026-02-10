@@ -6,7 +6,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { Subject } from 'rxjs';
 import { useFlavorId } from './use_flavor_id';
-import { ExploreFlavor } from '../../../common';
+import { AgenticObservabilityFlavor } from '../../../common';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
 
 // Mock the useOpenSearchDashboards hook
@@ -42,15 +42,15 @@ describe('useFlavorId', () => {
     expect(result.current).toBeNull();
   });
 
-  it('should extract flavor ID from explore app ID', () => {
+  it('should extract flavor ID from agentic observability app ID', () => {
     const { result } = renderHook(() => useFlavorId());
 
     // Use act() to flush React state updates from the Observable subscription
     act(() => {
-      currentAppIdSubject.next('explore/logs');
+      currentAppIdSubject.next('agenticObservability/logs');
     });
 
-    expect(result.current).toBe(ExploreFlavor.Logs);
+    expect(result.current).toBe(AgenticObservabilityFlavor.Logs);
   });
 
   it('should handle multiple app ID changes', () => {
@@ -58,14 +58,14 @@ describe('useFlavorId', () => {
 
     // Use act() to flush React state updates from the Observable subscription
     act(() => {
-      currentAppIdSubject.next('explore/logs');
+      currentAppIdSubject.next('agenticObservability/logs');
     });
-    expect(result.current).toBe(ExploreFlavor.Logs);
+    expect(result.current).toBe(AgenticObservabilityFlavor.Logs);
 
     act(() => {
-      currentAppIdSubject.next('explore/metrics');
+      currentAppIdSubject.next('agenticObservability/metrics');
     });
-    expect(result.current).toBe(ExploreFlavor.Metrics);
+    expect(result.current).toBe(AgenticObservabilityFlavor.Metrics);
   });
 
   it('should handle invalid app IDs', () => {

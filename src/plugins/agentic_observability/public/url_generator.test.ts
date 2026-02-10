@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ExploreUrlGenerator } from './url_generator';
+import { AgenticObservabilityUrlGenerator } from './url_generator';
 import { hashedItemStore, getStatesFromOsdUrl } from '../../opensearch_dashboards_utils/public';
 import { mockStorage } from '../../opensearch_dashboards_utils/public/storage/hashed_item_store/mock';
 
-const appBasePath: string = 'xyz/app/explore';
+const appBasePath: string = 'xyz/app/agenticObservability';
 const indexPatternId: string = 'c367b774-a4c2-11ea-bb37-0242ac130002';
 const savedObjectId: string = '571aaf70-4c88-11e8-b3d7-01146121b73d';
 
@@ -16,7 +16,7 @@ interface SetupParams {
 }
 
 const setup = async ({ useHash = false }: SetupParams = {}) => {
-  const generator = new ExploreUrlGenerator({
+  const generator = new AgenticObservabilityUrlGenerator({
     appBasePath,
     useHash,
   });
@@ -31,8 +31,8 @@ beforeEach(() => {
   hashedItemStore.storage = mockStorage;
 });
 
-describe('Explore url generator', () => {
-  test('can create a link to Explore with no state and no saved object', async () => {
+describe('Agentic Observability url generator', () => {
+  test('can create a link to Agentic Observability with no state and no saved object', async () => {
     const { generator } = await setup();
     const url = await generator.createUrl({});
     const { _a, _g } = getStatesFromOsdUrl(url, ['_a', '_g']);
@@ -42,7 +42,7 @@ describe('Explore url generator', () => {
     expect(_g).toEqual({});
   });
 
-  test('can create a link to a saved object in Explore', async () => {
+  test('can create a link to a saved object in Agentic Observability', async () => {
     const { generator } = await setup();
     const url = await generator.createUrl({ savedObjectId });
     const { _a, _g } = getStatesFromOsdUrl(url, ['_a', '_g']);

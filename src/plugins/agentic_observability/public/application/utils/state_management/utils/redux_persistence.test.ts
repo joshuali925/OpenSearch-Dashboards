@@ -4,10 +4,10 @@
  */
 
 import { getPreloadedState, loadReduxState, persistReduxState } from './redux_persistence';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { RootState } from '../store';
 import {
-  EXPLORE_DEFAULT_LANGUAGE,
+  AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE,
   DEFAULT_COLUMNS_SETTING,
   DEFAULT_TRACE_COLUMNS_SETTING,
   DEFAULT_LOGS_COLUMNS_SETTING,
@@ -28,7 +28,7 @@ jest.mock('../../../../components/visualizations/metric/metric_vis_config', () =
 }));
 
 describe('redux_persistence', () => {
-  let mockServices: ExploreServices;
+  let mockServices: AgenticObservabilityServices;
 
   beforeEach(() => {
     mockServices = {
@@ -38,7 +38,7 @@ describe('redux_persistence', () => {
       },
       core: {
         application: {
-          currentAppId$: of('explore/logs'),
+          currentAppId$: of('agenticObservability/logs'),
         },
       },
       data: {
@@ -56,7 +56,7 @@ describe('redux_persistence', () => {
             })),
             getInitialQueryByDataset: jest.fn((dataset) => ({
               query: 'initial query',
-              language: dataset.language || EXPLORE_DEFAULT_LANGUAGE,
+              language: dataset.language || AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE,
               dataset,
             })),
           },
@@ -178,7 +178,7 @@ describe('redux_persistence', () => {
           cancel: jest.fn(),
           flush: jest.fn(),
         },
-      } as ExploreServices;
+      } as AgenticObservabilityServices;
 
       expect(() => persistReduxState(mockState, servicesWithError)).not.toThrow();
     });
@@ -239,7 +239,7 @@ describe('redux_persistence', () => {
 
       expect(result).toBeDefined();
       expect(result.ui.activeTabId).toBe('');
-      expect(result.query.language).toBe(EXPLORE_DEFAULT_LANGUAGE);
+      expect(result.query.language).toBe(AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE);
     });
 
     it('should use preloaded state for missing sections', async () => {
@@ -271,7 +271,7 @@ describe('redux_persistence', () => {
           cancel: jest.fn(),
           flush: jest.fn(),
         },
-      } as ExploreServices;
+      } as AgenticObservabilityServices;
 
       const result = await loadReduxState(servicesWithError);
 
@@ -289,7 +289,7 @@ describe('redux_persistence', () => {
         activeTabId: '',
         showHistogram: true,
       });
-      expect(result.query.language).toBe(EXPLORE_DEFAULT_LANGUAGE);
+      expect(result.query.language).toBe(AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE);
       expect(result.query.query).toBe(''); // Should be empty string
       expect(result.results).toEqual({});
       expect(result.tab.logs).toEqual({});
@@ -333,7 +333,7 @@ describe('redux_persistence', () => {
       expect(result.query.dataset).toEqual(mockDataset);
       expect(mockServices.data.query.queryString.getInitialQueryByDataset).toHaveBeenCalledWith({
         ...mockDataset,
-        language: EXPLORE_DEFAULT_LANGUAGE,
+        language: AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE,
       });
     });
 
@@ -345,7 +345,7 @@ describe('redux_persistence', () => {
       const result = await getPreloadedState(mockServices);
 
       expect(result.query.dataset).toBeUndefined();
-      expect(result.query.language).toBe(EXPLORE_DEFAULT_LANGUAGE);
+      expect(result.query.language).toBe(AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE);
       expect(result.query.query).toBe('');
     });
 
@@ -504,7 +504,7 @@ describe('redux_persistence', () => {
     it('should accept Traces datasets for Traces flavor', async () => {
       const tracesServices = {
         ...mockServices,
-        core: { application: { currentAppId$: of('explore/traces') } },
+        core: { application: { currentAppId$: of('agenticObservability/traces') } },
         data: {
           ...mockServices.data,
           dataViews: {
@@ -527,7 +527,7 @@ describe('redux_persistence', () => {
     it('should reject non-Traces datasets for Traces flavor', async () => {
       const tracesServices = {
         ...mockServices,
-        core: { application: { currentAppId$: of('explore/traces') } },
+        core: { application: { currentAppId$: of('agenticObservability/traces') } },
         data: {
           ...mockServices.data,
           dataViews: {
@@ -550,7 +550,7 @@ describe('redux_persistence', () => {
     it('should accept non-Traces datasets for non-Traces flavor', async () => {
       const logsServices = {
         ...mockServices,
-        core: { application: { currentAppId$: of('explore/logs') } },
+        core: { application: { currentAppId$: of('agenticObservability/logs') } },
         data: {
           ...mockServices.data,
           dataViews: {
@@ -573,7 +573,7 @@ describe('redux_persistence', () => {
     it('should reject Traces datasets for non-Traces flavor', async () => {
       const logsServices = {
         ...mockServices,
-        core: { application: { currentAppId$: of('explore/logs') } },
+        core: { application: { currentAppId$: of('agenticObservability/logs') } },
         data: {
           ...mockServices.data,
           dataViews: {
@@ -634,7 +634,7 @@ describe('redux_persistence', () => {
     it('should use default columns for traces flavor when URL state has empty columns', async () => {
       const tracesServices = {
         ...mockServices,
-        core: { application: { currentAppId$: of('explore/traces') } },
+        core: { application: { currentAppId$: of('agenticObservability/traces') } },
       } as any;
 
       const mockQueryState = {
@@ -743,7 +743,7 @@ describe('redux_persistence', () => {
     it('should reject incompatible URL dataset and fetch new one for traces flavor', async () => {
       const tracesServices = {
         ...mockServices,
-        core: { application: { currentAppId$: of('explore/traces') } },
+        core: { application: { currentAppId$: of('agenticObservability/traces') } },
       } as any;
 
       const mockQueryState = {
@@ -800,7 +800,7 @@ describe('redux_persistence', () => {
     it('should reject traces dataset for logs flavor and fetch compatible one', async () => {
       const logsServices = {
         ...mockServices,
-        core: { application: { currentAppId$: of('explore/logs') } },
+        core: { application: { currentAppId$: of('agenticObservability/logs') } },
       } as any;
 
       const mockQueryState = {
@@ -896,7 +896,7 @@ describe('redux_persistence', () => {
     it('should accept Metrics datasets for Metrics flavor', async () => {
       const metricsServices = {
         ...mockServices,
-        core: { application: { currentAppId$: of('explore/metrics') } },
+        core: { application: { currentAppId$: of('agenticObservability/metrics') } },
         data: {
           ...mockServices.data,
           dataViews: {
@@ -926,7 +926,7 @@ describe('redux_persistence', () => {
     it('should reject non-Metrics datasets for Metrics flavor', async () => {
       const metricsServices = {
         ...mockServices,
-        core: { application: { currentAppId$: of('explore/metrics') } },
+        core: { application: { currentAppId$: of('agenticObservability/metrics') } },
         data: {
           ...mockServices.data,
           dataViews: {
@@ -953,7 +953,7 @@ describe('redux_persistence', () => {
     it('should reject Metrics datasets for Logs flavor', async () => {
       const logsServices = {
         ...mockServices,
-        core: { application: { currentAppId$: of('explore/logs') } },
+        core: { application: { currentAppId$: of('agenticObservability/logs') } },
         data: {
           ...mockServices.data,
           dataViews: {

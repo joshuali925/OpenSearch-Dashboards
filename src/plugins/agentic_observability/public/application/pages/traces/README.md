@@ -8,7 +8,7 @@ Built on the Discover interface and new in 3.3, Discover Traces provides a centr
 
 ![PPL Clicks](img/ppl_clicks.gif)
 
-### Explore interactive node-based visualizations with React Flow
+### Interactive node-based visualizations with React Flow
 
 3.3 adds the React Flow library to OpenSearch Dashboards core as an experimental feature, providing a standardized framework for interactive node-based visualizations. This integration eliminates version conflicts that occurred when individual plugins bundled copies of the library, providing a consistent user experience. The library is currently being used with the Discover: Traces feature to render service maps that visualize trace spans and service dependencies. Unlike traditional charting libraries, React Flow specializes in workflow and network diagrams, offering drag-and-drop interactions, custom node components, and efficient rendering of thousands of nodes while maintaining accessibility compliance.
 
@@ -37,15 +37,15 @@ Update your `config/opensearch_dashboards.yml` file with the following configura
 # Please note, workspace will not work with multi-tenancy. To enable workspace feature, you need to disable multi-tenancy first with `opensearch_security.multitenancy.enabled: false`
 # workspace.enabled: true
 
-# explore.enabled: true
+# agenticObservability.enabled: true
 
 # @experimental Set the value to true to enable discover traces
-# explore.discoverTraces.enabled: true
+# agenticObservability.discoverTraces.enabled: true
 ```
 
 ## Setup
 
-You should follow the steps from the [Explore setup guide](https://github.com/opensearch-project/OpenSearch-Dashboards/blob/main/src/plugins/explore/README.md) to create the data source and workspace first.
+You should follow the steps from the [Agentic Observability setup guide](https://github.com/opensearch-project/OpenSearch-Dashboards/blob/main/src/plugins/agenticObservability/README.md) to create the data source and workspace first.
 
 ### Create a Trace Index Pattern
 

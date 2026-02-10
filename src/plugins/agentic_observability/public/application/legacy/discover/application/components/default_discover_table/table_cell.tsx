@@ -42,7 +42,7 @@ const TableCellUI = ({
       />
       <span className="osdDocTableCell__filter" data-test-subj="osdDocTableCellFilter">
         <EuiToolTip
-          content={i18n.translate('agenticObservability.explore.discover.filterForValue', {
+          content={i18n.translate('agenticObservability.discover.filterForValue', {
             defaultMessage: 'Filter for value',
           })}
         >
@@ -50,7 +50,7 @@ const TableCellUI = ({
             size="xs"
             onClick={() => onFilter?.(columnId, fieldMapping, '+')}
             iconType="magnifyWithPlus"
-            aria-label={i18n.translate('agenticObservability.explore.discover.filterForValue', {
+            aria-label={i18n.translate('agenticObservability.discover.filterForValue', {
               defaultMessage: 'Filter for value',
             })}
             data-test-subj="filterForValue"
@@ -58,7 +58,7 @@ const TableCellUI = ({
           />
         </EuiToolTip>
         <EuiToolTip
-          content={i18n.translate('agenticObservability.explore.discover.filterOutValue', {
+          content={i18n.translate('agenticObservability.discover.filterOutValue', {
             defaultMessage: 'Filter out value',
           })}
         >
@@ -66,7 +66,7 @@ const TableCellUI = ({
             size="xs"
             onClick={() => onFilter?.(columnId, fieldMapping, '-')}
             iconType="magnifyWithMinus"
-            aria-label={i18n.translate('agenticObservability.explore.discover.filterOutValue', {
+            aria-label={i18n.translate('agenticObservability.discover.filterOutValue', {
               defaultMessage: 'Filter out value',
             })}
             data-test-subj="filterOutValue"

@@ -5,7 +5,7 @@
 
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { Query } from '../../../../../../../../src/plugins/data/common';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { RootState } from '../store';
 import {
   TraceAggregationConfig,
@@ -46,7 +46,7 @@ export const prepareTraceCacheKeys = (query: Query) => {
 export const executeRequestCountQuery = createAsyncThunk<
   any,
   {
-    services: ExploreServices;
+    services: AgenticObservabilityServices;
     cacheKey: string;
     baseQuery: string;
     config: TraceAggregationConfig;
@@ -71,7 +71,7 @@ export const executeRequestCountQuery = createAsyncThunk<
 export const executeErrorCountQuery = createAsyncThunk<
   any,
   {
-    services: ExploreServices;
+    services: AgenticObservabilityServices;
     cacheKey: string;
     baseQuery: string;
     config: TraceAggregationConfig;
@@ -96,7 +96,7 @@ export const executeErrorCountQuery = createAsyncThunk<
 export const executeLatencyQuery = createAsyncThunk<
   any,
   {
-    services: ExploreServices;
+    services: AgenticObservabilityServices;
     cacheKey: string;
     baseQuery: string;
     config: TraceAggregationConfig;

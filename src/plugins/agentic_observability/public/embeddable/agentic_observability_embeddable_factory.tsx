@@ -19,26 +19,31 @@ import {
   injectSearchSourceReferences,
   parseSearchSourceJSON,
 } from '../../../data/public';
-import { ExploreInput, ExploreOutput } from './types';
-import { EXPLORE_EMBEDDABLE_TYPE } from './constants';
-import { ExploreEmbeddable } from './explore_embeddable';
+import { AgenticObservabilityInput, AgenticObservabilityOutput } from './types';
+import { AGENTIC_OBSERVABILITY_EMBEDDABLE_TYPE } from './constants';
+import { AgenticObservabilityEmbeddable } from './agentic_observability_embeddable';
 import { VisualizationRegistryService } from '../services/visualization_registry_service';
-import { ExploreFlavor } from '../../common';
-import { SavedExplore } from '../saved_explore';
+import { AgenticObservabilityFlavor } from '../../common';
+import { SavedAgenticObservability } from '../saved_agentic_observability';
 
 interface StartServices {
   executeTriggerActions: UiActionsStart['executeTriggerActions'];
   isEditable: () => boolean;
 }
 
-export class ExploreEmbeddableFactory
-  implements EmbeddableFactoryDefinition<ExploreInput, ExploreOutput, ExploreEmbeddable> {
-  public readonly type = EXPLORE_EMBEDDABLE_TYPE;
+export class AgenticObservabilityEmbeddableFactory
+  implements
+    EmbeddableFactoryDefinition<
+      AgenticObservabilityInput,
+      AgenticObservabilityOutput,
+      AgenticObservabilityEmbeddable
+    > {
+  public readonly type = AGENTIC_OBSERVABILITY_EMBEDDABLE_TYPE;
   public readonly savedObjectMetaData = {
-    name: i18n.translate('agenticObservability.savedExplore.savedObjectName', {
-      defaultMessage: 'Saved explore',
+    name: i18n.translate('agenticObservability.savedAgenticObservability.savedObjectName', {
+      defaultMessage: 'Saved agentic observability',
     }),
-    type: 'explore',
+    type: 'agenticObservability',
     getIconForSavedObject: ({ attributes }: SimpleSavedObject<SavedObjectAttributes>) => {
       let iconType = '';
       try {
@@ -79,34 +84,36 @@ export class ExploreEmbeddableFactory
 
   public createFromSavedObject = async (
     savedObjectId: string,
-    input: Partial<ExploreInput> & { id: string; timeRange: TimeRange },
+    input: Partial<AgenticObservabilityInput> & { id: string; timeRange: TimeRange },
     parent?: Container
-  ): Promise<ExploreEmbeddable | ErrorEmbeddable> => {
+  ): Promise<AgenticObservabilityEmbeddable | ErrorEmbeddable> => {
     const services = getServices();
     const filterManager = services.filterManager;
-    const url = await services.getSavedExploreUrlById(savedObjectId);
+    const url = await services.getSavedAgenticObservabilityUrlById(savedObjectId);
 
     try {
-      const savedObject = await services.getSavedExploreById(savedObjectId);
+      const savedObject = await services.getSavedAgenticObservabilityById(savedObjectId);
       if (!savedObject) {
         throw new Error('Saved object not found');
       }
       const indexPattern = savedObject.searchSource.getField('index');
       const { executeTriggerActions } = await this.getStartServices();
-      const { ExploreEmbeddable: ExploreEmbeddableClass } = await import('./explore_embeddable');
-      const flavor = savedObject.type ?? ExploreFlavor.Logs;
-      const editUrl = services.addBasePath(`/app/explore/${flavor}/${url}`);
+      const { AgenticObservabilityEmbeddable: AgenticObservabilityEmbeddableClass } = await import(
+        './agentic_observability_embeddable'
+      );
+      const flavor = savedObject.type ?? AgenticObservabilityFlavor.Logs;
+      const editUrl = services.addBasePath(`/app/agenticObservability/${flavor}/${url}`);
 
-      return new ExploreEmbeddableClass(
+      return new AgenticObservabilityEmbeddableClass(
         {
-          savedExplore: savedObject,
+          savedAgenticObservability: savedObject,
           editUrl,
           editPath: url,
           filterManager,
           editable: services.capabilities.discover?.save as boolean,
           indexPatterns: indexPattern ? [indexPattern] : [],
           services,
-          editApp: `explore/${flavor}`,
+          editApp: `agenticObservability/${flavor}`,
         },
         input,
         executeTriggerActions,
@@ -119,12 +126,12 @@ export class ExploreEmbeddableFactory
   };
 
   /**
-   * Creates a by-value explore embeddable from input without a stored saved object.
+   * Creates a by-value agentic observability embeddable from input without a stored saved object.
    */
   public async create(
-    input: ExploreInput,
+    input: AgenticObservabilityInput,
     parent?: Container
-  ): Promise<ExploreEmbeddable | ErrorEmbeddable> {
+  ): Promise<AgenticObservabilityEmbeddable | ErrorEmbeddable> {
     if (!input.attributes) {
       return new ErrorEmbeddable(
         'Attributes are required. Use createFromSavedObject to create from a saved object id',
@@ -146,26 +153,28 @@ export class ExploreEmbeddableFactory
       const searchSource = await services.data.search.searchSource.create(searchSourceValues);
       const indexPattern = searchSource.getField('index');
 
-      const savedExplore = {
+      const savedAgenticObservability = {
         id: input.id,
         ...input.attributes,
         searchSource,
-      } as SavedExplore;
+      } as SavedAgenticObservability;
 
       const { executeTriggerActions } = await this.getStartServices();
-      const { ExploreEmbeddable: ExploreEmbeddableClass } = await import('./explore_embeddable');
-      const flavor = savedExplore.type;
+      const { AgenticObservabilityEmbeddable: AgenticObservabilityEmbeddableClass } = await import(
+        './agentic_observability_embeddable'
+      );
+      const flavor = savedAgenticObservability.type;
 
-      return new ExploreEmbeddableClass(
+      return new AgenticObservabilityEmbeddableClass(
         {
-          savedExplore,
+          savedAgenticObservability,
           editUrl: '', // by-value embeddables cannot be edited
           editPath: '',
           filterManager,
           editable: false,
           indexPatterns: indexPattern ? [indexPattern] : [],
           services,
-          editApp: `explore/${flavor}`,
+          editApp: `agenticObservability/${flavor}`,
         },
         input,
         executeTriggerActions,

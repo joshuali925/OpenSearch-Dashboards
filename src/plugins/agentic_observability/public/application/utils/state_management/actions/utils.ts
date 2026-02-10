@@ -10,7 +10,7 @@ import {
   formatTimePickerDate,
   parseInterval,
 } from '../../../../../../../../src/plugins/data/common';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { ISearchResult } from '../slices';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
 import { RootState } from '../store';
@@ -247,7 +247,7 @@ export const processRawResultsForHistogram = (
 export const createHistogramConfigWithInterval = (
   dataView: DataView,
   interval: string | undefined,
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   getState: () => RootState,
   customBarTarget?: number
 ): HistogramConfig | null => {

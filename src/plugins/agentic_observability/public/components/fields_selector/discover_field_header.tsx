@@ -28,7 +28,7 @@ export function DiscoverFieldHeader({ onCollapse }: IDiscoverFieldHeaderProps) {
 
   keyboardShortcut?.useKeyboardShortcut({
     id: 'ToggleFieldsPanel',
-    pluginId: 'explore',
+    pluginId: 'agenticObservability',
     name: i18n.translate('agenticObservability.discoverFieldHeader.toggleFieldsPanelShortcut', {
       defaultMessage: 'Toggle fields panel',
     }),

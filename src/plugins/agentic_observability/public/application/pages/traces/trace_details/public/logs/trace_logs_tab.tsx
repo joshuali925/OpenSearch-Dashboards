@@ -17,7 +17,7 @@ import { DatasetAccordionList } from './dataset_accordion_list';
 import { CorrelationEmptyState } from './correlation_empty_state';
 import { LogHit } from '../../server/ppl_request_logs';
 import { Dataset } from '../../../../../../../../data/common';
-import { buildExploreLogsUrl, getTimeRangeFromTraceData } from './url_builder';
+import { buildAgenticObservabilityLogsUrl, getTimeRangeFromTraceData } from './url_builder';
 
 export interface TraceLogsTabProps {
   traceId: string;
@@ -36,11 +36,11 @@ export const TraceLogsTab: React.FC<TraceLogsTabProps> = ({
   onSpanClick,
   traceDataset,
 }) => {
-  const handleViewInExplore = (logDataset: Dataset, logs: LogHit[]) => {
+  const handleViewInAgenticObservability = (logDataset: Dataset, logs: LogHit[]) => {
     try {
       const timeRange = getTimeRangeFromTraceData(logs);
 
-      const url = buildExploreLogsUrl({
+      const url = buildAgenticObservabilityLogsUrl({
         traceId,
         logDataset,
         timeRange,
@@ -102,7 +102,7 @@ export const TraceLogsTab: React.FC<TraceLogsTabProps> = ({
         <DatasetAccordionList
           logDatasets={logDatasets}
           datasetLogs={datasetLogs}
-          onViewInExplore={handleViewInExplore}
+          onViewInAgenticObservability={handleViewInAgenticObservability}
           onSpanClick={onSpanClick}
           testSubjPrefix="trace-logs"
           traceDataset={traceDataset}

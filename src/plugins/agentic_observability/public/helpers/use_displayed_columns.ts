@@ -16,7 +16,7 @@ import { useDatasetContext } from '../application/context';
 import { selectColumns } from '../application/utils/state_management/selectors';
 import { filterColumns } from './view_component_utils/filter_columns';
 import { getLegacyDisplayedColumns, LegacyDisplayedColumn } from './data_table_helper';
-import { ExploreServices } from '../types';
+import { AgenticObservabilityServices } from '../types';
 import { RootState } from '../application/utils/state_management/store';
 import {
   defaultResultsProcessor,
@@ -96,7 +96,7 @@ export const processDisplayedColumnNames = (
 export const useDisplayedColumns = (
   options: UseDisplayedColumnsOptions = {}
 ): LegacyDisplayedColumn[] => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const { uiSettings } = services;
 
   const columns = useSelector(selectColumns);

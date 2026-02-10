@@ -9,13 +9,15 @@ import './classic_experience_banner.scss';
 import { NEW_DISCOVER_INFO_URL, SHOW_CLASSIC_DISCOVER_LOCAL_STORAGE_KEY } from '../constants';
 
 export interface ClassicExperienceBannerProps {
-  navigateToExplore: () => void;
+  navigateToAgenticObservability: () => void;
 }
 
-export const ClassicExperienceBanner = ({ navigateToExplore }: ClassicExperienceBannerProps) => {
+export const ClassicExperienceBanner = ({
+  navigateToAgenticObservability,
+}: ClassicExperienceBannerProps) => {
   const switchToNewExperience = () => {
     localStorage.removeItem(SHOW_CLASSIC_DISCOVER_LOCAL_STORAGE_KEY);
-    navigateToExplore();
+    navigateToAgenticObservability();
   };
 
   return (

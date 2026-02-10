@@ -12,7 +12,7 @@ import { AreaChartStyle, AreaChartStyleOptions } from '../area/area_vis_config';
 import { AxisColumnMappings, AxisRole, ChartTypeMapping, VisColumn, VisFieldType } from '../types';
 import { visualizationRegistry } from '../visualization_registry';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { BarChartStyle, BarChartStyleOptions } from '../bar/bar_vis_config';
 import { UpdateVisualizationProps } from '../visualization_container';
 import { TableChartStyle, TableChartStyleOptions } from '../table/table_vis_config';
@@ -99,7 +99,7 @@ export interface VisualizationType<T extends ChartType> {
  * Hook to get the visualization registry from the service
  */
 export const useVisualizationRegistry = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
 
   // If the service is available, use it, otherwise fall back to the singleton
   return services.visualizationRegistry?.getRegistry() || visualizationRegistry;

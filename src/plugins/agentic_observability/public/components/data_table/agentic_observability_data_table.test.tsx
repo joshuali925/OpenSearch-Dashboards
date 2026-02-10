@@ -8,14 +8,14 @@ import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import * as useFlavorHooks from '../../helpers/use_flavor_id/use_flavor_id';
-import { ExploreDataTable } from './explore_data_table';
+import { AgenticObservabilityDataTable } from './agentic_observability_data_table';
 import {
   legacyReducer,
   uiReducer,
   queryReducer,
   resultsReducer,
 } from '../../application/utils/state_management/slices';
-import { ExploreFlavor } from '../../../common';
+import { AgenticObservabilityFlavor } from '../../../common';
 
 // Mock the hooks and services
 jest.mock('../../../../opensearch_dashboards_react/public', () => ({
@@ -92,7 +92,7 @@ jest.mock('../../application/utils/state_management/actions/query_actions', () =
   })),
 }));
 
-describe('ExploreDataTable', () => {
+describe('AgenticObservabilityDataTable', () => {
   const createMockStore = (hasResults = true) => {
     return configureStore({
       reducer: {
@@ -156,16 +156,16 @@ describe('ExploreDataTable', () => {
     const store = createMockStore(hasResults);
     return render(
       <Provider store={store}>
-        <ExploreDataTable />
+        <AgenticObservabilityDataTable />
       </Provider>
     );
   };
 
   beforeEach(() => {
-    jest.spyOn(useFlavorHooks, 'useFlavorId').mockReturnValue(ExploreFlavor.Logs);
+    jest.spyOn(useFlavorHooks, 'useFlavorId').mockReturnValue(AgenticObservabilityFlavor.Logs);
   });
 
-  it('renders the explore data table container', () => {
+  it('renders the agentic observability data table container', () => {
     renderComponent();
     expect(screen.getByTestId('discoverTable')).toBeInTheDocument();
   });

@@ -8,17 +8,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { Dataset, DEFAULT_DATA, EMPTY_QUERY } from '../../../../../../data/common';
 import { convertIndexPatternTerminology } from '../../../../../../opensearch_dashboards_utils/public';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { setQueryWithHistory } from '../../../../application/utils/state_management/slices';
 import { selectQuery } from '../../../../application/utils/state_management/selectors';
 import { useFlavorId } from '../../../../helpers/use_flavor_id';
 import { useClearEditors } from '../../../../application/hooks';
-import { EXPLORE_DEFAULT_LANGUAGE } from '../../../../../common';
+import { AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE } from '../../../../../common';
 import './dataset_select_terminology.scss';
-import { ExploreFlavor } from '../../../../../common';
+import { AgenticObservabilityFlavor } from '../../../../../common';
 
 export const DatasetSelectWidget = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const flavorId = useFlavorId();
   const dispatch = useDispatch();
   const currentQuery = useSelector(selectQuery);
@@ -78,10 +78,10 @@ export const DatasetSelectWidget = () => {
     async (dataset: Dataset | undefined) => {
       try {
         if (!dataset) {
-          // Clear dataset - reset to empty query state with explore default language
+          // Clear dataset - reset to empty query state with agentic observability default language
           queryString.setQuery({
             query: EMPTY_QUERY.QUERY,
-            language: EXPLORE_DEFAULT_LANGUAGE,
+            language: AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE,
             dataset: undefined,
           });
 
@@ -118,7 +118,7 @@ export const DatasetSelectWidget = () => {
   );
 
   const supportedTypes = useMemo(() => {
-    if (flavorId === ExploreFlavor.Metrics) return ['PROMETHEUS'];
+    if (flavorId === AgenticObservabilityFlavor.Metrics) return ['PROMETHEUS'];
 
     return (
       services.supportedTypes || [
@@ -247,7 +247,7 @@ export const DatasetSelectWidget = () => {
     <div ref={containerRef} className="agenticObsDatasetSelectWrapper">
       <DatasetSelect
         onSelect={handleDatasetSelect}
-        appName="explore"
+        appName="agenticObservability"
         supportedTypes={supportedTypes}
         signalType={flavorId}
         showNonTimeFieldDatasets={false}

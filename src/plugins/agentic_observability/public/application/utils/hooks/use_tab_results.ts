@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { useMemo } from 'react';
 import { RootState } from '../state_management/store';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { defaultPrepareQueryString } from '../state_management/actions/query_actions';
 import { selectPatternsField } from '../state_management/selectors';
 import { selectQueryStatusMapByKey } from '../state_management/selectors/query_editor/query_editor';
@@ -16,7 +16,7 @@ import { selectQueryStatusMapByKey } from '../state_management/selectors/query_e
  * Hook for reading tab specific result from result slice
  */
 export const useTabResults = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const query = useSelector((state: RootState) => state.query);
   const activeTabId = useSelector((state: RootState) => state.ui.activeTabId);
   const patternsField = useSelector(selectPatternsField); // for use in updating dependency array of cacheKey

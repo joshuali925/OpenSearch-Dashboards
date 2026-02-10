@@ -11,20 +11,23 @@ export const ExperienceBannerWrapper = ({
 }: {
   initializeBannerWrapper: () => Promise<{
     showClassicExperienceBanner: boolean;
-    navigateToExplore: () => void;
+    navigateToAgenticObservability: () => void;
   }>;
 }) => {
   const [state, setState] = useState<{
     showBanner: boolean;
-    handleSwitchToExplore: () => void;
+    handleSwitchToAgenticObservability: () => void;
   } | null>(null);
 
   useEffect(() => {
     const callInitializeBannerWrapper = async () => {
-      const { showClassicExperienceBanner, navigateToExplore } = await initializeBannerWrapper();
+      const {
+        showClassicExperienceBanner,
+        navigateToAgenticObservability,
+      } = await initializeBannerWrapper();
       setState({
         showBanner: showClassicExperienceBanner,
-        handleSwitchToExplore: navigateToExplore,
+        handleSwitchToAgenticObservability: navigateToAgenticObservability,
       });
     };
 
@@ -35,5 +38,9 @@ export const ExperienceBannerWrapper = ({
     return null;
   }
 
-  return <ClassicExperienceBanner navigateToExplore={state.handleSwitchToExplore} />;
+  return (
+    <ClassicExperienceBanner
+      navigateToAgenticObservability={state.handleSwitchToAgenticObservability}
+    />
+  );
 };

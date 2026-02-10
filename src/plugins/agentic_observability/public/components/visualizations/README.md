@@ -1,6 +1,6 @@
 # OpenSearch Dashboards Visualizations
 
-This directory contains the visualization components for the OpenSearch Dashboards Explore plugin. It provides a flexible, rule-based system for rendering different types of visualizations based on data structure.
+This directory contains the visualization components for the OpenSearch Dashboards Agentic Observability plugin. It provides a flexible, rule-based system for rendering different types of visualizations based on data structure.
 
 ## Structure
 

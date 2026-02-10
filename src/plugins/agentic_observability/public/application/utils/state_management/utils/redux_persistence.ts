@@ -6,7 +6,7 @@
 import { getCurrentAppId, getFlavorFromAppId } from '../../../../helpers/get_flavor_from_app_id';
 import { RootState } from '../store';
 import { AppState, QueryExecutionStatus } from '../types';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import {
   LegacyState,
   QueryEditorSliceState,
@@ -26,8 +26,8 @@ import {
   DEFAULT_COLUMNS_SETTING,
   DEFAULT_TRACE_COLUMNS_SETTING,
   DEFAULT_LOGS_COLUMNS_SETTING,
-  ExploreFlavor,
-  EXPLORE_DEFAULT_LANGUAGE,
+  AgenticObservabilityFlavor,
+  AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE,
 } from '../../../../../common';
 import { getPromptModeIsAvailable } from '../../get_prompt_mode_is_available';
 import { getSummaryAgentIsAvailable } from '../../get_summary_agent_is_available';
@@ -36,7 +36,7 @@ import { DEFAULT_EDITOR_MODE } from '../constants';
 /**
  * Persists Redux state to URL
  */
-export const persistReduxState = (state: RootState, services: ExploreServices) => {
+export const persistReduxState = (state: RootState, services: AgenticObservabilityServices) => {
   if (!services.osdUrlStateStorage) return;
   try {
     // Sync up _q (Query state) to URL state
@@ -60,7 +60,9 @@ export const persistReduxState = (state: RootState, services: ExploreServices) =
 /**
  * Loads Redux state from URL or returns default state
  */
-export const loadReduxState = async (services: ExploreServices): Promise<RootState> => {
+export const loadReduxState = async (
+  services: AgenticObservabilityServices
+): Promise<RootState> => {
   try {
     // Use the osdUrlStateStorage from services
     if (!services.osdUrlStateStorage) {
@@ -150,7 +152,9 @@ export const loadReduxState = async (services: ExploreServices): Promise<RootSta
 /**
  * Get preloaded state for each slice
  */
-export const getPreloadedState = async (services: ExploreServices): Promise<RootState> => {
+export const getPreloadedState = async (
+  services: AgenticObservabilityServices
+): Promise<RootState> => {
   const queryState = await getPreloadedQueryState(services);
   const uiState = getPreloadedUIState(services);
   const resultsState = getPreloadedResultsState(services);
@@ -174,8 +178,8 @@ export const getPreloadedState = async (services: ExploreServices): Promise<Root
  * Fetches the first available dataset using the data plugin's dataset service
  */
 const fetchFirstAvailableDataset = async (
-  services: ExploreServices,
-  flavor: ExploreFlavor | null,
+  services: AgenticObservabilityServices,
+  flavor: AgenticObservabilityFlavor | null,
   requiredSignalType?: string
 ): Promise<Dataset | undefined> => {
   try {
@@ -185,7 +189,7 @@ const fetchFirstAvailableDataset = async (
     }
 
     const typeConfig: DatasetTypeConfig | undefined = datasetService.getType(
-      flavor === ExploreFlavor.Metrics ? 'PROMETHEUS' : 'INDEX_PATTERN'
+      flavor === AgenticObservabilityFlavor.Metrics ? 'PROMETHEUS' : 'INDEX_PATTERN'
     );
     if (!typeConfig) {
       return undefined;
@@ -250,22 +254,22 @@ const fetchFirstAvailableDataset = async (
  * Resolves the dataset to use for the initial query state
  */
 const resolveDataset = async (
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   preferredDataset?: Dataset
 ): Promise<Dataset | undefined> => {
   const currentAppId = await getCurrentAppId(services);
   const flavorFromAppId = getFlavorFromAppId(currentAppId);
   const requiredSignalType =
-    flavorFromAppId === ExploreFlavor.Traces
+    flavorFromAppId === AgenticObservabilityFlavor.Traces
       ? CORE_SIGNAL_TYPES.TRACES
-      : flavorFromAppId === ExploreFlavor.Metrics
+      : flavorFromAppId === AgenticObservabilityFlavor.Metrics
       ? CORE_SIGNAL_TYPES.METRICS
       : undefined;
 
   // Get existing dataset from QueryStringManager or use preferred dataset
   const queryStringQuery = services.data?.query?.queryString?.getQuery();
   const defaultQuery =
-    flavorFromAppId === ExploreFlavor.Metrics
+    flavorFromAppId === AgenticObservabilityFlavor.Metrics
       ? undefined
       : services.data?.query?.queryString?.getDefaultQuery();
   const existingDataset = preferredDataset || queryStringQuery?.dataset || defaultQuery?.dataset;
@@ -310,7 +314,7 @@ const resolveDataset = async (
  * Get preloaded query state with dataset initialization
  */
 const getPreloadedQueryState = async (
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   preferredDataset?: Dataset
 ): Promise<QueryState> => {
   // Always resolve the dataset to ensure SignalType validation runs
@@ -338,7 +342,7 @@ const getPreloadedQueryState = async (
   if (minimalDataset) {
     const initialQueryByDataset = services.data.query.queryString.getInitialQueryByDataset({
       ...minimalDataset,
-      language: minimalDataset.language || EXPLORE_DEFAULT_LANGUAGE,
+      language: minimalDataset.language || AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE,
     });
 
     // override the initial query to be an empty string
@@ -351,7 +355,7 @@ const getPreloadedQueryState = async (
   } else {
     return {
       query: '',
-      language: EXPLORE_DEFAULT_LANGUAGE,
+      language: AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE,
       dataset: undefined,
     };
   }
@@ -360,7 +364,7 @@ const getPreloadedQueryState = async (
 /**
  * Get preloaded UI state
  */
-const getPreloadedUIState = (services: ExploreServices): UIState => {
+const getPreloadedUIState = (services: AgenticObservabilityServices): UIState => {
   return {
     activeTabId: '',
     showHistogram: true,
@@ -371,7 +375,7 @@ const getPreloadedUIState = (services: ExploreServices): UIState => {
  * Get preloaded queryEditor state
  */
 const getPreloadedQueryEditorState = async (
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   queryState?: QueryState
 ): Promise<QueryEditorSliceState> => {
   let promptModeIsAvailable = false;
@@ -408,14 +412,14 @@ const getPreloadedQueryEditorState = async (
 /**
  * Get preloaded results state (empty - not persisted)
  */
-const getPreloadedResultsState = (services: ExploreServices): ResultsState => {
+const getPreloadedResultsState = (services: AgenticObservabilityServices): ResultsState => {
   return {};
 };
 
 /**
  * Get preloaded tab state
  */
-const getPreloadedTabState = (services: ExploreServices): TabState => {
+const getPreloadedTabState = (services: AgenticObservabilityServices): TabState => {
   return {
     logs: {},
     patterns: {
@@ -428,21 +432,23 @@ const getPreloadedTabState = (services: ExploreServices): TabState => {
 /**
  * Get preloaded legacy state (vis_builder approach - defaults only, no saved object loading)
  */
-export const getPreloadedLegacyState = async (services: ExploreServices): Promise<LegacyState> => {
+export const getPreloadedLegacyState = async (
+  services: AgenticObservabilityServices
+): Promise<LegacyState> => {
   // Only return defaults - NO saved object loading (like vis_builder)
   const currentAppId = await getCurrentAppId(services);
   const flavorFromAppId = getFlavorFromAppId(currentAppId);
 
   const defaultColumns =
-    flavorFromAppId === ExploreFlavor.Traces
+    flavorFromAppId === AgenticObservabilityFlavor.Traces
       ? services.uiSettings?.get(DEFAULT_TRACE_COLUMNS_SETTING)
-      : flavorFromAppId === ExploreFlavor.Logs
+      : flavorFromAppId === AgenticObservabilityFlavor.Logs
       ? services.uiSettings?.get(DEFAULT_LOGS_COLUMNS_SETTING)
       : services.uiSettings?.get(DEFAULT_COLUMNS_SETTING);
 
   return {
     // Fields that exist in data_explorer + discover
-    // TODO: load saved explore by id
+    // TODO: load saved agentic observability by id
     savedSearch: undefined, // Matches discover format - string ID, not object
     columns: defaultColumns || ['_source'],
     sort: [],
@@ -458,14 +464,14 @@ export const getPreloadedLegacyState = async (services: ExploreServices): Promis
 /**
  * Get preloaded meta state
  */
-const getPreloadedMetaState = (services: ExploreServices) => {
+const getPreloadedMetaState = (services: AgenticObservabilityServices) => {
   return {
     isInitialized: false,
   };
 };
 
 const getColumnsForDataset = async (
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   currentColumns?: string[]
 ): Promise<string[] | null> => {
   if (currentColumns && currentColumns.length > 0) {
@@ -475,7 +481,7 @@ const getColumnsForDataset = async (
   try {
     const currentAppId = await getCurrentAppId(services);
     const currentFlavor = getFlavorFromAppId(currentAppId);
-    const isTracesFlavor = currentFlavor === ExploreFlavor.Traces;
+    const isTracesFlavor = currentFlavor === AgenticObservabilityFlavor.Traces;
 
     const tracesDefaultColumns = services.uiSettings?.get(DEFAULT_TRACE_COLUMNS_SETTING) || [
       'spanId',

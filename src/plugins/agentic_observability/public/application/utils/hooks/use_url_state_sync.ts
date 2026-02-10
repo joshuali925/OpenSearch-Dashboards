@@ -6,13 +6,13 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { syncQueryStateWithUrl } from '../../../../../data/public';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 
 /**
  * Hook to handle URL state synchronization for global state (_g)
  * Syncs time, filters, and refresh settings with URL
  */
-export const useUrlStateSync = (services: ExploreServices) => {
+export const useUrlStateSync = (services: AgenticObservabilityServices) => {
   const { pathname } = useLocation();
 
   useEffect(() => {

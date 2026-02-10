@@ -79,7 +79,7 @@ describe('TableCell', () => {
     // Reset window location
     delete (window as any).location;
     (window as any).location = {
-      pathname: '/app/explore',
+      pathname: '/app/agenticObservability',
       hash: '',
       origin: 'http://localhost:5601',
     };
@@ -242,7 +242,7 @@ describe('TableCell', () => {
     });
 
     it('renders regular cell content for non-span ID columns', () => {
-      (window as any).location.pathname = '/app/explore/traces';
+      (window as any).location.pathname = '/app/agenticObservability/traces';
 
       render(<TableCell {...{ ...spanIdProps, columnId: 'regularColumn' }} />);
 
@@ -254,7 +254,7 @@ describe('TableCell', () => {
     });
 
     it('opens trace details URL when span ID link is clicked', () => {
-      (window as any).location.pathname = '/app/explore/traces';
+      (window as any).location.pathname = '/app/agenticObservability/traces';
 
       render(<TableCell {...spanIdProps} />);
 
@@ -263,14 +263,14 @@ describe('TableCell', () => {
 
       expect(window.open).toHaveBeenCalledWith(
         expect.stringContaining(
-          "/app/explore/traces/traceDetails#/?_a=(dataset:(id:'test-dataset-id',title:'test-dataset-title',type:'INDEX_PATTERN'),spanId:'test-span-id-123',traceId:'test-trace-id-456')"
+          "/app/agenticObservability/traces/traceDetails#/?_a=(dataset:(id:'test-dataset-id',title:'test-dataset-title',type:'INDEX_PATTERN'),spanId:'test-span-id-123',traceId:'test-trace-id-456')"
         ),
         '_blank'
       );
     });
 
     it('handles different span ID column variations', () => {
-      (window as any).location.pathname = '/app/explore/traces';
+      (window as any).location.pathname = '/app/agenticObservability/traces';
 
       // Test span_id
       const { unmount: unmount1 } = render(
@@ -350,8 +350,8 @@ describe('TableCell', () => {
     });
 
     it('works when traces page is detected via hash', () => {
-      (window as any).location.pathname = '/app/explore';
-      (window as any).location.hash = '#/explore/traces';
+      (window as any).location.pathname = '/app/agenticObservability';
+      (window as any).location.hash = '#/agenticObservability/traces';
 
       render(<TableCell {...spanIdProps} />);
 
@@ -409,7 +409,7 @@ describe('TableCell', () => {
     };
 
     it('opens data table flyout when clicked on traces page', () => {
-      (window as any).location.pathname = '/app/explore/traces';
+      (window as any).location.pathname = '/app/agenticObservability/traces';
 
       render(<TableCell {...spanFlyoutProps} isOnTracesPage={true} />);
 

@@ -4,10 +4,12 @@
  */
 
 import { firstValueFrom } from '@osd/std';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { QueryEditorExtensionDependencies } from '../../../../../data/public';
 
-export const getPromptModeIsAvailable = async (services: ExploreServices): Promise<boolean> => {
+export const getPromptModeIsAvailable = async (
+  services: AgenticObservabilityServices
+): Promise<boolean> => {
   try {
     const extensions = services.data.query.queryString
       .getLanguageService()

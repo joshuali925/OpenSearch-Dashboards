@@ -15,7 +15,7 @@ import {
   resultsReducer,
   queryEditorReducer,
 } from '../../application/utils/state_management/slices';
-import { ExploreFlavor } from '../../../common';
+import { AgenticObservabilityFlavor } from '../../../common';
 import { useFlavorId } from '../../helpers/use_flavor_id';
 import { useDatasetContext } from '../../application/context/dataset_context/dataset_context';
 import { QueryExecutionStatus, EditorMode } from '../../application/utils/state_management/types';
@@ -58,16 +58,16 @@ jest.mock('../../application/context/dataset_context/dataset_context', () => ({
   })),
 }));
 
-jest.mock('./explore_logs_chart', () => ({
-  ExploreLogsChart: ({ chartData }: { chartData: any }) => (
+jest.mock('./agentic_observability_logs_chart', () => ({
+  AgenticObservabilityLogsChart: ({ chartData }: { chartData: any }) => (
     <div data-test-subj="agenticObs-logs-chart">
       Logs Chart with data: {chartData ? 'present' : 'absent'}
     </div>
   ),
 }));
 
-jest.mock('./explore_traces_chart', () => ({
-  ExploreTracesChart: ({ requestChartData }: { requestChartData: any }) => (
+jest.mock('./agentic_observability_traces_chart', () => ({
+  AgenticObservabilityTracesChart: ({ requestChartData }: { requestChartData: any }) => (
     <div data-test-subj="agenticObs-traces-chart">
       Traces Chart with data: {requestChartData ? 'present' : 'absent'}
     </div>
@@ -241,7 +241,7 @@ describe('DiscoverChartContainer', () => {
 
   const renderComponent = (
     hasResults = true,
-    flavorId = ExploreFlavor.Logs,
+    flavorId = AgenticObservabilityFlavor.Logs,
     breakdownField?: string,
     queryStatusMap = {}
   ) => {
@@ -259,13 +259,13 @@ describe('DiscoverChartContainer', () => {
   });
 
   it('renders logs chart when flavor is logs and data is available', () => {
-    renderComponent(true, ExploreFlavor.Logs);
+    renderComponent(true, AgenticObservabilityFlavor.Logs);
     expect(screen.getByTestId('agenticObs-logs-chart')).toBeInTheDocument();
     expect(screen.queryByTestId('agenticObs-traces-chart')).not.toBeInTheDocument();
   });
 
   it('renders traces chart when flavor is traces and data is available', () => {
-    renderComponent(true, ExploreFlavor.Traces);
+    renderComponent(true, AgenticObservabilityFlavor.Traces);
     expect(screen.getByTestId('agenticObs-traces-chart')).toBeInTheDocument();
     expect(screen.queryByTestId('agenticObs-logs-chart')).not.toBeInTheDocument();
   });
@@ -301,7 +301,7 @@ describe('DiscoverChartContainer', () => {
       hits: { total: 10 },
     });
 
-    const { container } = renderComponent(true, ExploreFlavor.Logs);
+    const { container } = renderComponent(true, AgenticObservabilityFlavor.Logs);
     expect(container.firstChild).toBeNull();
   });
 
@@ -318,7 +318,7 @@ describe('DiscoverChartContainer', () => {
       hits: { total: 10 },
     });
 
-    const { container } = renderComponent(true, ExploreFlavor.Traces);
+    const { container } = renderComponent(true, AgenticObservabilityFlavor.Traces);
     expect(container.firstChild).toBeNull();
   });
 
@@ -344,7 +344,7 @@ describe('DiscoverChartContainer', () => {
         return isBreakdown ? 'histogram:breakdown-cache-key' : 'histogram:test-cache-key';
       });
 
-      renderComponent(true, ExploreFlavor.Logs, 'status.keyword', {});
+      renderComponent(true, AgenticObservabilityFlavor.Logs, 'status.keyword', {});
 
       expect(prepareHistogramCacheKey).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -372,7 +372,7 @@ describe('DiscoverChartContainer', () => {
         return isBreakdown ? 'histogram:breakdown-cache-key' : 'histogram:test-cache-key';
       });
 
-      renderComponent(true, ExploreFlavor.Logs, undefined, {});
+      renderComponent(true, AgenticObservabilityFlavor.Logs, undefined, {});
 
       expect(prepareHistogramCacheKey).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -488,7 +488,7 @@ describe('DiscoverChartContainer', () => {
         },
       });
 
-      mockUseFlavorId.mockReturnValue(ExploreFlavor.Logs);
+      mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Logs);
       render(
         <Provider store={store}>
           <DiscoverChartContainer />
@@ -598,7 +598,7 @@ describe('DiscoverChartContainer', () => {
         },
       });
 
-      mockUseFlavorId.mockReturnValue(ExploreFlavor.Logs);
+      mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Logs);
       const { rerender } = render(
         <Provider store={store1}>
           <DiscoverChartContainer />
@@ -806,7 +806,7 @@ describe('DiscoverChartContainer', () => {
         },
       });
 
-      mockUseFlavorId.mockReturnValue(ExploreFlavor.Logs);
+      mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Logs);
       render(
         <Provider store={store}>
           <DiscoverChartContainer />

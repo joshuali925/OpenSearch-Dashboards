@@ -4,8 +4,8 @@
  */
 
 import { DataView as Dataset } from 'src/plugins/data/common';
-import { ExploreServices } from '../../../types';
-import { SavedExplore } from '../../../saved_explore';
+import { AgenticObservabilityServices } from '../../../types';
+import { SavedAgenticObservability } from '../../../saved_agentic_observability';
 import { TopNavMenuIconData } from '../../../../../navigation/public';
 import { ExecutionContextSearch } from '../../../../../expressions';
 import { getNewButtonRun, newTopNavData } from './top_nav_new';
@@ -17,7 +17,7 @@ import { TabDefinition } from '../../../services/tab_registry/tab_registry_servi
 import { useClearEditors } from '../../../application/hooks';
 
 export const getTopNavLinks = (
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   startSyncingQueryStateWithUrl: () => void,
   searchContext: ExecutionContextSearch,
   stateProps: {
@@ -28,7 +28,7 @@ export const getTopNavLinks = (
     activeTabId: string;
   },
   clearEditors: ReturnType<typeof useClearEditors>,
-  savedExplore?: SavedExplore
+  savedAgenticObservability?: SavedAgenticObservability
 ) => {
   const { capabilities, share } = services;
 
@@ -42,7 +42,7 @@ export const getTopNavLinks = (
         startSyncingQueryStateWithUrl,
         searchContext,
         stateProps,
-        savedExplore
+        savedAgenticObservability
       ),
     });
   }
@@ -59,7 +59,7 @@ export const getTopNavLinks = (
   if (share) {
     topNavLinks.push({
       ...shareTopNavData,
-      run: getShareButtonRun(services, savedExplore),
+      run: getShareButtonRun(services, savedAgenticObservability),
     });
   }
 

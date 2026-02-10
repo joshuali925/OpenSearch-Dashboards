@@ -32,7 +32,7 @@ import _ from 'lodash';
 import { createHashHistory } from 'history';
 import { ScopedHistory, AppMountParameters } from 'opensearch-dashboards/public';
 import { UiActionsStart } from '../../../../../ui_actions/public';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 import { createGetterSetter } from '../../../../../opensearch_dashboards_utils/public';
 import { search } from '../../../../../data/public';
 import { DocViewsRegistry } from '../../../types/doc_views_types';
@@ -40,17 +40,17 @@ import { DocViewsLinksRegistry } from './application/doc_views_links/doc_views_l
 import { ExpressionsStart } from '../../../../../expressions/public';
 import { DashboardStart } from '../../../../../dashboard/public';
 
-let services: ExploreServices | null = null;
+let services: AgenticObservabilityServices | null = null;
 let uiActions: UiActionsStart;
 
-export function getServices(): ExploreServices {
+export function getServices(): AgenticObservabilityServices {
   if (!services) {
     throw new Error('Discover services are not yet available');
   }
   return services;
 }
 
-export function setServices(newServices: ExploreServices) {
+export function setServices(newServices: AgenticObservabilityServices) {
   services = newServices;
 }
 

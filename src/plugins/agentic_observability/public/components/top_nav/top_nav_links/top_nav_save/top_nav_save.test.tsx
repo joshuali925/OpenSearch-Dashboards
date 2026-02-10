@@ -5,16 +5,16 @@
 
 import React from 'react';
 import { getSaveButtonRun, saveTopNavData } from './top_nav_save';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { ExecutionContextSearch } from '../../../../../../expressions';
-import { SavedExplore } from '../../../../types/saved_explore_types';
+import { SavedAgenticObservability } from '../../../../types/saved_agentic_observability_types';
 
 // Mock dependencies
-jest.mock('../../../../helpers/save_explore', () => ({
-  saveSavedExplore: jest.fn(() => Promise.resolve({ id: 'saved-id' })),
+jest.mock('../../../../helpers/save_agentic_observability', () => ({
+  saveSavedAgenticObservability: jest.fn(() => Promise.resolve({ id: 'saved-id' })),
 }));
 
-jest.mock('../../../../saved_explore/transforms', () => ({
+jest.mock('../../../../saved_agentic_observability/transforms', () => ({
   saveStateToSavedObject: jest.fn((obj) => obj),
 }));
 
@@ -28,7 +28,7 @@ const mockServices = ({
       Context: React.Fragment,
     },
   },
-} as unknown) as ExploreServices;
+} as unknown) as AgenticObservabilityServices;
 
 const mockSearchContext: ExecutionContextSearch = {
   query: { query: 'test', language: 'PPL' },
@@ -57,9 +57,9 @@ const mockSaveStateProps = {
   activeTabId: 'logs',
 };
 
-const mockSavedExplore = ({
+const mockSavedAgenticObservability = ({
   id: 'test-id',
-  title: 'Test Explore',
+  title: 'Test Agentic Observability',
   type: 'logs',
   searchSource: {} as any,
   destroy: jest.fn(),
@@ -70,7 +70,7 @@ const mockSavedExplore = ({
   isSaved: jest.fn(() => true),
   getFullPath: jest.fn(),
   getOpenSearchType: jest.fn(),
-} as unknown) as SavedExplore;
+} as unknown) as SavedAgenticObservability;
 
 describe('top_nav_save', () => {
   beforeEach(() => {
@@ -88,7 +88,7 @@ describe('top_nav_save', () => {
   });
 
   describe('getSaveButtonRun', () => {
-    it('returns early when no savedExplore is provided', () => {
+    it('returns early when no savedAgenticObservability is provided', () => {
       const run = getSaveButtonRun(mockServices, jest.fn(), mockSearchContext, mockSaveStateProps);
 
       // Should not throw and should complete quickly
@@ -97,7 +97,7 @@ describe('top_nav_save', () => {
       expect(result).toBeUndefined();
     });
 
-    it('calls showSaveModal when savedExplore is provided', () => {
+    it('calls showSaveModal when savedAgenticObservability is provided', () => {
       const { showSaveModal } = jest.requireMock('../../../../../../saved_objects/public');
 
       const run = getSaveButtonRun(
@@ -105,7 +105,7 @@ describe('top_nav_save', () => {
         jest.fn(),
         mockSearchContext,
         mockSaveStateProps,
-        mockSavedExplore
+        mockSavedAgenticObservability
       );
 
       const mockElement = document.createElement('button');

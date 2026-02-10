@@ -29,7 +29,7 @@ import {
   queryEditorInitialState,
 } from '../state_management/slices/query_editor/query_editor_slice';
 import { CoreStart } from 'opensearch-dashboards/public';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 
 // Mock dependencies
 jest.mock('../../../../../opensearch_dashboards_react/public', () => ({
@@ -129,7 +129,7 @@ describe('useTabResults', () => {
 
     mockUseOpenSearchDashboards.mockReturnValue({
       services: mockServices,
-    } as OpenSearchDashboardsReactContextValue<Partial<CoreStart> & ExploreServices>);
+    } as OpenSearchDashboardsReactContextValue<Partial<CoreStart> & AgenticObservabilityServices>);
 
     mockDefaultPrepareQuery.mockReturnValue('default-cache-key');
   });

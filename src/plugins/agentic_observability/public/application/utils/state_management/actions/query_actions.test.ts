@@ -64,7 +64,7 @@ import {
 import { QueryExecutionStatus } from '../types';
 import { setResults } from '../slices';
 import { Query, DataView } from 'src/plugins/data/common';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import { SAMPLE_SIZE_SETTING } from '../../../../../common';
 
 // Mock dependencies
@@ -172,7 +172,7 @@ global.AbortController = jest.fn().mockImplementation(() => ({
 }));
 
 describe('Query Actions - Comprehensive Test Suite', () => {
-  let mockServices: ExploreServices;
+  let mockServices: AgenticObservabilityServices;
   let mockDataView: DataView;
   let mockSearchSource: any;
   let mockInspectorRequest: any;
@@ -1166,7 +1166,7 @@ describe('Query Actions - Comprehensive Test Suite', () => {
     it('should handle visualization tab query execution', async () => {
       const mockState = {
         query: { query: 'source=logs', language: 'PPL', dataset: null },
-        ui: { activeTabId: 'explore_visualization_tab' },
+        ui: { activeTabId: 'agentic_observability_visualization_tab' },
         results: {},
         legacy: { interval: '1h' },
         queryEditor: { breakdownField: undefined, queryStatusMap: {} },
@@ -1174,7 +1174,7 @@ describe('Query Actions - Comprehensive Test Suite', () => {
 
       mockGetState.mockReturnValue(mockState);
       (mockServices.tabRegistry.getTab as jest.Mock).mockImplementation((tabId: string) => {
-        if (tabId === 'explore_visualization_tab') {
+        if (tabId === 'agentic_observability_visualization_tab') {
           return { prepareQuery: jest.fn().mockReturnValue('viz-query') };
         }
         return null;
@@ -1183,7 +1183,9 @@ describe('Query Actions - Comprehensive Test Suite', () => {
       const thunk = executeQueries({ services: mockServices });
       await thunk(mockDispatch, mockGetState, undefined);
 
-      expect(mockServices.tabRegistry.getTab).toHaveBeenCalledWith('explore_visualization_tab');
+      expect(mockServices.tabRegistry.getTab).toHaveBeenCalledWith(
+        'agentic_observability_visualization_tab'
+      );
     });
 
     it('should skip histogram query when language is PROMQL', async () => {

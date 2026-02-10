@@ -5,13 +5,16 @@
 
 import { useEffect } from 'react';
 import { HeaderVariant } from 'opensearch-dashboards/public';
-import { ExploreServices } from '../../../types';
+import { AgenticObservabilityServices } from '../../../types';
 
 /**
  * Hook to handle URL state synchronization for global state (_g)
  * Syncs time, filters, and refresh settings with URL
  */
-export const useHeaderVariants = (services: ExploreServices, variant: HeaderVariant) => {
+export const useHeaderVariants = (
+  services: AgenticObservabilityServices,
+  variant: HeaderVariant
+) => {
   const { setHeaderVariant } = services.chrome;
 
   useEffect(() => {

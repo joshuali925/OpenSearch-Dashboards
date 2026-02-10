@@ -129,15 +129,12 @@ export function HitsCounter({
               data-test-subj="resetSavedSearch"
               onClick={onResetQuery}
               size="s"
-              aria-label={i18n.translate(
-                'agenticObservability.explore.discover.reloadSavedSearchButton',
-                {
-                  defaultMessage: 'Reset search',
-                }
-              )}
+              aria-label={i18n.translate('agenticObservability.discover.reloadSavedSearchButton', {
+                defaultMessage: 'Reset search',
+              })}
             >
               <FormattedMessage
-                id="agenticObservability.explore.discover.reloadSavedSearchButton"
+                id="agenticObservability.discover.reloadSavedSearchButton"
                 defaultMessage="Reset search"
               />
             </EuiButtonEmpty>

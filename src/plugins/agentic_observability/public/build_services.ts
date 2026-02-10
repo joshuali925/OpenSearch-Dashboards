@@ -9,8 +9,8 @@ import { Storage } from '../../opensearch_dashboards_utils/public';
 import { RequestAdapter } from '../../inspector/public';
 import { ConfigSchema } from '../common/config';
 
-import { ExploreStartDependencies, ExploreServices } from './types';
-import { createSavedExploreLoader } from './saved_explore';
+import { AgenticObservabilityStartDependencies, AgenticObservabilityServices } from './types';
+import { createSavedAgenticObservabilityLoader } from './saved_agentic_observability';
 import { getHistory } from './application/legacy/discover/opensearch_dashboards_services';
 import { TabRegistryService } from './services/tab_registry/tab_registry_service';
 import { VisualizationRegistryService } from './services/visualization_registry_service';
@@ -20,18 +20,18 @@ import { SlotRegistryService } from './services/slot_registry';
 
 export function buildServices(
   core: CoreStart,
-  plugins: ExploreStartDependencies,
+  plugins: AgenticObservabilityStartDependencies,
   context: PluginInitializerContext,
   tabRegistry: TabRegistryService,
   visualizationRegistry: VisualizationRegistryService,
   queryPanelActionsRegistry: QueryPanelActionsRegistryService,
   isDatasetManagementEnabled: boolean = false,
   slotRegistry?: SlotRegistryService,
-  dataImporterConfig?: ExploreServices['dataImporterConfig'],
+  dataImporterConfig?: AgenticObservabilityServices['dataImporterConfig'],
   dataSourceEnabled: boolean = false,
   hideLocalCluster: boolean = false,
-  dataSourceManagement?: ExploreServices['dataSourceManagement']
-): ExploreServices {
+  dataSourceManagement?: AgenticObservabilityServices['dataSourceManagement']
+): AgenticObservabilityServices {
   const config = context.config.get<ConfigSchema>();
   const supportedTypes = config.supportedTypes;
   const services: SavedObjectOpenSearchDashboardsServices = {
@@ -41,12 +41,12 @@ export function buildServices(
     chrome: core.chrome,
     overlays: core.overlays,
   };
-  const savedObjectService = createSavedExploreLoader(services);
+  const savedObjectService = createSavedAgenticObservabilityLoader(services);
   const storage = new Storage(localStorage);
 
   return {
     addBasePath: core.http.basePath.prepend,
-    appName: 'explore',
+    appName: 'agenticObservability',
     capabilities: core.application.capabilities,
     chrome: core.chrome,
     core,
@@ -56,10 +56,10 @@ export function buildServices(
     filterManager: plugins.data.query.filterManager,
     dataViews: plugins.data.dataViews,
     indexPatterns: plugins.data.indexPatterns,
-    getSavedExploreById: async (id?: string) => {
+    getSavedAgenticObservabilityById: async (id?: string) => {
       return savedObjectService.get(id);
     },
-    getSavedExploreUrlById: async (id: string) => savedObjectService.urlFor(id),
+    getSavedAgenticObservabilityUrlById: async (id: string) => savedObjectService.urlFor(id),
     history: getHistory,
     inspector: plugins.inspector,
     inspectorAdapters: {
@@ -93,7 +93,7 @@ export function buildServices(
     scopedHistory: undefined, // Will be set by the app
     osdUrlStateStorage: undefined, // Will be set by the app
 
-    // Explore-specific services
+    // Agentic Observability-specific services
     tabRegistry,
     visualizationRegistry,
     queryPanelActionsRegistry,

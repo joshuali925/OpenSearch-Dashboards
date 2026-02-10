@@ -17,7 +17,7 @@ $osdHeaderOffset: $euiHeaderHeightCompensation;
   }
 
   &__page-body {
-    // within Explore we do not use the globalQueryEditor
+    // within Agentic Observability we do not use the globalQueryEditor
     // Although this element is empty the way we configure props, it contributes to extra padding
     & .globalQueryEditor {
       display: none;

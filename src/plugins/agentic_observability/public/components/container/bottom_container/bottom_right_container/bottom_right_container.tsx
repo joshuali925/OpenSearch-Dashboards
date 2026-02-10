@@ -14,7 +14,7 @@ import { DiscoverUninitialized } from '../../../../application/legacy/discover/a
 import { LoadingSpinner } from '../../../../application/legacy/discover/application/components/loading_spinner/loading_spinner';
 import { DiscoverNoResults } from '../../../../application/legacy/discover/application/components/no_results/no_results';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
-import { ExploreServices } from '../../../../types';
+import { AgenticObservabilityServices } from '../../../../types';
 import {
   executeQueries,
   defaultPrepareQueryString,
@@ -23,7 +23,7 @@ import { DiscoverChartContainer } from '../../../../components/chart/discover_ch
 import { useDatasetContext } from '../../../../application/context';
 import { ResizableVisControlAndTabs } from './resizable_vis_control_and_tabs';
 import { useFlavorId } from '../../../../helpers/use_flavor_id';
-import { ExploreFlavor } from '../../../../../common';
+import { AgenticObservabilityFlavor } from '../../../../../common';
 import { TraceAutoDetectCallout } from '../../../trace_auto_detect_callout';
 import { TracesTable } from '../../../tabs/traces_table';
 
@@ -39,7 +39,7 @@ ReadyContent.displayName = 'ReadyContent';
 export const BottomRightContainer = () => {
   const dispatch = useDispatch();
   const { dataset } = useDatasetContext();
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const flavorId = useFlavorId();
 
   const onRefresh = () => {
@@ -58,7 +58,7 @@ export const BottomRightContainer = () => {
 
   if (dataset == null) {
     // Show TracesTable with mock data for traces flavor
-    if (flavorId === ExploreFlavor.Traces) {
+    if (flavorId === AgenticObservabilityFlavor.Traces) {
       return (
         <CanvasPanel>
           <TracesTable />

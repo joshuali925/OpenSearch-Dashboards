@@ -76,13 +76,13 @@ describe('DatasetAccordionList', () => {
     'dataset-3': [],
   };
 
-  const mockOnViewInExplore = jest.fn();
+  const mockOnViewInAgenticObservability = jest.fn();
   const mockOnSpanClick = jest.fn();
 
   const defaultProps: DatasetAccordionListProps = {
     logDatasets: mockDatasets,
     datasetLogs: mockDatasetLogs,
-    onViewInExplore: mockOnViewInExplore,
+    onViewInAgenticObservability: mockOnViewInAgenticObservability,
     onSpanClick: mockOnSpanClick,
   };
 
@@ -121,7 +121,7 @@ describe('DatasetAccordionList', () => {
       expect(recentResultsTexts).toHaveLength(3);
     });
 
-    it('renders view in explore buttons only for datasets with logs', () => {
+    it('renders view in agentic observability buttons only for datasets with logs', () => {
       render(<DatasetAccordionList {...defaultProps} />);
 
       expect(screen.getByTestId('dataset-view-in-agenticObs-button-dataset-1')).toBeInTheDocument();
@@ -131,7 +131,7 @@ describe('DatasetAccordionList', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('renders view in explore button text only for datasets with logs', () => {
+    it('renders view in agentic observability button text only for datasets with logs', () => {
       render(<DatasetAccordionList {...defaultProps} />);
 
       const viewButtons = screen.getAllByText('View in Discover Logs');
@@ -210,25 +210,31 @@ describe('DatasetAccordionList', () => {
     });
   });
 
-  describe('View in Explore Functionality', () => {
-    it('calls onViewInExplore with correct parameters when button is clicked', () => {
+  describe('View in Agentic Observability Functionality', () => {
+    it('calls onViewInAgenticObservability with correct parameters when button is clicked', () => {
       render(<DatasetAccordionList {...defaultProps} />);
 
       const viewButton = screen.getByTestId('dataset-view-in-agenticObs-button-dataset-1');
       fireEvent.click(viewButton);
 
-      expect(mockOnViewInExplore).toHaveBeenCalledWith(mockDatasets[0], mockLogs);
+      expect(mockOnViewInAgenticObservability).toHaveBeenCalledWith(mockDatasets[0], mockLogs);
     });
 
-    it('calls onViewInExplore multiple times for different datasets', () => {
+    it('calls onViewInAgenticObservability multiple times for different datasets', () => {
       render(<DatasetAccordionList {...defaultProps} />);
 
       fireEvent.click(screen.getByTestId('dataset-view-in-agenticObs-button-dataset-1'));
       fireEvent.click(screen.getByTestId('dataset-view-in-agenticObs-button-dataset-2'));
 
-      expect(mockOnViewInExplore).toHaveBeenCalledTimes(2);
-      expect(mockOnViewInExplore).toHaveBeenNthCalledWith(1, mockDatasets[0], mockLogs);
-      expect(mockOnViewInExplore).toHaveBeenNthCalledWith(2, mockDatasets[1], [mockLogs[0]]);
+      expect(mockOnViewInAgenticObservability).toHaveBeenCalledTimes(2);
+      expect(mockOnViewInAgenticObservability).toHaveBeenNthCalledWith(
+        1,
+        mockDatasets[0],
+        mockLogs
+      );
+      expect(mockOnViewInAgenticObservability).toHaveBeenNthCalledWith(2, mockDatasets[1], [
+        mockLogs[0],
+      ]);
     });
   });
 

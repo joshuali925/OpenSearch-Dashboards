@@ -4,8 +4,8 @@
  */
 
 import { i18n } from '@osd/i18n';
-import { ExploreServices } from '../../../../types';
-import { resetExploreStateActionCreator } from '../../../../application/utils/state_management/actions/reset_explore_state';
+import { AgenticObservabilityServices } from '../../../../types';
+import { resetAgenticObservabilityStateActionCreator } from '../../../../application/utils/state_management/actions/reset_agentic_observability_state';
 import { TopNavMenuIconRun, TopNavMenuIconUIData } from '../types';
 import { useClearEditors } from '../../../../application/hooks';
 import { getVisualizationBuilder } from '../../../visualizations/visualization_builder';
@@ -23,12 +23,12 @@ export const newTopNavData: TopNavMenuIconUIData = {
 };
 
 export const getNewButtonRun = (
-  services: ExploreServices,
+  services: AgenticObservabilityServices,
   clearEditors: ReturnType<typeof useClearEditors>
 ): TopNavMenuIconRun => () => {
   const visBuilder = getVisualizationBuilder();
   visBuilder.clearUrl();
-  services.store.dispatch(resetExploreStateActionCreator(services, clearEditors));
+  services.store.dispatch(resetAgenticObservabilityStateActionCreator(services, clearEditors));
 
   if (services.scopedHistory) {
     services.scopedHistory.push('/');

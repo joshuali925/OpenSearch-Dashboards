@@ -18,15 +18,15 @@ import { i18n } from '@osd/i18n';
 import { FormattedMessage } from '@osd/i18n/react';
 import { useOpenSearchDashboards } from '../../../opensearch_dashboards_react/public';
 import { CORE_SIGNAL_TYPES } from '../../../data/common';
-import { ExploreServices } from '../types';
+import { AgenticObservabilityServices } from '../types';
 import { detectTraceDataAcrossDataSources, DetectionResult } from '../utils/auto_detect_trace_data';
 import { createAutoDetectedDatasets } from '../utils/create_auto_datasets';
 import { DiscoverNoIndexPatterns } from '../application/legacy/discover/application/components/no_index_patterns/no_index_patterns';
 
-const DISMISSED_KEY = 'explore:traces:autoDetectDismissed';
+const DISMISSED_KEY = 'agenticObservability:traces:autoDetectDismissed';
 
 export const TraceAutoDetectCallout: React.FC = () => {
-  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { services } = useOpenSearchDashboards<AgenticObservabilityServices>();
   const [isDetecting, setIsDetecting] = useState(true);
   const [detections, setDetections] = useState<DetectionResult[]>([]);
   const [isCreating, setIsCreating] = useState(false);

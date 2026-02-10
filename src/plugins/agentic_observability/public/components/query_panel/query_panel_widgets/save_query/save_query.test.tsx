@@ -47,7 +47,7 @@ jest.doMock('../../../../../../opensearch_dashboards_react/public', () => ({
         },
       },
       capabilities: {
-        explore: {
+        agenticObservability: {
           saveQuery: true,
         },
       },

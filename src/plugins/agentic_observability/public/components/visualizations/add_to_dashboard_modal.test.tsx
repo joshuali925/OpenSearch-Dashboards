@@ -11,9 +11,9 @@ const mockSavedObjectsClient = coreMock.createStart().savedObjects.client;
 const mockOnConfirm = jest.fn();
 const mockOnCancel = jest.fn();
 
-jest.mock('../../application/utils/hooks/use_saved_explore', () => ({
-  useSavedExplore: (id: string) => ({
-    savedExplore: { id, title: 'Old Title' },
+jest.mock('../../application/utils/hooks/use_saved_agentic_observability', () => ({
+  useSavedAgenticObservability: (id: string) => ({
+    savedAgenticObservability: { id, title: 'Old Title' },
   }),
 }));
 
@@ -36,7 +36,7 @@ describe('AddToDashboardModal', () => {
           savedObjectsClient={mockSavedObjectsClient}
           onConfirm={mockOnConfirm}
           onCancel={mockOnCancel}
-          savedExploreId="agenticObs-1"
+          savedAgenticObservabilityId="agenticObs-1"
         />
       );
     });
@@ -53,13 +53,13 @@ describe('AddToDashboardModal', () => {
           savedObjectsClient={mockSavedObjectsClient}
           onConfirm={mockOnConfirm}
           onCancel={mockOnCancel}
-          savedExploreId="agenticObs-1"
+          savedAgenticObservabilityId="agenticObs-1"
         />
       );
     });
 
     const titleInput = await screen.findByPlaceholderText('Enter save search name');
-    fireEvent.change(titleInput, { target: { value: 'My Saved Explore' } });
+    fireEvent.change(titleInput, { target: { value: 'My Saved Agentic Observability' } });
 
     // Wait for dashboards to load
     await waitFor(() => {
@@ -89,7 +89,7 @@ describe('AddToDashboardModal', () => {
     await waitFor(() =>
       expect(mockOnConfirm).toHaveBeenCalledWith(
         expect.objectContaining({
-          newTitle: 'My Saved Explore',
+          newTitle: 'My Saved Agentic Observability',
           mode: 'existing',
           selectDashboard: expect.objectContaining({ id: 'dash-2' }),
         })
@@ -104,7 +104,7 @@ describe('AddToDashboardModal', () => {
           savedObjectsClient={mockSavedObjectsClient}
           onConfirm={mockOnConfirm}
           onCancel={mockOnCancel}
-          savedExploreId="agenticObs-1"
+          savedAgenticObservabilityId="agenticObs-1"
         />
       );
     });
@@ -116,7 +116,7 @@ describe('AddToDashboardModal', () => {
     fireEvent.change(newDashboardInput, { target: { value: 'New Dashboard' } });
 
     const titleInput = await screen.findByPlaceholderText('Enter save search name');
-    fireEvent.change(titleInput, { target: { value: 'Explore Title' } });
+    fireEvent.change(titleInput, { target: { value: 'Agentic Observability Title' } });
 
     const addButton = screen.getByRole('button', { name: 'Add' });
     await waitFor(() => {
@@ -129,7 +129,7 @@ describe('AddToDashboardModal', () => {
       expect(mockOnConfirm).toHaveBeenCalledWith(
         expect.objectContaining({
           newDashboardName: 'New Dashboard',
-          newTitle: 'Explore Title',
+          newTitle: 'Agentic Observability Title',
           mode: 'new',
         })
       )
@@ -143,7 +143,7 @@ describe('AddToDashboardModal', () => {
           savedObjectsClient={mockSavedObjectsClient}
           onConfirm={mockOnConfirm}
           onCancel={mockOnCancel}
-          savedExploreId="agenticObs-1"
+          savedAgenticObservabilityId="agenticObs-1"
         />
       );
     });
@@ -159,7 +159,7 @@ describe('AddToDashboardModal', () => {
           savedObjectsClient={mockSavedObjectsClient}
           onConfirm={mockOnConfirm}
           onCancel={mockOnCancel}
-          savedExploreId="agenticObs-1"
+          savedAgenticObservabilityId="agenticObs-1"
         />
       );
     });
@@ -191,7 +191,7 @@ describe('AddToDashboardModal', () => {
           savedObjectsClient={mockSavedObjectsClient}
           onConfirm={mockOnConfirm}
           onCancel={mockOnCancel}
-          savedExploreId="agenticObs-1"
+          savedAgenticObservabilityId="agenticObs-1"
         />
       );
     });
@@ -233,7 +233,7 @@ describe('AddToDashboardModal', () => {
           savedObjectsClient={mockSavedObjectsClient}
           onConfirm={mockOnConfirm}
           onCancel={mockOnCancel}
-          savedExploreId="agenticObs-1"
+          savedAgenticObservabilityId="agenticObs-1"
         />
       );
     });
@@ -276,7 +276,7 @@ describe('AddToDashboardModal', () => {
           savedObjectsClient={mockSavedObjectsClient}
           onConfirm={mockOnConfirm}
           onCancel={mockOnCancel}
-          savedExploreId="agenticObs-1"
+          savedAgenticObservabilityId="agenticObs-1"
         />
       );
     });
@@ -312,7 +312,7 @@ describe('AddToDashboardModal', () => {
           savedObjectsClient={mockSavedObjectsClient}
           onConfirm={mockOnConfirm}
           onCancel={mockOnCancel}
-          savedExploreId="agenticObs-1"
+          savedAgenticObservabilityId="agenticObs-1"
         />
       );
     });
@@ -349,7 +349,7 @@ describe('AddToDashboardModal', () => {
           savedObjectsClient={mockSavedObjectsClient}
           onConfirm={mockOnConfirm}
           onCancel={mockOnCancel}
-          savedExploreId="agenticObs-1"
+          savedAgenticObservabilityId="agenticObs-1"
         />
       );
     });

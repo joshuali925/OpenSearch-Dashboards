@@ -28,14 +28,45 @@
  * under the License.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { I18nProvider } from '@osd/i18n/react';
+import { Agentation } from 'agentation';
 
 import { InternalChromeStart } from '../chrome';
 import { InternalApplicationStart } from '../application';
 import { OverlayStart } from '../overlays';
 import { AppWrapper, AppContainer } from './app_containers';
+
+/**
+ * Removes problematic CSS rules (e.g. `svg[fill="none"] { fill: none !important }`) from
+ * Agentation's injected style sheets while preserving the rest. Agentation injects global
+ * styles into document.head and provides no configuration to disable this behavior.
+ */
+function sanitizeAgentationStyles(styleEl: HTMLStyleElement) {
+  const sheet = styleEl.sheet;
+  if (!sheet) return;
+  for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
+    const rule = sheet.cssRules[i] as CSSStyleRule;
+    if (rule.selectorText?.includes('svg[fill="none"]')) {
+      sheet.deleteRule(i);
+    }
+  }
+}
+
+const SandboxedAgentation = () => {
+  useEffect(() => {
+    const styleIds = [
+      'feedback-tool-styles-annotation-popup-css-styles',
+      'feedback-tool-styles-page-toolbar-css-styles',
+    ];
+    styleIds.forEach((id) => {
+      const el = document.getElementById(id) as HTMLStyleElement | null;
+      if (el) sanitizeAgentationStyles(el);
+    });
+  }, []);
+  return <Agentation />;
+};
 
 export interface StartDeps {
   application: InternalApplicationStart;
@@ -75,6 +106,7 @@ export class RenderingService {
               <AppContainer classes$={chrome.getApplicationClasses$()}>{appUi}</AppContainer>
             </div>
           </AppWrapper>
+          {process.env.NODE_ENV === 'development' && <SandboxedAgentation />}
         </div>
       </I18nProvider>
     );

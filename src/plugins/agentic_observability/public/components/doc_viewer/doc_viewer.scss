@@ -1,0 +1,67 @@
+.agenticObsDocViewerTable {
+  margin-top: $ouiSizeXXS;
+}
+
+.agenticObsDocViewer {
+  pre,
+  .agenticObsDocViewer__value {
+    display: inline-block;
+    word-break: break-all;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    color: $euiColorFullShade;
+    vertical-align: top;
+    padding-top: 2px;
+  }
+
+  .agenticObsDocViewer__field {
+    padding-top: 8px;
+  }
+
+  .dscFieldName {
+    color: $euiColorDarkShade;
+  }
+
+  tr:first-child td {
+    border-top-color: transparent;
+  }
+
+  tr:hover {
+    .agenticObsDocViewer__actionButton {
+      opacity: 1;
+    }
+  }
+}
+
+.agenticObsDocViewer__buttons,
+.agenticObsDocViewer__field {
+  white-space: nowrap;
+}
+
+.agenticObsDocViewer__buttons {
+  width: 60px;
+
+  // Show all icons if one is focused,
+  // IE doesn't support, but the fallback is just the focused button becomes visible
+  &:focus-within {
+    .agenticObsDocViewer__actionButton {
+      opacity: 1;
+    }
+  }
+}
+
+.agenticObsDocViewer__field {
+  width: 160px;
+}
+
+.agenticObsDocViewer__actionButton {
+  opacity: 0;
+
+  &:focus {
+    opacity: 1;
+  }
+}
+
+.agenticObsDocViewer__warning {
+  margin-right: $ouiSizeXXS;
+}

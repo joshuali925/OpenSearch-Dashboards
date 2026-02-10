@@ -1,0 +1,7 @@
+.agenticObsDocTable_pagination {
+  width: 100%;
+
+  & ~ table {
+    margin-bottom: 0;
+  }
+}

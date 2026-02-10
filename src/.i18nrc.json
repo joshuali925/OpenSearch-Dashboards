@@ -1,6 +1,7 @@
 {
   "paths": {
     "advancedSettings": "plugins/advanced_settings",
+    "agenticObservability": "plugins/agentic_observability",
     "apmOss": "plugins/apm_oss",
     "banner": "plugins/banner",
     "charts": "plugins/charts",

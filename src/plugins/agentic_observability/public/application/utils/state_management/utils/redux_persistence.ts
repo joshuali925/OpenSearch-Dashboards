@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getCurrentAppId, getFlavorFromAppId } from '../../../../helpers/get_flavor_from_app_id';
+import { getCurrentAppId } from '../../../../helpers/get_flavor_from_app_id';
 import { RootState } from '../store';
 import { AppState, QueryExecutionStatus } from '../types';
 import { AgenticObservabilityServices } from '../../../../types';
@@ -23,10 +23,7 @@ import {
 } from '../../../../../../data/common';
 import { DatasetTypeConfig, IDataPluginServices } from '../../../../../../data/public';
 import {
-  DEFAULT_COLUMNS_SETTING,
   DEFAULT_TRACE_COLUMNS_SETTING,
-  DEFAULT_LOGS_COLUMNS_SETTING,
-  AgenticObservabilityFlavor,
   AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE,
 } from '../../../../../common';
 import { getPromptModeIsAvailable } from '../../get_prompt_mode_is_available';
@@ -179,7 +176,6 @@ export const getPreloadedState = async (
  */
 const fetchFirstAvailableDataset = async (
   services: AgenticObservabilityServices,
-  flavor: AgenticObservabilityFlavor | null,
   requiredSignalType?: string
 ): Promise<Dataset | undefined> => {
   try {
@@ -188,9 +184,7 @@ const fetchFirstAvailableDataset = async (
       return undefined;
     }
 
-    const typeConfig: DatasetTypeConfig | undefined = datasetService.getType(
-      flavor === AgenticObservabilityFlavor.Metrics ? 'PROMETHEUS' : 'INDEX_PATTERN'
-    );
+    const typeConfig: DatasetTypeConfig | undefined = datasetService.getType('INDEX_PATTERN');
     if (!typeConfig) {
       return undefined;
     }
@@ -257,21 +251,11 @@ const resolveDataset = async (
   services: AgenticObservabilityServices,
   preferredDataset?: Dataset
 ): Promise<Dataset | undefined> => {
-  const currentAppId = await getCurrentAppId(services);
-  const flavorFromAppId = getFlavorFromAppId(currentAppId);
-  const requiredSignalType =
-    flavorFromAppId === AgenticObservabilityFlavor.Traces
-      ? CORE_SIGNAL_TYPES.TRACES
-      : flavorFromAppId === AgenticObservabilityFlavor.Metrics
-      ? CORE_SIGNAL_TYPES.METRICS
-      : undefined;
+  const requiredSignalType = CORE_SIGNAL_TYPES.TRACES;
 
   // Get existing dataset from QueryStringManager or use preferred dataset
   const queryStringQuery = services.data?.query?.queryString?.getQuery();
-  const defaultQuery =
-    flavorFromAppId === AgenticObservabilityFlavor.Metrics
-      ? undefined
-      : services.data?.query?.queryString?.getDefaultQuery();
+  const defaultQuery = undefined;
   const existingDataset = preferredDataset || queryStringQuery?.dataset || defaultQuery?.dataset;
 
   // If we have an existing dataset, validate SignalType compatibility
@@ -285,18 +269,9 @@ const resolveDataset = async (
       // Get effective signal type from dataView or preferredDataset (for Prometheus which sets signalType directly)
       const effectiveSignalType = dataView?.signalType || preferredDataset?.signalType;
 
-      // If requiredSignalType is specified, dataset must match it
+      // Dataset must match required signal type (TRACES)
       if (requiredSignalType) {
         if (effectiveSignalType === requiredSignalType) {
-          return existingDataset;
-        }
-      } else {
-        // If requiredSignalType is not specified (i.e., Logs flavor),
-        // dataset should not have signalType equal to Traces or Metrics
-        if (
-          effectiveSignalType !== CORE_SIGNAL_TYPES.TRACES &&
-          effectiveSignalType !== CORE_SIGNAL_TYPES.METRICS
-        ) {
           return existingDataset;
         }
       }
@@ -307,7 +282,7 @@ const resolveDataset = async (
   }
 
   // Fetch first available dataset with required SignalType
-  return await fetchFirstAvailableDataset(services, flavorFromAppId, requiredSignalType);
+  return await fetchFirstAvailableDataset(services, requiredSignalType);
 };
 
 /**
@@ -435,21 +410,10 @@ const getPreloadedTabState = (services: AgenticObservabilityServices): TabState 
 export const getPreloadedLegacyState = async (
   services: AgenticObservabilityServices
 ): Promise<LegacyState> => {
-  // Only return defaults - NO saved object loading (like vis_builder)
-  const currentAppId = await getCurrentAppId(services);
-  const flavorFromAppId = getFlavorFromAppId(currentAppId);
-
-  const defaultColumns =
-    flavorFromAppId === AgenticObservabilityFlavor.Traces
-      ? services.uiSettings?.get(DEFAULT_TRACE_COLUMNS_SETTING)
-      : flavorFromAppId === AgenticObservabilityFlavor.Logs
-      ? services.uiSettings?.get(DEFAULT_LOGS_COLUMNS_SETTING)
-      : services.uiSettings?.get(DEFAULT_COLUMNS_SETTING);
+  const defaultColumns = services.uiSettings?.get(DEFAULT_TRACE_COLUMNS_SETTING);
 
   return {
-    // Fields that exist in data_explorer + discover
-    // TODO: load saved agentic observability by id
-    savedSearch: undefined, // Matches discover format - string ID, not object
+    savedSearch: undefined,
     columns: defaultColumns || ['_source'],
     sort: [],
     isDirty: false,
@@ -479,18 +443,11 @@ const getColumnsForDataset = async (
   }
 
   try {
-    const currentAppId = await getCurrentAppId(services);
-    const currentFlavor = getFlavorFromAppId(currentAppId);
-    const isTracesFlavor = currentFlavor === AgenticObservabilityFlavor.Traces;
-
     const tracesDefaultColumns = services.uiSettings?.get(DEFAULT_TRACE_COLUMNS_SETTING) || [
       'spanId',
     ];
-    const logsDefaultColumns = services.uiSettings?.get(DEFAULT_LOGS_COLUMNS_SETTING) || [
-      '_source',
-    ];
 
-    return isTracesFlavor ? tracesDefaultColumns : logsDefaultColumns;
+    return tracesDefaultColumns;
   } catch (error) {
     return null;
   }

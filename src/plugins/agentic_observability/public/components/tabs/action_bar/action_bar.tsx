@@ -54,7 +54,7 @@ const ActionBarComponent = ({ filteredRowsCount }: ActionBarProps = {}) => {
       showResetButton={!!savedSearch}
       resetQuery={() => {
         core.application.navigateToApp('agenticObservability', {
-          path: `${AgenticObservabilityFlavor.Logs}#/view/${savedSearch}`,
+          path: `${AgenticObservabilityFlavor.Traces}#/view/${savedSearch}`,
         });
       }}
       rows={rows}

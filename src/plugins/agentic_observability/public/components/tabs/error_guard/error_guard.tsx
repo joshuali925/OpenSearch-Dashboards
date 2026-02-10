@@ -11,8 +11,6 @@ import { EuiErrorBoundary, EuiFlexGroup, EuiIcon, EuiTitle } from '@elastic/eui'
 import { ErrorCodeBlock } from './error_code_block';
 import { TabDefinition } from '../../../services/tab_registry/tab_registry_service';
 import { useTabError } from '../../../application/utils/hooks/use_tab_error';
-import { AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID } from '../../../../common';
-import { PatternsErrorGuard } from './patterns_error_guard';
 
 const errorDefaultTitle = i18n.translate('agenticObservability.errorPanel.defaultTitle', {
   defaultMessage: 'An error occurred while executing the query',
@@ -36,9 +34,7 @@ export const ErrorGuard = ({ registryTab, children }: ErrorGuardProps): JSX.Elem
     return <EuiErrorBoundary>{children}</EuiErrorBoundary>;
   }
 
-  return registryTab.id === AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID ? (
-    <PatternsErrorGuard registryTab={registryTab} />
-  ) : (
+  return (
     <EuiErrorBoundary>
       <EuiFlexGroup direction="column" alignItems="center" className="agenticObsErrorGuard">
         <EuiIcon type="alert" size="xl" color="red" />

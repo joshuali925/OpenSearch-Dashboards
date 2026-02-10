@@ -66,12 +66,6 @@ jest.mock('../../../components/container/bottom_container', () => ({
   ),
 }));
 
-jest.mock('../../../components/experience_banners/new_experience_banner', () => ({
-  NewExperienceBanner: () => (
-    <div data-test-subj="new-experience-banner">New Experience Banner</div>
-  ),
-}));
-
 jest.mock('../../../components/top_nav/top_nav', () => ({
   TopNav: ({ setHeaderActionMenu }: { setHeaderActionMenu?: () => void }) => (
     <div data-test-subj="top-nav">
@@ -267,16 +261,7 @@ describe('TracesPage', () => {
         </TestHarness>
       );
 
-      expect(mockUseKeyboardShortcut).toHaveBeenCalledTimes(2);
-
-      expect(mockUseKeyboardShortcut).toHaveBeenCalledWith({
-        id: 'switchToPatternsTabTraces',
-        pluginId: 'agenticObservability',
-        name: 'Switch to patterns tab',
-        category: 'Navigation',
-        keys: 'shift+p',
-        execute: expect.any(Function),
-      });
+      expect(mockUseKeyboardShortcut).toHaveBeenCalledTimes(1);
 
       expect(mockUseKeyboardShortcut).toHaveBeenCalledWith({
         id: 'switchToVisualizationTabTraces',
@@ -298,23 +283,11 @@ describe('TracesPage', () => {
         </TestHarness>
       );
 
-      const patternsTabCall = mockUseKeyboardShortcut.mock.calls.find(
-        (call) => call[0].id === 'switchToPatternsTabTraces'
-      );
       const visualizationTabCall = mockUseKeyboardShortcut.mock.calls.find(
         (call) => call[0].id === 'switchToVisualizationTabTraces'
       );
 
-      expect(patternsTabCall).toBeDefined();
       expect(visualizationTabCall).toBeDefined();
-
-      patternsTabCall[0].execute();
-      expect(dispatchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: expect.stringContaining('setActiveTab'),
-          payload: 'agentic_observability_patterns_tab',
-        })
-      );
 
       visualizationTabCall[0].execute();
       expect(dispatchSpy).toHaveBeenCalledWith(
@@ -333,7 +306,6 @@ describe('TracesPage', () => {
         </TestHarness>
       );
       const shortcutIds = mockUseKeyboardShortcut.mock.calls.map((call) => call[0].id);
-      expect(shortcutIds).toContain('switchToPatternsTabTraces');
       expect(shortcutIds).toContain('switchToVisualizationTabTraces');
 
       expect(new Set(shortcutIds).size).toBe(shortcutIds.length);
@@ -347,14 +319,10 @@ describe('TracesPage', () => {
         </TestHarness>
       );
 
-      const patternsCall = mockUseKeyboardShortcut.mock.calls.find(
-        (call) => call[0].id === 'switchToPatternsTabTraces'
-      );
       const visualizationCall = mockUseKeyboardShortcut.mock.calls.find(
         (call) => call[0].id === 'switchToVisualizationTabTraces'
       );
 
-      expect(patternsCall[0].keys).toBe('shift+p');
       expect(visualizationCall[0].keys).toBe('shift+v');
     });
   });

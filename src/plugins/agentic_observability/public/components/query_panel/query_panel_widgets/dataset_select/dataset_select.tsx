@@ -118,15 +118,13 @@ export const DatasetSelectWidget = () => {
   );
 
   const supportedTypes = useMemo(() => {
-    if (flavorId === AgenticObservabilityFlavor.Metrics) return ['PROMETHEUS'];
-
     return (
       services.supportedTypes || [
         DEFAULT_DATA.SET_TYPES.INDEX,
         DEFAULT_DATA.SET_TYPES.INDEX_PATTERN,
       ]
     );
-  }, [services.supportedTypes, flavorId]);
+  }, [services.supportedTypes]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 

@@ -12,11 +12,12 @@ import {
 } from '../../../core/server';
 import { capabilitiesProvider } from './capabilities_provider';
 import { agenticObsSavedObjectType } from './saved_objects';
-import { agenticObsUiSettings } from './explore_ui_settings';
+import { agenticObsUiSettings } from './agentic_observability_ui_settings';
 
-import { ExplorePluginSetup, ExplorePluginStart } from './types';
+import { AgenticObservabilityPluginSetup, AgenticObservabilityPluginStart } from './types';
 
-export class AgenticObservabilityPlugin implements Plugin<ExplorePluginSetup, ExplorePluginStart> {
+export class AgenticObservabilityPlugin
+  implements Plugin<AgenticObservabilityPluginSetup, AgenticObservabilityPluginStart> {
   private readonly logger: Logger;
 
   // @ts-ignore
@@ -25,13 +26,13 @@ export class AgenticObservabilityPlugin implements Plugin<ExplorePluginSetup, Ex
   }
 
   public setup(core: CoreSetup) {
-    this.logger.debug('explore: Setup');
+    this.logger.debug('agenticObservability: Setup');
 
     core.capabilities.registerProvider(capabilitiesProvider);
 
-    // Register default explore capabilities
+    // Register default agenticObservability capabilities
     core.capabilities.registerProvider(() => ({
-      explore: {
+      agenticObservability: {
         discoverTracesEnabled: false,
         discoverMetricsEnabled: false,
       },
@@ -46,20 +47,23 @@ export class AgenticObservabilityPlugin implements Plugin<ExplorePluginSetup, Ex
         const store = dynamicConfigServiceStart.getAsyncLocalStore();
 
         const config = await client.getConfig(
-          { name: 'explore' },
+          { name: 'agenticObservability' },
           { asyncLocalStorageContext: store! }
         );
 
         return {
           ...capabilities,
-          explore: {
-            ...(capabilities.explore || {}),
+          agenticObservability: {
+            ...(capabilities.agenticObservability || {}),
             discoverTracesEnabled: config.discoverTraces?.enabled ?? false,
             discoverMetricsEnabled: config.discoverMetrics?.enabled ?? false,
           },
         };
       } catch (error) {
-        this.logger.error('Failed to load explore dynamic config, using defaults', error);
+        this.logger.error(
+          'Failed to load agenticObservability dynamic config, using defaults',
+          error
+        );
         // Keep defaults from provider (false for both flags)
         return capabilities;
       }

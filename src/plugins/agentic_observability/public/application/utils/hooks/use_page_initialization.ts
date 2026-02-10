@@ -80,7 +80,7 @@ export const useInitPage = () => {
         // Add to recently accessed
         chrome.recentlyAccessed.add(
           `/app/agenticObservability/${
-            savedAgenticObservability.type ?? AgenticObservabilityFlavor.Logs
+            savedAgenticObservability.type ?? AgenticObservabilityFlavor.Traces
           }#/view/${savedAgenticObservability.id}`,
           title,
           savedAgenticObservability.id,

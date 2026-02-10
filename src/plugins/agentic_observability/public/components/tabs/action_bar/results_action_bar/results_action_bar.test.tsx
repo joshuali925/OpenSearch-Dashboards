@@ -119,7 +119,7 @@ describe('ResultsActionBar', () => {
 
   test('should hide add to dashboard button and export button if current tab is patterns', () => {
     const patternsStore = mockStore({
-      ui: { activeTabId: 'agentic_observability_patterns_tab' },
+      ui: { activeTabId: 'agentic_observability_visualization_tab' },
       tab: { patterns: { patternsField: 'message' } },
     });
     render(

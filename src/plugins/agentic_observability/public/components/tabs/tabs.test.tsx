@@ -64,13 +64,13 @@ describe('AgenticObservabilityTabsComponent', () => {
           id: 'logs_tab',
           label: 'Logs',
           component: () => <div>Logs Content</div>,
-          flavor: [AgenticObservabilityFlavor.Logs],
+          flavor: [AgenticObservabilityFlavor.Traces],
         },
         {
           id: 'agentic_observability_visualization_tab',
           label: 'Visualization',
           component: () => <div>Visualization Content</div>,
-          flavor: [AgenticObservabilityFlavor.Logs],
+          flavor: [AgenticObservabilityFlavor.Traces],
         },
       ]),
       getTab: jest.fn((id: string) => ({
@@ -78,7 +78,7 @@ describe('AgenticObservabilityTabsComponent', () => {
         label: id === 'logs' ? 'Logs' : 'Visualization',
         component: () => <div>{id} Content</div>,
         prepareQuery: undefined,
-        flavor: [AgenticObservabilityFlavor.Logs],
+        flavor: [AgenticObservabilityFlavor.Traces],
       })),
     },
   };
@@ -212,7 +212,7 @@ describe('AgenticObservabilityTabsComponent', () => {
     );
 
     expect(container.firstChild).toBeNull();
-    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Logs); // Reset for other tests
+    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Traces); // Reset for other tests
   });
 
   it('should fallback to first tab when activeTabId is empty', () => {

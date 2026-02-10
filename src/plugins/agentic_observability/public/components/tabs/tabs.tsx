@@ -19,9 +19,6 @@ import { AgenticObservabilityServices } from '../../types';
 import { RootState } from '../../application/utils/state_management/store';
 import { useFlavorId } from '../../helpers/use_flavor_id';
 import { ErrorGuard } from './error_guard/error_guard';
-import { AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID } from '../../../common';
-import { DEFAULT_DATA } from '../../../../data/common';
-
 /**
  * Rendering tabs with different views of 1 OpenSearch hit in Discover.
  * The tabs are provided by the `docs_views` registry.
@@ -73,16 +70,7 @@ export const AgenticObservabilityTabs = () => {
         ? []
         : registryTabs
             .filter((registryTab) => {
-              const registeredFlavor = registryTab.flavor.includes(flavorId);
-              const isPatternsTab = registryTab.id === AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID;
-              const isDefaultDataset =
-                query?.dataset &&
-                (query.dataset.type === DEFAULT_DATA.SET_TYPES.INDEX_PATTERN ||
-                  query.dataset.type === DEFAULT_DATA.SET_TYPES.INDEX);
-              if (isPatternsTab) {
-                return registeredFlavor && isDefaultDataset;
-              }
-              return registeredFlavor;
+              return flavorId != null && registryTab.flavor.includes(flavorId);
             })
             .map((registryTab) => {
               return {
@@ -95,7 +83,7 @@ export const AgenticObservabilityTabs = () => {
                 ),
               };
             }),
-    [registryTabs, flavorId, query?.dataset]
+    [registryTabs, flavorId]
   );
 
   if (flavorId == null) {

@@ -21,12 +21,8 @@ export const DEFAULT_LOGS_COLUMNS_SETTING = 'agenticObservability:defaultLogsCol
 export const ENABLE_EXPERIMENTAL_SETTING = 'agenticObservability:experimental';
 export const AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE = 'PPL';
 export const AGENTIC_OBSERVABILITY_LOGS_TAB_ID = 'logs';
-export const AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID = 'agentic_observability_patterns_tab';
 export const AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID = 'agentic_observability_visualization_tab';
-export const AGENTIC_OBSERVABILITY_FIELD_STATS_TAB_ID = 'agentic_observability_field_stats_tab';
 
 export enum AgenticObservabilityFlavor {
-  Logs = 'logs',
   Traces = 'traces',
-  Metrics = 'metrics',
 }

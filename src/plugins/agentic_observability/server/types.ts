@@ -4,6 +4,6 @@
  */
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ExplorePluginSetup {}
+export interface AgenticObservabilityPluginSetup {}
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ExplorePluginStart {}
+export interface AgenticObservabilityPluginStart {}

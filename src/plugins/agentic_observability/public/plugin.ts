@@ -46,10 +46,6 @@ import { buildServices } from './build_services';
 import { DocViewTable } from './components/doc_viewer/doc_viewer_table/table';
 import { JsonCodeBlock } from './components/doc_viewer/json_code_block/json_code_block';
 import { TraceDetailsView } from './components/doc_viewer/trace_details_view/trace_details_view';
-import {
-  createQueryEditorExtensionConfig,
-  SHOW_CLASSIC_DISCOVER_LOCAL_STORAGE_KEY,
-} from './components/experience_banners';
 import { createSavedAgenticObservabilityLoader } from './saved_agentic_observability';
 import { TabRegistryService } from './services/tab_registry/tab_registry_service';
 import { setUsageCollector } from './services/usage_collector';
@@ -249,12 +245,6 @@ export class AgenticObservabilityPlugin
       order: 2,
     });
 
-    setupDeps.data.__enhance({
-      editor: {
-        queryEditorExtension: createQueryEditorExtensionConfig(core),
-      },
-    });
-
     const createAgenticObservabilityApp = (options: Partial<App> = {}): App => {
       const appStateUpdater = this.stateUpdaterByApp.agenticObservability as BehaviorSubject<
         AppUpdater
@@ -307,10 +297,7 @@ export class AgenticObservabilityPlugin
           );
 
           // Only show in observability-enabled workspaces
-          if (
-            !isAgenticObservabilityEnabledWorkspace ||
-            !!localStorage.getItem(SHOW_CLASSIC_DISCOVER_LOCAL_STORAGE_KEY)
-          ) {
+          if (!isAgenticObservabilityEnabledWorkspace) {
             coreStart.application.navigateToApp('discover', { replace: true });
             return () => {};
           }
@@ -591,7 +578,7 @@ export class AgenticObservabilityPlugin
             return {
               description: `${attributes?.description || ''}`,
               // TODO: it should navigate to different agentic observability flavor based on the `attributes.type`
-              editApp: `${PLUGIN_ID}/${AgenticObservabilityFlavor.Logs}`,
+              editApp: `${PLUGIN_ID}/${AgenticObservabilityFlavor.Traces}`,
               editUrl: `#/view/${encodeURIComponent(id)}`,
               icon: iconType,
               id,

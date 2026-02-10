@@ -136,7 +136,7 @@ describe('BottomRightContainer', () => {
     mockUseOpenSearchDashboards.mockReturnValue({
       services: mockServices,
     } as any);
-    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Logs);
+    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Traces);
   });
 
   const renderComponent = (status: QueryExecutionStatus = QueryExecutionStatus.UNINITIALIZED) => {
@@ -302,7 +302,7 @@ describe('BottomRightContainer', () => {
       isLoading: false,
       error: null,
     });
-    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Logs);
+    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Traces);
 
     renderComponent(QueryExecutionStatus.READY);
 

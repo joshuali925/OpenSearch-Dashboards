@@ -15,8 +15,6 @@ import { DiscoverDownloadCsv } from '../download_csv';
 import { DataView as Dataset } from '../../../../../../data/common';
 import { ACTION_BAR_BUTTONS_CONTAINER_ID } from '../../../../../../data/public';
 import { SaveAndAddButtonWithModal } from '../../../visualizations/add_to_dashboard_button';
-import { selectActiveTabId } from '../../../../application/utils/state_management/selectors';
-import { PatternsSettingsPopoverButton } from '../patterns_settings/patterns_settings_popover_button';
 import { getVisualizationBuilder } from '../../../visualizations/visualization_builder';
 import { SlotItemsForType } from '../../../../services/slot_registry';
 
@@ -43,10 +41,9 @@ export const DiscoverResultsActionBar = ({
   extraActions,
   rowsCountOverride,
 }: DiscoverResultsActionBarProps) => {
-  const currentTab = useSelector(selectActiveTabId);
-  const shouldShowAddToDashboardButton = currentTab !== 'agentic_observability_patterns_tab';
-  const shouldShowExportButton = currentTab !== 'agentic_observability_patterns_tab';
-  const showTabSpecificSettings = currentTab === 'agentic_observability_patterns_tab';
+  const shouldShowAddToDashboardButton = true;
+  const shouldShowExportButton = true;
+  const showTabSpecificSettings = false;
   const visualizationBuilder = getVisualizationBuilder();
   const visConfig = useObservable(visualizationBuilder.visConfig$);
   const showRawTable = useObservable(visualizationBuilder.showRawTable$);
@@ -115,11 +112,6 @@ export const DiscoverResultsActionBar = ({
                     </EuiToolTip>
                   </EuiFlexItem>
                 ) : null}
-                {showTabSpecificSettings && (
-                  <EuiFlexItem grow={false}>
-                    <PatternsSettingsPopoverButton />
-                  </EuiFlexItem>
-                )}
                 {shouldShowExportButton && (
                   <EuiFlexItem
                     grow={false}

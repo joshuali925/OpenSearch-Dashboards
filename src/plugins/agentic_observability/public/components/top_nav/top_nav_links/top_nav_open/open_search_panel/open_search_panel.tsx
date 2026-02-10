@@ -105,7 +105,7 @@ export const OpenSearchPanel = ({ onClose }: OpenSearchPanelProps) => {
               store.dispatch({ type: 'logs/incrementSaveAgenticObservabilityLoadCount' });
               // TODO: Nav link is generated in runtime. Different from discover, if using navigateToApp, top nav would disappear.
               // Address once flavor and view route are finalized.
-              const flavor = savedObject.attributes.type ?? AgenticObservabilityFlavor.Logs;
+              const flavor = savedObject.attributes.type ?? AgenticObservabilityFlavor.Traces;
               // application.navigateToApp('agenticObservability', {
               //   // TODO:finalize this until flavor and view route are finalized
               //   path: `${flavor}#/view/${id}`,

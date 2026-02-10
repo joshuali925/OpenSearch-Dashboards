@@ -29,7 +29,7 @@
  */
 
 export const capabilitiesProvider = () => ({
-  explore: {
+  agenticObservability: {
     show: true,
     createShortUrl: true,
     save: true,

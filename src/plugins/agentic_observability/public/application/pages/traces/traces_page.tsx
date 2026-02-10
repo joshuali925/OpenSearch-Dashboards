@@ -17,17 +17,14 @@ import { useInitialQueryExecution } from '../../utils/hooks/use_initial_query_ex
 import { useUrlStateSync } from '../../utils/hooks/use_url_state_sync';
 import { useTimefilterSubscription } from '../../utils/hooks/use_timefilter_subscription';
 import { useHeaderVariants } from '../../utils/hooks/use_header_variants';
-import { NewExperienceBanner } from '../../../components/experience_banners/new_experience_banner';
 import { BottomContainer } from '../../../components/container/bottom_container';
 import { TopNav } from '../../../components/top_nav/top_nav';
 import { useInitPage } from '../../../application/utils/hooks/use_page_initialization';
-import {
-  AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID,
-  AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID,
-} from '../../../../common';
+import { AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID } from '../../../../common';
 import { setActiveTab } from '../../utils/state_management/slices';
 import { TraceFlyout } from './trace_flyout/trace_flyout';
 import { TraceFlyoutProvider } from './trace_flyout/trace_flyout_context';
+
 /**
  * Main application component for the Agentic Observability plugin
  * @experimental
@@ -39,19 +36,6 @@ export const TracesPage: React.FC<Partial<Pick<AppMountParameters, 'setHeaderAct
   const { savedAgenticObservability } = useInitPage();
   const { keyboardShortcut } = services;
   const dispatch = useDispatch();
-
-  keyboardShortcut?.useKeyboardShortcut({
-    id: 'switchToPatternsTabTraces',
-    pluginId: 'agenticObservability',
-    name: i18n.translate('agenticObservability.tracesPage.switchToPatternsTabShortcut', {
-      defaultMessage: 'Switch to patterns tab',
-    }),
-    category: i18n.translate('agenticObservability.tracesPage.navigationCategory', {
-      defaultMessage: 'Navigation',
-    }),
-    keys: 'shift+p',
-    execute: () => dispatch(setActiveTab(AGENTIC_OBSERVABILITY_PATTERNS_TAB_ID)),
-  });
 
   keyboardShortcut?.useKeyboardShortcut({
     id: 'switchToVisualizationTabTraces',
@@ -81,13 +65,11 @@ export const TracesPage: React.FC<Partial<Pick<AppMountParameters, 'setHeaderAct
                 setHeaderActionMenu={setHeaderActionMenu}
                 savedAgenticObservability={savedAgenticObservability}
               />
-              <NewExperienceBanner />
 
               <div className="dscCanvas__queryPanel">
                 <QueryPanel />
               </div>
 
-              {/* Main content area with resizable panels under QueryPanel */}
               <BottomContainer />
             </EuiPageBody>
           </EuiPage>

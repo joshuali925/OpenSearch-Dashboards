@@ -50,7 +50,7 @@ describe('useFlavorId', () => {
       currentAppIdSubject.next('agenticObservability/logs');
     });
 
-    expect(result.current).toBe(AgenticObservabilityFlavor.Logs);
+    expect(result.current).toBe(AgenticObservabilityFlavor.Traces);
   });
 
   it('should handle multiple app ID changes', () => {
@@ -60,12 +60,12 @@ describe('useFlavorId', () => {
     act(() => {
       currentAppIdSubject.next('agenticObservability/logs');
     });
-    expect(result.current).toBe(AgenticObservabilityFlavor.Logs);
+    expect(result.current).toBe(AgenticObservabilityFlavor.Traces);
 
     act(() => {
       currentAppIdSubject.next('agenticObservability/metrics');
     });
-    expect(result.current).toBe(AgenticObservabilityFlavor.Metrics);
+    expect(result.current).toBe(AgenticObservabilityFlavor.Traces);
   });
 
   it('should handle invalid app IDs', () => {

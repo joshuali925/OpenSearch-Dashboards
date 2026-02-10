@@ -29,7 +29,8 @@ export const agenticObsUiSettings: Record<string, UiSettingsParams> = {
       'durationInNanos',
     ],
     description: i18n.translate('agenticObservability.advancedSettings.defaultTraceColumnsText', {
-      defaultMessage: 'Experimental: Columns displayed by default in the Explore traces tab',
+      defaultMessage:
+        'Experimental: Columns displayed by default in the Agentic Observability traces tab',
     }),
     category: ['agenticObservability'],
     schema: schema.arrayOf(schema.string()),
@@ -40,7 +41,7 @@ export const agenticObsUiSettings: Record<string, UiSettingsParams> = {
     }),
     value: ['body', 'severityText', 'resource.attributes.service.name'],
     description: i18n.translate('agenticObservability.advancedSettings.defaultLogsColumnsText', {
-      defaultMessage: 'Columns displayed by default in the Explore logs tab',
+      defaultMessage: 'Columns displayed by default in the Agentic Observability logs tab',
     }),
     category: ['agenticObservability'],
     schema: schema.arrayOf(schema.string()),
@@ -52,7 +53,7 @@ export const agenticObsUiSettings: Record<string, UiSettingsParams> = {
     value: false,
     description: i18n.translate('agenticObservability.advancedSettings.enableExperimentalText', {
       defaultMessage:
-        'Enable experimental features in Explore including field statistics and histogram breakdown selector.',
+        'Enable experimental features in Agentic Observability including field statistics and histogram breakdown selector.',
     }),
     category: ['agenticObservability'],
     schema: schema.boolean(),

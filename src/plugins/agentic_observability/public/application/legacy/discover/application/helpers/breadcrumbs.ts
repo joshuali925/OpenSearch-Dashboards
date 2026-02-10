@@ -42,7 +42,7 @@ export function getRootBreadcrumbs(): EuiBreadcrumb[] {
       }),
       onClick: () =>
         core.application.navigateToApp('agenticObservability', {
-          path: `${AgenticObservabilityFlavor.Logs}#/`,
+          path: `${AgenticObservabilityFlavor.Traces}#/`,
         }),
     },
   ];

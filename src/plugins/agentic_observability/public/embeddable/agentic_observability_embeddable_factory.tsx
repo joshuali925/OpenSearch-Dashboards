@@ -101,7 +101,7 @@ export class AgenticObservabilityEmbeddableFactory
       const { AgenticObservabilityEmbeddable: AgenticObservabilityEmbeddableClass } = await import(
         './agentic_observability_embeddable'
       );
-      const flavor = savedObject.type ?? AgenticObservabilityFlavor.Logs;
+      const flavor = savedObject.type ?? AgenticObservabilityFlavor.Traces;
       const editUrl = services.addBasePath(`/app/agenticObservability/${flavor}/${url}`);
 
       return new AgenticObservabilityEmbeddableClass(

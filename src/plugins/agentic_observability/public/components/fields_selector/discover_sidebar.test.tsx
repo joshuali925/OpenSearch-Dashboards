@@ -209,7 +209,7 @@ describe('discover sidebar', function () {
   });
 
   it('should not show faceted fields when flavor is not Traces', function () {
-    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Logs);
+    mockUseFlavorId.mockReturnValue(AgenticObservabilityFlavor.Traces);
     const props = getCompProps();
     render(<DiscoverSidebar {...props} />);
 

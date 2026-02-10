@@ -11,7 +11,7 @@ export function plugin(initializerContext: PluginInitializerContext) {
   return new AgenticObservabilityPlugin(initializerContext);
 }
 
-export { ExplorePluginSetup, ExplorePluginStart } from './types';
+export { AgenticObservabilityPluginSetup, AgenticObservabilityPluginStart } from './types';
 
 export const config: PluginConfigDescriptor<ConfigSchema> = {
   exposeToBrowser: {
@@ -19,7 +19,7 @@ export const config: PluginConfigDescriptor<ConfigSchema> = {
   },
   schema: configSchema,
   deprecations: ({ rename, unused }) => [
-    // This is to ensure that when explore is enabled, the necessary settings for the enhanced experience are also enabled;
+    // This is to ensure that when agentic observability is enabled, the necessary settings for the enhanced experience are also enabled;
     // this is a short-term solution that utilizes the deprecation framework to modify settings while typical deprecation functionality in OSD is not designed for this purpose.
     (settings, fromPath, addDeprecation) => {
       if (settings?.agenticObservability?.enabled === true) {

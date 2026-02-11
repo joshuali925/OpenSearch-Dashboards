@@ -53,6 +53,10 @@ jest.mock('../../../../components/chart/discover_chart_container', () => ({
   DiscoverChartContainer: () => <div data-test-subj="chart-container">Chart Container</div>,
 }));
 
+jest.mock('../../../tabs/traces_table', () => ({
+  TracesTable: () => <div data-test-subj="traces-table">Traces Table</div>,
+}));
+
 // Mock the context
 jest.mock('../../../../application/context', () => ({
   useDatasetContext: jest.fn(),
@@ -148,7 +152,7 @@ describe('BottomRightContainer', () => {
     );
   };
 
-  it('renders no index patterns when dataset is null', () => {
+  it('renders traces table when dataset is null and flavor is Traces', () => {
     mockUseDatasetContext.mockReturnValue({
       dataset: undefined,
       isLoading: false,
@@ -156,7 +160,7 @@ describe('BottomRightContainer', () => {
     });
 
     renderComponent();
-    expect(screen.getByTestId('no-index-patterns')).toBeInTheDocument();
+    expect(screen.getByTestId('traces-table')).toBeInTheDocument();
   });
 
   it('renders uninitialized state when status is UNINITIALIZED', () => {
@@ -268,7 +272,7 @@ describe('BottomRightContainer', () => {
     });
 
     renderComponent();
-    expect(screen.getByTestId('no-index-patterns')).toBeInTheDocument();
+    expect(screen.getByTestId('traces-table')).toBeInTheDocument();
   });
 
   it('should pass correct props to DiscoverNoResults', () => {

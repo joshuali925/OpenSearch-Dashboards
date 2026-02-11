@@ -117,7 +117,7 @@ describe('ResultsActionBar', () => {
     expect(screen.queryByTestId('saveAndAddButtonWithModal')).not.toBeInTheDocument();
   });
 
-  test('should hide add to dashboard button and export button if current tab is patterns', () => {
+  test('should show export button and add to dashboard button for visualization tab', () => {
     const patternsStore = mockStore({
       ui: { activeTabId: 'agentic_observability_visualization_tab' },
       tab: { patterns: { patternsField: 'message' } },
@@ -127,8 +127,8 @@ describe('ResultsActionBar', () => {
         <DiscoverResultsActionBar {...props} />
       </Provider>
     );
-    expect(screen.queryByTestId('discoverDownloadCsvButton')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('saveAndAddButtonWithModal')).not.toBeInTheDocument();
+    expect(screen.getByTestId('discoverDownloadCsvButton')).toBeInTheDocument();
+    expect(screen.getByTestId('saveAndAddButtonWithModal')).toBeInTheDocument();
   });
 
   test('should show export button but hide add to dashboard button for visualization tab', () => {

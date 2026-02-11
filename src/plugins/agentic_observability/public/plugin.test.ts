@@ -271,29 +271,10 @@ describe('AgenticObservabilityPlugin', () => {
     it('should register agentic observability applications', () => {
       plugin.setup(coreSetup as any, setupDeps as any);
 
-      expect(coreSetup.application.register).toHaveBeenCalledTimes(4);
-      expect(coreSetup.application.register).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'agenticObservability/logs',
-          title: 'Logs',
-        })
-      );
-      expect(coreSetup.application.register).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'agenticObservability/traces',
-          title: 'Traces',
-        })
-      );
-      expect(coreSetup.application.register).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'agenticObservability/metrics',
-          title: 'Metrics',
-        })
-      );
+      expect(coreSetup.application.register).toHaveBeenCalledTimes(1);
       expect(coreSetup.application.register).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'agenticObservability',
-          title: 'Discover',
         })
       );
     });
@@ -312,47 +293,29 @@ describe('AgenticObservabilityPlugin', () => {
 
       expect(setupDeps.visualizations.registerAlias).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: 'DiscoverVisualization',
+          name: 'AgenticObservabilityVisualization',
           aliasApp: 'agenticObservability',
           title: expect.any(String),
         })
       );
     });
 
-    it('should register Traces and Metrics apps with updater observables', () => {
+    it('should register the main app with updater observable', () => {
       plugin.setup(coreSetup, setupDeps);
 
-      // Verify Traces app has updater$
       expect(coreSetup.application.register).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 'agenticObservability/traces',
-          title: 'Traces',
-          updater$: expect.any(Object),
-        })
-      );
-
-      // Verify Metrics app has updater$
-      expect(coreSetup.application.register).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'agenticObservability/metrics',
-          title: 'Metrics',
-          updater$: expect.any(Object),
+          id: 'agenticObservability',
         })
       );
     });
 
-    it('should register all nav links during setup', () => {
+    it('should register nav links during setup', () => {
       plugin.setup(coreSetup, setupDeps);
 
-      // Verify navGroup.addNavLinksToGroup was called with all 4 links
       expect(coreSetup.chrome.navGroup.addNavLinksToGroup).toHaveBeenCalledWith(
         expect.any(Object),
-        expect.arrayContaining([
-          expect.objectContaining({ id: 'agenticObservability' }),
-          expect.objectContaining({ id: 'agenticObservability/logs' }),
-          expect.objectContaining({ id: 'agenticObservability/traces' }),
-          expect.objectContaining({ id: 'agenticObservability/metrics' }),
-        ])
+        expect.arrayContaining([expect.objectContaining({ id: 'agenticObservability' })])
       );
     });
 

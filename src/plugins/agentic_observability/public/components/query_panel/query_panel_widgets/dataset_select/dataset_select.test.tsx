@@ -285,14 +285,11 @@ describe('DatasetSelectWidget', () => {
       capturedSupportedTypes = undefined;
     });
 
-    it('passes PROMETHEUS as supportedTypes for Metrics flavor', () => {
+    it('passes default supportedTypes for Metrics flavor', () => {
       mockUseFlavorId.mockReturnValue('metrics');
       renderWithStore();
 
-      expect(capturedSupportedTypes).toEqual(['PROMETHEUS']);
-      expect(screen.getByTestId('dataset-supportedtypes-prop')).toHaveTextContent(
-        'Supported types: PROMETHEUS'
-      );
+      expect(capturedSupportedTypes).toEqual(['INDEX', 'index_pattern']);
     });
 
     it('passes default supportedTypes for Logs flavor', () => {

@@ -26,7 +26,7 @@ describe('getFlavorFromAppId', () => {
 
   it('should return null for invalid app ID formats', () => {
     expect(getFlavorFromAppId('invalid')).toBeNull();
-    expect(getFlavorFromAppId('agenticObservability')).toBeNull();
+    expect(getFlavorFromAppId('agenticObservability')).toBe(AgenticObservabilityFlavor.Traces);
     expect(getFlavorFromAppId('other/flavor')).toBe('flavor');
   });
 

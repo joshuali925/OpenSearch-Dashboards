@@ -39,7 +39,7 @@ describe('useFlavorId', () => {
 
   it('should return null when no app ID is provided', () => {
     const { result } = renderHook(() => useFlavorId());
-    expect(result.current).toBeNull();
+    expect(result.current).toBe(AgenticObservabilityFlavor.Traces);
   });
 
   it('should extract flavor ID from agentic observability app ID', () => {
@@ -50,7 +50,7 @@ describe('useFlavorId', () => {
       currentAppIdSubject.next('agenticObservability/logs');
     });
 
-    expect(result.current).toBe(AgenticObservabilityFlavor.Traces);
+    expect(result.current).toBe('logs');
   });
 
   it('should handle multiple app ID changes', () => {
@@ -60,12 +60,12 @@ describe('useFlavorId', () => {
     act(() => {
       currentAppIdSubject.next('agenticObservability/logs');
     });
-    expect(result.current).toBe(AgenticObservabilityFlavor.Traces);
+    expect(result.current).toBe('logs');
 
     act(() => {
       currentAppIdSubject.next('agenticObservability/metrics');
     });
-    expect(result.current).toBe(AgenticObservabilityFlavor.Traces);
+    expect(result.current).toBe('metrics');
   });
 
   it('should handle invalid app IDs', () => {

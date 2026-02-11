@@ -21,7 +21,7 @@ import { useFlavorId } from '../../helpers/use_flavor_id';
 import { AgenticObservabilityFlavor } from '../../../common';
 
 jest.mock('../../helpers/use_flavor_id', () => ({
-  useFlavorId: jest.fn(() => 'logs'),
+  useFlavorId: jest.fn(() => 'traces'),
 }));
 
 jest.mock('../../application/utils/state_management/slices', () => ({

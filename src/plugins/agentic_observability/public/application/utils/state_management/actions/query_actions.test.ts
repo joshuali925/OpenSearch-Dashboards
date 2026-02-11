@@ -66,6 +66,7 @@ import { setResults } from '../slices';
 import { Query, DataView } from 'src/plugins/data/common';
 import { AgenticObservabilityServices } from '../../../../types';
 import { SAMPLE_SIZE_SETTING } from '../../../../../common';
+import { of } from 'rxjs';
 
 // Mock dependencies
 jest.mock('@osd/i18n', () => ({
@@ -233,6 +234,11 @@ describe('Query Actions - Comprehensive Test Suite', () => {
     } as any;
 
     mockServices = {
+      core: {
+        application: {
+          currentAppId$: of('agenticObservability/traces'),
+        },
+      },
       data: {
         dataViews: {
           ensureDefaultDataView: jest.fn().mockResolvedValue(undefined),
@@ -295,6 +301,7 @@ describe('Query Actions - Comprehensive Test Suite', () => {
           }
           return null;
         }),
+        getAllTabs: jest.fn().mockReturnValue([]),
       },
       getRequestInspectorStats: jest.fn().mockReturnValue({}),
     } as any;
@@ -596,6 +603,7 @@ describe('Query Actions - Comprehensive Test Suite', () => {
     });
 
     it('should call updateFieldTopQueryValues when processing results with hits', () => {
+      jest.useFakeTimers();
       // Mock the getFieldValueCounts function that's used in updateFieldTopQueryValues
       const mockGetFieldValueCounts = fieldCalculatorModule.getFieldValueCounts as jest.Mock;
       mockGetFieldValueCounts.mockReturnValue({
@@ -635,6 +643,9 @@ describe('Query Actions - Comprehensive Test Suite', () => {
 
       const result = defaultResultsProcessor(rawResults, mockDatasetWithFields);
 
+      // Flush the deferred setTimeout(() => updateFieldTopQueryValues(...), 0)
+      jest.runAllTimers();
+
       // Verify that getFieldValueCounts was called as part of updateFieldTopQueryValues
       expect(mockGetFieldValueCounts).toHaveBeenCalledWith({
         hits: rawResults.hits.hits,
@@ -650,6 +661,7 @@ describe('Query Actions - Comprehensive Test Suite', () => {
       // Verify the result structure
       expect(result.hits).toBe(rawResults.hits);
       expect(result.dataset).toBe(mockDatasetWithFields);
+      jest.useRealTimers();
     });
   });
 

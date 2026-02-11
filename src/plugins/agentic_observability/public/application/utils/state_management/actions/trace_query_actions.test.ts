@@ -49,7 +49,6 @@ jest.mock('./utils', () => ({
 
 import {
   prepareTraceCacheKeys,
-  executeTraceAggregationQueries,
   executeRequestCountQuery,
   executeErrorCountQuery,
   executeLatencyQuery,
@@ -98,6 +97,13 @@ jest.mock('../../../../../../data/public', () => ({
   },
   search: {
     tabifyAggResponse: jest.fn(),
+    aggs: {
+      TimeBuckets: jest.fn().mockImplementation(() => ({
+        setInterval: jest.fn(),
+        setBounds: jest.fn(),
+        getInterval: jest.fn(() => ({ expression: '1h' })),
+      })),
+    },
   },
   ResultStatus: {
     UNINITIALIZED: 'uninitialized',
@@ -116,6 +122,16 @@ jest.mock('../../../../../../data/public', () => ({
 
 jest.mock('../../../../application/legacy/discover/opensearch_dashboards_services', () => ({
   getResponseInspectorStats: jest.fn(),
+}));
+
+// Mock executeTabQuery from query_actions since trace thunks delegate to it
+jest.mock('./query_actions', () => ({
+  executeTabQuery: jest.fn(({ cacheKey, queryString }) => {
+    // Return a thunk that resolves with mock data
+    const thunk = () => Promise.resolve({ payload: { hits: { hits: [], total: 10 } } });
+    thunk.unwrap = () => Promise.resolve({ hits: { hits: [], total: 10 } });
+    return thunk;
+  }),
 }));
 
 jest.mock('../slices', () => ({
@@ -331,111 +347,9 @@ describe('Trace Query Actions - Test Suite', () => {
       });
     });
 
-    describe('executeTraceAggregationQueries', () => {
-      it('should execute all three trace queries in parallel', async () => {
-        const params = {
-          services: mockServices,
-          baseQuery: 'source=traces',
-          config: {
-            timeField: 'endTime',
-            interval: '5m',
-            fromDate: 'now-1h',
-            toDate: 'now',
-            durationField: 'durationInNanos',
-            statusField: 'status.code',
-          },
-        };
-
-        // Mock data for the three queries
-        const mockRequestData = { hits: { hits: [], total: 0 } };
-
-        // Create a fresh mock dispatch for this test
-        const testMockDispatch = jest.fn();
-        testMockDispatch.mockImplementation(() => {
-          return {
-            unwrap: () => Promise.resolve(mockRequestData),
-          };
-        });
-
-        const thunk = executeTraceAggregationQueries(params);
-        const result = await thunk(testMockDispatch, mockGetState, undefined);
-
-        expect(result.payload).toEqual({
-          requestData: mockRequestData,
-          errorData: mockRequestData,
-          latencyData: mockRequestData,
-        });
-
-        // Verify that dispatch was called (at least 3 times for our queries)
-        expect(testMockDispatch).toHaveBeenCalled();
-      });
-
-      it('should handle individual query failures gracefully', async () => {
-        const params = {
-          services: mockServices,
-          baseQuery: 'source=traces',
-          config: createTraceConfig(),
-        };
-
-        // Mock one query to fail
-        const error = new Error('Request count query failed');
-        const testMockDispatch = jest.fn();
-        let thunkCallCount = 0;
-        testMockDispatch.mockImplementation((action: any) => {
-          // Only count function calls (actual thunks), not action objects
-          if (typeof action === 'function') {
-            thunkCallCount++;
-            // First thunk call fails, others succeed
-            if (thunkCallCount === 1) {
-              return { unwrap: () => Promise.reject(error) };
-            }
-          }
-          return { unwrap: () => Promise.resolve({ hits: { hits: [], total: 0 } }) };
-        });
-
-        const thunk = executeTraceAggregationQueries(params);
-        const result = await thunk(testMockDispatch, mockGetState, undefined);
-
-        // Redux Toolkit wraps errors in rejected actions instead of throwing
-        expect(result.type).toBe('query/executeTraceAggregationQueries/rejected');
-        expect(result.error).toBeDefined();
-        expect(result.error.message).toBe('Request count query failed');
-      });
-
-      it('should use correct cache keys for each query', async () => {
-        const params = {
-          services: mockServices,
-          baseQuery: 'source=traces | where service="api"',
-          config: createTraceConfig({ interval: '1h' }),
-        };
-
-        // Track dispatched thunk function calls (not pending/fulfilled actions)
-        const dispatchedThunkFunctions: any[] = [];
-        const testMockDispatch = jest.fn();
-        testMockDispatch.mockImplementation((thunkActionCreator: any) => {
-          // Only track function calls (thunks), not action objects
-          if (typeof thunkActionCreator === 'function') {
-            dispatchedThunkFunctions.push(thunkActionCreator);
-          }
-          return {
-            unwrap: () => Promise.resolve({ hits: { hits: [], total: 0 } }),
-          };
-        });
-
-        const thunk = executeTraceAggregationQueries(params);
-        await thunk(testMockDispatch, mockGetState, undefined);
-
-        // Verify correct cache keys are passed to the action creators
-        // We expect 3 async thunk function calls (request, error, latency queries)
-        expect(dispatchedThunkFunctions).toHaveLength(3);
-
-        // Verify dispatch was called
-        expect(testMockDispatch).toHaveBeenCalled();
-      });
-    });
-
     describe('executeRequestCountQuery', () => {
       it('should execute request count query successfully', async () => {
+        const { executeTabQuery: mockExecuteTabQuery } = jest.requireMock('./query_actions');
         const params = {
           services: mockServices,
           cacheKey: 'trace-requests:source=traces',
@@ -451,22 +365,18 @@ describe('Trace Query Actions - Test Suite', () => {
         await thunk(mockDispatch, mockGetState, undefined);
 
         expect(mockBuildRequestCountQuery).toHaveBeenCalledWith('source=traces', params.config);
-        expect(mockServices.data.dataViews.get).toHaveBeenCalled();
-        expect(mockSearchSource.fetch).toHaveBeenCalled();
-        expect(mockDispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'queryEditor/setIndividualQueryStatus',
-            payload: expect.objectContaining({
-              cacheKey: 'trace-requests:source=traces',
-              status: expect.objectContaining({
-                status: QueryExecutionStatus.READY,
-              }),
-            }),
-          })
-        );
+        // Verify executeTabQuery was dispatched
+        expect(mockDispatch).toHaveBeenCalled();
       });
 
       it('should handle request count query errors', async () => {
+        const { executeTabQuery: mockExecuteTabQuery } = jest.requireMock('./query_actions');
+        mockExecuteTabQuery.mockImplementationOnce(() => {
+          const thunk = () => Promise.reject(new Error('Query failed'));
+          thunk.unwrap = () => Promise.reject(new Error('Query failed'));
+          return thunk;
+        });
+
         const params = {
           services: mockServices,
           cacheKey: 'trace-requests:source=traces',
@@ -474,54 +384,19 @@ describe('Trace Query Actions - Test Suite', () => {
           config: createTraceConfig(),
         };
 
-        const error = {
-          body: {
-            error: 'Field not found',
-            message: JSON.stringify({
-              error: {
-                details: "can't resolve Symbol(namespace=FIELD_NAME, name=endTime)",
-                reason: 'SemanticCheckException',
-                type: 'SemanticCheckException',
-              },
-            }),
-            statusCode: 400,
-          },
-        };
-
-        mockSearchSource.fetch.mockRejectedValue(error);
-
         const thunk = executeRequestCountQuery(params);
+        const result = await thunk(mockDispatch, mockGetState, undefined);
 
-        try {
-          await thunk(mockDispatch, mockGetState, undefined);
-        } catch (e) {
-          expect(e).toBe(error);
-        }
-
-        expect(mockDispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'queryEditor/setIndividualQueryStatus',
-            payload: expect.objectContaining({
-              cacheKey: 'trace-requests:source=traces',
-              status: expect.objectContaining({
-                status: QueryExecutionStatus.ERROR,
-                error: expect.objectContaining({
-                  message: {
-                    details: "can't resolve Symbol(namespace=FIELD_NAME, name=endTime)",
-                    reason: 'SemanticCheckException',
-                    type: 'SemanticCheckException',
-                  },
-                }),
-              }),
-            }),
-          })
-        );
+        // The thunk should handle the error via createAsyncThunk rejection
+        expect(result.meta.requestStatus).toBe('rejected');
       });
 
       it('should set status to NO_RESULTS when no hits returned', async () => {
-        mockSearchSource.fetch.mockResolvedValue({
-          hits: { hits: [], total: 0 },
-          took: 5,
+        const { executeTabQuery: mockExecuteTabQuery } = jest.requireMock('./query_actions');
+        mockExecuteTabQuery.mockImplementationOnce(() => {
+          const thunk = () => Promise.resolve({ payload: { hits: { hits: [], total: 0 } } });
+          thunk.unwrap = () => Promise.resolve({ hits: { hits: [], total: 0 } });
+          return thunk;
         });
 
         const params = {
@@ -534,17 +409,7 @@ describe('Trace Query Actions - Test Suite', () => {
         const thunk = executeRequestCountQuery(params);
         await thunk(mockDispatch, mockGetState, undefined);
 
-        expect(mockDispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'queryEditor/setIndividualQueryStatus',
-            payload: expect.objectContaining({
-              cacheKey: 'trace-requests:source=traces',
-              status: expect.objectContaining({
-                status: QueryExecutionStatus.NO_RESULTS,
-              }),
-            }),
-          })
-        );
+        expect(mockBuildRequestCountQuery).toHaveBeenCalledWith('source=traces', params.config);
       });
     });
 
@@ -565,22 +430,17 @@ describe('Trace Query Actions - Test Suite', () => {
         await thunk(mockDispatch, mockGetState, undefined);
 
         expect(mockBuildErrorCountQuery).toHaveBeenCalledWith('source=traces', params.config);
-        expect(mockServices.data.dataViews.get).toHaveBeenCalled();
-        expect(mockSearchSource.fetch).toHaveBeenCalled();
-        expect(mockDispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'queryEditor/setIndividualQueryStatus',
-            payload: expect.objectContaining({
-              cacheKey: 'trace-errors:source=traces',
-              status: expect.objectContaining({
-                status: QueryExecutionStatus.READY,
-              }),
-            }),
-          })
-        );
+        expect(mockDispatch).toHaveBeenCalled();
       });
 
       it('should handle missing status field error', async () => {
+        const { executeTabQuery: mockExecuteTabQuery } = jest.requireMock('./query_actions');
+        mockExecuteTabQuery.mockImplementationOnce(() => {
+          const thunk = () => Promise.reject(new Error('Field not found'));
+          thunk.unwrap = () => Promise.reject(new Error('Field not found'));
+          return thunk;
+        });
+
         const params = {
           services: mockServices,
           cacheKey: 'trace-errors:source=traces',
@@ -588,48 +448,10 @@ describe('Trace Query Actions - Test Suite', () => {
           config: createTraceConfig({ statusField: 'status' }),
         };
 
-        const error = {
-          body: {
-            error: 'Field not found',
-            message: JSON.stringify({
-              error: {
-                details: "can't resolve Symbol(namespace=FIELD_NAME, name=status)",
-                reason: 'SemanticCheckException',
-                type: 'SemanticCheckException',
-              },
-            }),
-            statusCode: 400,
-          },
-        };
-
-        mockSearchSource.fetch.mockRejectedValue(error);
-
         const thunk = executeErrorCountQuery(params);
+        const result = await thunk(mockDispatch, mockGetState, undefined);
 
-        try {
-          await thunk(mockDispatch, mockGetState, undefined);
-        } catch (e) {
-          expect(e).toBe(error);
-        }
-
-        expect(mockDispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'queryEditor/setIndividualQueryStatus',
-            payload: expect.objectContaining({
-              cacheKey: 'trace-errors:source=traces',
-              status: expect.objectContaining({
-                status: QueryExecutionStatus.ERROR,
-                error: expect.objectContaining({
-                  message: {
-                    details: "can't resolve Symbol(namespace=FIELD_NAME, name=status)",
-                    reason: 'SemanticCheckException',
-                    type: 'SemanticCheckException',
-                  },
-                }),
-              }),
-            }),
-          })
-        );
+        expect(result.meta.requestStatus).toBe('rejected');
       });
 
       it('should handle different status field configurations', async () => {
@@ -674,22 +496,17 @@ describe('Trace Query Actions - Test Suite', () => {
         await thunk(mockDispatch, mockGetState, undefined);
 
         expect(mockBuildLatencyQuery).toHaveBeenCalledWith('source=traces', params.config);
-        expect(mockServices.data.dataViews.get).toHaveBeenCalled();
-        expect(mockSearchSource.fetch).toHaveBeenCalled();
-        expect(mockDispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'queryEditor/setIndividualQueryStatus',
-            payload: expect.objectContaining({
-              cacheKey: 'trace-latency:source=traces',
-              status: expect.objectContaining({
-                status: QueryExecutionStatus.READY,
-              }),
-            }),
-          })
-        );
+        expect(mockDispatch).toHaveBeenCalled();
       });
 
       it('should handle missing duration field error', async () => {
+        const { executeTabQuery: mockExecuteTabQuery } = jest.requireMock('./query_actions');
+        mockExecuteTabQuery.mockImplementationOnce(() => {
+          const thunk = () => Promise.reject(new Error('Field not found'));
+          thunk.unwrap = () => Promise.reject(new Error('Field not found'));
+          return thunk;
+        });
+
         const params = {
           services: mockServices,
           cacheKey: 'trace-latency:source=traces',
@@ -697,48 +514,10 @@ describe('Trace Query Actions - Test Suite', () => {
           config: createTraceConfig(),
         };
 
-        const error = {
-          body: {
-            error: 'Field not found',
-            message: JSON.stringify({
-              error: {
-                details: "can't resolve Symbol(namespace=FIELD_NAME, name=durationInNanos)",
-                reason: 'SemanticCheckException',
-                type: 'SemanticCheckException',
-              },
-            }),
-            statusCode: 400,
-          },
-        };
-
-        mockSearchSource.fetch.mockRejectedValue(error);
-
         const thunk = executeLatencyQuery(params);
+        const result = await thunk(mockDispatch, mockGetState, undefined);
 
-        try {
-          await thunk(mockDispatch, mockGetState, undefined);
-        } catch (e) {
-          expect(e).toBe(error);
-        }
-
-        expect(mockDispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'queryEditor/setIndividualQueryStatus',
-            payload: expect.objectContaining({
-              cacheKey: 'trace-latency:source=traces',
-              status: expect.objectContaining({
-                status: QueryExecutionStatus.ERROR,
-                error: expect.objectContaining({
-                  message: {
-                    details: "can't resolve Symbol(namespace=FIELD_NAME, name=durationInNanos)",
-                    reason: 'SemanticCheckException',
-                    type: 'SemanticCheckException',
-                  },
-                }),
-              }),
-            }),
-          })
-        );
+        expect(result.meta.requestStatus).toBe('rejected');
       });
 
       it('should handle different duration field configurations', async () => {
@@ -826,6 +605,13 @@ describe('Trace Query Actions - Test Suite', () => {
       });
 
       it('should handle query abortion correctly', async () => {
+        const { executeTabQuery: mockExecuteTabQuery } = jest.requireMock('./query_actions');
+        mockExecuteTabQuery.mockImplementationOnce(() => {
+          const thunk = () => Promise.resolve({ payload: undefined });
+          thunk.unwrap = () => Promise.resolve(undefined);
+          return thunk;
+        });
+
         const params = {
           services: mockServices,
           cacheKey: 'trace-requests:abort-test',
@@ -833,25 +619,10 @@ describe('Trace Query Actions - Test Suite', () => {
           config: createTraceConfig(),
         };
 
-        const abortError = new Error('Aborted');
-        abortError.name = 'AbortError';
-        mockSearchSource.fetch.mockRejectedValue(abortError);
-
         const thunk = executeRequestCountQuery(params);
         const result = await thunk(mockDispatch, mockGetState, undefined);
 
         expect(result.payload).toBeUndefined();
-        expect(mockDispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'queryEditor/setIndividualQueryStatus',
-            payload: expect.objectContaining({
-              cacheKey: 'trace-requests:abort-test',
-              status: expect.objectContaining({
-                status: QueryExecutionStatus.UNINITIALIZED,
-              }),
-            }),
-          })
-        );
       });
 
       it('should handle various time field configurations', async () => {

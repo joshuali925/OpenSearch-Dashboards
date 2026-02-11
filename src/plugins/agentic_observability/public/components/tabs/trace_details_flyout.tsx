@@ -358,13 +358,6 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({ trace, onClose
     },
   ];
 
-  // Format trace ID for display (truncate in middle if long)
-  const formatTraceId = (traceId: string | undefined): string => {
-    if (!traceId) return '—';
-    if (traceId.length <= 20) return traceId;
-    return `${traceId.substring(0, 8)}...${traceId.substring(traceId.length - 8)}`;
-  };
-
   return ReactDOM.createPortal(
     <div
       aria-labelledby="trace-details-flyout"
@@ -446,7 +439,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({ trace, onClose
           <EuiSpacer size="s" />
           <EuiTitle size="s">
             <h2 id="trace-details-flyout">
-              trace_id: {formatTraceId(trace.traceId)} <EuiBadge color="hollow">Trace ID</EuiBadge>
+              trace_id: {trace.traceId || '—'} <EuiBadge color="hollow">Trace ID</EuiBadge>
             </h2>
           </EuiTitle>
           <EuiSpacer size="s" />

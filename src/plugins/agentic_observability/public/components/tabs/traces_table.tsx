@@ -6,7 +6,6 @@ import React, { useState, useMemo, useCallback } from 'react';
 import {
   EuiBasicTable,
   EuiBasicTableColumn,
-  EuiCheckbox,
   EuiHealth,
   EuiBadge,
   EuiButtonEmpty,
@@ -26,7 +25,6 @@ const PAGE_SIZE = 50;
 
 export const TracesTable = () => {
   const { traces, loading, error, refresh } = useAgentTraces();
-  const [selectedItems, setSelectedItems] = useState<TraceRow[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [selectedTrace, setSelectedTrace] = useState<TraceRow | null>(null);
   const [isFlyoutOpen, setIsFlyoutOpen] = useState(false);
@@ -113,25 +111,6 @@ export const TracesTable = () => {
 
   const columns: Array<EuiBasicTableColumn<TraceRow>> = [
     {
-      field: 'checkbox',
-      name: '',
-      width: '32px',
-      render: (_: unknown, item: TraceRow) => (
-        <EuiCheckbox
-          id={`checkbox-${item.id}`}
-          checked={selectedItems.some((i) => i.id === item.id)}
-          onChange={(e) => {
-            e.stopPropagation();
-            if (e.target.checked) {
-              setSelectedItems([...selectedItems, item]);
-            } else {
-              setSelectedItems(selectedItems.filter((i) => i.id !== item.id));
-            }
-          }}
-        />
-      ),
-    },
-    {
       field: 'status',
       name: 'STATUS',
       width: '80px',
@@ -146,7 +125,14 @@ export const TracesTable = () => {
       name: 'KIND',
       width: '120px',
       render: (kind: string, item: TraceRow) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            paddingLeft: item.level ? `${item.level * 20}px` : '0',
+          }}
+        >
           {item.isExpandable && (
             <EuiButtonEmpty
               size="xs"
@@ -155,7 +141,7 @@ export const TracesTable = () => {
                 e.stopPropagation();
                 toggleRowExpansion(item.id);
               }}
-              style={{ minWidth: '16px', padding: 0 }}
+              style={{ width: '24px', height: '24px', minWidth: '24px', padding: 0 }}
             />
           )}
           {!item.isExpandable && <span style={{ width: '24px' }} />}
@@ -167,11 +153,7 @@ export const TracesTable = () => {
       field: 'name',
       name: 'NAME',
       width: '200px',
-      render: (name: string, item: TraceRow) => (
-        <div style={{ paddingLeft: item.level ? `${item.level * 20}px` : '0' }}>
-          <EuiText size="s">{name}</EuiText>
-        </div>
-      ),
+      render: (name: string) => <EuiText size="s">{name}</EuiText>,
     },
     {
       field: 'input',
@@ -240,12 +222,6 @@ export const TracesTable = () => {
       name: 'TOTAL TOKENS',
       width: '120px',
       render: (tokens: number | string) => <EuiText size="s">{tokens}</EuiText>,
-    },
-    {
-      field: 'totalCost',
-      name: 'TOTAL COST',
-      width: '120px',
-      render: (cost: string) => <EuiText size="s">{cost}</EuiText>,
     },
   ];
 

@@ -258,67 +258,10 @@ export const executeQueries = createAsyncThunk<
     return;
   }
 
-  const defaultCacheKey = defaultPrepareQueryString(query);
-  // Use separate cache keys for data table and histogram
-  const dataTableCacheKey = defaultCacheKey;
-  const breakdownField = state.queryEditor.breakdownField;
-  const histogramCacheKey = prepareHistogramCacheKey(query, !!breakdownField);
-
-  // Check what needs execution for core queries
-  // If results exist but query status is UNINITIALIZED (after cancel), we need to re-execute
-  const dataTableQueryStatus = state.queryEditor.queryStatusMap[dataTableCacheKey];
-  const histogramQueryStatus = state.queryEditor.queryStatusMap[histogramCacheKey];
-
   // Early exit if query should be skipped
   if (shouldSkipQueryExecution(query)) {
     return;
   }
-
-  const needsDataTableQuery =
-    !results[dataTableCacheKey] ||
-    dataTableQueryStatus?.status === QueryExecutionStatus.UNINITIALIZED;
-  const needsHistogramQuery =
-    query.language !== 'PROMQL' &&
-    (!results[histogramCacheKey] ||
-      histogramQueryStatus?.status === QueryExecutionStatus.UNINITIALIZED);
-
-  const promises = [];
-  // Execute query without aggregations
-  if (needsDataTableQuery) {
-    promises.push(
-      dispatch(
-        executeDataTableQuery({
-          services,
-          cacheKey: dataTableCacheKey,
-          queryString: defaultPrepareQueryString(query),
-        })
-      )
-    );
-  }
-
-  // Execute histogram query in background (non-blocking)
-  if (needsHistogramQuery) {
-    const interval = state.legacy?.interval;
-    dispatch(
-      executeHistogramQuery({
-        services,
-        cacheKey: histogramCacheKey,
-        queryString: defaultPrepareQueryString(query),
-        interval,
-      })
-    );
-  }
-
-  // Handle tab queries as before (keeping existing tab logic)
-  const visualizationTab = services.tabRegistry.getTab('agentic_observability_visualization_tab');
-  let visualizationTabPrepareQuery = defaultPrepareQueryString;
-  if (visualizationTab?.prepareQuery) {
-    const prepareQuery = visualizationTab.prepareQuery;
-    visualizationTabPrepareQuery = (queryParam: Query): string => {
-      return prepareQuery(queryParam);
-    };
-  }
-  const visualizationTabCacheKey = visualizationTabPrepareQuery(query);
 
   // Collect all tab cache keys that need execution
   const tabCacheKeysToExecute = new Set<string>();
@@ -334,11 +277,7 @@ export const executeQueries = createAsyncThunk<
       };
     }
     const activeTabCacheKey = activeTabPrepareQuery(query);
-    if (
-      activeTabCacheKey !== defaultCacheKey &&
-      activeTabCacheKey !== visualizationTabCacheKey &&
-      !results[activeTabCacheKey]
-    ) {
+    if (!results[activeTabCacheKey]) {
       tabCacheKeysToExecute.add(activeTabCacheKey);
     }
   } else {
@@ -348,45 +287,29 @@ export const executeQueries = createAsyncThunk<
     for (const tab of allTabs) {
       if (tab.prepareQuery) {
         const tabCacheKey = tab.prepareQuery(query);
-        if (
-          tabCacheKey !== defaultCacheKey &&
-          tabCacheKey !== visualizationTabCacheKey &&
-          !results[tabCacheKey]
-        ) {
+        if (!results[tabCacheKey]) {
           tabCacheKeysToExecute.add(tabCacheKey);
         }
       }
     }
   }
 
-  // Check what needs execution
-  const needsVisualizationTabQuery =
-    visualizationTabCacheKey !== defaultCacheKey && !results[visualizationTabCacheKey];
-
-  // Execute visualization tab query independently (non-blocking)
-  if (needsVisualizationTabQuery) {
-    dispatch(
-      executeTabQuery({
-        services,
-        cacheKey: visualizationTabCacheKey,
-        queryString: visualizationTabCacheKey,
-      })
-    );
-  }
-
-  // Execute tab queries for all tabs that need it (non-blocking, in parallel)
+  // Execute tab queries
+  const tabPromises = [];
   for (const tabCacheKey of tabCacheKeysToExecute) {
-    dispatch(
-      executeTabQuery({
-        services,
-        cacheKey: tabCacheKey,
-        queryString: tabCacheKey,
-      })
+    tabPromises.push(
+      dispatch(
+        executeTabQuery({
+          services,
+          cacheKey: tabCacheKey,
+          queryString: tabCacheKey,
+        })
+      )
     );
   }
 
-  // Wait only for data table query to complete (not histogram or tab queries)
-  await Promise.all(promises);
+  // Wait for tab queries to complete
+  await Promise.all(tabPromises);
 });
 
 /**

@@ -11,10 +11,7 @@ import {
   AgenticObservabilityFlavor,
   AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE,
   AGENTIC_OBSERVABILITY_LOGS_TAB_ID,
-  AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID,
 } from '../../common';
-import { VisTab } from '../components/tabs/vis_tab';
-import { prepareQueryForLanguage } from './utils/languages';
 import { defaultPrepareQueryString } from './utils/state_management/actions/query_actions';
 
 /**
@@ -41,25 +38,6 @@ export const registerBuiltInTabs = (tabRegistry: TabRegistryService) => {
     component: LogsTab,
   };
   tabRegistry.registerTab(tracesTabDefinition);
-
-  // Register Visualizations Tab
-  tabRegistry.registerTab({
-    id: AGENTIC_OBSERVABILITY_VISUALIZATION_TAB_ID,
-    label: i18n.translate('agenticObservability.visualizationTab.label', {
-      defaultMessage: 'Visualization',
-    }),
-    flavor: [AgenticObservabilityFlavor.Traces],
-    order: 20,
-    supportedLanguages: [AGENTIC_OBSERVABILITY_DEFAULT_LANGUAGE],
-
-    // Prepare query based on language
-    prepareQuery: (query) => {
-      const preparedQuery = prepareQueryForLanguage(query);
-      return preparedQuery.query;
-    },
-
-    component: VisTab,
-  });
 };
 
 /**

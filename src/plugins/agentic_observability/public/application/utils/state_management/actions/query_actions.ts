@@ -46,16 +46,6 @@ import {
   processRawResultsForHistogram,
   createHistogramConfigWithInterval,
 } from './utils';
-import { getCurrentFlavor } from '../../../../helpers/get_flavor_from_app_id';
-import { AgenticObservabilityFlavor } from '../../../../../common';
-import { TRACES_CHART_BAR_TARGET } from '../constants';
-import { createTraceAggregationConfig } from './trace_aggregation_builder';
-import {
-  prepareTraceCacheKeys,
-  executeRequestCountQuery,
-  executeErrorCountQuery,
-  executeLatencyQuery,
-} from './trace_query_actions';
 
 // Module-level storage for abort controllers keyed by cacheKey
 const activeQueryAbortControllers = new Map<string, AbortController>();
@@ -397,75 +387,6 @@ export const executeQueries = createAsyncThunk<
 
   // Wait only for data table query to complete (not histogram or tab queries)
   await Promise.all(promises);
-
-  // After main queries complete, check if we should execute trace aggregation queries
-  const flavorId = await getCurrentFlavor(services);
-
-  if (flavorId === AgenticObservabilityFlavor.Traces) {
-    // Get the latest results from state after the data table query has completed
-    const latestState = getState();
-    const dataTableResults = latestState.results[dataTableCacheKey];
-
-    // Only execute RED metrics queries if we have table results with data
-    if (dataTableResults && dataTableResults.hits?.hits?.length > 0) {
-      const dataset = query.dataset
-        ? await services.data.dataViews.get(
-            query.dataset.id,
-            query.dataset.type !== 'INDEX_PATTERN'
-          )
-        : await services.data.dataViews.getDefault();
-
-      if (dataset?.timeFieldName) {
-        const rawInterval = latestState.legacy?.interval || 'auto';
-
-        const histogramConfig = createHistogramConfigWithInterval(
-          dataset,
-          rawInterval,
-          services,
-          getState,
-          TRACES_CHART_BAR_TARGET
-        );
-        const calculatedInterval = histogramConfig?.finalInterval || '5m';
-
-        const { requestCacheKey, errorCacheKey, latencyCacheKey } = prepareTraceCacheKeys(query);
-
-        const baseQuery = defaultPrepareQueryString(query);
-
-        const config = createTraceAggregationConfig(
-          dataset.timeFieldName,
-          calculatedInterval,
-          breakdownField
-        );
-
-        // Execute all 3 RED metrics queries in background (non-blocking)
-        // These are histogram queries that shouldn't block tab queries
-        dispatch(
-          executeRequestCountQuery({
-            services,
-            cacheKey: requestCacheKey,
-            baseQuery,
-            config,
-          })
-        );
-        dispatch(
-          executeErrorCountQuery({
-            services,
-            cacheKey: errorCacheKey,
-            baseQuery,
-            config,
-          })
-        );
-        dispatch(
-          executeLatencyQuery({
-            services,
-            cacheKey: latencyCacheKey,
-            baseQuery,
-            config,
-          })
-        );
-      }
-    }
-  }
 });
 
 /**

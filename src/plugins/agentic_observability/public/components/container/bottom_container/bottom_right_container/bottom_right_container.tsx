@@ -19,7 +19,6 @@ import {
   executeQueries,
   defaultPrepareQueryString,
 } from '../../../../application/utils/state_management/actions/query_actions';
-import { DiscoverChartContainer } from '../../../../components/chart/discover_chart_container';
 import { useDatasetContext } from '../../../../application/context';
 import { ResizableVisControlAndTabs } from './resizable_vis_control_and_tabs';
 import { useFlavorId } from '../../../../helpers/use_flavor_id';
@@ -30,7 +29,6 @@ import { TracesTable } from '../../../tabs/traces_table';
 // Memoized content component to prevent re-renders of chart + tabs when status hasn't changed
 const ReadyContent = React.memo(() => (
   <CanvasPanel>
-    <DiscoverChartContainer />
     <ResizableVisControlAndTabs />
   </CanvasPanel>
 ));

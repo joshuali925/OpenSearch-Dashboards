@@ -17,12 +17,15 @@ import {
   EuiPanel,
   EuiIcon,
   EuiBadge,
+  EuiLoadingSpinner,
 } from '@elastic/eui';
 import { TraceRow } from './use_agent_traces';
 
-interface TraceDetailsProps {
+export interface TraceDetailsProps {
   trace: TraceRow;
   onClose: () => void;
+  fullTree?: TraceRow[];
+  isLoadingFullTree?: boolean;
 }
 
 interface TreeNode {
@@ -106,7 +109,12 @@ const DEFAULT_WIDTH = 600;
 const MIN_WIDTH = 360;
 const MAX_WIDTH_RATIO = 0.85;
 
-export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({ trace, onClose }) => {
+export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
+  trace,
+  onClose,
+  fullTree,
+  isLoadingFullTree,
+}) => {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const isDragging = useRef(false);
   const startX = useRef(0);
@@ -143,18 +151,29 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({ trace, onClose
     };
   }, []);
 
-  // Build tree from trace data
+  // Build tree from trace data — use fullTree (all spans) when available
   const traceTreeData = useMemo(() => {
+    if (fullTree && fullTree.length > 0) {
+      // fullTree contains root-level TraceRows with children already nested
+      return fullTree.map((root) => buildTreeFromTraceRow(root));
+    }
     return [buildTreeFromTraceRow(trace)];
-  }, [trace]);
+  }, [trace, fullTree]);
 
   const flatNodes = useMemo(() => flattenTree(traceTreeData), [traceTreeData]);
 
   // Initialize with the trace that was clicked
   const initialIndex = flatNodes.findIndex((node) => node.id === trace.id);
   const [selectedNodeIndex, setSelectedNodeIndex] = useState(initialIndex >= 0 ? initialIndex : 0);
+
+  // Re-sync index when flatNodes changes (e.g. fullTree loads)
+  useEffect(() => {
+    const idx = flatNodes.findIndex((node) => node.id === trace.id);
+    setSelectedNodeIndex(idx >= 0 ? idx : 0);
+  }, [flatNodes, trace.id]);
+
   const selectedNode = flatNodes[selectedNodeIndex];
-  const selectedTraceRow = selectedNode.traceRow;
+  const selectedTraceRow = selectedNode?.traceRow;
 
   const handlePrevious = () => {
     if (selectedNodeIndex > 0) {
@@ -179,7 +198,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({ trace, onClose
             justifyContent: 'space-between',
             width: '100%',
             padding: '4px 8px',
-            backgroundColor: node.id === selectedNode.id ? '#E6F1FA' : 'transparent',
+            backgroundColor: node.id === selectedNode?.id ? '#E6F1FA' : 'transparent',
             borderRadius: '4px',
             cursor: 'pointer',
           }}
@@ -231,11 +250,20 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({ trace, onClose
       name: 'Trace Tree',
       content: (
         <div style={{ padding: '16px' }}>
-          <EuiPanel paddingSize="s">
-            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-              {createTreeItems(traceTreeData)}
-            </div>
-          </EuiPanel>
+          {isLoadingFullTree ? (
+            <EuiPanel paddingSize="m" style={{ textAlign: 'center' }}>
+              <EuiLoadingSpinner size="l" />
+              <EuiText size="s" color="subdued" style={{ marginTop: '8px' }}>
+                Loading full trace tree...
+              </EuiText>
+            </EuiPanel>
+          ) : (
+            <EuiPanel paddingSize="s">
+              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                {createTreeItems(traceTreeData)}
+              </div>
+            </EuiPanel>
+          )}
         </div>
       ),
     },
@@ -482,13 +510,13 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({ trace, onClose
               <div style={{ padding: '8px 16px', background: '#F5F7FA' }}>
                 <EuiFlexGroup alignItems="center" gutterSize="s">
                   <EuiFlexItem grow={false}>
-                    <EuiBadge color={getKindColor(selectedNode.kind)}>
-                      {selectedNode.kind || 'NODE'}
+                    <EuiBadge color={getKindColor(selectedNode?.kind)}>
+                      {selectedNode?.kind || 'NODE'}
                     </EuiBadge>
                   </EuiFlexItem>
                   <EuiFlexItem>
                     <EuiText size="s">
-                      <strong>{selectedNode.label}</strong>
+                      <strong>{selectedNode?.label}</strong>
                     </EuiText>
                   </EuiFlexItem>
                   <EuiFlexItem grow={false}>

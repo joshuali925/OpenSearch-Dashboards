@@ -19,37 +19,92 @@ import {
   CriteriaWithPagination,
 } from '@elastic/eui';
 import { TraceDetailsFlyout } from './trace_details_flyout';
-import { useAgentTraces, TraceRow } from './use_agent_traces';
+import { useAgentTraces, TraceRow, getChildrenFromFullTree } from './use_agent_traces';
 
 const PAGE_SIZE = 50;
 
 export const TracesTable = () => {
-  const { traces, loading, error, refresh } = useAgentTraces();
+  const {
+    traces,
+    loading,
+    error,
+    refresh,
+    expandTrace,
+    traceSpansCache,
+    traceLoadingState,
+  } = useAgentTraces();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [selectedTrace, setSelectedTrace] = useState<TraceRow | null>(null);
+  const [selectedTraceFullTree, setSelectedTraceFullTree] = useState<TraceRow[] | undefined>(
+    undefined
+  );
   const [isFlyoutOpen, setIsFlyoutOpen] = useState(false);
+  const [flyoutLoading, setFlyoutLoading] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
 
-  const toggleRowExpansion = useCallback((id: string) => {
-    setExpandedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
+  const toggleRowExpansion = useCallback(
+    async (e: React.MouseEvent, id: string, traceId: string) => {
+      e.stopPropagation();
 
-  const handleRowClick = useCallback((item: TraceRow) => {
-    setSelectedTrace(item);
-    setIsFlyoutOpen(true);
-  }, []);
+      // If collapsing, just toggle
+      if (expandedRows.has(id)) {
+        setExpandedRows((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        return;
+      }
+
+      // If expanding, fetch children first (if not cached)
+      await expandTrace(traceId);
+      setExpandedRows((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+    },
+    [expandedRows, expandTrace]
+  );
+
+  const handleRowClick = useCallback(
+    async (item: TraceRow) => {
+      setSelectedTrace(item);
+      setIsFlyoutOpen(true);
+
+      // Check if full tree is already cached
+      const cached = traceSpansCache.get(item.traceId);
+      if (cached) {
+        setSelectedTraceFullTree(cached);
+        return;
+      }
+
+      // Fetch full tree for flyout
+      setFlyoutLoading(true);
+      try {
+        await expandTrace(item.traceId);
+        // After expandTrace completes, the cache will be updated
+        // We need to read it from the updated state in the next render
+        // Use a small timeout to let state propagate
+        setSelectedTraceFullTree(undefined); // Will be picked up from cache
+      } finally {
+        setFlyoutLoading(false);
+      }
+    },
+    [expandTrace, traceSpansCache]
+  );
+
+  // Keep flyout tree in sync with cache
+  const flyoutFullTree = useMemo(() => {
+    if (!selectedTrace) return undefined;
+    return selectedTraceFullTree || traceSpansCache.get(selectedTrace.traceId);
+  }, [selectedTrace, selectedTraceFullTree, traceSpansCache]);
 
   const closeFlyout = useCallback(() => {
     setIsFlyoutOpen(false);
     setSelectedTrace(null);
+    setSelectedTraceFullTree(undefined);
+    setFlyoutLoading(false);
   }, []);
 
   const getKindColor = (kind: string) => {
@@ -80,14 +135,21 @@ export const TracesTable = () => {
         visible.push(row);
       }
 
-      if (row.children && row.children.length > 0 && expandedRows.has(row.id)) {
-        row.children.forEach((child) => addRowAndChildren(child, true));
+      if (!expandedRows.has(row.id)) return;
+
+      // Use full tree children if available, otherwise gen_ai-only children
+      const fullTree = traceSpansCache.get(row.traceId);
+      const children =
+        fullTree && row.level === 0 ? getChildrenFromFullTree(fullTree, row.spanId) : row.children;
+
+      if (children && children.length > 0) {
+        children.forEach((child) => addRowAndChildren(child, true));
       }
     };
 
     traces.forEach((row) => addRowAndChildren(row, true));
     return visible;
-  }, [traces, expandedRows]);
+  }, [traces, expandedRows, traceSpansCache]);
 
   // Paginate visible rows
   const pageOfItems = useMemo(() => {
@@ -124,30 +186,43 @@ export const TracesTable = () => {
       field: 'kind',
       name: 'KIND',
       width: '120px',
-      render: (kind: string, item: TraceRow) => (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            paddingLeft: item.level ? `${item.level * 20}px` : '0',
-          }}
-        >
-          {item.isExpandable && (
-            <EuiButtonEmpty
-              size="xs"
-              iconType={expandedRows.has(item.id) ? 'arrowDown' : 'arrowRight'}
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                toggleRowExpansion(item.id);
-              }}
-              style={{ width: '24px', height: '24px', minWidth: '24px', padding: 0 }}
-            />
-          )}
-          {!item.isExpandable && <span style={{ width: '24px' }} />}
-          <EuiBadge color={getKindColor(kind)}>{kind}</EuiBadge>
-        </div>
-      ),
+      render: (kind: string, item: TraceRow) => {
+        const isTraceLoading = traceLoadingState.get(item.traceId)?.loading;
+        return (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              paddingLeft: item.level ? `${item.level * 20}px` : '0',
+            }}
+          >
+            {item.isExpandable && !isTraceLoading && (
+              <EuiButtonEmpty
+                size="xs"
+                iconType={expandedRows.has(item.id) ? 'arrowDown' : 'arrowRight'}
+                onClick={(e: React.MouseEvent) => toggleRowExpansion(e, item.id, item.traceId)}
+                style={{ width: '24px', height: '24px', minWidth: '24px', padding: 0 }}
+              />
+            )}
+            {item.isExpandable && isTraceLoading && (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  width: '24px',
+                  height: '24px',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <EuiLoadingSpinner size="s" />
+              </span>
+            )}
+            {!item.isExpandable && <span style={{ width: '24px' }} />}
+            <EuiBadge color={getKindColor(kind)}>{kind}</EuiBadge>
+          </div>
+        );
+      },
     },
     {
       field: 'name',
@@ -299,7 +374,12 @@ export const TracesTable = () => {
         />
       </div>
       {isFlyoutOpen && selectedTrace && (
-        <TraceDetailsFlyout trace={selectedTrace} onClose={closeFlyout} />
+        <TraceDetailsFlyout
+          trace={selectedTrace}
+          onClose={closeFlyout}
+          fullTree={flyoutFullTree}
+          isLoadingFullTree={flyoutLoading || traceLoadingState.get(selectedTrace.traceId)?.loading}
+        />
       )}
     </>
   );

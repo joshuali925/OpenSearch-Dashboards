@@ -32,7 +32,7 @@ export const registerBuiltInTabs = (tabRegistry: TabRegistryService) => {
     // Filter to only gen_ai spans for agentic observability
     prepareQuery: (query) => {
       const baseQuery = defaultPrepareQueryString(query);
-      return `${baseQuery} | where isnotnull(\`attributes.gen_ai.operation.name\`)`;
+      return `${baseQuery} | where parentSpanId = "" AND isnotnull(\`attributes.gen_ai.operation.name\`)`;
     },
 
     component: LogsTab,

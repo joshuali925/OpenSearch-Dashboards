@@ -1,0 +1,24 @@
+.agentTracesTimechart {
+  display: block;
+  position: relative;
+
+  // SASSTODO: the visualizing component should have an option or a modifier
+  .series > rect {
+    fill-opacity: 0.5;
+    stroke-width: 1;
+  }
+
+  &__nonEnhanced {
+    border-bottom: $ouiBorderThin;
+  }
+}
+
+.agentTracesHistogram {
+  display: flex;
+  height: 120px;
+}
+
+.agentTracesHistogram__header--partial {
+  font-weight: $euiFontWeightRegular;
+  min-width: $euiSize * 12;
+}

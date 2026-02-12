@@ -14,7 +14,10 @@ import {
   EuiFlexItem,
   EuiSelectableOption,
 } from '@elastic/eui';
-import { SpanFilter } from '../../../trace_view';
+export interface SpanFilter {
+  field: string;
+  value: string | number | boolean;
+}
 
 export interface SpanStatusFilterProps {
   spanFilters: SpanFilter[];

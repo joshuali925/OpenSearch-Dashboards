@@ -13,7 +13,6 @@ import {
   getTraceDetailsUrlParams,
   handleSpanIdNavigation,
   SpanIdLink,
-  TraceFlyoutButton,
   navigateToTraceDetailsWithSpan,
   getStatusCodeColor,
   DurationTableCell,
@@ -38,27 +37,12 @@ Object.defineProperty(window, 'open', {
   writable: true,
 });
 
-jest.mock('../../../../application/pages/traces/trace_flyout/trace_flyout_context', () => ({
-  useTraceFlyoutContext: jest.fn(),
-}));
-
-const mockOpenTraceFlyout = jest.fn();
-const { useTraceFlyoutContext } = jest.requireMock(
-  '../../../../application/pages/traces/trace_flyout/trace_flyout_context'
-);
-
 describe('trace_utils', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockLocation.pathname = '';
     mockLocation.hash = '';
     mockLocation.origin = 'http://localhost:5601';
-    useTraceFlyoutContext.mockReturnValue({
-      openTraceFlyout: mockOpenTraceFlyout,
-      closeTraceFlyout: jest.fn(),
-      isFlyoutOpen: false,
-      flyoutData: undefined,
-    });
   });
 
   describe('isOnTracesPage', () => {
@@ -692,92 +676,6 @@ describe('trace_utils', () => {
       // The tooltip should be present (though we can't easily test the hover behavior in jsdom)
       const link = screen.getByTestId('spanIdLink');
       expect(link).toBeInTheDocument();
-    });
-  });
-
-  describe('TraceFlyoutButton', () => {
-    const mockSetIsRowSelected = jest.fn();
-
-    const defaultProps = {
-      sanitizedCellValue: 'test-value',
-      rowData: { spanId: 'span-123', traceId: 'trace-456' } as any,
-      dataset: { id: 'test', title: 'test', type: 'INDEX_PATTERN' } as any,
-      setIsRowSelected: mockSetIsRowSelected,
-    };
-
-    beforeEach(() => {
-      mockSetIsRowSelected.mockClear();
-    });
-
-    it('should render button with sanitized text', () => {
-      render(<TraceFlyoutButton {...defaultProps} />);
-
-      expect(screen.getByText('test-value')).toBeInTheDocument();
-      expect(screen.getByTestId('traceFlyoutButton')).toBeInTheDocument();
-    });
-
-    it('should call openTraceFlyout when clicked', () => {
-      render(<TraceFlyoutButton {...defaultProps} />);
-
-      fireEvent.click(screen.getByTestId('traceFlyoutButton'));
-
-      expect(mockOpenTraceFlyout).toHaveBeenCalledWith({
-        spanId: 'span-123',
-        traceId: 'trace-456',
-        dataset: defaultProps.dataset,
-        rowData: defaultProps.rowData,
-      });
-    });
-
-    it('should call setIsRowSelected(true) when flyout is open with matching spanId', () => {
-      useTraceFlyoutContext.mockReturnValue({
-        openTraceFlyout: mockOpenTraceFlyout,
-        closeTraceFlyout: jest.fn(),
-        isFlyoutOpen: true,
-        flyoutData: { spanId: 'span-123' },
-      });
-
-      render(<TraceFlyoutButton {...defaultProps} sanitizedCellValue="span-123" />);
-      expect(mockSetIsRowSelected).toHaveBeenCalledWith(true);
-    });
-
-    it('should call setIsRowSelected(false) when flyout is open with different spanId', () => {
-      useTraceFlyoutContext.mockReturnValue({
-        openTraceFlyout: mockOpenTraceFlyout,
-        closeTraceFlyout: jest.fn(),
-        isFlyoutOpen: true,
-        flyoutData: { spanId: 'different-span-id' },
-      });
-
-      render(<TraceFlyoutButton {...defaultProps} />);
-
-      expect(mockSetIsRowSelected).toHaveBeenCalledWith(false);
-    });
-
-    it('should call setIsRowSelected(false) when flyout is closed', () => {
-      useTraceFlyoutContext.mockReturnValue({
-        openTraceFlyout: mockOpenTraceFlyout,
-        closeTraceFlyout: jest.fn(),
-        isFlyoutOpen: false,
-        flyoutData: undefined,
-      });
-
-      render(<TraceFlyoutButton {...defaultProps} />);
-
-      expect(mockSetIsRowSelected).toHaveBeenCalledWith(false);
-    });
-
-    it('should call setIsRowSelected(false) when flyoutData is undefined', () => {
-      useTraceFlyoutContext.mockReturnValue({
-        openTraceFlyout: mockOpenTraceFlyout,
-        closeTraceFlyout: jest.fn(),
-        isFlyoutOpen: true,
-        flyoutData: undefined,
-      });
-
-      render(<TraceFlyoutButton {...defaultProps} />);
-
-      expect(mockSetIsRowSelected).toHaveBeenCalledWith(false);
     });
   });
 

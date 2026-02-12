@@ -75,16 +75,6 @@ jest.mock('../../../components/top_nav/top_nav', () => ({
   ),
 }));
 
-jest.mock('./trace_flyout/trace_flyout_context', () => ({
-  TraceFlyoutProvider: ({ children }: { children: React.ReactNode }) => (
-    <div data-test-subj="trace-flyout-provider">{children}</div>
-  ),
-}));
-
-jest.mock('./trace_flyout/trace_flyout', () => ({
-  TraceFlyout: () => <div data-test-subj="trace-flyout">Trace Flyout</div>,
-}));
-
 jest.mock('../../utils/hooks/use_initial_query_execution', () => ({
   useInitialQueryExecution: jest.fn(),
 }));
@@ -237,18 +227,6 @@ describe('TracesPage', () => {
 
     expect(screen.getByTestId('query-panel')).toBeInTheDocument();
     expect(screen.getByTestId('top-nav')).toBeInTheDocument();
-  });
-
-  it('renders data table flyout components', () => {
-    const store = createTestStore();
-    render(
-      <TestHarness store={store}>
-        <TracesPage />
-      </TestHarness>
-    );
-
-    expect(screen.getByTestId('trace-flyout-provider')).toBeInTheDocument();
-    expect(screen.getByTestId('trace-flyout')).toBeInTheDocument();
   });
 
   describe('Keyboard Shortcuts', () => {

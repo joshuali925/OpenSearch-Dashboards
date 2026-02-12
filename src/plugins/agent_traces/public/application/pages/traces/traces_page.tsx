@@ -18,8 +18,6 @@ import { useHeaderVariants } from '../../utils/hooks/use_header_variants';
 import { BottomContainer } from '../../../components/container/bottom_container';
 import { TopNav } from '../../../components/top_nav/top_nav';
 import { useInitPage } from '../../../application/utils/hooks/use_page_initialization';
-import { TraceFlyout } from './trace_flyout/trace_flyout';
-import { TraceFlyoutProvider } from './trace_flyout/trace_flyout_context';
 
 /**
  * Main application component for the Agent Traces plugin
@@ -38,25 +36,19 @@ export const TracesPage: React.FC<Partial<Pick<AppMountParameters, 'setHeaderAct
 
   return (
     <EuiErrorBoundary>
-      <TraceFlyoutProvider>
-        <div className="mainPage">
-          <EuiPage className="agentTraces-layout" paddingSize="none" grow={false}>
-            <EuiPageBody className="agentTraces-layout__page-body">
-              <TopNav
-                setHeaderActionMenu={setHeaderActionMenu}
-                savedAgentTraces={savedAgentTraces}
-              />
+      <div className="mainPage">
+        <EuiPage className="agentTraces-layout" paddingSize="none" grow={false}>
+          <EuiPageBody className="agentTraces-layout__page-body">
+            <TopNav setHeaderActionMenu={setHeaderActionMenu} savedAgentTraces={savedAgentTraces} />
 
-              <div className="dscCanvas__queryPanel">
-                <QueryPanel />
-              </div>
+            <div className="dscCanvas__queryPanel">
+              <QueryPanel />
+            </div>
 
-              <BottomContainer />
-            </EuiPageBody>
-          </EuiPage>
-        </div>
-        <TraceFlyout />
-      </TraceFlyoutProvider>
+            <BottomContainer />
+          </EuiPageBody>
+        </EuiPage>
+      </div>
     </EuiErrorBoundary>
   );
 };

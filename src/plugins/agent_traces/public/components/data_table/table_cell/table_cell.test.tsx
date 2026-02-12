@@ -7,13 +7,10 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TableCell, ITableCellProps } from './table_cell';
 import { useDatasetContext } from '../../../application/context';
-import { useTraceFlyoutContext } from '../../../application/pages/traces/trace_flyout/trace_flyout_context';
 
 jest.mock('../../../application/context', () => ({
   useDatasetContext: jest.fn(),
 }));
-
-jest.mock('../../../application/pages/traces/trace_flyout/trace_flyout_context');
 
 jest.mock('../../../services/log_action_registry', () => ({
   logActionRegistry: {
@@ -364,77 +361,6 @@ describe('TableCell', () => {
 
       const spanIdLink = screen.getByTestId('spanIdLink');
       expect(spanIdLink.closest('.euiToolTipAnchor')).toBeTruthy();
-    });
-  });
-
-  describe('Span flyout button functionality', () => {
-    const mockUseTraceFlyoutContext = useTraceFlyoutContext as jest.MockedFunction<
-      typeof useTraceFlyoutContext
-    >;
-    const mockOpenTraceFlyout = jest.fn();
-
-    beforeEach(() => {
-      jest.clearAllMocks();
-      mockUseTraceFlyoutContext.mockReturnValue({
-        openTraceFlyout: mockOpenTraceFlyout,
-        closeTraceFlyout: jest.fn(),
-        isFlyoutOpen: false,
-        flyoutData: undefined,
-      });
-    });
-
-    const spanFlyoutProps: ITableCellProps = {
-      columnId: 'endTimeUnixNano',
-      sanitizedCellValue: '<span>Sep 20, 2025 @ 01:00:00.000000000</span>',
-      onFilter: mockOnFilter,
-      fieldMapping: { value: 'test' },
-      isTimeField: true,
-      isOnTracesPage: true,
-      setIsRowSelected: jest.fn(),
-      rowData: {
-        _index: 'test-index',
-        _id: 'test-id',
-        _score: 1,
-        _source: {
-          traceId: 'test-trace-id-456',
-          spanId: 'test-span-id-123',
-          parentSpanId: 'test-parent-span-id-789',
-          serviceName: 'test-service',
-          name: 'test-operation',
-          startTimeUnixNano: '1634567890000000000',
-          endTimeUnixNano: '1634567891000000000',
-          'status.code': '200',
-        },
-      },
-    };
-
-    it('opens data table flyout when clicked on traces page', () => {
-      (window as any).location.pathname = '/app/agentTraces/traces';
-
-      render(<TableCell {...spanFlyoutProps} isOnTracesPage={true} />);
-
-      const traceFlyoutButton = screen.getByTestId('traceFlyoutButton');
-      expect(traceFlyoutButton).toBeInTheDocument();
-      expect(traceFlyoutButton).toHaveTextContent('Sep 20, 2025 @ 01:00:00.000000000');
-
-      fireEvent.click(traceFlyoutButton);
-
-      expect(mockOpenTraceFlyout).toHaveBeenCalledWith({
-        spanId: 'test-span-id-123',
-        traceId: 'test-trace-id-456',
-        dataset: mockDataset,
-        rowData: spanFlyoutProps.rowData,
-      });
-    });
-
-    it('renders regular cell content when not on traces page', () => {
-      render(<TableCell {...spanFlyoutProps} isOnTracesPage={false} />);
-
-      const cellContent = screen.getByTestId('osdDocTableCellDataField');
-      expect(cellContent).toBeInTheDocument();
-      expect(cellContent.innerHTML).toBe('<span>Sep 20, 2025 @ 01:00:00.000000000</span>');
-
-      expect(screen.queryByTestId('traceFlyoutButton')).not.toBeInTheDocument();
     });
   });
 

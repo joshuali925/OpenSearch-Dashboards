@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect } from 'react';
-import { EuiToolTip, EuiLink, EuiIcon, EuiButtonEmpty, EuiText } from '@elastic/eui';
+import React from 'react';
+import { EuiToolTip, EuiLink, EuiIcon, EuiText } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import { SPAN_ID_FIELD_PATHS, TRACE_ID_FIELD_PATHS } from '../../../../utils/trace_field_constants';
 import { OpenSearchSearchHit } from '../../../../types/doc_views_types';
 import { DataView as Dataset } from '../../../../../../data/common';
 import './trace_utils.scss';
-import { useTraceFlyoutContext } from '../../../../application/pages/traces/trace_flyout/trace_flyout_context';
 import { validateRequiredTraceFields } from '../../../../utils/trace_field_validation';
 import { extractFieldFromRowData } from '../../../../utils/trace_field_validation';
 import {
@@ -163,52 +162,6 @@ export const SpanIdLink: React.FC<SpanIdLinkProps> = ({ sanitizedCellValue, rowD
         <EuiIcon type="popout" size="s" />
       </EuiLink>
     </EuiToolTip>
-  );
-};
-
-export interface TraceFlyoutButtonProps {
-  sanitizedCellValue: string;
-  rowData: OpenSearchSearchHit<Record<string, unknown>>;
-  dataset: Dataset;
-  setIsRowSelected: (isSelected: boolean) => void;
-}
-
-export const TraceFlyoutButton: React.FC<TraceFlyoutButtonProps> = ({
-  sanitizedCellValue,
-  rowData,
-  dataset,
-  setIsRowSelected,
-}) => {
-  const { openTraceFlyout, isFlyoutOpen, flyoutData } = useTraceFlyoutContext();
-  const spanIdValue = extractFieldFromRowData(rowData, SPAN_ID_FIELD_PATHS);
-  const traceIdValue = extractFieldFromRowData(rowData, TRACE_ID_FIELD_PATHS);
-
-  useEffect(() => {
-    if (isFlyoutOpen && flyoutData && flyoutData.spanId === spanIdValue) {
-      setIsRowSelected(true);
-    } else {
-      setIsRowSelected(false);
-    }
-  }, [isFlyoutOpen, setIsRowSelected, flyoutData, spanIdValue]);
-
-  const handleSpanFlyoutClick = () => {
-    openTraceFlyout({
-      spanId: spanIdValue,
-      traceId: traceIdValue,
-      dataset,
-      rowData,
-    });
-  };
-
-  return (
-    <EuiButtonEmpty
-      onClick={handleSpanFlyoutClick}
-      data-test-subj="traceFlyoutButton"
-      size="xs"
-      flush="left"
-    >
-      {sanitizedCellValue.replace(/<[^>]*>/g, '').trim()}
-    </EuiButtonEmpty>
   );
 };
 

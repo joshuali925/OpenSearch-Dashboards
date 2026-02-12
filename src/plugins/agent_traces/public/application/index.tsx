@@ -17,7 +17,6 @@ import {
 import { DatasetProvider } from './context';
 import { TracesPage } from './pages/traces';
 import { EditorContextProvider } from './context';
-import { TraceDetails } from './pages/traces/trace_details/trace_view';
 
 const NOOP_PAGE_CONTEXT_HOOK = (_options?: any): string => '';
 
@@ -62,10 +61,6 @@ export const renderApp = (
                     {/* View route for saved searches */}
                     <Route path="/view/:id" exact>
                       <TracesPage setHeaderActionMenu={setHeaderActionMenu} />
-                    </Route>
-
-                    <Route path="/traceDetails" exact={false}>
-                      <TraceDetails setMenuMountPoint={setHeaderActionMenu} />
                     </Route>
 
                     <Route path={[`/`]} exact={false}>

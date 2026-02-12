@@ -7,8 +7,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { shallow, ShallowWrapper } from 'enzyme';
 import { EuiSelectable } from '@elastic/eui';
-import { SpanStatusFilter, SpanStatusFilterProps } from './span_status_filter';
-import { SpanFilter } from '../../../trace_view';
+import { SpanStatusFilter, SpanStatusFilterProps, SpanFilter } from './span_status_filter';
 
 describe('SpanStatusFilter', () => {
   let component: ShallowWrapper;

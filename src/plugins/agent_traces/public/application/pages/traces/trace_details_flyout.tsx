@@ -2,8 +2,7 @@
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  */
-import ReactDOM from 'react-dom';
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   EuiTitle,
   EuiText,
@@ -18,6 +17,9 @@ import {
   EuiIcon,
   EuiBadge,
   EuiLoadingSpinner,
+  EuiFlyout,
+  EuiFlyoutHeader,
+  EuiFlyoutBody,
 } from '@elastic/eui';
 import { TraceRow } from './use_agent_traces';
 import { getKindColor, getKindIconColor } from './trace_utils';
@@ -67,52 +69,12 @@ const flattenTree = (nodes: TreeNode[], result: TreeNode[] = []): TreeNode[] => 
   return result;
 };
 
-const DEFAULT_WIDTH = 600;
-const MIN_WIDTH = 360;
-const MAX_WIDTH_RATIO = 0.85;
-
 export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
   trace,
   onClose,
   fullTree,
   isLoadingFullTree,
 }) => {
-  const [width, setWidth] = useState(DEFAULT_WIDTH);
-  const isDragging = useRef(false);
-  const startX = useRef(0);
-  const startWidth = useRef(0);
-
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      isDragging.current = true;
-      startX.current = e.clientX;
-      startWidth.current = width;
-      e.preventDefault();
-    },
-    [width]
-  );
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return;
-      const delta = startX.current - e.clientX;
-      const maxWidth = window.innerWidth * MAX_WIDTH_RATIO;
-      const newWidth = Math.min(maxWidth, Math.max(MIN_WIDTH, startWidth.current + delta));
-      setWidth(newWidth);
-    };
-
-    const handleMouseUp = () => {
-      isDragging.current = false;
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, []);
-
   // Build tree from trace data — use fullTree (all spans) when available
   const traceTreeData = useMemo(() => {
     if (fullTree && fullTree.length > 0) {
@@ -348,150 +310,94 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     },
   ];
 
-  return ReactDOM.createPortal(
-    <div
-      aria-labelledby="trace-details-flyout"
-      style={{
-        position: 'fixed',
-        top: 0,
-        right: 0,
-        bottom: 0,
-        width: `${width}px`,
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'row',
-      }}
-    >
-      {/* Drag handle for resizing */}
-      <div
-        onMouseDown={handleMouseDown}
-        style={{
-          width: '6px',
-          cursor: 'col-resize',
-          background: '#D3DAE6',
-          flexShrink: 0,
-          transition: isDragging.current ? 'none' : 'background 0.15s',
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.background = '#98A2B3';
-        }}
-        onMouseLeave={(e) => {
-          if (!isDragging.current) {
-            (e.currentTarget as HTMLElement).style.background = '#D3DAE6';
-          }
-        }}
-      />
-      {/* Flyout content */}
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          background: '#fff',
-          borderLeft: '1px solid #D3DAE6',
-          boxShadow: '-4px 0 12px rgba(0, 0, 0, 0.08)',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Header */}
-        <div style={{ padding: '16px', borderBottom: '1px solid #D3DAE6', flexShrink: 0 }}>
-          <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>
-            <EuiFlexItem grow={false}>
-              <EuiButtonIcon
-                iconType="arrowUp"
-                aria-label="Previous trace"
-                display="base"
-                size="s"
-                onClick={handlePrevious}
-                disabled={selectedNodeIndex === 0}
-              />
-            </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              <EuiButtonIcon
-                iconType="arrowDown"
-                aria-label="Next trace"
-                display="base"
-                size="s"
-                onClick={handleNext}
-                disabled={selectedNodeIndex === flatNodes.length - 1}
-              />
-            </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              <EuiButtonIcon
-                iconType="cross"
-                aria-label="Close"
-                onClick={onClose}
-                display="base"
-                size="s"
-              />
-            </EuiFlexItem>
-          </EuiFlexGroup>
-          <EuiSpacer size="s" />
-          <EuiTitle size="s">
-            <h2 id="trace-details-flyout">
-              trace_id: {trace.traceId || '—'} <EuiBadge color="hollow">Trace ID</EuiBadge>
-            </h2>
-          </EuiTitle>
-          <EuiSpacer size="s" />
-          <EuiFlexGroup gutterSize="l">
-            <EuiFlexItem grow={false}>
-              <EuiText size="xs" color="subdued">
-                TRACE STATUS
-              </EuiText>
-              <EuiHealth color={trace.status === 'success' ? 'success' : 'danger'}>
-                {trace.status === 'success' ? 'OK' : 'ERROR'}
-              </EuiHealth>
-            </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              <EuiText size="xs" color="subdued">
-                TOTAL TOKENS
-              </EuiText>
-              <EuiText size="s">{trace.totalTokens || '—'}</EuiText>
-            </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              <EuiText size="xs" color="subdued">
-                START TIME
-              </EuiText>
-              <EuiText size="s">{trace.startTime || '—'}</EuiText>
-            </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              <EuiText size="xs" color="subdued">
-                LATENCY
-              </EuiText>
-              <EuiText size="s">{trace.latency || '—'}</EuiText>
-            </EuiFlexItem>
-          </EuiFlexGroup>
-        </div>
+  return (
+    <EuiFlyout onClose={onClose} ownFocus={false} size="l" aria-labelledby="trace-details-flyout">
+      <EuiFlyoutHeader hasBorder>
+        <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>
+          <EuiFlexItem grow={false}>
+            <EuiButtonIcon
+              iconType="arrowUp"
+              aria-label="Previous trace"
+              display="base"
+              size="s"
+              onClick={handlePrevious}
+              disabled={selectedNodeIndex === 0}
+            />
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiButtonIcon
+              iconType="arrowDown"
+              aria-label="Next trace"
+              display="base"
+              size="s"
+              onClick={handleNext}
+              disabled={selectedNodeIndex === flatNodes.length - 1}
+            />
+          </EuiFlexItem>
+        </EuiFlexGroup>
+        <EuiSpacer size="s" />
+        <EuiTitle size="s">
+          <h2 id="trace-details-flyout">
+            trace_id: {trace.traceId || '—'} <EuiBadge color="hollow">Trace ID</EuiBadge>
+          </h2>
+        </EuiTitle>
+        <EuiSpacer size="s" />
+        <EuiFlexGroup gutterSize="l">
+          <EuiFlexItem grow={false}>
+            <EuiText size="xs" color="subdued">
+              TRACE STATUS
+            </EuiText>
+            <EuiHealth color={trace.status === 'success' ? 'success' : 'danger'}>
+              {trace.status === 'success' ? 'OK' : 'ERROR'}
+            </EuiHealth>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiText size="xs" color="subdued">
+              TOTAL TOKENS
+            </EuiText>
+            <EuiText size="s">{trace.totalTokens || '—'}</EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiText size="xs" color="subdued">
+              START TIME
+            </EuiText>
+            <EuiText size="s">{trace.startTime || '—'}</EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiText size="xs" color="subdued">
+              LATENCY
+            </EuiText>
+            <EuiText size="s">{trace.latency || '—'}</EuiText>
+          </EuiFlexItem>
+        </EuiFlexGroup>
+      </EuiFlyoutHeader>
 
-        {/* Body - scrollable */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '16px' }}>
-          <EuiTabbedContent tabs={tabs} initialSelectedTab={tabs[0]} onTabClick={() => {}} />
-          <EuiSpacer size="m" />
-          <EuiPanel paddingSize="none">
-            <div style={{ borderTop: '1px solid #D3DAE6' }}>
-              <div style={{ padding: '8px 16px', background: '#F5F7FA' }}>
-                <EuiFlexGroup alignItems="center" gutterSize="s">
-                  <EuiFlexItem grow={false}>
-                    <EuiBadge color={getKindColor(selectedNode?.kind)}>
-                      {selectedNode?.kind || 'NODE'}
-                    </EuiBadge>
-                  </EuiFlexItem>
-                  <EuiFlexItem>
-                    <EuiText size="s">
-                      <strong>{selectedNode?.label}</strong>
-                    </EuiText>
-                  </EuiFlexItem>
-                  <EuiFlexItem grow={false}>
-                    <EuiButtonIcon iconType="copy" aria-label="Copy" size="s" />
-                  </EuiFlexItem>
-                </EuiFlexGroup>
-              </div>
-              <EuiTabbedContent tabs={detailTabs} size="s" initialSelectedTab={detailTabs[0]} />
+      <EuiFlyoutBody>
+        <EuiTabbedContent tabs={tabs} initialSelectedTab={tabs[0]} onTabClick={() => {}} />
+        <EuiSpacer size="m" />
+        <EuiPanel paddingSize="none">
+          <div style={{ borderTop: '1px solid #D3DAE6' }}>
+            <div style={{ padding: '8px 16px', background: '#F5F7FA' }}>
+              <EuiFlexGroup alignItems="center" gutterSize="s">
+                <EuiFlexItem grow={false}>
+                  <EuiBadge color={getKindColor(selectedNode?.kind)}>
+                    {selectedNode?.kind || 'NODE'}
+                  </EuiBadge>
+                </EuiFlexItem>
+                <EuiFlexItem>
+                  <EuiText size="s">
+                    <strong>{selectedNode?.label}</strong>
+                  </EuiText>
+                </EuiFlexItem>
+                <EuiFlexItem grow={false}>
+                  <EuiButtonIcon iconType="copy" aria-label="Copy" size="s" />
+                </EuiFlexItem>
+              </EuiFlexGroup>
             </div>
-          </EuiPanel>
-        </div>
-      </div>
-    </div>,
-    document.body
+            <EuiTabbedContent tabs={detailTabs} size="s" initialSelectedTab={detailTabs[0]} />
+          </div>
+        </EuiPanel>
+      </EuiFlyoutBody>
+    </EuiFlyout>
   );
 };

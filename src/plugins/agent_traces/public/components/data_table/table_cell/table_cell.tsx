@@ -12,7 +12,6 @@ import { DocViewFilterFn, OpenSearchSearchHit } from '../../../types/doc_views_t
 import { useDatasetContext } from '../../../application/context';
 import {
   isSpanIdColumn,
-  TraceFlyoutButton,
   SpanIdLink,
   DurationTableCell,
   isDurationColumn,
@@ -48,13 +47,6 @@ export const TableCellUI = ({
   const dataFieldContent =
     isSpanIdColumn(columnId) && isOnTracesPage && rowData && dataset ? (
       <SpanIdLink sanitizedCellValue={sanitizedCellValue} rowData={rowData} dataset={dataset} />
-    ) : isTimeField && isOnTracesPage && rowData && dataset ? (
-      <TraceFlyoutButton
-        sanitizedCellValue={sanitizedCellValue}
-        rowData={rowData}
-        dataset={dataset}
-        setIsRowSelected={setIsRowSelected}
-      />
     ) : isOnTracesPage && isDurationColumn(columnId) ? (
       <DurationTableCell sanitizedCellValue={sanitizedCellValue} />
     ) : (

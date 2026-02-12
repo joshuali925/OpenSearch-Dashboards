@@ -4,18 +4,22 @@
  */
 
 import { useMemo, useCallback, useState, useRef } from 'react';
+import moment from 'moment';
 import { useDispatch } from 'react-redux';
-import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import { AgentTracesServices } from '../../types';
-import { executeQueries } from '../../application/utils/state_management/actions/query_actions';
-import { useTabResults } from '../../application/utils/hooks/use_tab_results';
-import { QueryExecutionStatus } from '../../application/utils/state_management/types';
-import { useDatasetContext } from '../../application/context/dataset_context/dataset_context';
-import { TracePPLService } from '../../application/pages/traces/trace_details/server/ppl_request_trace';
+import { AnyAction } from 'redux';
+import { ThunkDispatch } from 'redux-thunk';
+import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
+import { AgentTracesServices } from '../../../types';
+import { executeQueries } from '../../utils/state_management/actions/query_actions';
+import { RootState } from '../../utils/state_management/store';
+import { useTabResults } from '../../utils/hooks/use_tab_results';
+import { QueryExecutionStatus } from '../../utils/state_management/types';
+import { useDatasetContext } from '../../context/dataset_context/dataset_context';
+import { TracePPLService } from './trace_details/server/ppl_request_trace';
 import {
   transformPPLDataToTraceHits,
   TraceHit,
-} from '../../application/pages/traces/trace_details/public/traces/ppl_to_trace_hits';
+} from './trace_details/public/traces/ppl_to_trace_hits';
 
 export interface AgentSpan {
   spanId: string;
@@ -47,7 +51,7 @@ export interface TraceRow {
   traceId: string;
   parentSpanId: string | null;
   status: 'success' | 'error';
-  kind: 'AGENT' | 'CHAIN' | 'LLM' | 'RETRIEVE' | 'TOOL' | 'EMBEDDING' | 'UNKNOWN';
+  kind: string;
   name: string;
   input: string;
   output: string;
@@ -77,25 +81,8 @@ export interface UseAgentTracesResult {
   traceLoadingState: Map<string, TraceLoadingState>;
 }
 
-// Map gen_ai operation names to UI-friendly kind values
-export const mapOperationToKind = (operationName: string, name: string): TraceRow['kind'] => {
-  const opLower = (operationName || '').toLowerCase();
-  const nameLower = (name || '').toLowerCase();
-
-  if (opLower.includes('agent') || nameLower.includes('agent')) return 'AGENT';
-  if (opLower.includes('chain') || nameLower.includes('chain')) return 'CHAIN';
-  if (opLower.includes('llm') || opLower.includes('chat') || opLower.includes('completion'))
-    return 'LLM';
-  if (opLower.includes('retriev') || opLower.includes('vector') || opLower.includes('search'))
-    return 'RETRIEVE';
-  if (opLower.includes('tool') || opLower.includes('function')) return 'TOOL';
-  if (opLower.includes('embed')) return 'EMBEDDING';
-
-  return 'UNKNOWN';
-};
-
 // Format duration from nanoseconds to human readable
-export const formatDuration = (nanos: number): string => {
+const formatDuration = (nanos: number): string => {
   if (!nanos || nanos <= 0) return '—';
 
   const ms = nanos / 1_000_000;
@@ -106,70 +93,80 @@ export const formatDuration = (nanos: number): string => {
   return `${seconds.toFixed(2)}s`;
 };
 
-// Format timestamp to readable time
-export const formatTimestamp = (timestamp: string): string => {
+// Format timestamp to readable date/time
+const formatTimestamp = (timestamp: string): string => {
   if (!timestamp) return '—';
-
-  try {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true,
-    });
-  } catch {
-    return '—';
-  }
+  const m = moment(timestamp);
+  if (!m.isValid()) return '—';
+  return m.format('MM/DD/YYYY, h:mm:ss A');
 };
 
 // Get a safe string from a potentially nested field
-export const getFieldValue = (hit: any, fieldPath: string): any => {
-  const source = hit._source || hit;
+const getFieldValue = (hit: Record<string, unknown>, fieldPath: string): unknown => {
+  const source = (hit._source as Record<string, unknown>) || hit;
   const parts = fieldPath.split('.');
-  let value = source;
+  let value: unknown = source;
 
   for (const part of parts) {
-    if (value == null) return null;
-    value = value[part];
+    if (value == null || typeof value !== 'object') return null;
+    value = (value as Record<string, unknown>)[part];
   }
 
   return value;
 };
 
+// Typed accessors for getFieldValue
+const getStringField = (hit: Record<string, unknown>, path: string, fallback = ''): string =>
+  (getFieldValue(hit, path) as string) || fallback;
+
+const getNumberField = (
+  hit: Record<string, unknown>,
+  path: string,
+  fallback: number | null = 0
+): number | null => {
+  const val = getFieldValue(hit, path);
+  return typeof val === 'number' ? val : fallback;
+};
+
+// Search hit shape from Redux results (SearchResponse<any>)
+interface SpanSearchHit extends Record<string, unknown> {
+  _id?: string;
+  _source?: Record<string, unknown>;
+}
+
 // Map a single hit (from Redux results) to an AgentSpan
-export const hitToAgentSpan = (hit: any, index: number): AgentSpan => ({
-  spanId: getFieldValue(hit, 'spanId') || hit._id || `span-${index}`,
-  traceId: getFieldValue(hit, 'traceId') || '',
-  parentSpanId: getFieldValue(hit, 'parentSpanId') || null,
-  name: getFieldValue(hit, 'name') || '',
-  kind: getFieldValue(hit, 'kind') || '',
-  operationName: getFieldValue(hit, 'attributes.gen_ai.operation.name') || '',
-  startTime: getFieldValue(hit, 'startTime') || '',
-  endTime: getFieldValue(hit, 'endTime') || '',
-  durationNanos: getFieldValue(hit, 'durationInNanos') || 0,
-  statusCode: getFieldValue(hit, 'status.code') ?? 0,
-  statusMessage: getFieldValue(hit, 'status.message') || '',
-  serviceName: getFieldValue(hit, 'serviceName') || '',
-  genAiSystem: getFieldValue(hit, 'attributes.gen_ai.system') || '',
-  genAiRequestModel: getFieldValue(hit, 'attributes.gen_ai.request.model') || '',
-  genAiInputTokens: getFieldValue(hit, 'attributes.gen_ai.usage.input_tokens') || null,
-  genAiOutputTokens: getFieldValue(hit, 'attributes.gen_ai.usage.output_tokens') || null,
-  genAiTotalTokens: getFieldValue(hit, 'attributes.gen_ai.usage.total_tokens') || null,
+const hitToAgentSpan = (hit: SpanSearchHit, index: number): AgentSpan => ({
+  spanId: getStringField(hit, 'spanId') || hit._id || `span-${index}`,
+  traceId: getStringField(hit, 'traceId'),
+  parentSpanId: getStringField(hit, 'parentSpanId') || null,
+  name: getStringField(hit, 'name'),
+  kind: getStringField(hit, 'kind'),
+  operationName: getStringField(hit, 'attributes.gen_ai.operation.name'),
+  startTime: getStringField(hit, 'startTime'),
+  endTime: getStringField(hit, 'endTime'),
+  durationNanos: getNumberField(hit, 'durationInNanos', 0) as number,
+  statusCode: getNumberField(hit, 'status.code', 0) as number,
+  statusMessage: getStringField(hit, 'status.message'),
+  serviceName: getStringField(hit, 'serviceName'),
+  genAiSystem: getStringField(hit, 'attributes.gen_ai.system'),
+  genAiRequestModel: getStringField(hit, 'attributes.gen_ai.request.model'),
+  genAiInputTokens: getNumberField(hit, 'attributes.gen_ai.usage.input_tokens', null),
+  genAiOutputTokens: getNumberField(hit, 'attributes.gen_ai.usage.output_tokens', null),
+  genAiTotalTokens: getNumberField(hit, 'attributes.gen_ai.usage.total_tokens', null),
   input:
-    getFieldValue(hit, 'attributes.gen_ai.input.messages') ||
-    getFieldValue(hit, 'attributes.gen_ai.prompt') ||
-    getFieldValue(hit, 'attributes.input.value') ||
+    getStringField(hit, 'attributes.gen_ai.input.messages') ||
+    getStringField(hit, 'attributes.gen_ai.prompt') ||
+    getStringField(hit, 'attributes.input.value') ||
     '—',
   output:
-    getFieldValue(hit, 'attributes.gen_ai.output.messages') ||
-    getFieldValue(hit, 'attributes.gen_ai.completion') ||
-    getFieldValue(hit, 'attributes.output.value') ||
+    getStringField(hit, 'attributes.gen_ai.output.messages') ||
+    getStringField(hit, 'attributes.gen_ai.completion') ||
+    getStringField(hit, 'attributes.output.value') ||
     '—',
 });
 
 // Convert a TraceHit (from PPL response) to an AgentSpan
-export const traceHitToAgentSpan = (hit: TraceHit, index: number): AgentSpan => ({
+const traceHitToAgentSpan = (hit: TraceHit, index: number): AgentSpan => ({
   spanId: hit.spanId || `span-${index}`,
   traceId: hit.traceId || '',
   parentSpanId: hit.parentSpanId || null,
@@ -206,7 +203,7 @@ const spanToTraceRow = (span: AgentSpan, index: number): TraceRow => ({
   traceId: span.traceId,
   parentSpanId: span.parentSpanId,
   status: span.statusCode === 0 || span.statusCode === 1 ? 'success' : 'error',
-  kind: mapOperationToKind(span.operationName, span.name),
+  kind: span.operationName || 'unknown',
   name: span.name || span.operationName || 'Unknown',
   input: span.input || '—',
   output: span.output || '—',
@@ -233,7 +230,7 @@ const setLevels = (rows: TraceRow[], level: number) => {
 };
 
 // Build hierarchical tree from flat spans (gen_ai spans only, for initial table view)
-export const buildSpanTree = (spans: AgentSpan[]): TraceRow[] => {
+const buildSpanTree = (spans: AgentSpan[]): TraceRow[] => {
   const spanMap = new Map<string, TraceRow>();
   const rootSpans: TraceRow[] = [];
 
@@ -273,7 +270,7 @@ export const buildSpanTree = (spans: AgentSpan[]): TraceRow[] => {
 };
 
 // Build full hierarchical tree from ALL spans for a traceId (for expand/flyout)
-export const buildFullSpanTree = (spans: AgentSpan[]): TraceRow[] => {
+const buildFullSpanTree = (spans: AgentSpan[]): TraceRow[] => {
   const spanMap = new Map<string, TraceRow>();
   const rootSpans: TraceRow[] = [];
 
@@ -336,7 +333,7 @@ export const getChildrenFromFullTree = (
 
 export const useAgentTraces = (): UseAgentTracesResult => {
   const { services } = useOpenSearchDashboards<AgentTracesServices>();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
   const { dataset } = useDatasetContext();
 
   // Read tab-specific query results from Redux (uses tab's prepareQuery for cache key)
@@ -362,7 +359,7 @@ export const useAgentTraces = (): UseAgentTracesResult => {
     const hits = rawResults?.hits?.hits || [];
     if (hits.length === 0) return [];
 
-    const agentSpans = hits.map((hit: any, index: number) => hitToAgentSpan(hit, index));
+    const agentSpans = hits.map((hit: SpanSearchHit, index: number) => hitToAgentSpan(hit, index));
     return buildSpanTree(agentSpans);
   }, [rawResults]);
 
@@ -378,7 +375,7 @@ export const useAgentTraces = (): UseAgentTracesResult => {
     setTraceSpansCache(new Map());
     setTraceLoadingState(new Map());
     inFlightRef.current.clear();
-    dispatch(executeQueries({ services }) as any);
+    dispatch(executeQueries({ services }));
   }, [dispatch, services]);
 
   // Fetch all spans for a traceId and cache the result

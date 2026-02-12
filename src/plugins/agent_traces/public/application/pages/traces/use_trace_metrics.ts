@@ -4,10 +4,10 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import { AgentTracesServices } from '../../types';
-import { useDatasetContext } from '../../application/context/dataset_context/dataset_context';
-import { PPLService } from '../../application/pages/traces/trace_details/server/ppl_request_helpers';
+import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
+import { AgentTracesServices } from '../../../types';
+import { useDatasetContext } from '../../context/dataset_context/dataset_context';
+import { PPLService } from './trace_details/server/ppl_request_helpers';
 
 export interface TraceMetrics {
   totalTraces: number;

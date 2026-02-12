@@ -7,7 +7,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../../store';
 import { setActiveTab } from '../../slices';
 import { AgentTracesServices } from '../../../../../types';
-import { AGENT_TRACES_LOGS_TAB_ID } from '../../../../../../common';
+import { AGENT_TRACES_TRACES_TAB_ID } from '../../../../../../common';
 
 /**
  * Detect the optimal tab based on results and sets it as active.
@@ -18,5 +18,5 @@ export const detectAndSetOptimalTab = createAsyncThunk<
   { services: AgentTracesServices; savedTabId?: string },
   { state: RootState }
 >('ui/detectAndSetOptimalTab', async (_args, { dispatch }) => {
-  dispatch(setActiveTab(AGENT_TRACES_LOGS_TAB_ID));
+  dispatch(setActiveTab(AGENT_TRACES_TRACES_TAB_ID));
 });

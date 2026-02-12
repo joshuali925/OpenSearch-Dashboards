@@ -8,9 +8,9 @@ import { TracesTable } from './traces_table';
 /**
  * Traces tab component for displaying trace entries
  */
-export const LogsTab = () => {
+export const TracesTab = () => {
   return (
-    <div className="agentTraces-logs-tab tab-container">
+    <div className="agentTraces-traces-tab tab-container">
       <TracesTable />
     </div>
   );

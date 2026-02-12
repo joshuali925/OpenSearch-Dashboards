@@ -6,7 +6,7 @@
 import { detectAndSetOptimalTab } from './detect_optimal_tab';
 import { setActiveTab } from '../../slices';
 import { AgentTracesServices } from '../../../../../types';
-import { AGENT_TRACES_LOGS_TAB_ID } from '../../../../../../common';
+import { AGENT_TRACES_TRACES_TAB_ID } from '../../../../../../common';
 
 jest.mock('../../slices');
 
@@ -26,7 +26,9 @@ describe('detect_optimal_tab', () => {
     mockServices = {
       tabRegistry: {
         getTab: jest.fn(),
-        getAllTabs: jest.fn().mockReturnValue([{ id: AGENT_TRACES_LOGS_TAB_ID, label: 'Traces' }]),
+        getAllTabs: jest
+          .fn()
+          .mockReturnValue([{ id: AGENT_TRACES_TRACES_TAB_ID, label: 'Traces' }]),
       },
     } as any;
 
@@ -41,7 +43,7 @@ describe('detect_optimal_tab', () => {
     it('should always set logs/traces tab as active', async () => {
       const mockAction = {
         type: 'setActiveTab',
-        payload: AGENT_TRACES_LOGS_TAB_ID,
+        payload: AGENT_TRACES_TRACES_TAB_ID,
       };
       mockSetActiveTab.mockReturnValue(mockAction);
 
@@ -51,7 +53,7 @@ describe('detect_optimal_tab', () => {
 
       await thunk(mockDispatch, mockGetState, undefined);
 
-      expect(mockSetActiveTab).toHaveBeenCalledWith(AGENT_TRACES_LOGS_TAB_ID);
+      expect(mockSetActiveTab).toHaveBeenCalledWith(AGENT_TRACES_TRACES_TAB_ID);
       expect(mockDispatch).toHaveBeenCalledWith(mockAction);
     });
   });

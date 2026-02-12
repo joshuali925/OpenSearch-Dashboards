@@ -22,6 +22,7 @@ import { TraceDetailsFlyout } from './trace_details_flyout';
 import { useAgentTraces, TraceRow, getChildrenFromFullTree } from './use_agent_traces';
 import { useTraceMetrics } from './use_trace_metrics';
 import { TraceMetricsBar } from './trace_metrics_bar';
+import { getKindColor } from './trace_utils';
 
 const PAGE_SIZE = 50;
 
@@ -110,25 +111,6 @@ export const TracesTable = () => {
     setFlyoutLoading(false);
   }, []);
 
-  const getKindColor = (kind: string) => {
-    switch (kind) {
-      case 'AGENT':
-        return 'warning';
-      case 'CHAIN':
-        return 'secondary';
-      case 'LLM':
-        return 'danger';
-      case 'RETRIEVE':
-        return 'success';
-      case 'TOOL':
-        return 'primary';
-      case 'EMBEDDING':
-        return 'accent';
-      default:
-        return 'default';
-    }
-  };
-
   // Flatten tree structure for display, respecting expanded state
   const getVisibleRows = useMemo(() => {
     const visible: TraceRow[] = [];
@@ -176,19 +158,13 @@ export const TracesTable = () => {
 
   const columns: Array<EuiBasicTableColumn<TraceRow>> = [
     {
-      field: 'status',
-      name: 'STATUS',
-      width: '80px',
-      render: (status: string) => (
-        <EuiHealth color={status === 'success' ? 'success' : 'danger'}>
-          {status === 'success' ? '✓' : '✗'}
-        </EuiHealth>
-      ),
+      field: 'startTime',
+      name: 'TIMESTAMP',
+      render: (time: string) => <EuiText size="s">{time}</EuiText>,
     },
     {
       field: 'kind',
       name: 'KIND',
-      width: '120px',
       render: (kind: string, item: TraceRow) => {
         const isTraceLoading = traceLoadingState.get(item.traceId)?.loading;
         return (
@@ -230,76 +206,60 @@ export const TracesTable = () => {
     {
       field: 'name',
       name: 'NAME',
-      width: '200px',
       render: (name: string) => <EuiText size="s">{name}</EuiText>,
+    },
+    {
+      field: 'status',
+      name: 'STATUS',
+      render: (status: string) => (
+        <EuiHealth color={status === 'success' ? 'success' : 'danger'}>
+          {status === 'success' ? 'Success' : 'Error'}
+        </EuiHealth>
+      ),
+    },
+    {
+      field: 'latency',
+      name: 'LATENCY',
+      render: (latency: string) => <EuiText size="s">{latency}</EuiText>,
+    },
+    {
+      field: 'totalTokens',
+      name: 'TOKENS',
+      render: (tokens: number | string) => <EuiText size="s">{tokens}</EuiText>,
     },
     {
       field: 'input',
       name: 'INPUT',
-      width: '200px',
       render: (input: string) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <EuiText
-            size="s"
-            style={{
-              maxWidth: '150px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {input}
-          </EuiText>
-          {input && input.length > 20 && input !== '—' && (
-            <EuiButtonEmpty size="xs" color="primary">
-              View
-            </EuiButtonEmpty>
-          )}
-        </div>
+        <EuiText
+          size="s"
+          style={{
+            maxWidth: '150px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {input}
+        </EuiText>
       ),
     },
     {
       field: 'output',
       name: 'OUTPUT',
-      width: '200px',
       render: (output: string) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <EuiText
-            size="s"
-            style={{
-              maxWidth: '150px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {output}
-          </EuiText>
-          {output && output.length > 20 && output !== '—' && (
-            <EuiButtonEmpty size="xs" color="primary">
-              View
-            </EuiButtonEmpty>
-          )}
-        </div>
+        <EuiText
+          size="s"
+          style={{
+            maxWidth: '150px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {output}
+        </EuiText>
       ),
-    },
-    {
-      field: 'startTime',
-      name: 'START TIME',
-      width: '120px',
-      render: (time: string) => <EuiText size="s">{time}</EuiText>,
-    },
-    {
-      field: 'latency',
-      name: 'LATENCY',
-      width: '100px',
-      render: (latency: string) => <EuiText size="s">{latency}</EuiText>,
-    },
-    {
-      field: 'totalTokens',
-      name: 'TOTAL TOKENS',
-      width: '120px',
-      render: (tokens: number | string) => <EuiText size="s">{tokens}</EuiText>,
     },
   ];
 

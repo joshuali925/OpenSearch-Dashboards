@@ -4,13 +4,13 @@
  */
 
 import { i18n } from '@osd/i18n';
-import { LogsTab } from '../components/tabs/logs_tab';
+import { TracesTab } from './pages/traces/traces_tab';
 import { TabDefinition, TabRegistryService } from '../services/tab_registry/tab_registry_service';
 import { AgentTracesServices } from '../types';
 import {
   AgentTracesFlavor,
   AGENT_TRACES_DEFAULT_LANGUAGE,
-  AGENT_TRACES_LOGS_TAB_ID,
+  AGENT_TRACES_TRACES_TAB_ID,
 } from '../../common';
 import { defaultPrepareQueryString } from './utils/state_management/actions/query_actions';
 
@@ -19,9 +19,9 @@ import { defaultPrepareQueryString } from './utils/state_management/actions/quer
  * Agent Traces only supports Traces
  */
 export const registerBuiltInTabs = (tabRegistry: TabRegistryService) => {
-  // Register Traces Tab (LogsTab handles Traces flavor internally with TracesTable)
+  // Register Traces Tab
   const tracesTabDefinition: TabDefinition = {
-    id: AGENT_TRACES_LOGS_TAB_ID,
+    id: AGENT_TRACES_TRACES_TAB_ID,
     label: i18n.translate('agentTraces.tracesTab.label', {
       defaultMessage: 'Traces',
     }),
@@ -35,7 +35,7 @@ export const registerBuiltInTabs = (tabRegistry: TabRegistryService) => {
       return `${baseQuery} | where parentSpanId = "" AND isnotnull(\`attributes.gen_ai.operation.name\`)`;
     },
 
-    component: LogsTab,
+    component: TracesTab,
   };
   tabRegistry.registerTab(tracesTabDefinition);
 };

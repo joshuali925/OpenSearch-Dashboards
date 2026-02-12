@@ -61,9 +61,9 @@ describe('AgentTracesTabsComponent', () => {
     tabRegistry: {
       getAllTabs: jest.fn(() => [
         {
-          id: 'logs_tab',
-          label: 'Logs',
-          component: () => <div>Logs Content</div>,
+          id: 'traces_tab',
+          label: 'Traces',
+          component: () => <div>Traces Content</div>,
           flavor: [AgentTracesFlavor.Traces],
         },
         {
@@ -75,7 +75,7 @@ describe('AgentTracesTabsComponent', () => {
       ]),
       getTab: jest.fn((id: string) => ({
         id,
-        label: id === 'logs' ? 'Logs' : 'Visualization',
+        label: id === 'traces' ? 'Traces' : 'Visualization',
         component: () => <div>{id} Content</div>,
         prepareQuery: undefined,
         flavor: [AgentTracesFlavor.Traces],
@@ -121,14 +121,14 @@ describe('AgentTracesTabsComponent', () => {
       </Provider>
     );
 
-    expect(screen.getByText('Logs')).toBeInTheDocument();
+    expect(screen.getByText('Traces')).toBeInTheDocument();
     expect(screen.getByText('Visualization')).toBeInTheDocument();
   });
 
   it('should dispatch setActiveTab and executeTabQuery when tab is clicked and results not cached', () => {
     const store = createMockStore({
       ui: {
-        activeTabId: 'logs',
+        activeTabId: 'traces',
         showHistogram: true,
       },
       results: {},
@@ -153,7 +153,7 @@ describe('AgentTracesTabsComponent', () => {
   it('should not execute query when tab is clicked and results are already cached', () => {
     const store = createMockStore({
       ui: {
-        activeTabId: 'logs',
+        activeTabId: 'traces',
         showHistogram: true,
       },
       results: {
@@ -232,6 +232,6 @@ describe('AgentTracesTabsComponent', () => {
     );
 
     // The component should render and fallback to first available tab
-    expect(screen.getByText('Logs Content')).toBeInTheDocument();
+    expect(screen.getByText('Traces Content')).toBeInTheDocument();
   });
 });

@@ -24,7 +24,7 @@ import { ResizableVisControlAndTabs } from './resizable_vis_control_and_tabs';
 import { useFlavorId } from '../../../../helpers/use_flavor_id';
 import { AgentTracesFlavor } from '../../../../../common';
 import { TraceAutoDetectCallout } from '../../../trace_auto_detect_callout';
-import { TracesTable } from '../../../tabs/traces_table';
+import { TracesTable } from '../../../../application/pages/traces/traces_table';
 
 // Memoized content component to prevent re-renders of chart + tabs when status hasn't changed
 const ReadyContent = React.memo(() => (

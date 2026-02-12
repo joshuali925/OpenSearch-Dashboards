@@ -20,6 +20,7 @@ import {
   EuiLoadingSpinner,
 } from '@elastic/eui';
 import { TraceRow } from './use_agent_traces';
+import { getKindColor, getKindIconColor } from './trace_utils';
 
 export interface TraceDetailsProps {
   trace: TraceRow;
@@ -41,25 +42,6 @@ interface TreeNode {
 
 // Build tree nodes from a TraceRow
 const buildTreeFromTraceRow = (row: TraceRow): TreeNode => {
-  const getKindIconColor = (kind: string) => {
-    switch (kind) {
-      case 'AGENT':
-        return 'warning';
-      case 'CHAIN':
-        return 'secondary';
-      case 'LLM':
-        return 'danger';
-      case 'RETRIEVE':
-        return 'success';
-      case 'TOOL':
-        return 'primary';
-      case 'EMBEDDING':
-        return 'accent';
-      default:
-        return 'subdued';
-    }
-  };
-
   const node: TreeNode = {
     label: row.name,
     id: row.id,
@@ -83,26 +65,6 @@ const flattenTree = (nodes: TreeNode[], result: TreeNode[] = []): TreeNode[] => 
     }
   });
   return result;
-};
-
-// Helper function to get badge color based on kind
-const getKindColor = (kind?: string) => {
-  switch (kind) {
-    case 'AGENT':
-      return 'warning';
-    case 'CHAIN':
-      return 'secondary';
-    case 'LLM':
-      return 'danger';
-    case 'RETRIEVE':
-      return 'success';
-    case 'TOOL':
-      return 'primary';
-    case 'EMBEDDING':
-      return 'accent';
-    default:
-      return 'default';
-  }
 };
 
 const DEFAULT_WIDTH = 600;

@@ -20,6 +20,7 @@ import {
   EuiFlyoutHeader,
   EuiFlyoutBody,
   EuiAccordion,
+  EuiLink,
 } from '@elastic/eui';
 import { TraceRow } from './use_agent_traces';
 import { getKindColor } from './trace_utils';
@@ -171,9 +172,38 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     }
   };
 
+  // Expand all ancestors of a node so it becomes visible in the tree
+  const expandAncestors = (nodeId: string) => {
+    const findPath = (
+      nodes: TreeNode[],
+      targetId: string,
+      path: string[] = []
+    ): string[] | null => {
+      for (const node of nodes) {
+        if (node.id === targetId) return path;
+        if (node.children) {
+          const result = findPath(node.children, targetId, [...path, node.id]);
+          if (result) return result;
+        }
+      }
+      return null;
+    };
+    const ancestors = findPath(traceTreeData, nodeId);
+    if (ancestors && ancestors.length > 0) {
+      setExpandedNodes((prev) => {
+        const next = new Set(prev);
+        ancestors.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  };
+
   const selectNode = (nodeId: string) => {
     const index = flatNodes.findIndex((n) => n.id === nodeId);
-    if (index >= 0) setSelectedNodeIndex(index);
+    if (index >= 0) {
+      expandAncestors(nodeId);
+      setSelectedNodeIndex(index);
+    }
   };
 
   // Create tree items with selection highlighting and expand/collapse
@@ -304,7 +334,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
       {
         label: 'PARENT SPAN',
         value: row?.parentSpanId ? (
-          <span className="agentTracesFlyout__parentSpanLink">{row.parentSpanId}</span>
+          <EuiLink onClick={() => selectNode(row.parentSpanId!)}>{row.parentSpanId}</EuiLink>
         ) : (
           '(root span)'
         ),

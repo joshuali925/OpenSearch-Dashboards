@@ -7,8 +7,8 @@ import React from 'react';
 import { EuiCallOut, EuiSpacer, EuiText, EuiLink } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import { resolveServiceNameFromSpan } from '../traces/ppl_resolve_helpers';
-import { Dataset } from '../../../../../../../../data/common';
-import { getMissingFieldsDescription } from '../../../../../../utils/trace_field_validation';
+import { Dataset } from '../../../../../../../data/common';
+import { getMissingFieldsDescription } from '../../../../../utils/trace_field_validation';
 
 export function microToMilliSec(micro: number) {
   if (typeof micro !== 'number' || isNaN(micro)) return 0;

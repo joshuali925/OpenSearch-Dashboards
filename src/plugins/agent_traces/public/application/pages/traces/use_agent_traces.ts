@@ -15,11 +15,8 @@ import { RootState } from '../../utils/state_management/store';
 import { useTabResults } from '../../utils/hooks/use_tab_results';
 import { QueryExecutionStatus } from '../../utils/state_management/types';
 import { useDatasetContext } from '../../context/dataset_context/dataset_context';
-import { TracePPLService } from './trace_details/server/ppl_request_trace';
-import {
-  transformPPLDataToTraceHits,
-  TraceHit,
-} from './trace_details/public/traces/ppl_to_trace_hits';
+import { TracePPLService } from './trace_details/data_fetching/ppl_request_trace';
+import { transformPPLDataToTraceHits, TraceHit } from './trace_details/traces/ppl_to_trace_hits';
 
 export interface AgentSpan {
   spanId: string;

@@ -9,17 +9,17 @@ import { EuiEmptyPrompt, EuiText, EuiSpacer } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import { EuiLoadingSpinner, EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
 import { TRACE_ID_FIELD_PATHS, SPAN_ID_FIELD_PATHS } from '../../../utils/trace_field_constants';
-import { SpanDetailPanel } from '../../../application/pages/traces/trace_details/public/traces/span_detail_panel';
+import { SpanDetailPanel } from '../../../application/pages/traces/trace_details/traces/span_detail_panel';
 import { DocViewRenderProps } from '../../../types/doc_views_types';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
-import { TracePPLService } from '../../../application/pages/traces/trace_details/server/ppl_request_trace';
+import { TracePPLService } from '../../../application/pages/traces/trace_details/data_fetching/ppl_request_trace';
 import { DataExplorerServices } from '../../../../../data_explorer/public';
 import { useDatasetContext } from '../../../application/context';
 import {
   transformPPLDataToTraceHits,
   TraceHit,
-} from '../../../application/pages/traces/trace_details/public/traces/ppl_to_trace_hits';
-import { generateColorMap } from '../../../application/pages/traces/trace_details/public/traces/generate_color_map';
+} from '../../../application/pages/traces/trace_details/traces/ppl_to_trace_hits';
+import { generateColorMap } from '../../../application/pages/traces/trace_details/traces/generate_color_map';
 import { navigateToTraceDetailsWithSpan } from '../../data_table/table_cell/trace_utils/trace_utils';
 
 const extractTraceIdFromHit = (hit: any): string | null => {

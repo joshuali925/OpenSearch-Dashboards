@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
 import { AgentTracesServices } from '../../../types';
 import { useDatasetContext } from '../../context/dataset_context/dataset_context';
-import { PPLService } from './trace_details/server/ppl_request_helpers';
+import { PPLService } from './trace_details/data_fetching/ppl_request_helpers';
 import { defaultPrepareQueryString } from '../../utils/state_management/actions/query_actions';
 import { RootState } from '../../utils/state_management/store';
 

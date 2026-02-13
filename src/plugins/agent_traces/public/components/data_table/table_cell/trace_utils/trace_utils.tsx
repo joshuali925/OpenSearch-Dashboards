@@ -15,7 +15,7 @@ import { extractFieldFromRowData } from '../../../../utils/trace_field_validatio
 import {
   round,
   nanoToMilliSec,
-} from '../../../../application/pages/traces/trace_details/public/utils/helper_functions';
+} from '../../../../application/pages/traces/trace_details/utils/helper_functions';
 
 export const isOnTracesPage = (): boolean => {
   return (

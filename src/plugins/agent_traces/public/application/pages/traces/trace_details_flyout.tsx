@@ -559,7 +559,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
         <EuiSpacer size="l" />
 
         {/* Detail tabs: Overview, Logs, Metadata, Raw */}
-        <EuiTabbedContent tabs={detailTabs} initialSelectedTab={detailTabs[0]} />
+        <EuiTabbedContent tabs={detailTabs} initialSelectedTab={detailTabs[0]} size="s" />
       </EuiFlyoutBody>
     </EuiFlyout>
   );

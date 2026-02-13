@@ -8,7 +8,7 @@ import {
   EuiBasicTableColumn,
   EuiHealth,
   EuiBadge,
-  EuiButtonEmpty,
+  EuiButtonIcon,
   EuiText,
   EuiLoadingSpinner,
   EuiEmptyPrompt,
@@ -177,11 +177,13 @@ export const TracesTable = () => {
             }}
           >
             {item.isExpandable && !isTraceLoading && (
-              <EuiButtonEmpty
+              <EuiButtonIcon
                 size="xs"
                 iconType={expandedRows.has(item.id) ? 'arrowDown' : 'arrowRight'}
                 onClick={(e: React.MouseEvent) => toggleRowExpansion(e, item.id, item.traceId)}
-                style={{ width: '24px', height: '24px', minWidth: '24px', padding: 0 }}
+                aria-label={expandedRows.has(item.id) ? 'Collapse' : 'Expand'}
+                color="subdued"
+                iconSize="s"
               />
             )}
             {item.isExpandable && isTraceLoading && (

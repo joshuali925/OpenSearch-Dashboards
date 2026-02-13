@@ -96,7 +96,7 @@ export const BottomRightContainer = () => {
     );
   }
 
-  if (status === QueryExecutionStatus.LOADING && dataTableStatus === QueryExecutionStatus.LOADING) {
+  if (status === QueryExecutionStatus.LOADING) {
     return (
       <CanvasPanel>
         <LoadingSpinner />

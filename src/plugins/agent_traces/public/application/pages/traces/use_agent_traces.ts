@@ -40,6 +40,8 @@ export interface AgentSpan {
   // Raw input/output from events or attributes
   input: string;
   output: string;
+  // Original span document for Raw tab display
+  rawDocument: Record<string, unknown>;
 }
 
 export interface TraceRow {
@@ -60,6 +62,7 @@ export interface TraceRow {
   isExpanded?: boolean;
   level?: number;
   children?: TraceRow[];
+  rawDocument?: Record<string, unknown>;
 }
 
 export interface TraceLoadingState {
@@ -84,7 +87,9 @@ const formatDuration = (nanos: number): string => {
 
   const ms = nanos / 1_000_000;
   if (ms < 1000) {
-    return `${ms.toFixed(0)}ms`;
+    // Show sub-ms decimals only when there is actual sub-millisecond precision
+    const hasSubMsPrecision = nanos % 1_000_000 !== 0;
+    return hasSubMsPrecision ? `${ms.toFixed(2)}ms` : `${Math.round(ms)}ms`;
   }
   const seconds = ms / 1000;
   return `${seconds.toFixed(2)}s`;
@@ -160,6 +165,7 @@ const hitToAgentSpan = (hit: SpanSearchHit, index: number): AgentSpan => ({
     getStringField(hit, 'attributes.gen_ai.completion') ||
     getStringField(hit, 'attributes.output.value') ||
     '—',
+  rawDocument: (hit._source as Record<string, unknown>) || hit,
 });
 
 // Convert a TraceHit (from PPL response) to an AgentSpan
@@ -191,6 +197,7 @@ const traceHitToAgentSpan = (hit: TraceHit, index: number): AgentSpan => ({
     hit.attributes?.gen_ai?.completion ||
     hit.attributes?.output?.value ||
     '—',
+  rawDocument: hit as Record<string, unknown>,
 });
 
 // Convert an AgentSpan to a TraceRow
@@ -214,6 +221,7 @@ const spanToTraceRow = (span: AgentSpan, index: number): TraceRow => ({
   totalCost: '—',
   level: 0,
   children: [],
+  rawDocument: span.rawDocument,
 });
 
 // Set nesting levels recursively

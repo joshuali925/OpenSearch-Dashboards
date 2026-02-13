@@ -12,7 +12,6 @@ import {
   EuiHealth,
   EuiTabbedContent,
   EuiCodeBlock,
-  EuiButtonIcon,
   EuiPanel,
   EuiIcon,
   EuiBadge,
@@ -20,9 +19,11 @@ import {
   EuiFlyout,
   EuiFlyoutHeader,
   EuiFlyoutBody,
+  EuiAccordion,
 } from '@elastic/eui';
 import { TraceRow } from './use_agent_traces';
-import { getKindColor, getKindIconColor } from './trace_utils';
+import { getKindColor } from './trace_utils';
+import './trace_details_flyout.scss';
 
 export interface TraceDetailsProps {
   trace: TraceRow;
@@ -34,7 +35,6 @@ export interface TraceDetailsProps {
 interface TreeNode {
   label: string;
   id: string;
-  icon: React.ReactNode;
   children?: TreeNode[];
   kind?: string;
   tokens?: number | string;
@@ -47,7 +47,6 @@ const buildTreeFromTraceRow = (row: TraceRow): TreeNode => {
   const node: TreeNode = {
     label: row.name,
     id: row.id,
-    icon: <EuiIcon type="dot" color={getKindIconColor(row.kind)} />,
     kind: row.kind,
     tokens: row.totalTokens,
     latency: row.latency,
@@ -69,6 +68,32 @@ const flattenTree = (nodes: TreeNode[], result: TreeNode[] = []): TreeNode[] => 
   return result;
 };
 
+// Count total spans in a tree
+const countSpans = (nodes: TreeNode[]): number => {
+  let count = 0;
+  nodes.forEach((node) => {
+    count += 1;
+    if (node.children) {
+      count += countSpans(node.children);
+    }
+  });
+  return count;
+};
+
+// Sum all tokens in a tree
+const sumTokens = (nodes: TreeNode[]): number => {
+  let total = 0;
+  nodes.forEach((node) => {
+    if (typeof node.tokens === 'number') {
+      total += node.tokens;
+    }
+    if (node.children) {
+      total += sumTokens(node.children);
+    }
+  });
+  return total;
+};
+
 export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
   trace,
   onClose,
@@ -78,7 +103,6 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
   // Build tree from trace data — use fullTree (all spans) when available
   const traceTreeData = useMemo(() => {
     if (fullTree && fullTree.length > 0) {
-      // fullTree contains root-level TraceRows with children already nested
       return fullTree.map((root) => buildTreeFromTraceRow(root));
     }
     return [buildTreeFromTraceRow(trace)];
@@ -99,62 +123,41 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
   const selectedNode = flatNodes[selectedNodeIndex];
   const selectedTraceRow = selectedNode?.traceRow;
 
-  const handlePrevious = () => {
-    if (selectedNodeIndex > 0) {
-      setSelectedNodeIndex(selectedNodeIndex - 1);
-    }
-  };
+  // Compute header-level aggregates
+  const totalSpans = useMemo(() => countSpans(traceTreeData), [traceTreeData]);
+  const totalTokens = useMemo(() => {
+    const sum = sumTokens(traceTreeData);
+    return sum > 0 ? sum : trace.totalTokens;
+  }, [traceTreeData, trace.totalTokens]);
 
-  const handleNext = () => {
-    if (selectedNodeIndex < flatNodes.length - 1) {
-      setSelectedNodeIndex(selectedNodeIndex + 1);
-    }
-  };
+  // Track which tree nodes are expanded (by node id)
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
-  // Create tree items with selection highlighting
-  const createTreeItems = (nodes: TreeNode[]): React.ReactNode[] => {
-    return nodes.map((node) => (
-      <div key={node.id} style={{ marginBottom: '4px' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            width: '100%',
-            padding: '4px 8px',
-            backgroundColor: node.id === selectedNode?.id ? '#E6F1FA' : 'transparent',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-          onClick={() => {
-            const index = flatNodes.findIndex((n) => n.id === node.id);
-            if (index >= 0) setSelectedNodeIndex(index);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              const index = flatNodes.findIndex((n) => n.id === node.id);
-              if (index >= 0) setSelectedNodeIndex(index);
-            }
-          }}
-          role="button"
-          tabIndex={0}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {node.icon}
-            <strong>{node.label}</strong>
-          </span>
-          <span style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#69707D' }}>
-            {node.tokens !== '—' && node.tokens !== undefined && <span>{node.tokens}</span>}
-            {node.latency && node.latency !== '—' && <span>{node.latency}</span>}
-          </span>
-        </div>
-        {node.children && node.children.length > 0 && (
-          <div style={{ marginLeft: '24px', marginTop: '4px' }}>
-            {createTreeItems(node.children)}
-          </div>
-        )}
-      </div>
-    ));
+  // Initialize all nodes with children as expanded on first load
+  useEffect(() => {
+    const allExpandable = new Set<string>();
+    const collectExpandable = (nodes: TreeNode[]) => {
+      nodes.forEach((node) => {
+        if (node.children && node.children.length > 0) {
+          allExpandable.add(node.id);
+          collectExpandable(node.children);
+        }
+      });
+    };
+    collectExpandable(traceTreeData);
+    setExpandedNodes(allExpandable);
+  }, [traceTreeData]);
+
+  const toggleExpanded = (nodeId: string) => {
+    setExpandedNodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) {
+        next.delete(nodeId);
+      } else {
+        next.add(nodeId);
+      }
+      return next;
+    });
   };
 
   // Parse input/output as JSON if possible, otherwise show as string
@@ -168,235 +171,365 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     }
   };
 
-  const tabs = [
-    {
-      id: 'trace-tree',
-      name: 'Trace Tree',
-      content: (
-        <div style={{ padding: '16px' }}>
-          {isLoadingFullTree ? (
-            <EuiPanel paddingSize="m" style={{ textAlign: 'center' }}>
-              <EuiLoadingSpinner size="l" />
-              <EuiText size="s" color="subdued" style={{ marginTop: '8px' }}>
-                Loading full trace tree...
-              </EuiText>
-            </EuiPanel>
-          ) : (
-            <EuiPanel paddingSize="s">
-              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                {createTreeItems(traceTreeData)}
-              </div>
-            </EuiPanel>
+  const selectNode = (nodeId: string) => {
+    const index = flatNodes.findIndex((n) => n.id === nodeId);
+    if (index >= 0) setSelectedNodeIndex(index);
+  };
+
+  // Create tree items with selection highlighting and expand/collapse
+  const createTreeItems = (nodes: TreeNode[], depth = 0): React.ReactNode[] => {
+    return nodes.map((node) => {
+      const isSelected = node.id === selectedNode?.id;
+      const hasChildren = node.children && node.children.length > 0;
+      const isExpanded = expandedNodes.has(node.id);
+      const rowClassName = `agentTracesFlyout__treeRow${
+        isSelected ? ' agentTracesFlyout__treeRow--selected' : ''
+      }`;
+      return (
+        <div key={node.id} className="agentTracesFlyout__treeNode">
+          <EuiFlexGroup
+            className={rowClassName}
+            alignItems="center"
+            justifyContent="spaceBetween"
+            gutterSize="none"
+            responsive={false}
+            onClick={() => selectNode(node.id)}
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') selectNode(node.id);
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            <EuiFlexItem grow={false}>
+              <EuiFlexGroup
+                className="agentTracesFlyout__treeRowLabel"
+                alignItems="center"
+                gutterSize="none"
+                responsive={false}
+              >
+                <EuiFlexItem grow={false}>
+                  {hasChildren ? (
+                    <EuiIcon
+                      type={isExpanded ? 'arrowDown' : 'arrowRight'}
+                      size="s"
+                      color="subdued"
+                      className="agentTracesFlyout__expandIcon"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        toggleExpanded(node.id);
+                      }}
+                      tabIndex={0}
+                      onKeyDown={(e: React.KeyboardEvent) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.stopPropagation();
+                          toggleExpanded(node.id);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <EuiIcon type="dot" size="s" color="subdued" />
+                  )}
+                </EuiFlexItem>
+                <EuiFlexItem grow={false}>
+                  <EuiText size="s">
+                    <strong>{node.label}</strong>
+                  </EuiText>
+                </EuiFlexItem>
+              </EuiFlexGroup>
+            </EuiFlexItem>
+            {node.latency && node.latency !== '—' && (
+              <EuiFlexItem grow={false} className="agentTracesFlyout__treeRowLatency">
+                <EuiText size="xs" color="subdued">
+                  {node.latency}
+                </EuiText>
+              </EuiFlexItem>
+            )}
+          </EuiFlexGroup>
+          {hasChildren && isExpanded && (
+            <div className="agentTracesFlyout__treeChildren">
+              {createTreeItems(node.children!, depth + 1)}
+            </div>
           )}
         </div>
-      ),
-    },
-    {
-      id: 'agent-graph',
-      name: 'Agent Graph',
-      content: (
-        <div style={{ padding: '16px' }}>
-          <EuiText>
-            <p>Agent graph visualization would go here</p>
-          </EuiText>
-        </div>
-      ),
-    },
-    {
-      id: 'timeline',
-      name: 'Timeline',
-      content: (
-        <div style={{ padding: '16px' }}>
-          <EuiText>
-            <p>Timeline visualization would go here</p>
-          </EuiText>
-        </div>
-      ),
-    },
-  ];
+      );
+    });
+  };
 
+  // Render a two-column label/value grid (items alternate left/right columns)
+  const renderFieldGrid = (
+    items: Array<{ label: string; value: React.ReactNode }>
+  ): React.ReactElement => {
+    const leftItems = items.filter((_, i) => i % 2 === 0);
+    const rightItems = items.filter((_, i) => i % 2 !== 0);
+    const rowCount = Math.max(leftItems.length, rightItems.length);
+
+    return (
+      <>
+        {Array.from({ length: rowCount }).map((_, i) => (
+          <EuiFlexGroup key={i} gutterSize="l" responsive={false}>
+            <EuiFlexItem>
+              {leftItems[i] && (
+                <div className="agentTracesFlyout__field">
+                  <EuiText size="xs" color="subdued">
+                    {leftItems[i].label}
+                  </EuiText>
+                  <EuiText size="s">{leftItems[i].value}</EuiText>
+                </div>
+              )}
+            </EuiFlexItem>
+            <EuiFlexItem>
+              {rightItems[i] && (
+                <div className="agentTracesFlyout__field">
+                  <EuiText size="xs" color="subdued">
+                    {rightItems[i].label}
+                  </EuiText>
+                  <EuiText size="s">{rightItems[i].value}</EuiText>
+                </div>
+              )}
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        ))}
+      </>
+    );
+  };
+
+  // Overview tab content
+  const renderOverviewTab = () => {
+    const row = selectedTraceRow;
+    const overviewFields = [
+      { label: 'SERVICE', value: row?.kind || '—' },
+      { label: 'DURATION', value: row?.latency || '—' },
+      { label: 'SPAN ID', value: row?.spanId || '—' },
+      { label: 'MODEL', value: '—' },
+      {
+        label: 'PARENT SPAN',
+        value: row?.parentSpanId ? (
+          <span className="agentTracesFlyout__parentSpanLink">{row.parentSpanId}</span>
+        ) : (
+          '(root span)'
+        ),
+      },
+      { label: 'TOOL USED', value: '—' },
+      {
+        label: 'STATUS',
+        value: (
+          <EuiHealth color={row?.status === 'success' ? 'success' : 'danger'}>
+            {row?.status === 'success' ? 'OK' : 'ERROR'}
+          </EuiHealth>
+        ),
+      },
+      {
+        label: 'TOKENS USED',
+        value: row?.totalTokens && row.totalTokens !== '—' ? `${row.totalTokens} tokens` : '—',
+      },
+      { label: 'START TIME', value: row?.startTime || '—' },
+      { label: 'COST', value: row?.totalCost || '—' },
+    ];
+
+    return (
+      <div className="agentTracesFlyout__tabContent">
+        {renderFieldGrid(overviewFields)}
+
+        <EuiSpacer size="m" />
+
+        <EuiAccordion
+          id="trace-input-accordion"
+          buttonContent={
+            <EuiTitle size="xxs">
+              <span>INPUT</span>
+            </EuiTitle>
+          }
+          initialIsOpen
+          paddingSize="m"
+        >
+          <EuiCodeBlock language="json" fontSize="s" paddingSize="m" isCopyable>
+            {formatJsonOrString(row?.input)}
+          </EuiCodeBlock>
+        </EuiAccordion>
+
+        <EuiSpacer size="m" />
+
+        <EuiAccordion
+          id="trace-output-accordion"
+          buttonContent={
+            <EuiTitle size="xxs">
+              <span>OUTPUT</span>
+            </EuiTitle>
+          }
+          initialIsOpen
+          paddingSize="m"
+        >
+          <EuiCodeBlock language="json" fontSize="s" paddingSize="m" isCopyable>
+            {formatJsonOrString(row?.output)}
+          </EuiCodeBlock>
+        </EuiAccordion>
+      </div>
+    );
+  };
+
+  // Metadata tab content — same two-column layout as Overview
+  const renderMetadataTab = () => {
+    const row = selectedTraceRow;
+    const metadataFields = [
+      { label: 'TRACE ID', value: row?.traceId || '—' },
+      {
+        label: 'KIND',
+        value: <EuiBadge color={getKindColor(row?.kind)}>{row?.kind || 'UNKNOWN'}</EuiBadge>,
+      },
+      { label: 'SPAN ID', value: row?.spanId || '—' },
+      { label: 'START TIME', value: row?.startTime || '—' },
+      { label: 'PARENT SPAN ID', value: row?.parentSpanId || '(root span)' },
+      { label: 'LATENCY', value: row?.latency || '—' },
+      { label: 'TOTAL TOKENS', value: String(row?.totalTokens || '—') },
+    ];
+
+    return <div className="agentTracesFlyout__tabContent">{renderFieldGrid(metadataFields)}</div>;
+  };
+
+  // Bottom detail tabs: Overview, Logs, Metadata, Raw
   const detailTabs = [
     {
-      id: 'input',
-      name: (
-        <span>
-          <EuiIcon type="arrowDown" size="s" /> Input
-        </span>
-      ),
-      content: (
-        <div style={{ padding: '16px' }}>
-          <EuiCodeBlock language="json" fontSize="s" paddingSize="m" isCopyable>
-            {formatJsonOrString(selectedTraceRow?.input)}
-          </EuiCodeBlock>
-        </div>
-      ),
+      id: 'overview',
+      name: 'Overview',
+      content: renderOverviewTab(),
     },
     {
-      id: 'output',
-      name: (
-        <span>
-          <EuiIcon type="arrowUp" size="s" /> Output
-        </span>
-      ),
+      id: 'logs',
+      name: 'Logs',
       content: (
-        <div style={{ padding: '16px' }}>
-          <EuiCodeBlock language="json" fontSize="s" paddingSize="m" isCopyable>
-            {formatJsonOrString(selectedTraceRow?.output)}
-          </EuiCodeBlock>
-        </div>
-      ),
-    },
-    {
-      id: 'evaluations',
-      name: 'Evaluations',
-      content: (
-        <div style={{ padding: '16px' }}>
-          <EuiText size="s">No evaluations available</EuiText>
-        </div>
-      ),
-    },
-    {
-      id: 'attributes',
-      name: 'Attributes',
-      content: (
-        <div style={{ padding: '16px' }}>
-          <EuiText size="s">
-            <dl>
-              <dt>
-                <strong>Trace ID:</strong>
-              </dt>
-              <dd>{selectedTraceRow?.traceId || '—'}</dd>
-              <dt>
-                <strong>Span ID:</strong>
-              </dt>
-              <dd>{selectedTraceRow?.spanId || '—'}</dd>
-              <dt>
-                <strong>Parent Span ID:</strong>
-              </dt>
-              <dd>{selectedTraceRow?.parentSpanId || '(root span)'}</dd>
-              <dt>
-                <strong>Kind:</strong>
-              </dt>
-              <dd>
-                <EuiBadge color={getKindColor(selectedTraceRow?.kind)}>
-                  {selectedTraceRow?.kind || 'UNKNOWN'}
-                </EuiBadge>
-              </dd>
-              <dt>
-                <strong>Start Time:</strong>
-              </dt>
-              <dd>{selectedTraceRow?.startTime || '—'}</dd>
-              <dt>
-                <strong>Latency:</strong>
-              </dt>
-              <dd>{selectedTraceRow?.latency || '—'}</dd>
-              <dt>
-                <strong>Total Tokens:</strong>
-              </dt>
-              <dd>{selectedTraceRow?.totalTokens || '—'}</dd>
-            </dl>
+        <div className="agentTracesFlyout__tabContent">
+          <EuiText size="s" color="subdued">
+            No logs available
           </EuiText>
         </div>
       ),
     },
     {
-      id: 'annotations',
-      name: 'Annotations',
+      id: 'metadata',
+      name: 'Metadata',
+      content: renderMetadataTab(),
+    },
+    {
+      id: 'raw',
+      name: 'Raw',
       content: (
-        <div style={{ padding: '16px' }}>
-          <EuiText size="s">No annotations</EuiText>
+        <div className="agentTracesFlyout__tabContent">
+          <EuiCodeBlock language="json" fontSize="s" paddingSize="m" isCopyable>
+            {JSON.stringify(selectedTraceRow?.rawDocument || {}, null, 2)}
+          </EuiCodeBlock>
         </div>
       ),
     },
   ];
 
   return (
-    <EuiFlyout onClose={onClose} ownFocus={false} size="l" aria-labelledby="trace-details-flyout">
+    <EuiFlyout onClose={onClose} ownFocus={false} size="m" aria-labelledby="trace-details-flyout">
       <EuiFlyoutHeader hasBorder>
+        {/* Title row: name + status badge */}
         <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>
           <EuiFlexItem grow={false}>
-            <EuiButtonIcon
-              iconType="arrowUp"
-              aria-label="Previous trace"
-              display="base"
-              size="s"
-              onClick={handlePrevious}
-              disabled={selectedNodeIndex === 0}
-            />
+            <EuiTitle size="m">
+              <h2 id="trace-details-flyout">{trace.name || '—'}</h2>
+            </EuiTitle>
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
-            <EuiButtonIcon
-              iconType="arrowDown"
-              aria-label="Next trace"
-              display="base"
-              size="s"
-              onClick={handleNext}
-              disabled={selectedNodeIndex === flatNodes.length - 1}
-            />
+            <EuiBadge color={trace.status === 'success' ? 'success' : 'danger'}>
+              {trace.status === 'success' ? 'SUCCESS' : 'ERROR'}
+            </EuiBadge>
           </EuiFlexItem>
         </EuiFlexGroup>
+
         <EuiSpacer size="s" />
-        <EuiTitle size="s">
-          <h2 id="trace-details-flyout">
-            trace_id: {trace.traceId || '—'} <EuiBadge color="hollow">Trace ID</EuiBadge>
-          </h2>
-        </EuiTitle>
+
+        {/* Metadata row */}
+        <EuiFlexGroup gutterSize="l" responsive={false} wrap>
+          <EuiFlexItem grow={false}>
+            <EuiText size="xs" color="subdued">
+              TRACE ID
+            </EuiText>
+            <EuiText size="s">
+              <strong>{trace.traceId ? trace.traceId.substring(0, 16) : '—'}</strong>
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiText size="xs" color="subdued">
+              SESSION
+            </EuiText>
+            <EuiText size="s">
+              <strong>—</strong>
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiText size="xs" color="subdued">
+              DURATION
+            </EuiText>
+            <EuiText size="s">
+              <strong>{trace.latency || '—'}</strong>
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiText size="xs" color="subdued">
+              SPANS
+            </EuiText>
+            <EuiText size="s">
+              <strong>{totalSpans}</strong>
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiText size="xs" color="subdued">
+              TOKENS
+            </EuiText>
+            <EuiText size="s">
+              <strong>{totalTokens || '—'}</strong>
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiText size="xs" color="subdued">
+              COST
+            </EuiText>
+            <EuiText size="s">
+              <strong>{trace.totalCost || '—'}</strong>
+            </EuiText>
+          </EuiFlexItem>
+        </EuiFlexGroup>
+
         <EuiSpacer size="s" />
-        <EuiFlexGroup gutterSize="l">
+
+        {/* Start time row with clock icon */}
+        <EuiFlexGroup alignItems="center" gutterSize="xs" responsive={false}>
           <EuiFlexItem grow={false}>
-            <EuiText size="xs" color="subdued">
-              TRACE STATUS
-            </EuiText>
-            <EuiHealth color={trace.status === 'success' ? 'success' : 'danger'}>
-              {trace.status === 'success' ? 'OK' : 'ERROR'}
-            </EuiHealth>
+            <EuiIcon type="clock" size="s" color="subdued" />
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiText size="xs" color="subdued">
-              TOTAL TOKENS
+              {trace.startTime || '—'}
             </EuiText>
-            <EuiText size="s">{trace.totalTokens || '—'}</EuiText>
-          </EuiFlexItem>
-          <EuiFlexItem grow={false}>
-            <EuiText size="xs" color="subdued">
-              START TIME
-            </EuiText>
-            <EuiText size="s">{trace.startTime || '—'}</EuiText>
-          </EuiFlexItem>
-          <EuiFlexItem grow={false}>
-            <EuiText size="xs" color="subdued">
-              LATENCY
-            </EuiText>
-            <EuiText size="s">{trace.latency || '—'}</EuiText>
           </EuiFlexItem>
         </EuiFlexGroup>
       </EuiFlyoutHeader>
 
       <EuiFlyoutBody>
-        <EuiTabbedContent tabs={tabs} initialSelectedTab={tabs[0]} onTabClick={() => {}} />
-        <EuiSpacer size="m" />
-        <EuiPanel paddingSize="none">
-          <div style={{ borderTop: '1px solid #D3DAE6' }}>
-            <div style={{ padding: '8px 16px', background: '#F5F7FA' }}>
-              <EuiFlexGroup alignItems="center" gutterSize="s">
-                <EuiFlexItem grow={false}>
-                  <EuiBadge color={getKindColor(selectedNode?.kind)}>
-                    {selectedNode?.kind || 'NODE'}
-                  </EuiBadge>
-                </EuiFlexItem>
-                <EuiFlexItem>
-                  <EuiText size="s">
-                    <strong>{selectedNode?.label}</strong>
-                  </EuiText>
-                </EuiFlexItem>
-                <EuiFlexItem grow={false}>
-                  <EuiButtonIcon iconType="copy" aria-label="Copy" size="s" />
-                </EuiFlexItem>
-              </EuiFlexGroup>
-            </div>
-            <EuiTabbedContent tabs={detailTabs} size="s" initialSelectedTab={detailTabs[0]} />
-          </div>
-        </EuiPanel>
+        {/* Trace tree */}
+        <EuiTitle size="xs">
+          <h3>Trace tree</h3>
+        </EuiTitle>
+        <EuiSpacer size="s" />
+        {isLoadingFullTree ? (
+          <EuiPanel paddingSize="m" className="agentTracesFlyout__loadingPanel">
+            <EuiLoadingSpinner size="l" />
+            <EuiSpacer size="s" />
+            <EuiText size="s" color="subdued">
+              Loading full trace tree...
+            </EuiText>
+          </EuiPanel>
+        ) : (
+          <div className="agentTracesFlyout__treeContainer">{createTreeItems(traceTreeData)}</div>
+        )}
+
+        <EuiSpacer size="l" />
+
+        {/* Detail tabs: Overview, Logs, Metadata, Raw */}
+        <EuiTabbedContent tabs={detailTabs} initialSelectedTab={detailTabs[0]} />
       </EuiFlyoutBody>
     </EuiFlyout>
   );

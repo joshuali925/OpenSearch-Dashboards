@@ -157,29 +157,13 @@ export function resolveDuration(
   const durationInNanos = fieldMap.get('durationInNanos')?.[index];
   const durationNano = fieldMap.get('durationNano')?.[index];
 
+  // Prefer explicit duration fields — they carry original nanosecond precision
+  if (durationInNanos || durationNano) {
+    return durationInNanos || durationNano;
+  }
+
+  // Fall back to computing from timestamps
   if (startTime && endTime) {
-    const hasStartNanoPrecision = hasNanosecondPrecision(startTime);
-    const hasEndNanoPrecision = hasNanosecondPrecision(endTime);
-
-    if (hasStartNanoPrecision && hasEndNanoPrecision) {
-      try {
-        const startNanos = convertTimestampToNanos(startTime);
-        const endNanos = convertTimestampToNanos(endTime);
-        if (startNanos > 0 && endNanos > 0 && endNanos > startNanos) {
-          return endNanos - startNanos;
-        }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.warn('Error calculating duration from high-precision timestamps:', error);
-      }
-    }
-
-    // If timestamps lack precision, prefer provided duration fields for better accuracy
-    if ((!hasStartNanoPrecision || !hasEndNanoPrecision) && (durationInNanos || durationNano)) {
-      return durationInNanos || durationNano;
-    }
-
-    // Fall back to calculated duration from lower-precision timestamps
     try {
       const startNanos = convertTimestampToNanos(startTime);
       const endNanos = convertTimestampToNanos(endTime);
@@ -188,12 +172,11 @@ export function resolveDuration(
       }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.warn('Error calculating duration from low-precision timestamps:', error);
+      console.warn('Error calculating duration from timestamps:', error);
     }
   }
 
-  // Final fallback to provided duration fields
-  return durationInNanos || durationNano || 0;
+  return 0;
 }
 
 export function resolveInstrumentationScope(fieldMap: Map<string, any[]>, index: number): any {
@@ -225,29 +208,13 @@ export function resolveDurationFromDatarows(
   const durationInNanos = getValueByName('durationInNanos');
   const durationNano = getValueByName('durationNano');
 
+  // Prefer explicit duration fields — they carry original nanosecond precision
+  if (durationInNanos || durationNano) {
+    return durationInNanos || durationNano;
+  }
+
+  // Fall back to computing from timestamps
   if (startTime && endTime) {
-    const hasStartNanoPrecision = hasNanosecondPrecision(startTime);
-    const hasEndNanoPrecision = hasNanosecondPrecision(endTime);
-
-    if (hasStartNanoPrecision && hasEndNanoPrecision) {
-      try {
-        const startNanos = convertTimestampToNanos(startTime);
-        const endNanos = convertTimestampToNanos(endTime);
-        if (startNanos > 0 && endNanos > 0 && endNanos > startNanos) {
-          return endNanos - startNanos;
-        }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.warn('Error calculating duration from high-precision timestamps:', error);
-      }
-    }
-
-    // If timestamps lack precision, prefer provided duration fields for better accuracy
-    if ((!hasStartNanoPrecision || !hasEndNanoPrecision) && (durationInNanos || durationNano)) {
-      return durationInNanos || durationNano;
-    }
-
-    // Fall back to calculated duration from lower-precision timestamps
     try {
       const startNanos = convertTimestampToNanos(startTime);
       const endNanos = convertTimestampToNanos(endTime);
@@ -256,12 +223,11 @@ export function resolveDurationFromDatarows(
       }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.warn('Error calculating duration from low-precision timestamps:', error);
+      console.warn('Error calculating duration from timestamps:', error);
     }
   }
 
-  // Final fallback to provided duration fields
-  return durationInNanos || durationNano || 0;
+  return 0;
 }
 
 export function resolveInstrumentationScopeFromDatarows(

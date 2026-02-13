@@ -11,12 +11,6 @@ export const configSchema = schema.object({
   supportedTypes: schema.arrayOf(schema.string(), {
     defaultValue: [DEFAULT_DATA.SET_TYPES.INDEX, DEFAULT_DATA.SET_TYPES.INDEX_PATTERN],
   }),
-  discoverTraces: schema.object({
-    enabled: schema.boolean({ defaultValue: false }),
-  }),
-  discoverMetrics: schema.object({
-    enabled: schema.boolean({ defaultValue: false }),
-  }),
 });
 
 export type ConfigSchema = TypeOf<typeof configSchema>;

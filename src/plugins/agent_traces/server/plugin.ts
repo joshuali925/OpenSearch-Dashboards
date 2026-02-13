@@ -29,42 +29,6 @@ export class AgentTracesPlugin implements Plugin<AgentTracesPluginSetup, AgentTr
 
     core.capabilities.registerProvider(capabilitiesProvider);
 
-    // Register default agentTraces capabilities
-    core.capabilities.registerProvider(() => ({
-      agentTraces: {
-        discoverTracesEnabled: false,
-        discoverMetricsEnabled: false,
-      },
-    }));
-
-    // Register dynamic capabilities switcher for feature flags
-    // This will override the defaults with values from DynamicConfigService
-    core.capabilities.registerSwitcher(async (request, capabilities) => {
-      try {
-        const dynamicConfigServiceStart = await core.dynamicConfigService.getStartService();
-        const client = dynamicConfigServiceStart.getClient();
-        const store = dynamicConfigServiceStart.getAsyncLocalStore();
-
-        const config = await client.getConfig(
-          { name: 'agentTraces' },
-          { asyncLocalStorageContext: store! }
-        );
-
-        return {
-          ...capabilities,
-          agentTraces: {
-            ...(capabilities.agentTraces || {}),
-            discoverTracesEnabled: config.discoverTraces?.enabled ?? false,
-            discoverMetricsEnabled: config.discoverMetrics?.enabled ?? false,
-          },
-        };
-      } catch (error) {
-        this.logger.error('Failed to load agentTraces dynamic config, using defaults', error);
-        // Keep defaults from provider (false for both flags)
-        return capabilities;
-      }
-    });
-
     core.capabilities.registerSwitcher(async (request, capabilites) => {
       return await core.security.readonlyService().hideForReadonly(request, capabilites, {
         discover: {

@@ -60,16 +60,11 @@ describe('AgentTracesPlugin', () => {
   let coreStart: CoreStart;
   let setupDeps: AgentTracesSetupDependencies;
   let startDeps: AgentTracesStartDependencies;
-  let mockCapabilities: any;
 
   function createMockInitializerContext() {
     return {
       config: {
-        get: jest.fn().mockReturnValue({
-          discoverTraces: {
-            enabled: false,
-          },
-        }),
+        get: jest.fn().mockReturnValue({}),
       },
       logger: {
         get: jest.fn().mockReturnValue({
@@ -223,37 +218,6 @@ describe('AgentTracesPlugin', () => {
       configurable: true,
     });
 
-    // Add capabilities mock with agent traces feature flags (mutable for tests)
-    mockCapabilities = {
-      agentTraces: {
-        discoverTracesEnabled: false,
-        discoverMetricsEnabled: false,
-      },
-      navLinks: {},
-      management: {},
-      catalogue: {},
-      workspaces: {},
-    };
-
-    Object.defineProperty(coreStart.application, 'capabilities', {
-      get: () => mockCapabilities,
-      set: (value) => {
-        Object.assign(mockCapabilities, value);
-      },
-      configurable: true,
-    });
-
-    // Mock navLinks.get for AppUpdater logic
-    Object.defineProperty(coreStart.application, 'navLinks', {
-      value: {
-        get: jest.fn().mockReturnValue({
-          navLinkStatus: 1, // AppNavLinkStatus.visible
-        }),
-      },
-      writable: true,
-      configurable: true,
-    });
-
     // Mock setup dependencies
     setupDeps = createMockSetupDeps();
 
@@ -358,62 +322,6 @@ describe('AgentTracesPlugin', () => {
 
       expect(result.visualizationRegistry).toBeDefined();
       expect(result.slotRegistry).toBeDefined();
-    });
-
-    it('should hide Traces and Metrics nav links when capabilities are disabled', () => {
-      // Set capabilities to disabled (default from beforeEach)
-      mockCapabilities.agentTraces = {
-        discoverTracesEnabled: false,
-        discoverMetricsEnabled: false,
-      };
-
-      plugin.start(coreStart, startDeps);
-
-      // The AppUpdaters should be called during start
-      expect(coreStart.application.capabilities.agentTraces?.discoverTracesEnabled).toBe(false);
-      expect(coreStart.application.capabilities.agentTraces?.discoverMetricsEnabled).toBe(false);
-    });
-
-    it('should show Traces nav link when capability is enabled', () => {
-      // Enable traces capability
-      mockCapabilities.agentTraces = {
-        discoverTracesEnabled: true,
-        discoverMetricsEnabled: false,
-      };
-
-      plugin.start(coreStart, startDeps);
-
-      // Verify traces is enabled, metrics is disabled
-      expect(coreStart.application.capabilities.agentTraces?.discoverTracesEnabled).toBe(true);
-      expect(coreStart.application.capabilities.agentTraces?.discoverMetricsEnabled).toBe(false);
-    });
-
-    it('should show Metrics nav link when capability is enabled', () => {
-      // Enable metrics capability
-      mockCapabilities.agentTraces = {
-        discoverTracesEnabled: false,
-        discoverMetricsEnabled: true,
-      };
-
-      plugin.start(coreStart, startDeps);
-
-      // Verify metrics is enabled, traces is disabled
-      expect(coreStart.application.capabilities.agentTraces?.discoverTracesEnabled).toBe(false);
-      expect(coreStart.application.capabilities.agentTraces?.discoverMetricsEnabled).toBe(true);
-    });
-
-    it('should show both Traces and Metrics nav links when both capabilities are enabled', () => {
-      // Enable both capabilities
-      mockCapabilities.agentTraces = {
-        discoverTracesEnabled: true,
-        discoverMetricsEnabled: true,
-      };
-
-      plugin.start(coreStart, startDeps);
-
-      // Verify both are enabled
-      expect(coreStart.application.capabilities.agentTraces?.discoverTracesEnabled).toBe(true);
-      expect(coreStart.application.capabilities.agentTraces?.discoverMetricsEnabled).toBe(true);
     });
   });
 

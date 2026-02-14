@@ -3,24 +3,36 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/* stylelint-disable @osd/stylelint/no_modifying_global_selectors */
+
 .agentTracesFlyout {
+  // Make the tree container fill available height and scroll
   &__treeContainer {
-    max-height: 400px;
+    height: 100%;
     overflow-y: auto;
+    overflow-x: hidden;
+    padding: $ouiSizeS;
   }
 
   &__treeNode {
-    margin-bottom: 2px;
+    margin-bottom: 0;
+    position: relative;
   }
 
   &__treeRow {
     padding: $ouiSizeXS $ouiSizeS $ouiSizeXS 0;
     border-left: 3px solid transparent;
-    border-radius: 2px;
+    border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.15s ease;
+    position: relative;
+
+    &:hover {
+      background-color: $ouiColorLightestShade;
+    }
 
     &--selected {
-      background-color: $ouiFocusBackgroundColor;
+      background-color: tintOrShade($ouiColorPrimary, 90%, 70%);
       border-left-color: $ouiColorPrimary;
     }
   }
@@ -102,17 +114,171 @@
 
   &__expandIcon {
     cursor: pointer;
+    transition: transform 0.15s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+
+  &__flyoutResizer {
+    position: absolute;
+
+    &:hover {
+      background: $ouiColorPrimary !important;
+    }
+
+    &:active {
+      background: $ouiColorPrimary !important;
+    }
+  }
+
+  &__resizer {
+    position: relative;
+
+    &:hover {
+      background: $ouiColorPrimary !important;
+    }
+
+    &:active {
+      background: $ouiColorPrimary !important;
+    }
   }
 
   &__loadingPanel {
     text-align: center;
   }
 
+  // Make tab content fill available height and scroll
   &__tabContent {
     padding: $ouiSize;
+    height: auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   &__field {
     margin-bottom: $ouiSize;
   }
+
+  &__parentSpanLink {
+    color: $ouiColorPrimary;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
+
+// Make the flyout body responsive to height
+.agentTracesFlyout .euiFlyoutBody {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .euiFlyoutBody__overflowContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    padding-top: 0 !important;
+  }
+}
+
+// Remove top padding from tabbed content
+.agentTracesFlyout .euiTabbedContent {
+  padding-top: 0 !important;
+
+  .euiTabs {
+    padding-top: 0 !important;
+  }
+}
+
+// Ensure the two-column layout fills height properly
+.agentTracesFlyout .euiFlyoutBody__overflowContent > .euiFlexGroup {
+  flex: 1;
+  min-height: 0;
+
+  // Left column (tree)
+  > .euiFlexItem:first-child {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    // EuiTabbedContent wrapper
+    > .euiTabbedContent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+
+      // Tab panels container
+      .euiTabbedContent__panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+      }
+
+      // Tab content panel
+      [role="tabpanel"] {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+
+        // Direct child wrapper
+        > div {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          min-height: 0;
+        }
+      }
+    }
+  }
+
+  // Right column (details)
+  > .euiFlexItem:last-child {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+
+    // EuiTabbedContent wrapper
+    > .euiTabbedContent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+
+      // Tab panels container
+      .euiTabbedContent__panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+      }
+
+      // Tab content panel
+      [role="tabpanel"] {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+      }
+    }
+  }
+}
+
+/* stylelint-enable @osd/stylelint/no_modifying_global_selectors */

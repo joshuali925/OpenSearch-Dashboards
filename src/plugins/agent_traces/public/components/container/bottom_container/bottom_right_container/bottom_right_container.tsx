@@ -2,9 +2,9 @@
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  */
-import React, { useState } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { EuiSpacer, EuiTabs, EuiTab } from '@elastic/eui';
+import { EuiSpacer } from '@elastic/eui';
 import { selectQueryStatusMapByKey } from '../../../../application/utils/state_management/selectors';
 import { RootState } from '../../../../application/utils/state_management/store';
 import { QueryExecutionStatus } from '../../../../application/utils/state_management/types';
@@ -25,9 +25,6 @@ import { useFlavorId } from '../../../../helpers/use_flavor_id';
 import { AgentTracesFlavor } from '../../../../../common';
 import { TraceAutoDetectCallout } from '../../../trace_auto_detect_callout';
 import { TracesTable } from '../../../../application/pages/traces/traces_table';
-import { SessionsTable } from '../../../../application/pages/traces/sessions_table';
-import { SpansTable } from '../../../../application/pages/traces/spans_table';
-import './bottom_right_container.scss';
 
 // Memoized content component to prevent re-renders of chart + tabs when status hasn't changed
 const ReadyContent = React.memo(() => (
@@ -42,7 +39,6 @@ export const BottomRightContainer = () => {
   const { dataset } = useDatasetContext();
   const { services } = useOpenSearchDashboards<AgentTracesServices>();
   const flavorId = useFlavorId();
-  const [selectedTab, setSelectedTab] = useState<'traces' | 'sessions' | 'spans'>('traces');
 
   const onRefresh = () => {
     if (services) {
@@ -59,32 +55,11 @@ export const BottomRightContainer = () => {
   });
 
   if (dataset == null) {
-    // Show Traces/Sessions/Spans tabs with mock data for traces flavor
+    // Show TracesTable with mock data for traces flavor
     if (flavorId === AgentTracesFlavor.Traces) {
       return (
         <CanvasPanel>
-          <div className="agentTracesTabsContainer" style={{ padding: '16px 16px 0 16px' }}>
-            <EuiTabs>
-              <EuiTab
-                isSelected={selectedTab === 'traces'}
-                onClick={() => setSelectedTab('traces')}
-              >
-                Traces
-              </EuiTab>
-              <EuiTab
-                isSelected={selectedTab === 'sessions'}
-                onClick={() => setSelectedTab('sessions')}
-              >
-                Sessions
-              </EuiTab>
-              <EuiTab isSelected={selectedTab === 'spans'} onClick={() => setSelectedTab('spans')}>
-                Spans
-              </EuiTab>
-            </EuiTabs>
-          </div>
-          {selectedTab === 'traces' && <TracesTable />}
-          {selectedTab === 'sessions' && <SessionsTable />}
-          {selectedTab === 'spans' && <SpansTable />}
+          <TracesTable />
         </CanvasPanel>
       );
     }

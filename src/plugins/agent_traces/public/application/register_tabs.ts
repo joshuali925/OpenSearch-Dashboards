@@ -5,12 +5,14 @@
 
 import { i18n } from '@osd/i18n';
 import { TracesTab } from './pages/traces/traces_tab';
+import { SpansTab } from './pages/traces/spans_tab';
 import { TabDefinition, TabRegistryService } from '../services/tab_registry/tab_registry_service';
 import { AgentTracesServices } from '../types';
 import {
   AgentTracesFlavor,
   AGENT_TRACES_DEFAULT_LANGUAGE,
   AGENT_TRACES_TRACES_TAB_ID,
+  AGENT_TRACES_SPANS_TAB_ID,
 } from '../../common';
 import { defaultPrepareQueryString } from './utils/state_management/actions/query_actions';
 
@@ -38,6 +40,26 @@ export const registerBuiltInTabs = (tabRegistry: TabRegistryService) => {
     component: TracesTab,
   };
   tabRegistry.registerTab(tracesTabDefinition);
+
+  // Register Spans Tab
+  const spansTabDefinition: TabDefinition = {
+    id: AGENT_TRACES_SPANS_TAB_ID,
+    label: i18n.translate('agentTraces.spansTab.label', {
+      defaultMessage: 'Spans',
+    }),
+    flavor: [AgentTracesFlavor.Traces],
+    order: 20,
+    supportedLanguages: [AGENT_TRACES_DEFAULT_LANGUAGE],
+
+    // Filter to all gen_ai spans (not just root spans)
+    prepareQuery: (query) => {
+      const baseQuery = defaultPrepareQueryString(query);
+      return `${baseQuery} | where isnotnull(\`attributes.gen_ai.operation.name\`)`;
+    },
+
+    component: SpansTab,
+  };
+  tabRegistry.registerTab(spansTabDefinition);
 };
 
 /**

@@ -20,8 +20,6 @@ import {
 } from '@elastic/eui';
 import { TraceDetailsFlyout } from './trace_details_flyout';
 import { useAgentTraces, TraceRow, getChildrenFromFullTree } from './use_agent_traces';
-import { useTraceMetrics } from './use_trace_metrics';
-import { TraceMetricsBar } from './trace_metrics_bar';
 import { getKindColor } from './trace_utils';
 
 const PAGE_SIZE = 50;
@@ -36,7 +34,6 @@ export const TracesTable = () => {
     traceSpansCache,
     traceLoadingState,
   } = useAgentTraces();
-  const { metrics, loading: metricsLoading } = useTraceMetrics(!loading && traces.length > 0);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [selectedTrace, setSelectedTrace] = useState<TraceRow | null>(null);
   const [selectedTraceFullTree, setSelectedTraceFullTree] = useState<TraceRow[] | undefined>(
@@ -318,7 +315,6 @@ export const TracesTable = () => {
   return (
     <>
       <div style={{ padding: '16px' }}>
-        <TraceMetricsBar metrics={metrics} loading={metricsLoading} />
         <EuiFlexGroup justifyContent="spaceBetween" alignItems="center" gutterSize="m">
           <EuiFlexItem grow={false}>
             <EuiText size="s" color="subdued">

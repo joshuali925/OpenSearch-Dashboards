@@ -21,6 +21,7 @@ export const DEFAULT_LOGS_COLUMNS_SETTING = 'agentTraces:defaultLogsColumns';
 export const ENABLE_EXPERIMENTAL_SETTING = 'agentTraces:experimental';
 export const AGENT_TRACES_DEFAULT_LANGUAGE = 'PPL';
 export const AGENT_TRACES_TRACES_TAB_ID = 'traces';
+export const AGENT_TRACES_SPANS_TAB_ID = 'spans';
 export const AGENT_TRACES_VISUALIZATION_TAB_ID = 'agent_traces_visualization_tab';
 
 export enum AgentTracesFlavor {

@@ -96,14 +96,6 @@ export const BottomRightContainer = () => {
     );
   }
 
-  if (status === QueryExecutionStatus.LOADING) {
-    return (
-      <CanvasPanel>
-        <LoadingSpinner />
-      </CanvasPanel>
-    );
-  }
-
   if (
     dataTableStatus === QueryExecutionStatus.READY ||
     dataTableStatus === QueryExecutionStatus.ERROR ||
@@ -111,6 +103,17 @@ export const BottomRightContainer = () => {
     status === QueryExecutionStatus.ERROR
   ) {
     return <ReadyContent />;
+  }
+
+  // Show a full-page spinner only when no tab has rendered yet.
+  // Once any tab has results the tabs component stays visible and
+  // individual tabs handle their own loading state.
+  if (status === QueryExecutionStatus.LOADING) {
+    return (
+      <CanvasPanel>
+        <LoadingSpinner />
+      </CanvasPanel>
+    );
   }
 
   return null;

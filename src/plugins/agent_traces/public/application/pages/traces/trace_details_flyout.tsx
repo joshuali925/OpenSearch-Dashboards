@@ -20,6 +20,8 @@ import {
   EuiFlyoutHeader,
   EuiFlyoutBody,
   EuiAccordion,
+  EuiButtonIcon,
+  EuiCopy,
 } from '@elastic/eui';
 import { TraceRow } from './use_agent_traces';
 import { getKindColor } from './trace_utils';
@@ -148,6 +150,76 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     setExpandedNodes(allExpandable);
   }, [traceTreeData]);
 
+  // Resizable panel state
+  const [flyoutWidth, setFlyoutWidth] = useState(1400); // Wider default to show timestamp
+  const [leftPanelWidth, setLeftPanelWidth] = useState(700); // 50% of 1400px
+  const [isResizing, setIsResizing] = useState(false);
+  const [isResizingFlyout, setIsResizingFlyout] = useState(false);
+
+  // Update left panel width when flyout width changes to maintain 50/50 split
+  useEffect(() => {
+    if (!isResizing && !isResizingFlyout) {
+      setLeftPanelWidth(flyoutWidth / 2);
+    }
+  }, [flyoutWidth, isResizing, isResizingFlyout]);
+
+  // Handle mouse down on resizer
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  // Handle mouse down on flyout edge resizer
+  const handleFlyoutMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizingFlyout(true);
+  };
+
+  // Handle mouse move for resizing
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isResizing) {
+        // Resize left panel
+        const flyoutElement = document.querySelector('.euiFlyout');
+        if (flyoutElement) {
+          const flyoutRect = flyoutElement.getBoundingClientRect();
+          const newWidth = e.clientX - flyoutRect.left;
+          
+          // Constrain width between 200px and 600px
+          const constrainedWidth = Math.max(200, Math.min(600, newWidth));
+          setLeftPanelWidth(constrainedWidth);
+        }
+      } else if (isResizingFlyout) {
+        // Resize entire flyout
+        const newWidth = window.innerWidth - e.clientX;
+        
+        // Constrain flyout width between 600px and 95vw
+        const maxWidth = window.innerWidth * 0.95;
+        const constrainedWidth = Math.max(600, Math.min(maxWidth, newWidth));
+        setFlyoutWidth(constrainedWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      setIsResizingFlyout(false);
+    };
+
+    if (isResizing || isResizingFlyout) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, isResizingFlyout]);
+
   const toggleExpanded = (nodeId: string) => {
     setExpandedNodes((prev) => {
       const next = new Set(prev);
@@ -176,15 +248,16 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     if (index >= 0) setSelectedNodeIndex(index);
   };
 
-  // Create tree items with selection highlighting and expand/collapse
+  // Create tree items with selection highlighting, expand/collapse, and tree lines
   const createTreeItems = (nodes: TreeNode[], depth = 0): React.ReactNode[] => {
-    return nodes.map((node) => {
+    return nodes.map((node, index) => {
       const isSelected = node.id === selectedNode?.id;
       const hasChildren = node.children && node.children.length > 0;
       const isExpanded = expandedNodes.has(node.id);
       const rowClassName = `agentTracesFlyout__treeRow${
         isSelected ? ' agentTracesFlyout__treeRow--selected' : ''
       }`;
+
       return (
         <div key={node.id} className="agentTracesFlyout__treeNode">
           <EuiFlexGroup
@@ -207,6 +280,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
                 gutterSize="none"
                 responsive={false}
               >
+                {/* Expand/collapse icon */}
                 <EuiFlexItem grow={false}>
                   {hasChildren ? (
                     <EuiIcon
@@ -230,6 +304,8 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
                     <EuiIcon type="dot" size="s" color="subdued" />
                   )}
                 </EuiFlexItem>
+
+                {/* Node label */}
                 <EuiFlexItem grow={false}>
                   <EuiText size="s">
                     <strong>{node.label}</strong>
@@ -237,6 +313,8 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
                 </EuiFlexItem>
               </EuiFlexGroup>
             </EuiFlexItem>
+
+            {/* Latency */}
             {node.latency && node.latency !== '—' && (
               <EuiFlexItem grow={false} className="agentTracesFlyout__treeRowLatency">
                 <EuiText size="xs" color="subdued">
@@ -245,6 +323,8 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
               </EuiFlexItem>
             )}
           </EuiFlexGroup>
+
+          {/* Children */}
           {hasChildren && isExpanded && (
             <div className="agentTracesFlyout__treeChildren">
               {createTreeItems(node.children!, depth + 1)}
@@ -299,8 +379,33 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     const overviewFields = [
       { label: 'SERVICE', value: row?.kind || '—' },
       { label: 'DURATION', value: row?.latency || '—' },
-      { label: 'SPAN ID', value: row?.spanId || '—' },
-      { label: 'MODEL', value: '—' },
+      {
+        label: 'SPAN ID',
+        value: row?.spanId ? (
+          <EuiFlexGroup gutterSize="xs" alignItems="center" responsive={false}>
+            <EuiFlexItem grow={false}>
+              <EuiText size="s">
+                <code>{row.spanId.substring(0, 16)}</code>
+              </EuiText>
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              <EuiCopy textToCopy={row.spanId}>
+                {(copy) => (
+                  <EuiButtonIcon
+                    size="xs"
+                    iconType="copy"
+                    onClick={copy}
+                    aria-label="Copy span ID"
+                  />
+                )}
+              </EuiCopy>
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        ) : (
+          '—'
+        ),
+      },
+      { label: 'MODEL', value: row?.rawDocument?.['gen_ai.request.model'] || '—' },
       {
         label: 'PARENT SPAN',
         value: row?.parentSpanId ? (
@@ -309,7 +414,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           '(root span)'
         ),
       },
-      { label: 'TOOL USED', value: '—' },
+      { label: 'TOOL USED', value: row?.rawDocument?.['gen_ai.tool.name'] || '—' },
       {
         label: 'STATUS',
         value: (
@@ -327,42 +432,66 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     ];
 
     return (
-      <div className="agentTracesFlyout__tabContent">
+      <div className="agentTracesFlyout__tabContent" style={{ height: 'auto', minHeight: 0 }}>
         {renderFieldGrid(overviewFields)}
 
         <EuiSpacer size="m" />
 
-        <EuiAccordion
-          id="trace-input-accordion"
-          buttonContent={
-            <EuiTitle size="xxs">
-              <span>INPUT</span>
-            </EuiTitle>
-          }
-          initialIsOpen
-          paddingSize="m"
-        >
-          <EuiCodeBlock language="json" fontSize="s" paddingSize="m" isCopyable>
+        {/* Input Section */}
+        <div>
+          <EuiFlexGroup justifyContent="spaceBetween" alignItems="center" gutterSize="s">
+            <EuiFlexItem grow={false}>
+              <EuiTitle size="xxs">
+                <span>INPUT</span>
+              </EuiTitle>
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              <EuiCopy textToCopy={formatJsonOrString(row?.input)}>
+                {(copy) => (
+                  <EuiButtonIcon
+                    size="xs"
+                    iconType="copy"
+                    onClick={copy}
+                    aria-label="Copy input"
+                  />
+                )}
+              </EuiCopy>
+            </EuiFlexItem>
+          </EuiFlexGroup>
+          <EuiSpacer size="xs" />
+          <EuiCodeBlock language="json" fontSize="s" paddingSize="m" overflowHeight={200}>
             {formatJsonOrString(row?.input)}
           </EuiCodeBlock>
-        </EuiAccordion>
+        </div>
 
         <EuiSpacer size="m" />
 
-        <EuiAccordion
-          id="trace-output-accordion"
-          buttonContent={
-            <EuiTitle size="xxs">
-              <span>OUTPUT</span>
-            </EuiTitle>
-          }
-          initialIsOpen
-          paddingSize="m"
-        >
-          <EuiCodeBlock language="json" fontSize="s" paddingSize="m" isCopyable>
+        {/* Output Section */}
+        <div>
+          <EuiFlexGroup justifyContent="spaceBetween" alignItems="center" gutterSize="s">
+            <EuiFlexItem grow={false}>
+              <EuiTitle size="xxs">
+                <span>OUTPUT</span>
+              </EuiTitle>
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              <EuiCopy textToCopy={formatJsonOrString(row?.output)}>
+                {(copy) => (
+                  <EuiButtonIcon
+                    size="xs"
+                    iconType="copy"
+                    onClick={copy}
+                    aria-label="Copy output"
+                  />
+                )}
+              </EuiCopy>
+            </EuiFlexItem>
+          </EuiFlexGroup>
+          <EuiSpacer size="xs" />
+          <EuiCodeBlock language="json" fontSize="s" paddingSize="m" overflowHeight={200}>
             {formatJsonOrString(row?.output)}
           </EuiCodeBlock>
-        </EuiAccordion>
+        </div>
       </div>
     );
   };
@@ -386,7 +515,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     return <div className="agentTracesFlyout__tabContent">{renderFieldGrid(metadataFields)}</div>;
   };
 
-  // Bottom detail tabs: Overview, Logs, Metadata, Raw
+  // Bottom detail tabs: Overview, Logs, Metadata, Raw Spans, Timeline
   const detailTabs = [
     {
       id: 'overview',
@@ -410,8 +539,8 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
       content: renderMetadataTab(),
     },
     {
-      id: 'raw',
-      name: 'Raw',
+      id: 'raw-spans',
+      name: 'Raw Spans',
       content: (
         <div className="agentTracesFlyout__tabContent">
           <EuiCodeBlock language="json" fontSize="s" paddingSize="m" isCopyable>
@@ -420,10 +549,54 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
         </div>
       ),
     },
+    {
+      id: 'timeline',
+      name: 'Timeline',
+      content: (
+        <div className="agentTracesFlyout__tabContent">
+          <EuiText size="s" color="subdued">
+            Timeline view coming soon...
+          </EuiText>
+        </div>
+      ),
+    },
   ];
 
   return (
-    <EuiFlyout onClose={onClose} ownFocus={false} size="m" aria-labelledby="trace-details-flyout">
+    <EuiFlyout
+      onClose={onClose}
+      ownFocus={false}
+      size="l"
+      aria-labelledby="trace-details-flyout"
+      style={{ width: `${flyoutWidth}px`, maxWidth: '95vw' }}
+    >
+      {/* Flyout edge resizer */}
+      <div
+        className="agentTracesFlyout__flyoutResizer"
+        onMouseDown={handleFlyoutMouseDown}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: '5px',
+          cursor: 'col-resize',
+          background: isResizingFlyout ? '#0066cc' : 'transparent',
+          zIndex: 1001,
+          transition: isResizingFlyout ? 'none' : 'background 0.15s ease',
+        }}
+        onMouseEnter={(e) => {
+          if (!isResizingFlyout) {
+            e.currentTarget.style.background = '#0066cc';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isResizingFlyout) {
+            e.currentTarget.style.background = 'transparent';
+          }
+        }}
+      />
+
       <EuiFlyoutHeader hasBorder>
         {/* Title row: name + status badge */}
         <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>
@@ -441,15 +614,49 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
 
         <EuiSpacer size="s" />
 
+        {/* Start time row with clock icon */}
+        <EuiFlexGroup alignItems="center" gutterSize="xs" responsive={false}>
+          <EuiFlexItem grow={false}>
+            <EuiIcon type="clock" size="s" color="subdued" />
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiText size="xs" color="subdued">
+              {trace.startTime || '—'}
+            </EuiText>
+          </EuiFlexItem>
+        </EuiFlexGroup>
+
+        <EuiSpacer size="s" />
+
         {/* Metadata row */}
         <EuiFlexGroup gutterSize="l" responsive={false} wrap>
           <EuiFlexItem grow={false}>
             <EuiText size="xs" color="subdued">
               TRACE ID
             </EuiText>
-            <EuiText size="s">
-              <strong>{trace.traceId ? trace.traceId.substring(0, 16) : '—'}</strong>
-            </EuiText>
+            <EuiFlexGroup gutterSize="xs" alignItems="center" responsive={false}>
+              <EuiFlexItem grow={false}>
+                <EuiText size="s">
+                  <strong>
+                    <code>{trace.traceId ? trace.traceId.substring(0, 12) : '—'}</code>
+                  </strong>
+                </EuiText>
+              </EuiFlexItem>
+              <EuiFlexItem grow={false}>
+                {trace.traceId && (
+                  <EuiCopy textToCopy={trace.traceId}>
+                    {(copy) => (
+                      <EuiButtonIcon
+                        size="xs"
+                        iconType="copy"
+                        onClick={copy}
+                        aria-label="Copy trace ID"
+                      />
+                    )}
+                  </EuiCopy>
+                )}
+              </EuiFlexItem>
+            </EuiFlexGroup>
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiText size="xs" color="subdued">
@@ -494,42 +701,101 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
         </EuiFlexGroup>
 
         <EuiSpacer size="s" />
-
-        {/* Start time row with clock icon */}
-        <EuiFlexGroup alignItems="center" gutterSize="xs" responsive={false}>
-          <EuiFlexItem grow={false}>
-            <EuiIcon type="clock" size="s" color="subdued" />
-          </EuiFlexItem>
-          <EuiFlexItem grow={false}>
-            <EuiText size="xs" color="subdued">
-              {trace.startTime || '—'}
-            </EuiText>
-          </EuiFlexItem>
-        </EuiFlexGroup>
       </EuiFlyoutHeader>
 
       <EuiFlyoutBody>
-        {/* Trace tree */}
-        <EuiTitle size="xs">
-          <h3>Trace tree</h3>
-        </EuiTitle>
-        <EuiSpacer size="s" />
-        {isLoadingFullTree ? (
-          <EuiPanel paddingSize="m" className="agentTracesFlyout__loadingPanel">
-            <EuiLoadingSpinner size="l" />
-            <EuiSpacer size="s" />
-            <EuiText size="s" color="subdued">
-              Loading full trace tree...
-            </EuiText>
-          </EuiPanel>
-        ) : (
-          <div className="agentTracesFlyout__treeContainer">{createTreeItems(traceTreeData)}</div>
-        )}
+        {/* Two-column layout */}
+        <EuiFlexGroup gutterSize="none" responsive={false} style={{ height: '100%', minHeight: 0 }}>
+          {/* Left Column - Trace Tree (resizable width) */}
+          <EuiFlexItem
+            grow={false}
+            style={{
+              width: `${leftPanelWidth}px`,
+              borderRight: 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              minHeight: 0,
+            }}
+          >
+            <EuiTabbedContent
+              tabs={[
+                {
+                  id: 'trace-tree',
+                  name: 'Trace Tree',
+                  content: (
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                      <EuiSpacer size="s" />
+                      {isLoadingFullTree ? (
+                        <EuiPanel paddingSize="m" className="agentTracesFlyout__loadingPanel">
+                          <EuiLoadingSpinner size="l" />
+                          <EuiSpacer size="s" />
+                          <EuiText size="s" color="subdued">
+                            Loading full trace tree...
+                          </EuiText>
+                        </EuiPanel>
+                      ) : (
+                        <div className="agentTracesFlyout__treeContainer" style={{ flex: 1 }}>
+                          {createTreeItems(traceTreeData)}
+                        </div>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  id: 'agent-graph',
+                  name: 'Agent Graph',
+                  content: (
+                    <div style={{ padding: '16px', height: '100%' }}>
+                      <EuiText size="s" color="subdued">
+                        Agent graph view coming soon...
+                      </EuiText>
+                    </div>
+                  ),
+                },
+              ]}
+              initialSelectedTab={{ id: 'trace-tree', name: 'Trace Tree' }}
+              size="s"
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            />
+          </EuiFlexItem>
 
-        <EuiSpacer size="l" />
+          {/* Resizer */}
+          <div
+            className="agentTracesFlyout__resizer"
+            onMouseDown={handleMouseDown}
+            style={{
+              width: '5px',
+              cursor: 'col-resize',
+              background: isResizing ? '#0066cc' : '#D3DAE6',
+              flexShrink: 0,
+              transition: isResizing ? 'none' : 'background 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              if (!isResizing) {
+                e.currentTarget.style.background = '#0066cc';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isResizing) {
+                e.currentTarget.style.background = '#D3DAE6';
+              }
+            }}
+          />
 
-        {/* Detail tabs: Overview, Logs, Metadata, Raw */}
-        <EuiTabbedContent tabs={detailTabs} initialSelectedTab={detailTabs[0]} />
+          {/* Right Column - Detail Tabs */}
+          <EuiFlexItem
+            grow={true}
+            style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}
+          >
+            <EuiTabbedContent
+              tabs={detailTabs}
+              initialSelectedTab={detailTabs[0]}
+              size="s"
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            />
+          </EuiFlexItem>
+        </EuiFlexGroup>
       </EuiFlyoutBody>
     </EuiFlyout>
   );

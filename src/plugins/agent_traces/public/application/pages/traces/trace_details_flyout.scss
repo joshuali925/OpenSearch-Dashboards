@@ -4,23 +4,33 @@
  */
 
 .agentTracesFlyout {
+  // Make the tree container fill available height and scroll
   &__treeContainer {
-    max-height: 400px;
+    height: 100%;
     overflow-y: auto;
+    overflow-x: hidden;
+    padding: $ouiSizeS;
   }
 
   &__treeNode {
-    margin-bottom: 2px;
+    margin-bottom: 0;
+    position: relative;
   }
 
   &__treeRow {
     padding: $ouiSizeXS $ouiSizeS;
     border-left: 3px solid transparent;
-    border-radius: 2px;
+    border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.15s ease;
+    position: relative;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.03);
+    }
 
     &--selected {
-      background-color: $ouiFocusBackgroundColor;
+      background-color: rgba(0, 119, 204, 0.08);
       border-left-color: $ouiColorPrimary;
     }
   }
@@ -34,19 +44,84 @@
   }
 
   &__treeChildren {
-    margin-left: $ouiSize;
+    position: relative;
+    padding-left: 24px;
+    
+    // Vertical line connecting children - aligned with icon center
+    &::before {
+      content: '';
+      position: absolute;
+      left: 8px; // Align with center of 16px icon (8px from left edge)
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background-color: #D3DAE6;
+    }
+  }
+
+  &__treeNode {
+    margin-bottom: 2px;
+    position: relative;
+    
+    // Stop the vertical line at the last child's icon center
+    &:last-child {
+      // Cover the bottom part of the parent's vertical line
+      &::after {
+        content: '';
+        position: absolute;
+        left: -16px; // Align with the vertical line (24px padding - 8px offset)
+        top: 18px; // Align with icon vertical center (approximate based on row height)
+        bottom: 0;
+        width: 1px;
+        background-color: #fff;
+      }
+    }
   }
 
   &__expandIcon {
     cursor: pointer;
+    transition: transform 0.15s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+
+  &__flyoutResizer {
+    position: absolute;
+    
+    &:hover {
+      background: #0066cc !important;
+    }
+    
+    &:active {
+      background: #0066cc !important;
+    }
+  }
+
+  &__resizer {
+    position: relative;
+    
+    &:hover {
+      background: #0066cc !important;
+    }
+    
+    &:active {
+      background: #0066cc !important;
+    }
   }
 
   &__loadingPanel {
     text-align: center;
   }
 
+  // Make tab content fill available height and scroll
   &__tabContent {
     padding: $ouiSize;
+    height: auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   &__field {
@@ -55,5 +130,121 @@
 
   &__parentSpanLink {
     color: $ouiColorPrimary;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Make the flyout body responsive to height
+.euiFlyout {
+  .euiFlyoutBody {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    &__overflowContent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+      padding-top: 0 !important;
+    }
+  }
+  
+  // Remove top padding from tabbed content
+  .euiTabbedContent {
+    padding-top: 0 !important;
+    
+    .euiTabs {
+      padding-top: 0 !important;
+    }
+  }
+}
+
+// Ensure the two-column layout fills height properly
+.euiFlyoutBody__overflowContent > .euiFlexGroup {
+  flex: 1;
+  min-height: 0;
+
+  // Left column (tree)
+  > .euiFlexItem:first-child {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    // EuiTabbedContent wrapper
+    > .euiTabbedContent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+
+      // Tab panels container
+      .euiTabbedContent__panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+      }
+
+      // Tab content panel
+      [role="tabpanel"] {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+
+        // Direct child wrapper
+        > div {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          min-height: 0;
+        }
+      }
+    }
+  }
+
+  // Right column (details)
+  > .euiFlexItem:last-child {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+
+    // EuiTabbedContent wrapper
+    > .euiTabbedContent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+
+      // Tab panels container
+      .euiTabbedContent__panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+      }
+
+      // Tab content panel
+      [role="tabpanel"] {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+      }
+    }
   }
 }

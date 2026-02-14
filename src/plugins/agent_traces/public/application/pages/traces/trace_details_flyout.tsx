@@ -277,6 +277,22 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           </EuiFlexGroup>
           {hasChildren && isExpanded && (
             <div className="agentTracesFlyout__treeChildren">
+              <div
+                className="agentTracesFlyout__guideLine"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  toggleExpanded(node.id);
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.stopPropagation();
+                    toggleExpanded(node.id);
+                  }
+                }}
+                aria-label={`Collapse ${node.label}`}
+              />
               {createTreeItems(node.children!, depth + 1)}
             </div>
           )}

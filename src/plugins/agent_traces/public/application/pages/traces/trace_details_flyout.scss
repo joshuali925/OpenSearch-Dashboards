@@ -14,7 +14,7 @@
   }
 
   &__treeRow {
-    padding: $ouiSizeXS $ouiSizeS;
+    padding: $ouiSizeXS $ouiSizeS $ouiSizeXS 0;
     border-left: 3px solid transparent;
     border-radius: 2px;
     cursor: pointer;
@@ -34,7 +34,70 @@
   }
 
   &__treeChildren {
-    margin-left: $ouiSize;
+    position: relative;
+    margin-left: $ouiSizeS; // align vertical line under the parent's expand icon
+    padding-left: $ouiSize; // space for connector lines
+  }
+
+  // Invisible hover/click target spanning the guide line area
+  &__guideLine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: $ouiSize;
+    cursor: pointer;
+    z-index: 1;
+  }
+
+  // Connector lines drawn by each child node inside __treeChildren
+  &__treeChildren > &__treeNode {
+    position: relative;
+
+    // Vertical line segment
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: -2px; // bridge the margin-bottom gap between nodes
+      left: -$ouiSize;
+      width: 1px;
+      background-color: $ouiColorLightShade;
+      transition: background-color 150ms ease;
+      pointer-events: none;
+    }
+
+    // Rounded horizontal branch: uses border-left + border-bottom for the curve
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -$ouiSize;
+      width: $ouiSize; // extend all the way to the content
+      height: 15px; // to the vertical center of the row
+      border-left: 1px solid $ouiColorLightShade;
+      border-bottom: 1px solid $ouiColorLightShade;
+      border-bottom-left-radius: 6px;
+      background: none;
+      transition: border-color 150ms ease;
+      pointer-events: none;
+    }
+
+    // Last child: vertical line stops at the branch point (no overshoot)
+    &:last-child::before {
+      display: none; // the ::after curve already draws the vertical + horizontal
+    }
+  }
+
+  // Highlight all connector segments when the guide line is hovered
+  &__guideLine:hover {
+    & ~ .agentTracesFlyout__treeNode::before {
+      background-color: $ouiColorPrimary;
+    }
+
+    & ~ .agentTracesFlyout__treeNode::after {
+      border-color: $ouiColorPrimary;
+    }
   }
 
   &__expandIcon {

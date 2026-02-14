@@ -19,24 +19,24 @@ import {
   CriteriaWithPagination,
 } from '@elastic/eui';
 import { TraceDetailsFlyout } from './trace_details_flyout';
-import { useAgentSpans, SpanRow } from './use_agent_spans';
+import { useAgentSessions, SessionRow } from './use_agent_sessions';
 import { getKindColor } from './trace_utils';
 
 const PAGE_SIZE = 50;
 
-export const SpansTable = () => {
+export const SessionsTable = () => {
   const {
-    spans,
+    sessions,
     loading,
     error,
     refresh,
-    expandSpan,
-    spanSpansCache,
-    spanLoadingState,
-  } = useAgentSpans();
+    expandSession,
+    sessionSpansCache,
+    sessionLoadingState,
+  } = useAgentSessions();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [selectedSpan, setSelectedSpan] = useState<SpanRow | null>(null);
-  const [selectedSpanFullTree, setSelectedSpanFullTree] = useState<SpanRow[] | undefined>(
+  const [selectedSession, setSelectedSession] = useState<SessionRow | null>(null);
+  const [selectedSessionFullTree, setSelectedSessionFullTree] = useState<SessionRow[] | undefined>(
     undefined
   );
   const [isFlyoutOpen, setIsFlyoutOpen] = useState(false);
@@ -56,71 +56,71 @@ export const SpansTable = () => {
         return;
       }
 
-      await expandSpan(traceId);
+      await expandSession(traceId);
       setExpandedRows((prev) => {
         const next = new Set(prev);
         next.add(id);
         return next;
       });
     },
-    [expandedRows, expandSpan]
+    [expandedRows, expandSession]
   );
 
   const handleRowClick = useCallback(
-    async (item: SpanRow) => {
-      setSelectedSpan(item);
+    async (item: SessionRow) => {
+      setSelectedSession(item);
       setIsFlyoutOpen(true);
 
-      const cached = spanSpansCache.get(item.traceId);
+      const cached = sessionSpansCache.get(item.traceId);
       if (cached) {
-        setSelectedSpanFullTree(cached);
+        setSelectedSessionFullTree(cached);
         return;
       }
 
       setFlyoutLoading(true);
       try {
-        await expandSpan(item.traceId);
-        setSelectedSpanFullTree(undefined);
+        await expandSession(item.traceId);
+        setSelectedSessionFullTree(undefined);
       } finally {
         setFlyoutLoading(false);
       }
     },
-    [expandSpan, spanSpansCache]
+    [expandSession, sessionSpansCache]
   );
 
   const flyoutFullTree = useMemo(() => {
-    if (!selectedSpan) return undefined;
-    return selectedSpanFullTree || spanSpansCache.get(selectedSpan.traceId);
-  }, [selectedSpan, selectedSpanFullTree, spanSpansCache]);
+    if (!selectedSession) return undefined;
+    return selectedSessionFullTree || sessionSpansCache.get(selectedSession.traceId);
+  }, [selectedSession, selectedSessionFullTree, sessionSpansCache]);
 
   const closeFlyout = useCallback(() => {
     setIsFlyoutOpen(false);
-    setSelectedSpan(null);
-    setSelectedSpanFullTree(undefined);
+    setSelectedSession(null);
+    setSelectedSessionFullTree(undefined);
     setFlyoutLoading(false);
   }, []);
 
   const getVisibleRows = useMemo(() => {
-    const visible: SpanRow[] = [];
+    const visible: SessionRow[] = [];
 
-    const addRowAndChildren = (row: SpanRow, parentExpanded: boolean) => {
+    const addRowAndChildren = (row: SessionRow, parentExpanded: boolean) => {
       if (parentExpanded || row.level === 0) {
         visible.push(row);
       }
 
       if (!expandedRows.has(row.id)) return;
 
-      const fullTree = spanSpansCache.get(row.traceId);
+      const fullTree = sessionSpansCache.get(row.traceId);
       const children = fullTree && row.level === 0 ? [] : row.children;
 
       if (children && children.length > 0) {
-        children.forEach((child: SpanRow) => addRowAndChildren(child, true));
+        children.forEach((child: SessionRow) => addRowAndChildren(child, true));
       }
     };
 
-    spans.forEach((row: SpanRow) => addRowAndChildren(row, true));
+    sessions.forEach((row: SessionRow) => addRowAndChildren(row, true));
     return visible;
-  }, [spans, expandedRows, spanSpansCache]);
+  }, [sessions, expandedRows, sessionSpansCache]);
 
   const pageOfItems = useMemo(() => {
     const start = pageIndex * PAGE_SIZE;
@@ -137,11 +137,11 @@ export const SpansTable = () => {
     [pageIndex, getVisibleRows.length]
   );
 
-  const onTableChange = useCallback(({ page }: CriteriaWithPagination<SpanRow>) => {
+  const onTableChange = useCallback(({ page }: CriteriaWithPagination<SessionRow>) => {
     setPageIndex(page.index);
   }, []);
 
-  const columns: Array<EuiBasicTableColumn<SpanRow>> = [
+  const columns: Array<EuiBasicTableColumn<SessionRow>> = [
     {
       field: 'startTime',
       name: 'TIMESTAMP',
@@ -150,8 +150,8 @@ export const SpansTable = () => {
     {
       field: 'kind',
       name: 'KIND',
-      render: (kind: string, item: SpanRow) => {
-        const isSpanLoading = spanLoadingState.get(item.traceId)?.loading;
+      render: (kind: string, item: SessionRow) => {
+        const isSessionLoading = sessionLoadingState.get(item.traceId)?.loading;
         return (
           <div
             style={{
@@ -161,7 +161,7 @@ export const SpansTable = () => {
               paddingLeft: item.level ? `${item.level * 20}px` : '0',
             }}
           >
-            {item.isExpandable && !isSpanLoading && (
+            {item.isExpandable && !isSessionLoading && (
               <EuiButtonEmpty
                 size="xs"
                 iconType={expandedRows.has(item.id) ? 'arrowDown' : 'arrowRight'}
@@ -169,7 +169,7 @@ export const SpansTable = () => {
                 style={{ width: '24px', height: '24px', minWidth: '24px', padding: 0 }}
               />
             )}
-            {item.isExpandable && isSpanLoading && (
+            {item.isExpandable && isSessionLoading && (
               <span
                 style={{
                   display: 'inline-flex',
@@ -253,7 +253,7 @@ export const SpansTable = () => {
       <div style={{ padding: '48px', textAlign: 'center' }}>
         <EuiLoadingSpinner size="xl" />
         <EuiText size="s" color="subdued" style={{ marginTop: '16px' }}>
-          Loading agent spans...
+          Loading agent sessions...
         </EuiText>
       </div>
     );
@@ -262,7 +262,7 @@ export const SpansTable = () => {
   if (error) {
     return (
       <div style={{ padding: '16px' }}>
-        <EuiCallOut title="Error loading spans" color="danger" iconType="alert">
+        <EuiCallOut title="Error loading sessions" color="danger" iconType="alert">
           <p>{error}</p>
           <EuiButton onClick={refresh} color="danger" size="s">
             Retry
@@ -272,16 +272,17 @@ export const SpansTable = () => {
     );
   }
 
-  if (spans.length === 0) {
+  if (sessions.length === 0) {
     return (
       <div style={{ padding: '16px' }}>
         <EuiEmptyPrompt
           iconType="apmTrace"
-          title={<h3>No agent spans found</h3>}
+          title={<h3>No agent sessions found</h3>}
           body={
             <p>
-              No AI agent spans were found in the <code>otel-v1-apm-span</code> index. Make sure
-              your application is instrumented with OpenTelemetry and is sending spans.
+              No AI agent sessions were found in the <code>otel-v1-apm-span</code> index. Make sure
+              your application is instrumented with OpenTelemetry and is sending spans with session
+              information.
             </p>
           }
           actions={
@@ -300,7 +301,7 @@ export const SpansTable = () => {
         <EuiFlexGroup justifyContent="spaceBetween" alignItems="center" gutterSize="m">
           <EuiFlexItem grow={false}>
             <EuiText size="s" color="subdued">
-              Showing {getVisibleRows.length} of {spans.length} spans
+              Showing {getVisibleRows.length} of {sessions.length} sessions
             </EuiText>
           </EuiFlexItem>
         </EuiFlexGroup>
@@ -317,12 +318,14 @@ export const SpansTable = () => {
           })}
         />
       </div>
-      {isFlyoutOpen && selectedSpan && (
+      {isFlyoutOpen && selectedSession && (
         <TraceDetailsFlyout
-          trace={selectedSpan}
+          trace={selectedSession}
           onClose={closeFlyout}
           fullTree={flyoutFullTree}
-          isLoadingFullTree={flyoutLoading || spanLoadingState.get(selectedSpan.traceId)?.loading}
+          isLoadingFullTree={
+            flyoutLoading || sessionLoadingState.get(selectedSession.traceId)?.loading
+          }
         />
       )}
     </>

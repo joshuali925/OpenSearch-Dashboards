@@ -150,46 +150,6 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     setExpandedNodes(allExpandable);
   }, [traceTreeData]);
 
-  // Flyout edge resizer state
-  const [flyoutWidth, setFlyoutWidth] = useState(1400);
-  const [isResizingFlyout, setIsResizingFlyout] = useState(false);
-  const resizingFlyoutRef = useRef(false);
-
-  const handleFlyoutMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    resizingFlyoutRef.current = true;
-    setIsResizingFlyout(true);
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  }, []);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!resizingFlyoutRef.current) return;
-      const newWidth = window.innerWidth - e.clientX;
-      const maxWidth = window.innerWidth * 0.95;
-      setFlyoutWidth(Math.max(600, Math.min(maxWidth, newWidth)));
-    };
-
-    const handleMouseUp = () => {
-      if (resizingFlyoutRef.current) {
-        resizingFlyoutRef.current = false;
-        setIsResizingFlyout(false);
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-      }
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, []);
-
   const toggleExpanded = (nodeId: string) => {
     setExpandedNodes((prev) => {
       const next = new Set(prev);
@@ -579,35 +539,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
       ownFocus={false}
       size="l"
       aria-labelledby="trace-details-flyout"
-      style={{ width: `${flyoutWidth}px`, maxWidth: '95vw' }}
     >
-      {/* Flyout edge resizer */}
-      <div
-        className="agentTracesFlyout__flyoutResizer"
-        onMouseDown={handleFlyoutMouseDown}
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: '5px',
-          cursor: 'col-resize',
-          background: isResizingFlyout ? '#0066cc' : 'transparent',
-          zIndex: 1001,
-          transition: isResizingFlyout ? 'none' : 'background 0.15s ease',
-        }}
-        onMouseEnter={(e) => {
-          if (!isResizingFlyout) {
-            e.currentTarget.style.background = '#0066cc';
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isResizingFlyout) {
-            e.currentTarget.style.background = 'transparent';
-          }
-        }}
-      />
-
       <EuiFlyoutHeader hasBorder>
         {/* Title row: name + status badge */}
         <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>

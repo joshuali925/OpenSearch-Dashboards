@@ -5,6 +5,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { EuiDataGrid, EuiDataGridCellValueElementProps, EuiDataGridColumn } from '@elastic/eui';
+import { i18n } from '@osd/i18n';
 import { VisColumn, VisFieldType } from '../types';
 import { defaultTableChartStyles, CellTypeConfig, TableChartStyle } from './table_vis_config';
 import { FilterConfig, TableColumnHeader } from './table_vis_filter';
@@ -333,7 +334,9 @@ export const TableVis = React.memo(
         <EuiDataGrid
           key={`table-vis-${filteredRows.length}-${pagination.pageSize}`}
           className="tableVis__dataGrid"
-          aria-label="Table visualization"
+          aria-label={i18n.translate('agentTraces.vis.table.tableVisualizationAriaLabel', {
+            defaultMessage: 'Table visualization',
+          })}
           columns={dataGridColumns}
           columnVisibility={{ visibleColumns, setVisibleColumns: handleColumnVisibilityChange }}
           rowCount={filteredRows.length}

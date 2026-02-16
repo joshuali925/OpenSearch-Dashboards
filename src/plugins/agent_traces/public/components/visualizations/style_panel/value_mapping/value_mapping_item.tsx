@@ -94,7 +94,9 @@ export const ValueMappingItem = ({
                 <EuiButtonIcon
                   size="m"
                   iconType="cross"
-                  aria-label="DeleteColor"
+                  aria-label={i18n.translate('agentTraces.vis.valueMapping.deleteColorAriaLabel', {
+                    defaultMessage: 'Delete color',
+                  })}
                   onClick={() => handleChangeMapping('color', undefined)}
                 />
               </EuiFlexItem>
@@ -110,7 +112,9 @@ export const ValueMappingItem = ({
           <EuiButtonIcon
             size="m"
             iconType="trash"
-            aria-label="Delete"
+            aria-label={i18n.translate('agentTraces.vis.valueMapping.deleteAriaLabel', {
+              defaultMessage: 'Delete',
+            })}
             color="danger"
             onClick={() => onDelete(id)}
           />
@@ -129,14 +133,18 @@ const convertRangeValue = (
       <EuiFlexItem>
         <DebouncedFieldNumber
           value={input?.min}
-          placeholder="From"
+          placeholder={i18n.translate('agentTraces.vis.valueMapping.fromPlaceholder', {
+            defaultMessage: 'From',
+          })}
           onChange={(value) => updateRange({ ...input, min: value })}
         />
       </EuiFlexItem>
       <EuiFlexItem>
         <DebouncedFieldNumber
           value={input?.max}
-          placeholder="To"
+          placeholder={i18n.translate('agentTraces.vis.valueMapping.toPlaceholder', {
+            defaultMessage: 'To',
+          })}
           onChange={(value) => updateRange({ ...input, max: value })}
         />
       </EuiFlexItem>

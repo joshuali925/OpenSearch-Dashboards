@@ -216,7 +216,10 @@ export const TableFooterOptions: React.FC<TableFooterStyleControlsProps> = ({
                         <EuiButtonIcon
                           iconType="trash"
                           color="danger"
-                          aria-label="Delete Calculation"
+                          aria-label={i18n.translate(
+                            'agentTraces.vis.table.footer.deleteCalculationAriaLabel',
+                            { defaultMessage: 'Delete Calculation' }
+                          )}
                           onClick={() => onRemoveCalculation(index)}
                           data-test-subj={`visTableFooterDelete-${index}`}
                         />
@@ -250,7 +253,10 @@ export const TableFooterOptions: React.FC<TableFooterStyleControlsProps> = ({
                             button={
                               <EuiButtonIcon
                                 iconType="plusInCircle"
-                                aria-label="Add Field"
+                                aria-label={i18n.translate(
+                                  'agentTraces.vis.table.footer.addFieldAriaLabel',
+                                  { defaultMessage: 'Add Field' }
+                                )}
                                 onClick={() => setPopoverIndex(index)}
                                 data-test-subj={`visTableFooterAddField-${index}`}
                               />

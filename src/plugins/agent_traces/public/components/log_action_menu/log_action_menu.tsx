@@ -12,6 +12,7 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
 } from '@elastic/eui';
+import { i18n } from '@osd/i18n';
 import { LogActionDefinition, LogActionContext } from '../../types/log_actions';
 import { logActionRegistry } from '../../services/log_action_registry';
 
@@ -93,7 +94,9 @@ export const LogActionMenu: React.FC<LogActionMenuProps> = ({
   const panels = [
     {
       id: 0,
-      title: 'Log Actions',
+      title: i18n.translate('agentTraces.logActionMenu.title', {
+        defaultMessage: 'Log Actions',
+      }),
       items: compatibleActions.map((action) => ({
         name: action.displayName,
         icon: action.iconType,
@@ -108,7 +111,9 @@ export const LogActionMenu: React.FC<LogActionMenuProps> = ({
       onClick={openPopover}
       size={size}
       disabled={disabled}
-      aria-label="Open log actions menu"
+      aria-label={i18n.translate('agentTraces.logActionMenu.openMenuAriaLabel', {
+        defaultMessage: 'Open log actions menu',
+      })}
       data-test-subj="logActionMenuButton"
     />
   );
@@ -134,7 +139,9 @@ export const LogActionMenu: React.FC<LogActionMenuProps> = ({
                 iconType="arrowLeft"
                 onClick={handleBackToMenu}
                 size="s"
-                aria-label="Back to menu"
+                aria-label={i18n.translate('agentTraces.logActionMenu.backToMenuAriaLabel', {
+                  defaultMessage: 'Back to menu',
+                })}
               />
             </EuiFlexItem>
             <EuiFlexItem>

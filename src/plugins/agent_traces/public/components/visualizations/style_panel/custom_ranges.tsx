@@ -13,6 +13,7 @@ import {
   EuiButton,
   EuiSpacer,
 } from '@elastic/eui';
+import { i18n } from '@osd/i18n';
 import { RangeValue } from '../types';
 
 export interface RangeProps {
@@ -39,24 +40,36 @@ export const Range: React.FC<RangeProps> = ({ index, value, onChange, prevMax, o
   return (
     <EuiFlexGroup alignItems="center">
       <EuiFlexItem>
-        <EuiFormRow label="Min">
+        <EuiFormRow
+          label={i18n.translate('agentTraces.visualizations.customRanges.minLabel', {
+            defaultMessage: 'Min',
+          })}
+        >
           <EuiFieldNumber
             compressed
             min={prevMax ?? 0}
             value={value.min ?? ''}
             onChange={handleMinChange}
-            placeholder="Min"
+            placeholder={i18n.translate('agentTraces.visualizations.customRanges.minPlaceholder', {
+              defaultMessage: 'Min',
+            })}
           />
         </EuiFormRow>
       </EuiFlexItem>
       <EuiFlexItem>
-        <EuiFormRow label="Max">
+        <EuiFormRow
+          label={i18n.translate('agentTraces.visualizations.customRanges.maxLabel', {
+            defaultMessage: 'Max',
+          })}
+        >
           <EuiFieldNumber
             compressed
             min={value.min ?? 0}
             value={value.max ?? ''}
             onChange={handleMaxChange}
-            placeholder="Max"
+            placeholder={i18n.translate('agentTraces.visualizations.customRanges.maxPlaceholder', {
+              defaultMessage: 'Max',
+            })}
           />
         </EuiFormRow>
       </EuiFlexItem>
@@ -64,7 +77,9 @@ export const Range: React.FC<RangeProps> = ({ index, value, onChange, prevMax, o
         <EuiButtonIcon
           size="xs"
           iconType="trash"
-          aria-label="Delete"
+          aria-label={i18n.translate('agentTraces.visualizations.customRanges.deleteAriaLabel', {
+            defaultMessage: 'Delete',
+          })}
           color="danger"
           onClick={handleDeleteRange}
         />
@@ -120,7 +135,9 @@ export const CustomRange: React.FC<CustomRangeProps> = ({ customRanges, onCustom
       })}
       <EuiSpacer size="s" />
       <EuiButton onClick={handleAddRange} fullWidth size="s">
-        + Add Range
+        {i18n.translate('agentTraces.visualizations.customRanges.addRangeButton', {
+          defaultMessage: '+ Add Range',
+        })}
       </EuiButton>
     </>
   );

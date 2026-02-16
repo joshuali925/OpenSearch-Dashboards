@@ -29,7 +29,9 @@ export const MinMaxControls = ({ min, max, onMaxChange, onMinChange }: MinMaxCon
         <DebouncedFieldNumber
           value={min}
           onChange={(value) => onMinChange(value)}
-          placeholder="auto"
+          placeholder={i18n.translate('agentTraces.stylePanel.threshold.autoPlaceholder', {
+            defaultMessage: 'auto',
+          })}
           data-test-subj="thresholdMinBase"
         />
       </EuiFormRow>
@@ -45,7 +47,9 @@ export const MinMaxControls = ({ min, max, onMaxChange, onMinChange }: MinMaxCon
         <DebouncedFieldNumber
           value={max}
           onChange={(value) => onMaxChange(value)}
-          placeholder="auto"
+          placeholder={i18n.translate('agentTraces.stylePanel.threshold.autoPlaceholder', {
+            defaultMessage: 'auto',
+          })}
           data-test-subj="thresholdMaxBase"
         />
       </EuiFormRow>

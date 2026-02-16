@@ -8,7 +8,7 @@ import {
   EuiBasicTableColumn,
   EuiHealth,
   EuiBadge,
-  EuiButtonEmpty,
+  EuiButtonIcon,
   EuiText,
   EuiLoadingSpinner,
   EuiEmptyPrompt,
@@ -16,29 +16,52 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiCallOut,
+  EuiSpacer,
   CriteriaWithPagination,
 } from '@elastic/eui';
+import { i18n } from '@osd/i18n';
 import { TraceDetailsFlyout } from './trace_details_flyout';
-import { useAgentSpans, SpanRow } from './use_agent_spans';
 import { getKindColor } from './trace_utils';
+import { SpanRow, SpanLoadingState, getChildrenFromFullTree } from './span_utils';
+import './expandable_span_table.scss';
 
 const PAGE_SIZE = 50;
 
-export const SpansTable = () => {
-  const {
-    spans,
-    loading,
-    error,
-    refresh,
-    expandSpan,
-    spanSpansCache,
-    spanLoadingState,
-  } = useAgentSpans();
+export interface ExpandableSpanTableProps {
+  rows: SpanRow[];
+  loading: boolean;
+  error: string | null;
+  refresh: () => void;
+  expandRow: (traceId: string) => Promise<void>;
+  spansCache: Map<string, SpanRow[]>;
+  loadingState: Map<string, SpanLoadingState>;
+  /** Label used in loading/error/empty messages (e.g. "traces", "sessions", "spans") */
+  entityLabel: string;
+  /** Description shown in the empty state body */
+  emptyDescription: string;
+  /** Whether to resolve children from full tree on expand (traces use this, sessions/spans do not) */
+  resolveChildrenFromFullTree?: boolean;
+}
+
+/**
+ * Generic expandable table for traces, sessions, and spans.
+ * Replaces the previously duplicated TracesTable, SessionsTable, and SpansTable.
+ */
+export const ExpandableSpanTable: React.FC<ExpandableSpanTableProps> = ({
+  rows,
+  loading,
+  error,
+  refresh,
+  expandRow,
+  spansCache,
+  loadingState,
+  entityLabel,
+  emptyDescription,
+  resolveChildrenFromFullTree = false,
+}) => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [selectedSpan, setSelectedSpan] = useState<SpanRow | null>(null);
-  const [selectedSpanFullTree, setSelectedSpanFullTree] = useState<SpanRow[] | undefined>(
-    undefined
-  );
+  const [selectedRow, setSelectedRow] = useState<SpanRow | null>(null);
+  const [selectedRowFullTree, setSelectedRowFullTree] = useState<SpanRow[] | undefined>(undefined);
   const [isFlyoutOpen, setIsFlyoutOpen] = useState(false);
   const [flyoutLoading, setFlyoutLoading] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
@@ -56,47 +79,47 @@ export const SpansTable = () => {
         return;
       }
 
-      await expandSpan(traceId);
+      await expandRow(traceId);
       setExpandedRows((prev) => {
         const next = new Set(prev);
         next.add(id);
         return next;
       });
     },
-    [expandedRows, expandSpan]
+    [expandedRows, expandRow]
   );
 
   const handleRowClick = useCallback(
     async (item: SpanRow) => {
-      setSelectedSpan(item);
+      setSelectedRow(item);
       setIsFlyoutOpen(true);
 
-      const cached = spanSpansCache.get(item.traceId);
+      const cached = spansCache.get(item.traceId);
       if (cached) {
-        setSelectedSpanFullTree(cached);
+        setSelectedRowFullTree(cached);
         return;
       }
 
       setFlyoutLoading(true);
       try {
-        await expandSpan(item.traceId);
-        setSelectedSpanFullTree(undefined);
+        await expandRow(item.traceId);
+        setSelectedRowFullTree(undefined);
       } finally {
         setFlyoutLoading(false);
       }
     },
-    [expandSpan, spanSpansCache]
+    [expandRow, spansCache]
   );
 
   const flyoutFullTree = useMemo(() => {
-    if (!selectedSpan) return undefined;
-    return selectedSpanFullTree || spanSpansCache.get(selectedSpan.traceId);
-  }, [selectedSpan, selectedSpanFullTree, spanSpansCache]);
+    if (!selectedRow) return undefined;
+    return selectedRowFullTree || spansCache.get(selectedRow.traceId);
+  }, [selectedRow, selectedRowFullTree, spansCache]);
 
   const closeFlyout = useCallback(() => {
     setIsFlyoutOpen(false);
-    setSelectedSpan(null);
-    setSelectedSpanFullTree(undefined);
+    setSelectedRow(null);
+    setSelectedRowFullTree(undefined);
     setFlyoutLoading(false);
   }, []);
 
@@ -110,17 +133,20 @@ export const SpansTable = () => {
 
       if (!expandedRows.has(row.id)) return;
 
-      const fullTree = spanSpansCache.get(row.traceId);
-      const children = fullTree && row.level === 0 ? [] : row.children;
+      const fullTree = spansCache.get(row.traceId);
+      const children =
+        resolveChildrenFromFullTree && fullTree && row.level === 0
+          ? getChildrenFromFullTree(fullTree, row.spanId)
+          : row.children;
 
       if (children && children.length > 0) {
-        children.forEach((child: SpanRow) => addRowAndChildren(child, true));
+        children.forEach((child) => addRowAndChildren(child, true));
       }
     };
 
-    spans.forEach((row: SpanRow) => addRowAndChildren(row, true));
+    rows.forEach((row) => addRowAndChildren(row, true));
     return visible;
-  }, [spans, expandedRows, spanSpansCache]);
+  }, [rows, expandedRows, spansCache, resolveChildrenFromFullTree]);
 
   const pageOfItems = useMemo(() => {
     const start = pageIndex * PAGE_SIZE;
@@ -151,38 +177,32 @@ export const SpansTable = () => {
       field: 'kind',
       name: 'KIND',
       render: (kind: string, item: SpanRow) => {
-        const isSpanLoading = spanLoadingState.get(item.traceId)?.loading;
+        const isRowLoading = loadingState.get(item.traceId)?.loading;
         return (
           <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              paddingLeft: item.level ? `${item.level * 20}px` : '0',
-            }}
+            className="agtExpandableTable__kindCell"
+            style={item.level ? { paddingLeft: `${item.level * 20}px` } : undefined}
           >
-            {item.isExpandable && !isSpanLoading && (
-              <EuiButtonEmpty
+            {item.isExpandable && !isRowLoading && (
+              <EuiButtonIcon
                 size="xs"
                 iconType={expandedRows.has(item.id) ? 'arrowDown' : 'arrowRight'}
                 onClick={(e: React.MouseEvent) => toggleRowExpansion(e, item.id, item.traceId)}
-                style={{ width: '24px', height: '24px', minWidth: '24px', padding: 0 }}
+                aria-label={
+                  expandedRows.has(item.id)
+                    ? i18n.translate('agentTraces.table.collapse', { defaultMessage: 'Collapse' })
+                    : i18n.translate('agentTraces.table.expand', { defaultMessage: 'Expand' })
+                }
+                color="subdued"
+                iconSize="s"
               />
             )}
-            {item.isExpandable && isSpanLoading && (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  width: '24px',
-                  height: '24px',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
+            {item.isExpandable && isRowLoading && (
+              <span className="agtExpandableTable__spinnerPlaceholder">
                 <EuiLoadingSpinner size="s" />
               </span>
             )}
-            {!item.isExpandable && <span style={{ width: '24px' }} />}
+            {!item.isExpandable && <span className="agtExpandableTable__expandPlaceholder" />}
             <EuiBadge color={getKindColor(kind)}>{kind}</EuiBadge>
           </div>
         );
@@ -198,7 +218,9 @@ export const SpansTable = () => {
       name: 'STATUS',
       render: (status: string) => (
         <EuiHealth color={status === 'success' ? 'success' : 'danger'}>
-          {status === 'success' ? 'Success' : 'Error'}
+          {status === 'success'
+            ? i18n.translate('agentTraces.table.statusSuccess', { defaultMessage: 'Success' })
+            : i18n.translate('agentTraces.table.statusError', { defaultMessage: 'Error' })}
         </EuiHealth>
       ),
     },
@@ -216,15 +238,7 @@ export const SpansTable = () => {
       field: 'input',
       name: 'INPUT',
       render: (input: string) => (
-        <EuiText
-          size="s"
-          style={{
-            maxWidth: '150px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
+        <EuiText size="s" className="agtExpandableTable__truncatedText">
           {input}
         </EuiText>
       ),
@@ -233,15 +247,7 @@ export const SpansTable = () => {
       field: 'output',
       name: 'OUTPUT',
       render: (output: string) => (
-        <EuiText
-          size="s"
-          style={{
-            maxWidth: '150px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
+        <EuiText size="s" className="agtExpandableTable__truncatedText">
           {output}
         </EuiText>
       ),
@@ -250,10 +256,14 @@ export const SpansTable = () => {
 
   if (loading) {
     return (
-      <div style={{ padding: '48px', textAlign: 'center' }}>
+      <div className="agtExpandableTable__loadingState">
         <EuiLoadingSpinner size="xl" />
-        <EuiText size="s" color="subdued" style={{ marginTop: '16px' }}>
-          Loading agent spans...
+        <EuiSpacer size="m" />
+        <EuiText size="s" color="subdued">
+          {i18n.translate('agentTraces.table.loading', {
+            defaultMessage: 'Loading agent {entityLabel}...',
+            values: { entityLabel },
+          })}
         </EuiText>
       </div>
     );
@@ -261,32 +271,41 @@ export const SpansTable = () => {
 
   if (error) {
     return (
-      <div style={{ padding: '16px' }}>
-        <EuiCallOut title="Error loading spans" color="danger" iconType="alert">
+      <div className="agtExpandableTable__contentPadding">
+        <EuiCallOut
+          title={i18n.translate('agentTraces.table.errorTitle', {
+            defaultMessage: 'Error loading {entityLabel}',
+            values: { entityLabel },
+          })}
+          color="danger"
+          iconType="alert"
+        >
           <p>{error}</p>
           <EuiButton onClick={refresh} color="danger" size="s">
-            Retry
+            {i18n.translate('agentTraces.table.retry', { defaultMessage: 'Retry' })}
           </EuiButton>
         </EuiCallOut>
       </div>
     );
   }
 
-  if (spans.length === 0) {
+  if (rows.length === 0) {
     return (
-      <div style={{ padding: '16px' }}>
+      <div className="agtExpandableTable__contentPadding">
         <EuiEmptyPrompt
           iconType="apmTrace"
-          title={<h3>No agent spans found</h3>}
-          body={
-            <p>
-              No AI agent spans were found in the <code>otel-v1-apm-span</code> index. Make sure
-              your application is instrumented with OpenTelemetry and is sending spans.
-            </p>
+          title={
+            <h3>
+              {i18n.translate('agentTraces.table.emptyTitle', {
+                defaultMessage: 'No agent {entityLabel} found',
+                values: { entityLabel },
+              })}
+            </h3>
           }
+          body={<p>{emptyDescription}</p>}
           actions={
             <EuiButton onClick={refresh} iconType="refresh">
-              Refresh
+              {i18n.translate('agentTraces.table.refresh', { defaultMessage: 'Refresh' })}
             </EuiButton>
           }
         />
@@ -296,11 +315,18 @@ export const SpansTable = () => {
 
   return (
     <>
-      <div style={{ padding: '16px' }}>
+      <div className="agtExpandableTable__contentPadding">
         <EuiFlexGroup justifyContent="spaceBetween" alignItems="center" gutterSize="m">
           <EuiFlexItem grow={false}>
             <EuiText size="s" color="subdued">
-              Showing {getVisibleRows.length} of {spans.length} spans
+              {i18n.translate('agentTraces.table.showingCount', {
+                defaultMessage: 'Showing {visible} of {total} {entityLabel}',
+                values: {
+                  visible: getVisibleRows.length,
+                  total: rows.length,
+                  entityLabel,
+                },
+              })}
             </EuiText>
           </EuiFlexItem>
         </EuiFlexGroup>
@@ -317,12 +343,12 @@ export const SpansTable = () => {
           })}
         />
       </div>
-      {isFlyoutOpen && selectedSpan && (
+      {isFlyoutOpen && selectedRow && (
         <TraceDetailsFlyout
-          trace={selectedSpan}
+          trace={selectedRow}
           onClose={closeFlyout}
           fullTree={flyoutFullTree}
-          isLoadingFullTree={flyoutLoading || spanLoadingState.get(selectedSpan.traceId)?.loading}
+          isLoadingFullTree={flyoutLoading || loadingState.get(selectedRow.traceId)?.loading}
         />
       )}
     </>

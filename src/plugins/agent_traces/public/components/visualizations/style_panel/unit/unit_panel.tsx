@@ -38,7 +38,9 @@ export const UnitPanel = ({ unit, onUnitChange }: UnitPanelProps) => {
   const inputBoxButton = (
     <EuiFieldText
       id="unitPanelInput"
-      placeholder="Select a unit"
+      placeholder={i18n.translate('agentTraces.stylePanel.unit.selectPlaceholder', {
+        defaultMessage: 'Select a unit',
+      })}
       value={selectedUnit?.name ?? ''}
       onClick={() => {
         setPopover(!isPopoverOpen);

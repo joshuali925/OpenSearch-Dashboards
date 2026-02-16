@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { i18n } from '@osd/i18n';
 import { OpenSearchSearchHit } from '../types/doc_views_types';
 import {
   SPAN_ID_FIELD_PATHS,
@@ -75,11 +76,6 @@ export const extractServiceNameFromRowData = (
   const resourceServiceName = getNestedValue(rowData, 'resource.attributes.service.name');
   if (resourceServiceName && typeof resourceServiceName === 'string') {
     return resourceServiceName;
-  }
-
-  const resourceServiceNameAlt = getNestedValue(rowData, 'resource.attributes.service.name');
-  if (resourceServiceNameAlt && typeof resourceServiceNameAlt === 'string') {
-    return resourceServiceNameAlt;
   }
 
   const sourceServiceName = getNestedValue(rowData, '_source.serviceName');
@@ -197,18 +193,38 @@ export const getMissingFieldsDescription = (
   if (missingFields.length === 0) return [];
 
   const fieldDescriptions: Record<string, string> = {
-    spanId: 'Used for span selection and highlighting',
-    traceId: 'Required for trace identification',
-    parentSpanId: 'Used to build hierarchical structure',
-    serviceName: 'Displayed as labels and used for color coding',
-    name: 'Displayed as operation labels',
-    startTime: 'Positions spans on timeline',
-    endTime: 'Determines span width/duration',
-    'status.code': 'Used for error indicators',
+    spanId: i18n.translate('agentTraces.traceValidation.spanIdDescription', {
+      defaultMessage: 'Used for span selection and highlighting',
+    }),
+    traceId: i18n.translate('agentTraces.traceValidation.traceIdDescription', {
+      defaultMessage: 'Required for trace identification',
+    }),
+    parentSpanId: i18n.translate('agentTraces.traceValidation.parentSpanIdDescription', {
+      defaultMessage: 'Used to build hierarchical structure',
+    }),
+    serviceName: i18n.translate('agentTraces.traceValidation.serviceNameDescription', {
+      defaultMessage: 'Displayed as labels and used for color coding',
+    }),
+    name: i18n.translate('agentTraces.traceValidation.nameDescription', {
+      defaultMessage: 'Displayed as operation labels',
+    }),
+    startTime: i18n.translate('agentTraces.traceValidation.startTimeDescription', {
+      defaultMessage: 'Positions spans on timeline',
+    }),
+    endTime: i18n.translate('agentTraces.traceValidation.endTimeDescription', {
+      defaultMessage: 'Determines span width/duration',
+    }),
+    'status.code': i18n.translate('agentTraces.traceValidation.statusCodeDescription', {
+      defaultMessage: 'Used for error indicators',
+    }),
   };
 
   return missingFields.map((field) => ({
     name: field,
-    description: fieldDescriptions[field] || 'Required field',
+    description:
+      fieldDescriptions[field] ||
+      i18n.translate('agentTraces.traceValidation.requiredFieldDescription', {
+        defaultMessage: 'Required field',
+      }),
   }));
 };

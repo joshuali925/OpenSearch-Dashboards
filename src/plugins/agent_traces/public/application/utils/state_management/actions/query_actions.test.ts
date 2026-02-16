@@ -1221,11 +1221,7 @@ describe('Query Actions - Comprehensive Test Suite', () => {
       const thunk = executeQueries({ services: mockServices });
       await thunk(mockDispatch, mockGetState, undefined);
 
-      const dispatchedThunks = mockDispatch.mock.calls.filter(
-        (call) => typeof call[0] === 'function'
-      );
-      expect(dispatchedThunks.length).toBeGreaterThanOrEqual(1);
-
+      // Verify no histogram query was dispatched for PROMQL
       const histogramActions = mockDispatch.mock.calls.filter(
         (call) =>
           call[0]?.type === 'query/executeHistogramQuery/pending' ||

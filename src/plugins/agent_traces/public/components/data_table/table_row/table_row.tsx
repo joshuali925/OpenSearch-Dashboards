@@ -21,9 +21,7 @@ import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_re
 import { ExpandedTableRow } from './expanded_table_row/expanded_table_row';
 import { TableRowContent } from './table_row_content';
 import { isOnTracesPage } from '../table_cell/trace_utils/trace_utils';
-
-// Create stable NOOP hook reference outside component to avoid re-renders
-const NOOP_DYNAMIC_CONTEXT_HOOK = (options?: any, _shouldCleanup?: boolean): string => '';
+import { NOOP_DYNAMIC_CONTEXT_HOOK } from '../../../helpers/noop_dynamic_context_hook';
 
 export interface TableRowProps {
   row: OpenSearchSearchHit<Record<string, unknown>>;

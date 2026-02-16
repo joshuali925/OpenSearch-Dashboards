@@ -31,7 +31,7 @@ export class AgentTracesPlugin implements Plugin<AgentTracesPluginSetup, AgentTr
 
     core.capabilities.registerSwitcher(async (request, capabilites) => {
       return await core.security.readonlyService().hideForReadonly(request, capabilites, {
-        discover: {
+        agentTraces: {
           createShortUrl: false,
           save: false,
           saveQuery: false,

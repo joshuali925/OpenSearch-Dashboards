@@ -104,7 +104,10 @@ export const StateTimeLineExclusiveVisOptions = ({
         <DebouncedFieldNumber
           value={styles.rowHeight}
           onChange={(value) => updateStyle('rowHeight', value)}
-          placeholder="value between 0-1"
+          placeholder={i18n.translate(
+            'agentTraces.vis.stateTimeline.exclusive.rowHeightPlaceholder',
+            { defaultMessage: 'value between 0-1' }
+          )}
           max={1}
         />
       </EuiFormRow>
@@ -157,7 +160,10 @@ export const StateTimeLineExclusiveVisOptions = ({
                 threshold: value,
               } as DisconnectValuesOption)
             }
-            placeholder="1h"
+            placeholder={i18n.translate(
+              'agentTraces.vis.stateTimeline.exclusive.thresholdPlaceholder',
+              { defaultMessage: '1h' }
+            )}
             data-test-subj="disableValuesThreshold"
           />
         </EuiFormRow>
@@ -208,7 +214,10 @@ export const StateTimeLineExclusiveVisOptions = ({
                 threshold: value,
               } as ConnectNullValuesOption)
             }
-            placeholder="1h"
+            placeholder={i18n.translate(
+              'agentTraces.vis.stateTimeline.exclusive.thresholdPlaceholder',
+              { defaultMessage: '1h' }
+            )}
             data-test-subj="connectValuesThreshold"
           />
         </EuiFormRow>

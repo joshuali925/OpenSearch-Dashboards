@@ -138,7 +138,7 @@ describe('ValueMappingItem', () => {
       <ValueMappingItem id={0} mapping={mapping} onChange={mockOnChange} onDelete={mockOnDelete} />
     );
 
-    fireEvent.click(screen.getByLabelText('DeleteColor'));
+    fireEvent.click(screen.getByLabelText('Delete color'));
     expect(mockOnChange).toHaveBeenCalledWith(0, expect.objectContaining({ color: undefined }));
   });
 });

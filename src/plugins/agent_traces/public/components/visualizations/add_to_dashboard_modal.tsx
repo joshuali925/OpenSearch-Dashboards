@@ -178,7 +178,10 @@ export const AddToDashboardModal: React.FC<AddToDashboardModalProps> = ({
                   data-test-subj="selectExistingDashboard"
                   compressed={true}
                   fullWidth={true}
-                  placeholder="Search and select a dashboard"
+                  placeholder={i18n.translate(
+                    'agentTraces.addtoDashboardModal.searchDashboardPlaceholder',
+                    { defaultMessage: 'Search and select a dashboard' }
+                  )}
                   singleSelection={{ asPlainText: true }}
                   options={dashboardsToShow.map((dashboard) => {
                     return {
@@ -226,7 +229,10 @@ export const AddToDashboardModal: React.FC<AddToDashboardModalProps> = ({
               >
                 <DebouncedFieldText
                   value={newDashboardName}
-                  placeholder="Enter dashboard name"
+                  placeholder={i18n.translate(
+                    'agentTraces.addtoDashboardModal.dashboardNamePlaceholder',
+                    { defaultMessage: 'Enter dashboard name' }
+                  )}
                   onChange={(text) => {
                     setNewDashboardName(text);
                   }}
@@ -244,7 +250,10 @@ export const AddToDashboardModal: React.FC<AddToDashboardModalProps> = ({
             >
               <DebouncedFieldText
                 value={title}
-                placeholder="Enter save search name"
+                placeholder={i18n.translate(
+                  'agentTraces.addtoDashboardModal.saveSearchNamePlaceholder',
+                  { defaultMessage: 'Enter save search name' }
+                )}
                 onChange={(text) => {
                   setIsTitleOrDashboardTitleDuplicate(false);
                   setTitle(text);

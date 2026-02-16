@@ -159,7 +159,10 @@ export const AllAxesOptions: React.FC<AllAxesOptionsProps> = ({
                   >
                     <DebouncedFieldText
                       value={axis.title.text ?? ''}
-                      placeholder="Axis name"
+                      placeholder={i18n.translate(
+                        'agentTraces.vis.standardAxes.axisNamePlaceholder',
+                        { defaultMessage: 'Axis name' }
+                      )}
                       onChange={(text) =>
                         updateAxis(index, {
                           title: { ...axis.title, text },

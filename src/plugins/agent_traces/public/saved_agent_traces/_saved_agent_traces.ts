@@ -37,18 +37,8 @@ export function createSavedAgentTracesClass(services: SavedObjectOpenSearchDashb
     constructor(id: string) {
       super({
         id,
-        type: 'agentTraces',
-        mapping: {
-          title: 'text',
-          description: 'text',
-          hits: 'integer',
-          columns: 'keyword',
-          sort: 'keyword',
-          version: 'integer',
-          type: 'text',
-          visualization: 'text',
-          uiState: 'text',
-        },
+        type: SavedAgentTraces.type,
+        mapping: SavedAgentTraces.mapping,
         searchSource: true,
         defaults: {
           title: '',

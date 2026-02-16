@@ -20,6 +20,7 @@ import {
   EuiSelectOption,
   EuiTitle,
 } from '@elastic/eui';
+import { i18n } from '@osd/i18n';
 import { FilterOperator, VisColumn } from '../types';
 
 import './table_vis_filter.scss';
@@ -333,7 +334,9 @@ export const ColumnFilterContent: React.FC<ColumnFilterContentProps> = ({
               <EuiFormRow>
                 <EuiCheckbox
                   id="selectAll"
-                  label="Select All"
+                  label={i18n.translate('agentTraces.vis.table.filter.selectAll', {
+                    defaultMessage: 'Select All',
+                  })}
                   checked={isSelectAllChecked}
                   onChange={(e) => handleSelectAll(e.target.checked)}
                   data-test-subj="selectAllCheckbox"

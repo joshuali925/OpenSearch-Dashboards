@@ -47,12 +47,23 @@ jest.mock('./resizable_vis_control_and_tabs', () => ({
   ),
 }));
 
-jest.mock('../../../../components/chart/discover_chart_container', () => ({
-  DiscoverChartContainer: () => <div data-test-subj="chart-container">Chart Container</div>,
+jest.mock('../../../../application/pages/traces/expandable_span_table', () => ({
+  ExpandableSpanTable: (props: { entityLabel: string }) => (
+    <div data-test-subj={`${props.entityLabel}-table`}>{props.entityLabel} Table</div>
+  ),
 }));
 
-jest.mock('../../../tabs/traces_table', () => ({
-  TracesTable: () => <div data-test-subj="traces-table">Traces Table</div>,
+jest.mock('../../../../application/pages/traces/use_span_data', () => ({
+  useSpanData: () => ({
+    rows: [],
+    loading: false,
+    error: null,
+    refresh: jest.fn(),
+    expandRow: jest.fn(),
+    getSpans: jest.fn(),
+    spansCache: new Map(),
+    loadingState: new Map(),
+  }),
 }));
 
 // Mock the context
@@ -203,7 +214,6 @@ describe('BottomRightContainer', () => {
 
     renderComponent(QueryExecutionStatus.ERROR);
 
-    expect(screen.getByTestId('chart-container')).toBeInTheDocument();
     expect(screen.getByTestId('agentTraces-tabs-vis-style-panel')).toBeInTheDocument();
   });
 
@@ -216,7 +226,6 @@ describe('BottomRightContainer', () => {
 
     renderComponent(QueryExecutionStatus.READY);
 
-    expect(screen.getByTestId('chart-container')).toBeInTheDocument();
     expect(screen.getByTestId('agentTraces-tabs-vis-style-panel')).toBeInTheDocument();
   });
 
@@ -284,7 +293,7 @@ describe('BottomRightContainer', () => {
     expect(screen.getByTestId('no-results')).toBeInTheDocument();
   });
 
-  it('should render chart container when flavor is traces', () => {
+  it('should render ready content when flavor is traces and status is READY', () => {
     mockUseDatasetContext.mockReturnValue({
       dataset: { timeFieldName: 'timestamp' } as any,
       isLoading: false,
@@ -294,11 +303,10 @@ describe('BottomRightContainer', () => {
 
     renderComponent(QueryExecutionStatus.READY);
 
-    expect(screen.getByTestId('chart-container')).toBeInTheDocument();
     expect(screen.getByTestId('agentTraces-tabs-vis-style-panel')).toBeInTheDocument();
   });
 
-  it('should render chart container when flavor is logs', () => {
+  it('should render ready content when flavor is traces and status is ERROR', () => {
     mockUseDatasetContext.mockReturnValue({
       dataset: { timeFieldName: 'timestamp' } as any,
       isLoading: false,
@@ -306,9 +314,8 @@ describe('BottomRightContainer', () => {
     });
     mockUseFlavorId.mockReturnValue(AgentTracesFlavor.Traces);
 
-    renderComponent(QueryExecutionStatus.READY);
+    renderComponent(QueryExecutionStatus.ERROR);
 
-    expect(screen.getByTestId('chart-container')).toBeInTheDocument();
     expect(screen.getByTestId('agentTraces-tabs-vis-style-panel')).toBeInTheDocument();
   });
 });

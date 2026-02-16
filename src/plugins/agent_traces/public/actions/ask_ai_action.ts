@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { i18n } from '@osd/i18n';
 import { LogActionDefinition } from '../types/log_actions';
 import { AskAIActionItem } from '../components/ask_ai_action_item';
 import { ChatServiceStart } from '../../../../core/public';
@@ -13,7 +14,9 @@ import { ChatServiceStart } from '../../../../core/public';
 export function createAskAiAction(chatService: ChatServiceStart): LogActionDefinition {
   return {
     id: 'ask_ai',
-    displayName: 'Ask AI',
+    displayName: i18n.translate('agentTraces.actions.askAi.displayName', {
+      defaultMessage: 'Ask AI',
+    }),
     iconType: 'generate',
     order: 1,
 

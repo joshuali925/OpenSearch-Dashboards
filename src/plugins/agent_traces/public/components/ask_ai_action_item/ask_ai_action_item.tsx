@@ -12,13 +12,12 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
 } from '@elastic/eui';
+import { i18n } from '@osd/i18n';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
 import { AgentTracesServices } from '../../types';
 import { LogActionItemProps } from '../../types/log_actions';
 import { ChatServiceStart } from '../../../../../core/public';
-
-// Create stable NOOP hook reference outside component to avoid re-renders
-const NOOP_DYNAMIC_CONTEXT_HOOK = (_options: any, _shouldCleanup?: boolean): string => '';
+import { NOOP_DYNAMIC_CONTEXT_HOOK } from '../../helpers/noop_dynamic_context_hook';
 
 interface AskAIActionItemProps extends LogActionItemProps {
   chatService: ChatServiceStart;
@@ -69,7 +68,12 @@ export const AskAIActionItem: React.FC<AskAIActionItemProps> = ({
 
   const handleExecute = useCallback(async () => {
     if (!userInput.trim()) {
-      onResult?.({ success: false, error: 'Please provide a question about the log entry.' });
+      onResult?.({
+        success: false,
+        error: i18n.translate('agentTraces.askAiAction.emptyQuestionError', {
+          defaultMessage: 'Please provide a question about the log entry.',
+        }),
+      });
       return;
     }
 
@@ -84,7 +88,11 @@ export const AskAIActionItem: React.FC<AskAIActionItemProps> = ({
 
       onResult?.({
         success: true,
-        data: { message: 'Question sent to AI assistant with log context' },
+        data: {
+          message: i18n.translate('agentTraces.askAiAction.successMessage', {
+            defaultMessage: 'Question sent to AI assistant with log context',
+          }),
+        },
       });
 
       // Close the action panel
@@ -116,13 +124,18 @@ export const AskAIActionItem: React.FC<AskAIActionItemProps> = ({
   return (
     <div style={{ padding: '16px', minWidth: '300px' }}>
       <EuiText size="s" color="subdued">
-        Ask AI about this log entry. The log data will be automatically included as context.
+        {i18n.translate('agentTraces.askAiAction.description', {
+          defaultMessage:
+            'Ask AI about this log entry. The log data will be automatically included as context.',
+        })}
       </EuiText>
 
       <EuiSpacer size="m" />
 
       <EuiFieldText
-        placeholder="Ask a question about this log entry..."
+        placeholder={i18n.translate('agentTraces.askAiAction.placeholder', {
+          defaultMessage: 'Ask a question about this log entry...',
+        })}
         value={userInput}
         onChange={(e) => setUserInput(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -136,7 +149,9 @@ export const AskAIActionItem: React.FC<AskAIActionItemProps> = ({
       <EuiFlexGroup justifyContent="flexEnd" gutterSize="s">
         <EuiFlexItem grow={false}>
           <EuiButton size="s" onClick={onClose} disabled={isLoading}>
-            Cancel
+            {i18n.translate('agentTraces.askAiAction.cancelButton', {
+              defaultMessage: 'Cancel',
+            })}
           </EuiButton>
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
@@ -148,7 +163,13 @@ export const AskAIActionItem: React.FC<AskAIActionItemProps> = ({
             disabled={isLoading || !userInput.trim()}
             data-test-subj="askAiActionExecuteButton"
           >
-            {isLoading ? 'Sending...' : 'Send to AI'}
+            {isLoading
+              ? i18n.translate('agentTraces.askAiAction.sendingButton', {
+                  defaultMessage: 'Sending...',
+                })
+              : i18n.translate('agentTraces.askAiAction.sendButton', {
+                  defaultMessage: 'Send to AI',
+                })}
           </EuiButton>
         </EuiFlexItem>
       </EuiFlexGroup>

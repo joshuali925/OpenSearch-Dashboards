@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { i18n } from '@osd/i18n';
 import { SavedObjectsClientContract } from 'src/core/public';
 import { IndexPatternsContract } from '../../../data/public';
 
@@ -169,7 +170,9 @@ export async function detectTraceDataAcrossDataSources(
         // Create a new object with local cluster title
         const detectionWithSource: DetectionResult = {
           ...localDetection,
-          dataSourceTitle: 'Local Cluster',
+          dataSourceTitle: i18n.translate('agentTraces.autoDetect.localCluster', {
+            defaultMessage: 'Local Cluster',
+          }),
         };
         results.push(detectionWithSource);
       }

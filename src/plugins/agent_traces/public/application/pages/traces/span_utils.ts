@@ -3,21 +3,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useMemo, useCallback, useState, useRef } from 'react';
 import moment from 'moment';
-import { useDispatch } from 'react-redux';
-import { AnyAction } from 'redux';
-import { ThunkDispatch } from 'redux-thunk';
-import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
-import { AgentTracesServices } from '../../../types';
-import { executeQueries } from '../../utils/state_management/actions/query_actions';
-import { RootState } from '../../utils/state_management/store';
-import { useTabResults } from '../../utils/hooks/use_tab_results';
-import { QueryExecutionStatus } from '../../utils/state_management/types';
-import { useDatasetContext } from '../../context/dataset_context/dataset_context';
-import { TracePPLService } from './trace_details/data_fetching/ppl_request_trace';
-import { transformPPLDataToTraceHits, TraceHit } from './trace_details/traces/ppl_to_trace_hits';
+import { TraceHit } from './trace_details/traces/ppl_to_trace_hits';
 
+/**
+ * Shared types and utility functions for agent traces, sessions, and spans.
+ * Consolidates logic that was previously duplicated across use_agent_traces,
+ * use_agent_sessions, and use_agent_spans.
+ */
+
+// --- Interfaces ---
+
+export interface AgentSpan {
+  spanId: string;
+  traceId: string;
+  parentSpanId: string | null;
+  name: string;
+  kind: string;
+  operationName: string;
+  startTime: string;
+  endTime: string;
+  durationNanos: number;
+  statusCode: number;
+  statusMessage: string;
+  serviceName: string;
+  genAiSystem: string;
+  genAiRequestModel: string;
+  genAiInputTokens: number | null;
+  genAiOutputTokens: number | null;
+  genAiTotalTokens: number | null;
+  input: string;
+  output: string;
+  rawDocument: Record<string, unknown>;
+}
+
+/** Unified row type for traces, sessions, and spans tables. */
 export interface SpanRow {
   id: string;
   spanId: string;
@@ -44,19 +64,15 @@ export interface SpanLoadingState {
   error: string | null;
 }
 
-export interface UseAgentSpansResult {
-  spans: SpanRow[];
-  loading: boolean;
-  error: string | null;
-  refresh: () => void;
-  expandSpan: (traceId: string) => Promise<void>;
-  getSpanSpans: (traceId: string) => Promise<SpanRow[]>;
-  spanSpansCache: Map<string, SpanRow[]>;
-  spanLoadingState: Map<string, SpanLoadingState>;
+export interface SpanSearchHit extends Record<string, unknown> {
+  _id?: string;
+  _source?: Record<string, unknown>;
 }
 
-// Format duration from nanoseconds to human readable
-const formatDuration = (nanos: number): string => {
+// --- Formatting helpers ---
+
+/** Format duration from nanoseconds to human readable */
+export const formatDuration = (nanos: number): string => {
   if (!nanos || nanos <= 0) return '—';
 
   const ms = nanos / 1_000_000;
@@ -68,16 +84,18 @@ const formatDuration = (nanos: number): string => {
   return `${seconds.toFixed(2)}s`;
 };
 
-// Format timestamp to readable date/time
-const formatTimestamp = (timestamp: string): string => {
+/** Format timestamp to readable date/time */
+export const formatTimestamp = (timestamp: string): string => {
   if (!timestamp) return '—';
   const m = moment(timestamp);
   if (!m.isValid()) return '—';
   return m.format('MM/DD/YYYY, h:mm:ss A');
 };
 
-// Get a safe string from a potentially nested field
-const getFieldValue = (hit: Record<string, unknown>, fieldPath: string): unknown => {
+// --- Field accessors ---
+
+/** Get a safe value from a potentially nested field */
+export const getFieldValue = (hit: Record<string, unknown>, fieldPath: string): unknown => {
   const source = (hit._source as Record<string, unknown>) || hit;
   const parts = fieldPath.split('.');
   let value: unknown = source;
@@ -90,10 +108,10 @@ const getFieldValue = (hit: Record<string, unknown>, fieldPath: string): unknown
   return value;
 };
 
-const getStringField = (hit: Record<string, unknown>, path: string, fallback = ''): string =>
+export const getStringField = (hit: Record<string, unknown>, path: string, fallback = ''): string =>
   (getFieldValue(hit, path) as string) || fallback;
 
-const getNumberField = (
+export const getNumberField = (
   hit: Record<string, unknown>,
   path: string,
   fallback: number | null = 0
@@ -102,35 +120,10 @@ const getNumberField = (
   return typeof val === 'number' ? val : fallback;
 };
 
-interface SpanSearchHit extends Record<string, unknown> {
-  _id?: string;
-  _source?: Record<string, unknown>;
-}
+// --- Converters ---
 
-interface AgentSpan {
-  spanId: string;
-  traceId: string;
-  parentSpanId: string | null;
-  name: string;
-  kind: string;
-  operationName: string;
-  startTime: string;
-  endTime: string;
-  durationNanos: number;
-  statusCode: number;
-  statusMessage: string;
-  serviceName: string;
-  genAiSystem: string;
-  genAiRequestModel: string;
-  genAiInputTokens: number | null;
-  genAiOutputTokens: number | null;
-  genAiTotalTokens: number | null;
-  input: string;
-  output: string;
-  rawDocument: Record<string, unknown>;
-}
-
-const hitToAgentSpan = (hit: SpanSearchHit, index: number): AgentSpan => ({
+/** Map a single search hit (from Redux results) to an AgentSpan */
+export const hitToAgentSpan = (hit: SpanSearchHit, index: number): AgentSpan => ({
   spanId: getStringField(hit, 'spanId') || hit._id || `span-${index}`,
   traceId: getStringField(hit, 'traceId'),
   parentSpanId: getStringField(hit, 'parentSpanId') || null,
@@ -161,7 +154,8 @@ const hitToAgentSpan = (hit: SpanSearchHit, index: number): AgentSpan => ({
   rawDocument: (hit._source as Record<string, unknown>) || hit,
 });
 
-const traceHitToAgentSpan = (hit: TraceHit, index: number): AgentSpan => ({
+/** Convert a TraceHit (from PPL response) to an AgentSpan */
+export const traceHitToAgentSpan = (hit: TraceHit, index: number): AgentSpan => ({
   spanId: hit.spanId || `span-${index}`,
   traceId: hit.traceId || '',
   parentSpanId: hit.parentSpanId || null,
@@ -192,7 +186,8 @@ const traceHitToAgentSpan = (hit: TraceHit, index: number): AgentSpan => ({
   rawDocument: hit as Record<string, unknown>,
 });
 
-const spanToSpanRow = (span: AgentSpan, index: number): SpanRow => ({
+/** Convert an AgentSpan to a SpanRow */
+export const spanToRow = (span: AgentSpan, index: number): SpanRow => ({
   id: span.spanId || `span-${index}`,
   spanId: span.spanId,
   traceId: span.traceId,
@@ -215,7 +210,10 @@ const spanToSpanRow = (span: AgentSpan, index: number): SpanRow => ({
   rawDocument: span.rawDocument,
 });
 
-const setLevels = (rows: SpanRow[], level: number) => {
+// --- Tree building ---
+
+/** Set nesting levels recursively */
+export const setLevels = (rows: SpanRow[], level: number) => {
   rows.forEach((row) => {
     row.level = level;
     if (row.children && row.children.length > 0) {
@@ -224,12 +222,13 @@ const setLevels = (rows: SpanRow[], level: number) => {
   });
 };
 
-const buildSpanTree = (spans: AgentSpan[]): SpanRow[] => {
+/** Build hierarchical tree from flat spans (for initial table view) */
+export const buildSpanTree = (spans: AgentSpan[]): SpanRow[] => {
   const spanMap = new Map<string, SpanRow>();
   const rootSpans: SpanRow[] = [];
 
   spans.forEach((span, index) => {
-    spanMap.set(span.spanId, spanToSpanRow(span, index));
+    spanMap.set(span.spanId, spanToRow(span, index));
   });
 
   spanMap.forEach((row) => {
@@ -258,12 +257,13 @@ const buildSpanTree = (spans: AgentSpan[]): SpanRow[] => {
   return rootSpans;
 };
 
-const buildFullSpanTree = (spans: AgentSpan[]): SpanRow[] => {
+/** Build full hierarchical tree from ALL spans for a traceId (for expand/flyout) */
+export const buildFullSpanTree = (spans: AgentSpan[]): SpanRow[] => {
   const spanMap = new Map<string, SpanRow>();
   const rootSpans: SpanRow[] = [];
 
   spans.forEach((span, index) => {
-    spanMap.set(span.spanId, spanToSpanRow(span, index));
+    spanMap.set(span.spanId, spanToRow(span, index));
   });
 
   spanMap.forEach((row) => {
@@ -296,129 +296,22 @@ const buildFullSpanTree = (spans: AgentSpan[]): SpanRow[] => {
   return rootSpans;
 };
 
-export const useAgentSpans = (): UseAgentSpansResult => {
-  const { services } = useOpenSearchDashboards<AgentTracesServices>();
-  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
-  const { dataset } = useDatasetContext();
-
-  const { results: rawResults, status } = useTabResults();
-
-  const [spanSpansCache, setSpanSpansCache] = useState<Map<string, SpanRow[]>>(new Map());
-  const [spanLoadingState, setSpanLoadingState] = useState<Map<string, SpanLoadingState>>(
-    new Map()
-  );
-
-  const inFlightRef = useRef<Set<string>>(new Set());
-
-  const pplService = useMemo(
-    () => (services.data ? new TracePPLService(services.data) : undefined),
-    [services.data]
-  );
-
-  const spans = useMemo(() => {
-    const hits = rawResults?.hits?.hits || [];
-    if (hits.length === 0) return [];
-
-    const agentSpans = hits.map((hit: SpanSearchHit, index: number) => hitToAgentSpan(hit, index));
-    return buildSpanTree(agentSpans);
-  }, [rawResults]);
-
-  const loading = status?.status === QueryExecutionStatus.LOADING;
-  const error =
-    status?.status === QueryExecutionStatus.ERROR
-      ? status.error?.originalErrorMessage || status.error?.message?.details || 'Query failed'
-      : null;
-
-  const refresh = useCallback(() => {
-    setSpanSpansCache(new Map());
-    setSpanLoadingState(new Map());
-    inFlightRef.current.clear();
-    dispatch(executeQueries({ services }));
-  }, [dispatch, services]);
-
-  const expandSpan = useCallback(
-    async (traceId: string) => {
-      if (spanSpansCache.has(traceId)) return;
-      if (inFlightRef.current.has(traceId)) return;
-      if (!pplService || !dataset) return;
-
-      inFlightRef.current.add(traceId);
-      setSpanLoadingState((prev) => {
-        const next = new Map(prev);
-        next.set(traceId, { loading: true, error: null });
-        return next;
-      });
-
-      try {
-        const datasetParam = {
-          id: dataset.id || '',
-          title: dataset.title,
-          type: dataset.type || 'INDEX_PATTERN',
-          ...(dataset.dataSourceRef && {
-            dataSource: {
-              id: dataset.dataSourceRef.id,
-              title: dataset.dataSourceRef.name || dataset.dataSourceRef.id,
-              type: dataset.dataSourceRef.type || 'OpenSearch',
-              version: '',
-            },
-          }),
-        };
-
-        const response = await pplService.fetchTraceSpans({
-          traceId,
-          dataset: datasetParam,
-          limit: 1000,
-        });
-
-        const traceHits = transformPPLDataToTraceHits(response);
-        const allSpans = traceHits.map((hit: TraceHit, i: number) => traceHitToAgentSpan(hit, i));
-        const fullTree = buildFullSpanTree(allSpans);
-
-        setSpanSpansCache((prev) => {
-          const next = new Map(prev);
-          next.set(traceId, fullTree);
-          return next;
-        });
-        setSpanLoadingState((prev) => {
-          const next = new Map(prev);
-          next.set(traceId, { loading: false, error: null });
-          return next;
-        });
-      } catch (err) {
-        setSpanLoadingState((prev) => {
-          const next = new Map(prev);
-          next.set(traceId, {
-            loading: false,
-            error: (err as Error).message || 'Failed to fetch span spans',
-          });
-          return next;
-        });
-      } finally {
-        inFlightRef.current.delete(traceId);
+/** Find the children of a specific span within a full tree */
+export const getChildrenFromFullTree = (
+  fullTree: SpanRow[],
+  spanId: string
+): SpanRow[] | undefined => {
+  const findNode = (rows: SpanRow[]): SpanRow | undefined => {
+    for (const row of rows) {
+      if (row.spanId === spanId) return row;
+      if (row.children) {
+        const found = findNode(row.children);
+        if (found) return found;
       }
-    },
-    [pplService, dataset, spanSpansCache]
-  );
-
-  const getSpanSpans = useCallback(
-    async (traceId: string): Promise<SpanRow[]> => {
-      if (spanSpansCache.has(traceId)) {
-        return spanSpansCache.get(traceId)!;
-      }
-      await expandSpan(traceId);
-      return spanSpansCache.get(traceId) || [];
-    },
-    [spanSpansCache, expandSpan]
-  );
-
-  return {
-    spans,
-    loading,
-    error,
-    refresh,
-    expandSpan,
-    getSpanSpans,
-    spanSpansCache,
-    spanLoadingState,
+    }
+    return undefined;
   };
+
+  const node = findNode(fullTree);
+  return node?.children;
 };

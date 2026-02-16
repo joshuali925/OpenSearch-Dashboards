@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { EuiFlexGroup, EuiFlexItem, EuiText, EuiLoadingSpinner } from '@elastic/eui';
+import { i18n } from '@osd/i18n';
 import { TraceMetrics } from './use_trace_metrics';
 
 interface TraceMetricsBarProps {
@@ -67,35 +68,45 @@ export const TraceMetricsBar: React.FC<TraceMetricsBarProps> = ({ metrics, loadi
       <EuiFlexGroup gutterSize="l" alignItems="center" responsive={false} wrap>
         <EuiFlexItem grow={false}>
           <MetricItem
-            label="Total Traces"
+            label={i18n.translate('agentTraces.metrics.totalTraces', {
+              defaultMessage: 'Total Traces',
+            })}
             value={formatNumber(metrics.totalTraces)}
             loading={loading}
           />
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
           <MetricItem
-            label="Total Spans"
+            label={i18n.translate('agentTraces.metrics.totalSpans', {
+              defaultMessage: 'Total Spans',
+            })}
             value={formatNumber(metrics.totalSpans)}
             loading={loading}
           />
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
           <MetricItem
-            label="Total Tokens"
+            label={i18n.translate('agentTraces.metrics.totalTokens', {
+              defaultMessage: 'Total Tokens',
+            })}
             value={formatNumber(metrics.totalTokens)}
             loading={loading}
           />
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
           <MetricItem
-            label="Latency P50"
+            label={i18n.translate('agentTraces.metrics.latencyP50', {
+              defaultMessage: 'Latency P50',
+            })}
             value={formatLatency(metrics.latencyP50Seconds)}
             loading={loading}
           />
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
           <MetricItem
-            label="Latency P99"
+            label={i18n.translate('agentTraces.metrics.latencyP99', {
+              defaultMessage: 'Latency P99',
+            })}
             value={formatLatency(metrics.latencyP99Seconds)}
             loading={loading}
           />

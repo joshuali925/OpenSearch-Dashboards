@@ -543,7 +543,9 @@ export class AgentTracesPlugin
       stage: 'production',
       promotion: {
         buttonText: agentTracesVisDisplayName,
-        description: 'Build query-powered visualizations',
+        description: i18n.translate('agentTraces.visualization.promotionDescription', {
+          defaultMessage: 'Build query-powered visualizations',
+        }),
       },
       appExtensions: {
         visualizations: {
@@ -598,7 +600,10 @@ export class AgentTracesPlugin
         if (visOfAction && visOfAction.isClassic) {
           action.grouping?.push({
             id: 'others',
-            getDisplayName: () => 'More',
+            getDisplayName: () =>
+              i18n.translate('agentTraces.visualization.moreGroupLabel', {
+                defaultMessage: 'More',
+              }),
             getIconType: () => 'boxesHorizontal',
           });
         }

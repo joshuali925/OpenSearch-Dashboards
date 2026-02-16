@@ -28,6 +28,7 @@
  * under the License.
  */
 
+import { i18n } from '@osd/i18n';
 import {
   getOsdFieldOverrides,
   IndexPattern,
@@ -44,14 +45,7 @@ export interface LegacyDisplayedColumn {
   colRightIdx: number;
 }
 
-export interface ColumnProps {
-  name: string;
-  displayName: string;
-  isSortable: boolean;
-  isRemoveable: boolean;
-  colLeftIdx: number;
-  colRightIdx: number;
-}
+export type ColumnProps = LegacyDisplayedColumn;
 
 /**
  * Returns properties necessary to display the time column
@@ -68,7 +62,9 @@ export function getTimeColumn(
 ): ColumnProps {
   return {
     name: timeFieldName,
-    displayName: 'Time',
+    displayName: i18n.translate('agentTraces.dataTable.timeColumnDisplayName', {
+      defaultMessage: 'Time',
+    }),
     isSortable: osdFieldOverrides.sortable ?? true,
     isRemoveable: false,
     colLeftIdx: -1,
@@ -79,20 +75,34 @@ export function getTimeColumn(
 function getColumnDisplayName(column: string): string {
   switch (column) {
     case 'name':
-      return 'Service Identifier';
+      return i18n.translate('agentTraces.dataTable.column.name', {
+        defaultMessage: 'Service Identifier',
+      });
     case 'durationNano':
     case 'durationInNanos':
-      return 'Duration';
+      return i18n.translate('agentTraces.dataTable.column.duration', {
+        defaultMessage: 'Duration',
+      });
     case 'resource.attributes.service.name':
-      return 'Service';
+      return i18n.translate('agentTraces.dataTable.column.serviceName', {
+        defaultMessage: 'Service',
+      });
     case 'attributes.http.status_code':
-      return 'Status Code';
+      return i18n.translate('agentTraces.dataTable.column.httpStatusCode', {
+        defaultMessage: 'Status Code',
+      });
     case 'status.code':
-      return 'Status';
+      return i18n.translate('agentTraces.dataTable.column.statusCode', {
+        defaultMessage: 'Status',
+      });
     case 'spanId':
-      return 'SpanID';
+      return i18n.translate('agentTraces.dataTable.column.spanId', {
+        defaultMessage: 'SpanID',
+      });
     case 'kind':
-      return 'Service Kind';
+      return i18n.translate('agentTraces.dataTable.column.kind', {
+        defaultMessage: 'Service Kind',
+      });
     default:
       return column;
   }

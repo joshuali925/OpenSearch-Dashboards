@@ -1,0 +1,46 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+.agtExpandableTable {
+  // Flex container for the KIND column cell (holds expand icon + badge)
+  &__kindCell {
+    display: flex;
+    align-items: center;
+    gap: $ouiSizeXS;
+  }
+
+  // Fixed-size wrapper for the loading spinner in expandable rows
+  &__spinnerPlaceholder {
+    display: inline-flex;
+    width: $ouiSizeL;
+    height: $ouiSizeL;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // Invisible spacer matching expand icon width for non-expandable rows
+  &__expandPlaceholder {
+    width: $ouiSizeL;
+  }
+
+  // Truncated text for INPUT and OUTPUT columns
+  &__truncatedText {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Centered loading state container
+  &__loadingState {
+    padding: $ouiSizeXL * 2;
+    text-align: center;
+  }
+
+  // Standard content padding for error, empty, and table states
+  &__contentPadding {
+    padding: $ouiSize;
+  }
+}

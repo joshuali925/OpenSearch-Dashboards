@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { EuiSpacer, EuiTabs, EuiTab } from '@elastic/eui';
+import { i18n } from '@osd/i18n';
 import { selectQueryStatusMapByKey } from '../../../../application/utils/state_management/selectors';
 import { RootState } from '../../../../application/utils/state_management/store';
 import { QueryExecutionStatus } from '../../../../application/utils/state_management/types';
@@ -24,9 +25,8 @@ import { ResizableVisControlAndTabs } from './resizable_vis_control_and_tabs';
 import { useFlavorId } from '../../../../helpers/use_flavor_id';
 import { AgentTracesFlavor } from '../../../../../common';
 import { TraceAutoDetectCallout } from '../../../trace_auto_detect_callout';
-import { TracesTable } from '../../../../application/pages/traces/traces_table';
-import { SessionsTable } from '../../../../application/pages/traces/sessions_table';
-import { SpansTable } from '../../../../application/pages/traces/spans_table';
+import { ExpandableSpanTable } from '../../../../application/pages/traces/expandable_span_table';
+import { useSpanData } from '../../../../application/pages/traces/use_span_data';
 import './bottom_right_container.scss';
 
 // Memoized content component to prevent re-renders of chart + tabs when status hasn't changed
@@ -43,6 +43,7 @@ export const BottomRightContainer = () => {
   const { services } = useOpenSearchDashboards<AgentTracesServices>();
   const flavorId = useFlavorId();
   const [selectedTab, setSelectedTab] = useState<'traces' | 'sessions' | 'spans'>('traces');
+  const spanData = useSpanData();
 
   const onRefresh = () => {
     if (services) {
@@ -69,22 +70,65 @@ export const BottomRightContainer = () => {
                 isSelected={selectedTab === 'traces'}
                 onClick={() => setSelectedTab('traces')}
               >
-                Traces
+                {i18n.translate('agentTraces.bottomRightContainer.tracesTab', {
+                  defaultMessage: 'Traces',
+                })}
               </EuiTab>
               <EuiTab
                 isSelected={selectedTab === 'sessions'}
                 onClick={() => setSelectedTab('sessions')}
               >
-                Sessions
+                {i18n.translate('agentTraces.bottomRightContainer.sessionsTab', {
+                  defaultMessage: 'Sessions',
+                })}
               </EuiTab>
               <EuiTab isSelected={selectedTab === 'spans'} onClick={() => setSelectedTab('spans')}>
-                Spans
+                {i18n.translate('agentTraces.bottomRightContainer.spansTab', {
+                  defaultMessage: 'Spans',
+                })}
               </EuiTab>
             </EuiTabs>
           </div>
-          {selectedTab === 'traces' && <TracesTable />}
-          {selectedTab === 'sessions' && <SessionsTable />}
-          {selectedTab === 'spans' && <SpansTable />}
+          {selectedTab === 'traces' && (
+            <ExpandableSpanTable
+              rows={spanData.rows}
+              loading={spanData.loading}
+              error={spanData.error}
+              refresh={spanData.refresh}
+              expandRow={spanData.expandRow}
+              spansCache={spanData.spansCache}
+              loadingState={spanData.loadingState}
+              entityLabel="traces"
+              emptyDescription="No AI agent spans were found in the otel-v1-apm-span index. Make sure your application is instrumented with OpenTelemetry and is sending spans with gen_ai.operation.name attribute."
+              resolveChildrenFromFullTree
+            />
+          )}
+          {selectedTab === 'sessions' && (
+            <ExpandableSpanTable
+              rows={spanData.rows}
+              loading={spanData.loading}
+              error={spanData.error}
+              refresh={spanData.refresh}
+              expandRow={spanData.expandRow}
+              spansCache={spanData.spansCache}
+              loadingState={spanData.loadingState}
+              entityLabel="sessions"
+              emptyDescription="No AI agent sessions were found in the otel-v1-apm-span index. Make sure your application is instrumented with OpenTelemetry and is sending spans with session information."
+            />
+          )}
+          {selectedTab === 'spans' && (
+            <ExpandableSpanTable
+              rows={spanData.rows}
+              loading={spanData.loading}
+              error={spanData.error}
+              refresh={spanData.refresh}
+              expandRow={spanData.expandRow}
+              spansCache={spanData.spansCache}
+              loadingState={spanData.loadingState}
+              entityLabel="spans"
+              emptyDescription="No AI agent spans were found in the otel-v1-apm-span index. Make sure your application is instrumented with OpenTelemetry and is sending spans."
+            />
+          )}
         </CanvasPanel>
       );
     }

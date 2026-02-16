@@ -55,7 +55,9 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
     >
       {feedback !== FeedbackStatus.THUMB_DOWN && (
         <EuiSmallButtonIcon
-          aria-label="feedback thumbs up"
+          aria-label={i18n.translate('agentTraces.resultsSummary.thumbsUpAriaLabel', {
+            defaultMessage: 'feedback thumbs up',
+          })}
           color={feedback === FeedbackStatus.THUMB_UP ? 'primary' : 'text'}
           iconType="thumbsUp"
           title={
@@ -71,7 +73,9 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
       )}
       {feedback !== FeedbackStatus.THUMB_UP && (
         <EuiSmallButtonIcon
-          aria-label="feedback thumbs down"
+          aria-label={i18n.translate('agentTraces.resultsSummary.thumbsDownAriaLabel', {
+            defaultMessage: 'feedback thumbs down',
+          })}
           color={feedback === FeedbackStatus.THUMB_DOWN ? 'primary' : 'text'}
           title={
             !feedback
@@ -89,7 +93,9 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
       <EuiCopy textToCopy={summary ?? ''}>
         {(copy) => (
           <EuiSmallButtonIcon
-            aria-label="Copy to clipboard"
+            aria-label={i18n.translate('agentTraces.resultsSummary.copyAriaLabel', {
+              defaultMessage: 'Copy to clipboard',
+            })}
             title={i18n.translate('agentTraces.resultsSummary.summary.copy', {
               defaultMessage: `Copy to clipboard`,
             })}

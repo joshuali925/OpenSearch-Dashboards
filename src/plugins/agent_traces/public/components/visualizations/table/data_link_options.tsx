@@ -153,7 +153,10 @@ export const DataLinkModal: React.FC<DataLinkModalProps> = ({
                   <EuiButtonIcon
                     iconType="plusInCircle"
                     onClick={() => setIsPopoverOpen(true)}
-                    aria-label="Add Field"
+                    aria-label={i18n.translate(
+                      'agentTraces.stylePanel.table.dataLinks.addFieldAriaLabel',
+                      { defaultMessage: 'Add Field' }
+                    )}
                     data-test-subj="dataLinkAddFieldButton"
                   />
                 }
@@ -306,7 +309,10 @@ export const DataLinkOptions: React.FC<TableVisStyleControlsProps> = ({
                       setEditingLink(link);
                       setIsModalOpen(true);
                     }}
-                    aria-label="Edit link"
+                    aria-label={i18n.translate(
+                      'agentTraces.stylePanel.table.dataLinks.editLinkAriaLabel',
+                      { defaultMessage: 'Edit link' }
+                    )}
                     data-test-subj={`editDataLink-${link.id}`}
                   />
                 </EuiFlexItem>
@@ -314,7 +320,10 @@ export const DataLinkOptions: React.FC<TableVisStyleControlsProps> = ({
                   <EuiButtonIcon
                     iconType="trash"
                     onClick={() => deleteLink(link.id)}
-                    aria-label="Delete link"
+                    aria-label={i18n.translate(
+                      'agentTraces.stylePanel.table.dataLinks.deleteLinkAriaLabel',
+                      { defaultMessage: 'Delete link' }
+                    )}
                     data-test-subj={`deleteDataLink-${link.id}`}
                   />
                 </EuiFlexItem>

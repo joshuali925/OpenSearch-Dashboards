@@ -69,7 +69,9 @@ export const Range: React.FC<RangeProps> = ({ id, value, onChange, onDelete }) =
           value={value.value}
           defaultValue={0}
           onChange={(val) => onChange(id, { ...value, value: val ?? 0 })}
-          placeholder="Value"
+          placeholder={i18n.translate('agentTraces.stylePanel.threshold.valuePlaceholder', {
+            defaultMessage: 'Value',
+          })}
           data-test-subj={`agentTracesVisThresholdValue-${id}`}
         />
       </EuiFlexItem>
@@ -78,7 +80,9 @@ export const Range: React.FC<RangeProps> = ({ id, value, onChange, onDelete }) =
         <EuiButtonIcon
           size="xs"
           iconType="trash"
-          aria-label="Delete"
+          aria-label={i18n.translate('agentTraces.stylePanel.threshold.deleteAriaLabel', {
+            defaultMessage: 'Delete',
+          })}
           color="danger"
           onClick={handleDeleteRange}
           data-test-subj={`agentTracesVisThresholdDeleteButton-${id}`}
@@ -197,14 +201,23 @@ export const ThresholdCustomValues: React.FC<ThresholdCustomValuesProps> = ({
         </EuiFlexItem>
 
         <EuiFlexItem grow={true}>
-          <EuiFieldNumber compressed value={undefined} placeholder="Base" disabled />
+          <EuiFieldNumber
+            compressed
+            value={undefined}
+            placeholder={i18n.translate('agentTraces.stylePanel.threshold.basePlaceholder', {
+              defaultMessage: 'Base',
+            })}
+            disabled
+          />
         </EuiFlexItem>
 
         <EuiFlexItem grow={false}>
           <EuiButtonIcon
             size="xs"
             iconType="trash"
-            aria-label="Delete"
+            aria-label={i18n.translate('agentTraces.stylePanel.threshold.deleteAriaLabel', {
+              defaultMessage: 'Delete',
+            })}
             color="danger"
             // base threshold should not be deleted
             isDisabled={true}

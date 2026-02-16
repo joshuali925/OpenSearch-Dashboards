@@ -12,6 +12,7 @@ import {
   EuiFormRow,
   EuiSelect,
 } from '@elastic/eui';
+import { i18n } from '@osd/i18n';
 import { CellTypeConfig, TableChartStyle } from './table_vis_config';
 import { StyleControlsProps } from '../utils/use_visualization_types';
 import { ColorMode, VisColumn } from '../types';
@@ -131,7 +132,10 @@ export const TableCellTypeOptions: React.FC<TableCellTypeOptionsProps> = ({
                 iconType="trash"
                 color="danger"
                 onClick={() => handleRemoveCellType(index)}
-                aria-label="Remove cell type"
+                aria-label={i18n.translate(
+                  'agentTraces.vis.table.cellType.removeCellTypeAriaLabel',
+                  { defaultMessage: 'Remove cell type' }
+                )}
                 data-test-subj={`visTableRemoveCellType${index}`}
               />
             </EuiFlexItem>
@@ -141,7 +145,9 @@ export const TableCellTypeOptions: React.FC<TableCellTypeOptionsProps> = ({
       {numericalColumns.length > selectedFields.length && (
         <EuiFormRow>
           <EuiButton size="s" onClick={handleAddCellType} data-test-subj="visTableAddCellType">
-            Add new cell type
+            {i18n.translate('agentTraces.vis.table.cellType.addNewCellType', {
+              defaultMessage: 'Add new cell type',
+            })}
           </EuiButton>
         </EuiFormRow>
       )}

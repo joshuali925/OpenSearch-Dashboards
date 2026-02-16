@@ -2,7 +2,7 @@
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  */
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   EuiTitle,
   EuiText,
@@ -23,9 +23,13 @@ import {
   EuiCopy,
   EuiResizableContainer,
 } from '@elastic/eui';
-import { TraceRow } from './use_agent_traces';
+import { i18n } from '@osd/i18n';
+import { SpanRow } from './span_utils';
 import { getKindColor } from './trace_utils';
 import './trace_details_flyout.scss';
+
+// Keep TraceRow as an alias for backward compatibility
+type TraceRow = SpanRow;
 
 export interface TraceDetailsProps {
   trace: TraceRow;
@@ -164,7 +168,8 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
 
   // Parse input/output as JSON if possible, otherwise show as string
   const formatJsonOrString = (value: string | undefined): string => {
-    if (!value || value === '—') return '(no data)';
+    if (!value || value === '—')
+      return i18n.translate('agentTraces.flyout.noData', { defaultMessage: '(no data)' });
     try {
       const parsed = JSON.parse(value);
       return JSON.stringify(parsed, null, 2);
@@ -352,10 +357,18 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
   const renderOverviewTab = () => {
     const row = selectedTraceRow;
     const overviewFields = [
-      { label: 'SERVICE', value: row?.kind || '—' },
-      { label: 'DURATION', value: row?.latency || '—' },
       {
-        label: 'SPAN ID',
+        label: i18n.translate('agentTraces.flyout.overview.service', { defaultMessage: 'SERVICE' }),
+        value: row?.kind || '—',
+      },
+      {
+        label: i18n.translate('agentTraces.flyout.overview.duration', {
+          defaultMessage: 'DURATION',
+        }),
+        value: row?.latency || '—',
+      },
+      {
+        label: i18n.translate('agentTraces.flyout.overview.spanId', { defaultMessage: 'SPAN ID' }),
         value: row?.spanId ? (
           <EuiFlexGroup gutterSize="xs" alignItems="center" responsive={false}>
             <EuiFlexItem grow={false}>
@@ -370,7 +383,9 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
                     size="xs"
                     iconType="copy"
                     onClick={copy}
-                    aria-label="Copy span ID"
+                    aria-label={i18n.translate('agentTraces.flyout.copySpanId', {
+                      defaultMessage: 'Copy span ID',
+                    })}
                   />
                 )}
               </EuiCopy>
@@ -380,30 +395,58 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           '—'
         ),
       },
-      { label: 'MODEL', value: row?.rawDocument?.['gen_ai.request.model'] || '—' },
       {
-        label: 'PARENT SPAN',
+        label: i18n.translate('agentTraces.flyout.overview.model', { defaultMessage: 'MODEL' }),
+        value: (row?.rawDocument?.['gen_ai.request.model'] as string) || '—',
+      },
+      {
+        label: i18n.translate('agentTraces.flyout.overview.parentSpan', {
+          defaultMessage: 'PARENT SPAN',
+        }),
         value: row?.parentSpanId ? (
           <EuiLink onClick={() => selectNode(row.parentSpanId!)}>{row.parentSpanId}</EuiLink>
         ) : (
-          '(root span)'
+          i18n.translate('agentTraces.flyout.rootSpan', { defaultMessage: '(root span)' })
         ),
       },
-      { label: 'TOOL USED', value: row?.rawDocument?.['gen_ai.tool.name'] || '—' },
       {
-        label: 'STATUS',
+        label: i18n.translate('agentTraces.flyout.overview.toolUsed', {
+          defaultMessage: 'TOOL USED',
+        }),
+        value: (row?.rawDocument?.['gen_ai.tool.name'] as string) || '—',
+      },
+      {
+        label: i18n.translate('agentTraces.flyout.overview.status', { defaultMessage: 'STATUS' }),
         value: (
           <EuiHealth color={row?.status === 'success' ? 'success' : 'danger'}>
-            {row?.status === 'success' ? 'OK' : 'ERROR'}
+            {row?.status === 'success'
+              ? i18n.translate('agentTraces.flyout.statusOk', { defaultMessage: 'OK' })
+              : i18n.translate('agentTraces.flyout.statusError', { defaultMessage: 'ERROR' })}
           </EuiHealth>
         ),
       },
       {
-        label: 'TOKENS USED',
-        value: row?.totalTokens && row.totalTokens !== '—' ? `${row.totalTokens} tokens` : '—',
+        label: i18n.translate('agentTraces.flyout.overview.tokensUsed', {
+          defaultMessage: 'TOKENS USED',
+        }),
+        value:
+          row?.totalTokens && row.totalTokens !== '—'
+            ? i18n.translate('agentTraces.flyout.tokensValue', {
+                defaultMessage: '{count} tokens',
+                values: { count: row.totalTokens },
+              })
+            : '—',
       },
-      { label: 'START TIME', value: row?.startTime || '—' },
-      { label: 'COST', value: row?.totalCost || '—' },
+      {
+        label: i18n.translate('agentTraces.flyout.overview.startTime', {
+          defaultMessage: 'START TIME',
+        }),
+        value: row?.startTime || '—',
+      },
+      {
+        label: i18n.translate('agentTraces.flyout.overview.cost', { defaultMessage: 'COST' }),
+        value: row?.totalCost || '—',
+      },
     ];
 
     return (
@@ -417,13 +460,22 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           <EuiFlexGroup justifyContent="spaceBetween" alignItems="center" gutterSize="s">
             <EuiFlexItem grow={false}>
               <EuiTitle size="xxs">
-                <span>INPUT</span>
+                <span>
+                  {i18n.translate('agentTraces.flyout.inputTitle', { defaultMessage: 'INPUT' })}
+                </span>
               </EuiTitle>
             </EuiFlexItem>
             <EuiFlexItem grow={false}>
               <EuiCopy textToCopy={formatJsonOrString(row?.input)}>
                 {(copy) => (
-                  <EuiButtonIcon size="xs" iconType="copy" onClick={copy} aria-label="Copy input" />
+                  <EuiButtonIcon
+                    size="xs"
+                    iconType="copy"
+                    onClick={copy}
+                    aria-label={i18n.translate('agentTraces.flyout.copyInput', {
+                      defaultMessage: 'Copy input',
+                    })}
+                  />
                 )}
               </EuiCopy>
             </EuiFlexItem>
@@ -441,7 +493,9 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           <EuiFlexGroup justifyContent="spaceBetween" alignItems="center" gutterSize="s">
             <EuiFlexItem grow={false}>
               <EuiTitle size="xxs">
-                <span>OUTPUT</span>
+                <span>
+                  {i18n.translate('agentTraces.flyout.outputTitle', { defaultMessage: 'OUTPUT' })}
+                </span>
               </EuiTitle>
             </EuiFlexItem>
             <EuiFlexItem grow={false}>
@@ -451,7 +505,9 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
                     size="xs"
                     iconType="copy"
                     onClick={copy}
-                    aria-label="Copy output"
+                    aria-label={i18n.translate('agentTraces.flyout.copyOutput', {
+                      defaultMessage: 'Copy output',
+                    })}
                   />
                 )}
               </EuiCopy>
@@ -470,16 +526,46 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
   const renderMetadataTab = () => {
     const row = selectedTraceRow;
     const metadataFields = [
-      { label: 'TRACE ID', value: row?.traceId || '—' },
       {
-        label: 'KIND',
+        label: i18n.translate('agentTraces.flyout.metadata.traceId', {
+          defaultMessage: 'TRACE ID',
+        }),
+        value: row?.traceId || '—',
+      },
+      {
+        label: i18n.translate('agentTraces.flyout.metadata.kind', { defaultMessage: 'KIND' }),
         value: <EuiBadge color={getKindColor(row?.kind)}>{row?.kind || 'UNKNOWN'}</EuiBadge>,
       },
-      { label: 'SPAN ID', value: row?.spanId || '—' },
-      { label: 'START TIME', value: row?.startTime || '—' },
-      { label: 'PARENT SPAN ID', value: row?.parentSpanId || '(root span)' },
-      { label: 'LATENCY', value: row?.latency || '—' },
-      { label: 'TOTAL TOKENS', value: String(row?.totalTokens || '—') },
+      {
+        label: i18n.translate('agentTraces.flyout.metadata.spanId', { defaultMessage: 'SPAN ID' }),
+        value: row?.spanId || '—',
+      },
+      {
+        label: i18n.translate('agentTraces.flyout.metadata.startTime', {
+          defaultMessage: 'START TIME',
+        }),
+        value: row?.startTime || '—',
+      },
+      {
+        label: i18n.translate('agentTraces.flyout.metadata.parentSpanId', {
+          defaultMessage: 'PARENT SPAN ID',
+        }),
+        value:
+          row?.parentSpanId ||
+          i18n.translate('agentTraces.flyout.rootSpanLabel', { defaultMessage: '(root span)' }),
+      },
+      {
+        label: i18n.translate('agentTraces.flyout.metadata.latency', {
+          defaultMessage: 'LATENCY',
+        }),
+        value: row?.latency || '—',
+      },
+      {
+        label: i18n.translate('agentTraces.flyout.metadata.totalTokens', {
+          defaultMessage: 'TOTAL TOKENS',
+        }),
+        value: String(row?.totalTokens || '—'),
+      },
     ];
 
     return <div className="agentTracesFlyout__tabContent">{renderFieldGrid(metadataFields)}</div>;
@@ -489,28 +575,30 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
   const detailTabs = [
     {
       id: 'overview',
-      name: 'Overview',
+      name: i18n.translate('agentTraces.flyout.tabs.overview', { defaultMessage: 'Overview' }),
       content: renderOverviewTab(),
     },
     {
       id: 'logs',
-      name: 'Logs',
+      name: i18n.translate('agentTraces.flyout.tabs.logs', { defaultMessage: 'Logs' }),
       content: (
         <div className="agentTracesFlyout__tabContent">
           <EuiText size="s" color="subdued">
-            No logs available
+            {i18n.translate('agentTraces.flyout.noLogsAvailable', {
+              defaultMessage: 'No logs available',
+            })}
           </EuiText>
         </div>
       ),
     },
     {
       id: 'metadata',
-      name: 'Metadata',
+      name: i18n.translate('agentTraces.flyout.tabs.metadata', { defaultMessage: 'Metadata' }),
       content: renderMetadataTab(),
     },
     {
       id: 'raw-spans',
-      name: 'Raw Spans',
+      name: i18n.translate('agentTraces.flyout.tabs.rawSpans', { defaultMessage: 'Raw Spans' }),
       content: (
         <div className="agentTracesFlyout__tabContent">
           <EuiCodeBlock language="json" fontSize="s" paddingSize="m" isCopyable>
@@ -521,11 +609,13 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     },
     {
       id: 'timeline',
-      name: 'Timeline',
+      name: i18n.translate('agentTraces.flyout.tabs.timeline', { defaultMessage: 'Timeline' }),
       content: (
         <div className="agentTracesFlyout__tabContent">
           <EuiText size="s" color="subdued">
-            Timeline view coming soon...
+            {i18n.translate('agentTraces.flyout.timelineComingSoon', {
+              defaultMessage: 'Timeline view coming soon...',
+            })}
           </EuiText>
         </div>
       ),
@@ -550,7 +640,9 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiBadge color={trace.status === 'success' ? 'success' : 'danger'}>
-              {trace.status === 'success' ? 'SUCCESS' : 'ERROR'}
+              {trace.status === 'success'
+                ? i18n.translate('agentTraces.flyout.header.success', { defaultMessage: 'SUCCESS' })
+                : i18n.translate('agentTraces.flyout.header.error', { defaultMessage: 'ERROR' })}
             </EuiBadge>
           </EuiFlexItem>
         </EuiFlexGroup>
@@ -575,7 +667,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
         <EuiFlexGroup gutterSize="l" responsive={false} wrap>
           <EuiFlexItem grow={false}>
             <EuiText size="xs" color="subdued">
-              TRACE ID
+              {i18n.translate('agentTraces.flyout.header.traceId', { defaultMessage: 'TRACE ID' })}
             </EuiText>
             <EuiFlexGroup gutterSize="xs" alignItems="center" responsive={false}>
               <EuiFlexItem grow={false}>
@@ -593,7 +685,9 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
                         size="xs"
                         iconType="copy"
                         onClick={copy}
-                        aria-label="Copy trace ID"
+                        aria-label={i18n.translate('agentTraces.flyout.copyTraceId', {
+                          defaultMessage: 'Copy trace ID',
+                        })}
                       />
                     )}
                   </EuiCopy>
@@ -603,7 +697,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiText size="xs" color="subdued">
-              SESSION
+              {i18n.translate('agentTraces.flyout.header.session', { defaultMessage: 'SESSION' })}
             </EuiText>
             <EuiText size="s">
               <strong>—</strong>
@@ -611,7 +705,9 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiText size="xs" color="subdued">
-              DURATION
+              {i18n.translate('agentTraces.flyout.header.duration', {
+                defaultMessage: 'DURATION',
+              })}
             </EuiText>
             <EuiText size="s">
               <strong>{trace.latency || '—'}</strong>
@@ -619,7 +715,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiText size="xs" color="subdued">
-              SPANS
+              {i18n.translate('agentTraces.flyout.header.spans', { defaultMessage: 'SPANS' })}
             </EuiText>
             <EuiText size="s">
               <strong>{totalSpans}</strong>
@@ -627,7 +723,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiText size="xs" color="subdued">
-              TOKENS
+              {i18n.translate('agentTraces.flyout.header.tokens', { defaultMessage: 'TOKENS' })}
             </EuiText>
             <EuiText size="s">
               <strong>{totalTokens || '—'}</strong>
@@ -635,7 +731,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiText size="xs" color="subdued">
-              COST
+              {i18n.translate('agentTraces.flyout.header.cost', { defaultMessage: 'COST' })}
             </EuiText>
             <EuiText size="s">
               <strong>{trace.totalCost || '—'}</strong>
@@ -665,7 +761,9 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
                   tabs={[
                     {
                       id: 'trace-tree',
-                      name: 'Trace Tree',
+                      name: i18n.translate('agentTraces.flyout.traceTreeTab', {
+                        defaultMessage: 'Trace Tree',
+                      }),
                       content: (
                         <div
                           style={{
@@ -682,7 +780,9 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
                               <EuiLoadingSpinner size="l" />
                               <EuiSpacer size="s" />
                               <EuiText size="s" color="subdued">
-                                Loading full trace tree...
+                                {i18n.translate('agentTraces.flyout.loadingTraceTree', {
+                                  defaultMessage: 'Loading full trace tree...',
+                                })}
                               </EuiText>
                             </div>
                           ) : (
@@ -695,17 +795,26 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
                     },
                     {
                       id: 'agent-graph',
-                      name: 'Agent Graph',
+                      name: i18n.translate('agentTraces.flyout.agentGraphTab', {
+                        defaultMessage: 'Agent Graph',
+                      }),
                       content: (
                         <div style={{ padding: '16px', height: '100%' }}>
                           <EuiText size="s" color="subdued">
-                            Agent graph view coming soon...
+                            {i18n.translate('agentTraces.flyout.agentGraphComingSoon', {
+                              defaultMessage: 'Agent graph view coming soon...',
+                            })}
                           </EuiText>
                         </div>
                       ),
                     },
                   ]}
-                  initialSelectedTab={{ id: 'trace-tree', name: 'Trace Tree' }}
+                  initialSelectedTab={{
+                    id: 'trace-tree',
+                    name: i18n.translate('agentTraces.flyout.traceTreeTab', {
+                      defaultMessage: 'Trace Tree',
+                    }),
+                  }}
                   size="s"
                   style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
                 />

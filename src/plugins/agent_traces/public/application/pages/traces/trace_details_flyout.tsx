@@ -2,7 +2,7 @@
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  */
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import {
   EuiTitle,
   EuiText,
@@ -12,17 +12,16 @@ import {
   EuiHealth,
   EuiTabbedContent,
   EuiCodeBlock,
-  EuiPanel,
   EuiIcon,
   EuiBadge,
   EuiLoadingSpinner,
   EuiFlyout,
   EuiFlyoutHeader,
   EuiFlyoutBody,
-  EuiAccordion,
   EuiLink,
   EuiButtonIcon,
   EuiCopy,
+  EuiResizableContainer,
 } from '@elastic/eui';
 import { TraceRow } from './use_agent_traces';
 import { getKindColor } from './trace_utils';
@@ -151,75 +150,45 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     setExpandedNodes(allExpandable);
   }, [traceTreeData]);
 
-  // Resizable panel state
-  const [flyoutWidth, setFlyoutWidth] = useState(1400); // Wider default to show timestamp
-  const [leftPanelWidth, setLeftPanelWidth] = useState(700); // 50% of 1400px
-  const [isResizing, setIsResizing] = useState(false);
+  // Flyout edge resizer state
+  const [flyoutWidth, setFlyoutWidth] = useState(1400);
   const [isResizingFlyout, setIsResizingFlyout] = useState(false);
+  const resizingFlyoutRef = useRef(false);
 
-  // Update left panel width when flyout width changes to maintain 50/50 split
-  useEffect(() => {
-    if (!isResizing && !isResizingFlyout) {
-      setLeftPanelWidth(flyoutWidth / 2);
-    }
-  }, [flyoutWidth, isResizing, isResizingFlyout]);
-
-  // Handle mouse down on resizer
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleFlyoutMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    setIsResizing(true);
-  };
-
-  // Handle mouse down on flyout edge resizer
-  const handleFlyoutMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
+    resizingFlyoutRef.current = true;
     setIsResizingFlyout(true);
-  };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
 
-  // Handle mouse move for resizing
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isResizing) {
-        // Resize left panel
-        const flyoutElement = document.querySelector('.euiFlyout');
-        if (flyoutElement) {
-          const flyoutRect = flyoutElement.getBoundingClientRect();
-          const newWidth = e.clientX - flyoutRect.left;
-
-          // Constrain width between 200px and 600px
-          const constrainedWidth = Math.max(200, Math.min(600, newWidth));
-          setLeftPanelWidth(constrainedWidth);
-        }
-      } else if (isResizingFlyout) {
-        // Resize entire flyout
-        const newWidth = window.innerWidth - e.clientX;
-
-        // Constrain flyout width between 600px and 95vw
-        const maxWidth = window.innerWidth * 0.95;
-        const constrainedWidth = Math.max(600, Math.min(maxWidth, newWidth));
-        setFlyoutWidth(constrainedWidth);
-      }
+      if (!resizingFlyoutRef.current) return;
+      const newWidth = window.innerWidth - e.clientX;
+      const maxWidth = window.innerWidth * 0.95;
+      setFlyoutWidth(Math.max(600, Math.min(maxWidth, newWidth)));
     };
 
     const handleMouseUp = () => {
-      setIsResizing(false);
-      setIsResizingFlyout(false);
+      if (resizingFlyoutRef.current) {
+        resizingFlyoutRef.current = false;
+        setIsResizingFlyout(false);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
     };
 
-    if (isResizing || isResizingFlyout) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-    }
-
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
-  }, [isResizing, isResizingFlyout]);
+  }, []);
 
   const toggleExpanded = (nodeId: string) => {
     setExpandedNodes((prev) => {
@@ -746,98 +715,89 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
       </EuiFlyoutHeader>
 
       <EuiFlyoutBody>
-        {/* Two-column layout */}
-        <EuiFlexGroup gutterSize="none" responsive={false} style={{ height: '100%', minHeight: 0 }}>
-          {/* Left Column - Trace Tree (resizable width) */}
-          <EuiFlexItem
-            grow={false}
-            style={{
-              width: `${leftPanelWidth}px`,
-              borderRight: 'none',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-              minHeight: 0,
-            }}
-          >
-            <EuiTabbedContent
-              tabs={[
-                {
-                  id: 'trace-tree',
-                  name: 'Trace Tree',
-                  content: (
-                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                      <EuiSpacer size="s" />
-                      {isLoadingFullTree ? (
-                        <EuiPanel paddingSize="m" className="agentTracesFlyout__loadingPanel">
-                          <EuiLoadingSpinner size="l" />
+        <EuiResizableContainer
+          direction="horizontal"
+          className="agentTracesFlyout__resizableContainer"
+        >
+          {(EuiResizablePanel, EuiResizableButton) => (
+            <>
+              {/* Left Column - Trace Tree */}
+              <EuiResizablePanel
+                id="traceTree"
+                initialSize={50}
+                minSize="200px"
+                paddingSize="none"
+                style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+              >
+                <EuiTabbedContent
+                  tabs={[
+                    {
+                      id: 'trace-tree',
+                      name: 'Trace Tree',
+                      content: (
+                        <div
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            minHeight: 0,
+                          }}
+                        >
                           <EuiSpacer size="s" />
-                          <EuiText size="s" color="subdued">
-                            Loading full trace tree...
-                          </EuiText>
-                        </EuiPanel>
-                      ) : (
-                        <div className="agentTracesFlyout__treeContainer" style={{ flex: 1 }}>
-                          {createTreeItems(traceTreeData)}
+                          {isLoadingFullTree ? (
+                            <div className="agentTracesFlyout__loadingPanel">
+                              <EuiLoadingSpinner size="l" />
+                              <EuiSpacer size="s" />
+                              <EuiText size="s" color="subdued">
+                                Loading full trace tree...
+                              </EuiText>
+                            </div>
+                          ) : (
+                            <div className="agentTracesFlyout__treeContainer" style={{ flex: 1 }}>
+                              {createTreeItems(traceTreeData)}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  ),
-                },
-                {
-                  id: 'agent-graph',
-                  name: 'Agent Graph',
-                  content: (
-                    <div style={{ padding: '16px', height: '100%' }}>
-                      <EuiText size="s" color="subdued">
-                        Agent graph view coming soon...
-                      </EuiText>
-                    </div>
-                  ),
-                },
-              ]}
-              initialSelectedTab={{ id: 'trace-tree', name: 'Trace Tree' }}
-              size="s"
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
-            />
-          </EuiFlexItem>
+                      ),
+                    },
+                    {
+                      id: 'agent-graph',
+                      name: 'Agent Graph',
+                      content: (
+                        <div style={{ padding: '16px', height: '100%' }}>
+                          <EuiText size="s" color="subdued">
+                            Agent graph view coming soon...
+                          </EuiText>
+                        </div>
+                      ),
+                    },
+                  ]}
+                  initialSelectedTab={{ id: 'trace-tree', name: 'Trace Tree' }}
+                  size="s"
+                  style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+                />
+              </EuiResizablePanel>
 
-          {/* Resizer */}
-          <div
-            className="agentTracesFlyout__resizer"
-            onMouseDown={handleMouseDown}
-            style={{
-              width: '5px',
-              cursor: 'col-resize',
-              background: isResizing ? '#0066cc' : '#D3DAE6',
-              flexShrink: 0,
-              transition: isResizing ? 'none' : 'background 0.15s ease',
-            }}
-            onMouseEnter={(e) => {
-              if (!isResizing) {
-                e.currentTarget.style.background = '#0066cc';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isResizing) {
-                e.currentTarget.style.background = '#D3DAE6';
-              }
-            }}
-          />
+              <EuiResizableButton />
 
-          {/* Right Column - Detail Tabs */}
-          <EuiFlexItem
-            grow={true}
-            style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}
-          >
-            <EuiTabbedContent
-              tabs={detailTabs}
-              initialSelectedTab={detailTabs[0]}
-              size="s"
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
-            />
-          </EuiFlexItem>
-        </EuiFlexGroup>
+              {/* Right Column - Detail Tabs */}
+              <EuiResizablePanel
+                id="traceDetails"
+                initialSize={50}
+                minSize="200px"
+                paddingSize="none"
+                style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+              >
+                <EuiTabbedContent
+                  tabs={detailTabs}
+                  initialSelectedTab={detailTabs[0]}
+                  size="s"
+                  style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+                />
+              </EuiResizablePanel>
+            </>
+          )}
+        </EuiResizableContainer>
       </EuiFlyoutBody>
     </EuiFlyout>
   );

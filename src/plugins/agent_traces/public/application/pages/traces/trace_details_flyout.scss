@@ -133,19 +133,12 @@
     }
   }
 
-  &__resizer {
-    position: relative;
-
-    &:hover {
-      background: $ouiColorPrimary !important;
-    }
-
-    &:active {
-      background: $ouiColorPrimary !important;
-    }
-  }
-
   &__loadingPanel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
   }
 
@@ -177,6 +170,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
 
   .euiFlyoutBody__overflowContent {
     flex: 1;
@@ -189,95 +183,35 @@
 }
 
 // Remove top padding from tabbed content
-.agentTracesFlyout .euiTabbedContent {
+.agentTracesFlyout .euiTabs {
   padding-top: 0 !important;
-
-  .euiTabs {
-    padding-top: 0 !important;
-  }
 }
 
-// Ensure the two-column layout fills height properly
-.agentTracesFlyout .euiFlyoutBody__overflowContent > .euiFlexGroup {
+// Ensure the resizable container fills height properly
+.agentTracesFlyout .euiFlyoutBody__overflowContent > .euiResizableContainer {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
+}
 
-  // Left column (tree)
-  > .euiFlexItem:first-child {
+// Make resizable panels fill height with proper flex layout for tabbed content.
+// NOTE: EuiResizablePanel wraps content in .euiResizablePanel__content, and
+// EuiTabbedContent does NOT render a .euiTabbedContent class in this OUI version.
+// The actual hierarchy is:
+//   .euiResizablePanel → .euiResizablePanel__content → div (tabbed root) → [role="tabpanel"] → content
+.agentTracesFlyout .euiResizableContainer .euiResizablePanel__content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+
+  [role="tabpanel"] {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-
-    // EuiTabbedContent wrapper
-    > .euiTabbedContent {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      min-height: 0;
-
-      // Tab panels container
-      .euiTabbedContent__panel {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        min-height: 0;
-      }
-
-      // Tab content panel
-      [role="tabpanel"] {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        min-height: 0;
-
-        // Direct child wrapper
-        > div {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-          min-height: 0;
-        }
-      }
-    }
-  }
-
-  // Right column (details)
-  > .euiFlexItem:last-child {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     min-height: 0;
-
-    // EuiTabbedContent wrapper
-    > .euiTabbedContent {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      min-height: 0;
-
-      // Tab panels container
-      .euiTabbedContent__panel {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        min-height: 0;
-      }
-
-      // Tab content panel
-      [role="tabpanel"] {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        min-height: 0;
-      }
-    }
   }
 }
 

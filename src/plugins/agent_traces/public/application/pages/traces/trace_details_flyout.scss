@@ -8,7 +8,8 @@
 .agentTracesFlyout {
   // Make the tree container fill available height and scroll
   &__treeContainer {
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     padding: $ouiSizeS;
@@ -142,13 +143,9 @@
     text-align: center;
   }
 
-  // Make tab content fill available height and scroll
+  // Tab content styling — scrolling is handled by [role="tabpanel"]
   &__tabContent {
     padding: $ouiSize;
-    height: auto;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
   }
 
   &__field {
@@ -171,6 +168,15 @@
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+
+  // EUI inserts .euiFlyoutBody__overflow between body and content; propagate flex
+  .euiFlyoutBody__overflow {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
 
   .euiFlyoutBody__overflowContent {
     flex: 1;

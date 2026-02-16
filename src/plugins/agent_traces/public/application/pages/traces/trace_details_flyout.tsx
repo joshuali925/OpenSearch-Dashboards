@@ -447,7 +447,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
     ];
 
     return (
-      <div className="agentTracesFlyout__tabContent" style={{ height: 'auto', minHeight: 0 }}>
+      <div className="agentTracesFlyout__tabContent">
         {renderFieldGrid(overviewFields)}
 
         <EuiSpacer size="m" />
@@ -741,6 +741,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
                             display: 'flex',
                             flexDirection: 'column',
                             minHeight: 0,
+                            overflow: 'hidden',
                           }}
                         >
                           <EuiSpacer size="s" />

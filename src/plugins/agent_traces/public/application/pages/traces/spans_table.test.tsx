@@ -43,6 +43,23 @@ jest.mock('./flyout/trace_flyout_context', () => ({
   }),
 }));
 
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: ({ count, getItemKey }: any) => {
+    const items = Array.from({ length: count }, (_, i) => ({
+      index: i,
+      start: i * 32,
+      end: (i + 1) * 32,
+      size: 32,
+      key: getItemKey ? getItemKey(i) : String(i),
+    }));
+    return {
+      getVirtualItems: () => items,
+      getTotalSize: () => count * 32,
+      measureElement: () => {},
+    };
+  },
+}));
+
 const mockSpans = [
   {
     id: 'span-1',
@@ -65,8 +82,11 @@ const mockSpans = [
 const mockUseAgentSpans = jest.fn(() => ({
   spans: mockSpans,
   loading: false,
+  isFetchingMore: false,
+  hasMore: true,
   error: null,
   refresh: jest.fn(),
+  fetchMore: jest.fn(),
   expandSpan: jest.fn(),
   spanSpansCache: new Map(),
   spanLoadingState: new Map(),
@@ -92,8 +112,11 @@ describe('SpansTable', () => {
     mockUseAgentSpans.mockReturnValue({
       spans: mockSpans,
       loading: false,
+      isFetchingMore: false,
+      hasMore: true,
       error: null,
       refresh: jest.fn(),
+      fetchMore: jest.fn(),
       expandSpan: jest.fn(),
       spanSpansCache: new Map(),
       spanLoadingState: new Map(),
@@ -104,8 +127,11 @@ describe('SpansTable', () => {
     mockUseAgentSpans.mockReturnValue({
       spans: [],
       loading: true,
+      isFetchingMore: false,
+      hasMore: true,
       error: null,
       refresh: jest.fn(),
+      fetchMore: jest.fn(),
       expandSpan: jest.fn(),
       spanSpansCache: new Map(),
       spanLoadingState: new Map(),
@@ -118,8 +144,11 @@ describe('SpansTable', () => {
     mockUseAgentSpans.mockReturnValue({
       spans: [],
       loading: false,
+      isFetchingMore: false,
+      hasMore: true,
       error: 'Network error',
       refresh: jest.fn(),
+      fetchMore: jest.fn(),
       expandSpan: jest.fn(),
       spanSpansCache: new Map(),
       spanLoadingState: new Map(),
@@ -132,8 +161,11 @@ describe('SpansTable', () => {
     mockUseAgentSpans.mockReturnValue({
       spans: [],
       loading: false,
+      isFetchingMore: false,
+      hasMore: true,
       error: null,
       refresh: jest.fn(),
+      fetchMore: jest.fn(),
       expandSpan: jest.fn(),
       spanSpansCache: new Map(),
       spanLoadingState: new Map(),

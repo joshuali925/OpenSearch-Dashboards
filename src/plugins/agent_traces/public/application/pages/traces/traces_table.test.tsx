@@ -43,6 +43,23 @@ jest.mock('./flyout/trace_flyout_context', () => ({
   }),
 }));
 
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: ({ count, getItemKey }: any) => {
+    const items = Array.from({ length: count }, (_, i) => ({
+      index: i,
+      start: i * 32,
+      end: (i + 1) * 32,
+      size: 32,
+      key: getItemKey ? getItemKey(i) : String(i),
+    }));
+    return {
+      getVirtualItems: () => items,
+      getTotalSize: () => count * 32,
+      measureElement: () => {},
+    };
+  },
+}));
+
 const mockTraces = [
   {
     id: 'trace-1',
@@ -67,8 +84,11 @@ const mockTraces = [
 const mockUseAgentTraces = jest.fn(() => ({
   traces: mockTraces,
   loading: false,
+  isFetchingMore: false,
+  hasMore: true,
   error: null,
   refresh: jest.fn(),
+  fetchMore: jest.fn(),
   expandTrace: jest.fn(),
   traceSpansCache: new Map(),
   traceLoadingState: new Map(),
@@ -95,8 +115,11 @@ describe('TracesTable', () => {
     mockUseAgentTraces.mockReturnValue({
       traces: mockTraces,
       loading: false,
+      isFetchingMore: false,
+      hasMore: true,
       error: null,
       refresh: jest.fn(),
+      fetchMore: jest.fn(),
       expandTrace: jest.fn(),
       traceSpansCache: new Map(),
       traceLoadingState: new Map(),
@@ -107,8 +130,11 @@ describe('TracesTable', () => {
     mockUseAgentTraces.mockReturnValue({
       traces: [],
       loading: true,
+      isFetchingMore: false,
+      hasMore: true,
       error: null,
       refresh: jest.fn(),
+      fetchMore: jest.fn(),
       expandTrace: jest.fn(),
       traceSpansCache: new Map(),
       traceLoadingState: new Map(),
@@ -121,8 +147,11 @@ describe('TracesTable', () => {
     mockUseAgentTraces.mockReturnValue({
       traces: [],
       loading: false,
+      isFetchingMore: false,
+      hasMore: true,
       error: 'Something went wrong',
       refresh: jest.fn(),
+      fetchMore: jest.fn(),
       expandTrace: jest.fn(),
       traceSpansCache: new Map(),
       traceLoadingState: new Map(),
@@ -135,8 +164,11 @@ describe('TracesTable', () => {
     mockUseAgentTraces.mockReturnValue({
       traces: [],
       loading: false,
+      isFetchingMore: false,
+      hasMore: true,
       error: null,
       refresh: jest.fn(),
+      fetchMore: jest.fn(),
       expandTrace: jest.fn(),
       traceSpansCache: new Map(),
       traceLoadingState: new Map(),

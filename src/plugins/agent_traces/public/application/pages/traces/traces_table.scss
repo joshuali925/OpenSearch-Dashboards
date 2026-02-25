@@ -29,9 +29,34 @@
 }
 
 .agentTracesTable__container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   padding: $ouiSizeS;
+}
+
+.agentTracesTable__scrollContainer {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: $ouiColorEmptyShade;
+  }
 }
 
 .agentTracesTable__clickableRow {
   cursor: pointer;
+}
+
+.agentTracesTable__loadingMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $ouiSizeS;
+  padding: $ouiSizeM;
 }

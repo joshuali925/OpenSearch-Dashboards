@@ -26,8 +26,11 @@ export interface TraceLoadingState {
 export interface UseAgentTracesResult {
   traces: TraceRow[];
   loading: boolean;
+  isFetchingMore: boolean;
+  hasMore: boolean;
   error: string | null;
   refresh: () => void;
+  fetchMore: () => void;
   expandTrace: (traceId: string) => Promise<void>;
   traceSpansCache: Map<string, TraceRow[]>;
   traceLoadingState: Map<string, TraceLoadingState>;
@@ -101,10 +104,9 @@ export const getChildrenFromFullTree = (
   return node?.children;
 };
 
-export const useAgentTraces = (
-  pageIndex: number = 0,
-  pageSize: number = 50
-): UseAgentTracesResult => {
+const DEFAULT_PAGE_SIZE = 50;
+
+export const useAgentTraces = (): UseAgentTracesResult => {
   const { services, pplService, datasetParam, baseQueryString } = usePPLQueryDeps();
   const fetchVersion = useSelector((state: RootState) => state.queryEditor.fetchVersion);
   const isTabActive = useIsTabActive();
@@ -122,11 +124,29 @@ export const useAgentTraces = (
   const isTabActiveRef = useRef(isTabActive);
   const skippedFetchRef = useRef(false);
 
-  // Server-side paginated traces
+  // Infinite-scroll state
+  const [pageIndex, setPageIndex] = useState(0);
   const [traces, setTraces] = useState<TraceRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const fetchGenerationRef = useRef(0);
+
+  // Reset when query parameters change
+  const queryKey = `${baseQueryString}|${timeVersion}|${fetchVersion}|${refreshCounter}`;
+  const prevQueryKeyRef = useRef(queryKey);
+  useEffect(() => {
+    if (queryKey !== prevQueryKeyRef.current) {
+      prevQueryKeyRef.current = queryKey;
+      fetchGenerationRef.current += 1;
+      setPageIndex(0);
+      setTraces([]);
+      setHasMore(true);
+      setError(null);
+    }
+  }, [queryKey]);
 
   // Cache of fully-loaded trace span trees (keyed by traceId)
   const [traceSpansCache, setTraceSpansCache] = useState<Map<string, TraceRow[]>>(new Map());
@@ -144,8 +164,8 @@ export const useAgentTraces = (
     }
   }, [isTabActive]);
 
-  // Fetch paginated root traces via PPL.
-  // isTabActive is read via ref so tab switches alone don't re-trigger the fetch.
+  // Fetch traces for the current pageIndex via PPL.
+  // On page 0, replace traces. On page > 0, append to existing traces.
   useEffect(() => {
     if (!isTabActiveRef.current) {
       skippedFetchRef.current = true;
@@ -158,30 +178,46 @@ export const useAgentTraces = (
     }
 
     skippedFetchRef.current = false;
+    const generation = fetchGenerationRef.current;
     let cancelled = false;
+
     const fetchTraces = async () => {
-      setLoading(true);
+      if (pageIndex === 0) {
+        setLoading(true);
+      } else {
+        setIsFetchingMore(true);
+      }
       setError(null);
 
       try {
-        const offset = pageIndex * pageSize;
-        const pplQuery = `${baseQueryString} | where parentSpanId = "" AND isnotnull(\`attributes.gen_ai.operation.name\`) | sort - startTime | head ${pageSize} from ${offset}`;
+        const offset = pageIndex * DEFAULT_PAGE_SIZE;
+        const pplQuery = `${baseQueryString} | where parentSpanId = "" AND isnotnull(\`attributes.gen_ai.operation.name\`) | sort - startTime | head ${DEFAULT_PAGE_SIZE} from ${offset}`;
         const response = await pplService.executeQuery(datasetParam, pplQuery);
 
-        if (cancelled) return;
+        if (cancelled || generation !== fetchGenerationRef.current) return;
 
         const traceHits = transformPPLDataToTraceHits(response);
         const agentSpans = hitsToAgentSpans(traceHits);
         const rows = buildSpanTree(agentSpans, timezone);
-        setTraces(rows);
+
+        if (rows.length < DEFAULT_PAGE_SIZE) {
+          setHasMore(false);
+        }
+
+        if (pageIndex === 0) {
+          setTraces(rows);
+        } else {
+          setTraces((prev) => [...prev, ...rows]);
+        }
       } catch (err) {
-        if (cancelled) return;
+        if (cancelled || generation !== fetchGenerationRef.current) return;
         // eslint-disable-next-line no-console
-        console.error('Failed to fetch paginated traces:', err);
+        console.error('Failed to fetch traces:', err);
         setError((err as Error).message || 'Failed to fetch traces');
       } finally {
-        if (!cancelled) {
+        if (!cancelled && generation === fetchGenerationRef.current) {
           setLoading(false);
+          setIsFetchingMore(false);
         }
       }
     };
@@ -195,18 +231,28 @@ export const useAgentTraces = (
     datasetParam,
     baseQueryString,
     pageIndex,
-    pageSize,
     refreshCounter,
     timeVersion,
     timezone,
     fetchVersion,
   ]);
 
-  // Refresh by incrementing counter and clearing caches
+  // Fetch the next page of results
+  const fetchMore = useCallback(() => {
+    if (hasMore && !loading && !isFetchingMore) {
+      setPageIndex((prev) => prev + 1);
+    }
+  }, [hasMore, loading, isFetchingMore]);
+
+  // Refresh by resetting to page 0 and clearing caches
   const refresh = useCallback(() => {
     setTraceSpansCache(new Map());
     setTraceLoadingState(new Map());
     inFlightRef.current.clear();
+    fetchGenerationRef.current += 1;
+    setPageIndex(0);
+    setTraces([]);
+    setHasMore(true);
     setRefreshCounter((c) => c + 1);
   }, []);
 
@@ -269,8 +315,11 @@ export const useAgentTraces = (
   return {
     traces,
     loading,
+    isFetchingMore,
+    hasMore,
     error,
     refresh,
+    fetchMore,
     expandTrace,
     traceSpansCache,
     traceLoadingState,

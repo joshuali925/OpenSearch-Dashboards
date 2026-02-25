@@ -4,13 +4,15 @@
  */
 import React, { useMemo, useCallback, useEffect, useRef } from 'react';
 import {
-  EuiBasicTable,
-  EuiBasicTableColumn,
+  EuiTable,
+  EuiTableHeader,
+  EuiTableHeaderCell,
+  EuiTableRowCell,
   EuiText,
   EuiLink,
-  EuiFlexGroup,
-  EuiFlexItem,
+  EuiLoadingSpinner,
 } from '@elastic/eui';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { i18n } from '@osd/i18n';
 import { FormattedMessage } from '@osd/i18n/react';
 import './traces_table.scss';
@@ -21,39 +23,35 @@ import { useAgentSpans, SpanRow } from './hooks/use_agent_spans';
 import { useTraceMetricsContext } from './hooks/use_trace_metrics';
 import { getSpanCategory, getCategoryBadgeStyle } from '../../../services/span_categorization';
 import { CATEGORY_BADGE_CLASS } from './flyout/tree_helpers';
-import {
-  useTablePagination,
-  renderStatus,
-  TableLoadingState,
-  TableErrorState,
-  TableEmptyState,
-} from './table_shared';
+import { renderStatus, TableLoadingState, TableEmptyState } from './table_shared';
+
+interface ColumnDef {
+  field: string;
+  name: string;
+  width?: string;
+  textOnly?: boolean;
+  render: (item: SpanRow) => React.ReactNode;
+}
+
+const NUM_COLUMNS = 8;
 
 export const SpansTable = () => {
-  const { pageIndex, pageSize, pagination: basePagination, onTableChange } = useTablePagination(0);
-  const { spans, loading, error, refresh, expandSpan, spanSpansCache } = useAgentSpans(
-    pageIndex,
-    pageSize
-  );
+  const {
+    spans,
+    loading,
+    isFetchingMore,
+    hasMore,
+    error,
+    refresh,
+    fetchMore,
+    expandSpan,
+    spanSpansCache,
+  } = useAgentSpans();
   const { metrics } = useTraceMetricsContext();
-
-  const pagination = useMemo(
-    () => ({
-      ...basePagination,
-      totalItemCount: metrics?.totalSpans ?? spans.length,
-    }),
-    [basePagination, metrics?.totalSpans, spans.length]
-  );
-
-  // Reset to first page when current page is beyond available results
-  useEffect(() => {
-    if (!loading && spans.length === 0 && pageIndex > 0) {
-      // handled by useTablePagination query reset
-    }
-  }, [loading, spans.length, pageIndex]);
 
   const { openFlyout, updateFlyoutFullTree } = useTraceFlyout();
   const flyoutTraceIdRef = useRef<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Sync full tree from cache to flyout when cache updates
   useEffect(() => {
@@ -81,72 +79,95 @@ export const SpansTable = () => {
     [expandSpan, spanSpansCache, openFlyout, updateFlyoutFullTree]
   );
 
-  const columns: Array<EuiBasicTableColumn<SpanRow>> = [
-    {
-      field: 'startTime',
-      name: i18n.translate('agentTraces.spansTable.timeColumn', { defaultMessage: 'Time' }),
-      width: '200px',
-      render: (time: string) => <EuiLink color="primary">{time}</EuiLink>,
-    },
-    {
-      field: 'kind',
-      name: i18n.translate('agentTraces.spansTable.kindColumn', { defaultMessage: 'Kind' }),
-      render: (_kind: string, item: SpanRow) => {
-        const category = getSpanCategory(item);
-        const modifier = CATEGORY_BADGE_CLASS[category];
-        return (
-          <span
-            className={`agentTracesFlyout__kindBadge agentTracesFlyout__kindBadge--${modifier}`}
-            style={getCategoryBadgeStyle(category)}
-          >
-            {category}
-          </span>
-        );
+  const columns: ColumnDef[] = useMemo(
+    () => [
+      {
+        field: 'startTime',
+        name: i18n.translate('agentTraces.spansTable.timeColumn', { defaultMessage: 'Time' }),
+        width: '200px',
+        render: (item: SpanRow) => <EuiLink color="primary">{item.startTime}</EuiLink>,
       },
-    },
-    {
-      field: 'name',
-      name: i18n.translate('agentTraces.spansTable.nameColumn', { defaultMessage: 'Name' }),
-      render: (name: string) => <EuiText size="s">{name}</EuiText>,
-    },
-    {
-      field: 'status',
-      width: '100px',
-      name: i18n.translate('agentTraces.spansTable.statusColumn', { defaultMessage: 'Status' }),
-      render: renderStatus,
-    },
-    {
-      field: 'latency',
-      width: '100px',
-      name: i18n.translate('agentTraces.spansTable.latencyColumn', { defaultMessage: 'Latency' }),
-      render: (latency: string) => <EuiText size="s">{latency}</EuiText>,
-    },
-    {
-      field: 'totalTokens',
-      name: i18n.translate('agentTraces.spansTable.tokensColumn', { defaultMessage: 'Tokens' }),
-      render: (tokens: number | string) => <EuiText size="s">{tokens}</EuiText>,
-    },
-    {
-      field: 'input',
-      name: i18n.translate('agentTraces.spansTable.inputColumn', { defaultMessage: 'Input' }),
-      width: '175px',
-      render: (input: string) => (
-        <EuiText size="s" className="agentTracesTable__truncatedText">
-          {input}
-        </EuiText>
-      ),
-    },
-    {
-      field: 'output',
-      name: i18n.translate('agentTraces.spansTable.outputColumn', { defaultMessage: 'Output' }),
-      width: '175px',
-      render: (output: string) => (
-        <EuiText size="s" className="agentTracesTable__truncatedText">
-          {output}
-        </EuiText>
-      ),
-    },
-  ];
+      {
+        field: 'kind',
+        name: i18n.translate('agentTraces.spansTable.kindColumn', { defaultMessage: 'Kind' }),
+        render: (item: SpanRow) => {
+          const category = getSpanCategory(item);
+          const modifier = CATEGORY_BADGE_CLASS[category];
+          return (
+            <span
+              className={`agentTracesFlyout__kindBadge agentTracesFlyout__kindBadge--${modifier}`}
+              style={getCategoryBadgeStyle(category)}
+            >
+              {category}
+            </span>
+          );
+        },
+      },
+      {
+        field: 'name',
+        name: i18n.translate('agentTraces.spansTable.nameColumn', { defaultMessage: 'Name' }),
+        render: (item: SpanRow) => <EuiText size="s">{item.name}</EuiText>,
+      },
+      {
+        field: 'status',
+        width: '100px',
+        name: i18n.translate('agentTraces.spansTable.statusColumn', { defaultMessage: 'Status' }),
+        render: (item: SpanRow) => renderStatus(item.status),
+      },
+      {
+        field: 'latency',
+        width: '100px',
+        name: i18n.translate('agentTraces.spansTable.latencyColumn', {
+          defaultMessage: 'Latency',
+        }),
+        render: (item: SpanRow) => <EuiText size="s">{item.latency}</EuiText>,
+      },
+      {
+        field: 'totalTokens',
+        name: i18n.translate('agentTraces.spansTable.tokensColumn', { defaultMessage: 'Tokens' }),
+        render: (item: SpanRow) => <EuiText size="s">{item.totalTokens}</EuiText>,
+      },
+      {
+        field: 'input',
+        name: i18n.translate('agentTraces.spansTable.inputColumn', { defaultMessage: 'Input' }),
+        width: '175px',
+        render: (item: SpanRow) => (
+          <EuiText size="s" className="agentTracesTable__truncatedText">
+            {item.input}
+          </EuiText>
+        ),
+      },
+      {
+        field: 'output',
+        name: i18n.translate('agentTraces.spansTable.outputColumn', { defaultMessage: 'Output' }),
+        width: '175px',
+        render: (item: SpanRow) => (
+          <EuiText size="s" className="agentTracesTable__truncatedText">
+            {item.output}
+          </EuiText>
+        ),
+      },
+    ],
+    []
+  );
+
+  const virtualizer = useVirtualizer({
+    count: spans.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => 32,
+    overscan: 10,
+    getItemKey: (index) => spans[index]?.id ?? String(index),
+  });
+
+  // Prefetch next page when scrolling near the bottom
+  const virtualItems = virtualizer.getVirtualItems();
+  const lastItemIndex = virtualItems[virtualItems.length - 1]?.index;
+  useEffect(() => {
+    if (lastItemIndex == null) return;
+    if (lastItemIndex >= spans.length - 10) {
+      fetchMore();
+    }
+  }, [lastItemIndex, spans.length, fetchMore]);
 
   if (loading && spans.length === 0) {
     return (
@@ -184,30 +205,83 @@ export const SpansTable = () => {
   }
 
   return (
-    <>
-      <div className="agentTracesTable__container">
-        <EuiText size="s" color="subdued">
-          <FormattedMessage
-            id="agentTraces.spansTable.showingCount"
-            defaultMessage="Showing {count} spans"
-            values={{ count: metrics?.totalSpans ?? spans.length }}
-          />
-        </EuiText>
-        <EuiBasicTable
-          items={spans}
-          columns={columns}
-          tableLayout="auto"
-          hasActions={false}
-          compressed
-          loading={loading}
-          pagination={pagination}
-          onChange={onTableChange}
-          rowProps={(item: SpanRow) => ({
-            onClick: () => handleRowClick(item),
-            className: 'agentTracesTable__clickableRow',
-          })}
+    <div className="agentTracesTable__container">
+      <EuiText size="s" color="subdued">
+        <FormattedMessage
+          id="agentTraces.spansTable.showingCount"
+          defaultMessage="Showing {count} spans"
+          values={{ count: metrics?.totalSpans ?? spans.length }}
         />
+      </EuiText>
+      <div ref={scrollContainerRef} className="agentTracesTable__scrollContainer">
+        <EuiTable compressed tableLayout="fixed">
+          <EuiTableHeader>
+            {columns.map((col) => (
+              <EuiTableHeaderCell key={col.field} width={col.width}>
+                {col.name}
+              </EuiTableHeaderCell>
+            ))}
+          </EuiTableHeader>
+          <tbody>
+            {virtualItems.length > 0 && (
+              <tr>
+                <td colSpan={NUM_COLUMNS} style={{ height: virtualItems[0].start, padding: 0 }} />
+              </tr>
+            )}
+            {virtualItems.map((vRow) => {
+              const item = spans[vRow.index];
+              return (
+                <tr
+                  key={vRow.key}
+                  ref={virtualizer.measureElement}
+                  data-index={vRow.index}
+                  className="euiTableRow euiTableRow-isClickable agentTracesTable__clickableRow euiTableRow--isCompressed"
+                  onClick={() => handleRowClick(item)}
+                >
+                  {columns.map((col) => (
+                    <EuiTableRowCell key={col.field} width={col.width} textOnly={col.textOnly}>
+                      {col.render(item)}
+                    </EuiTableRowCell>
+                  ))}
+                </tr>
+              );
+            })}
+            {virtualItems.length > 0 && (
+              <tr>
+                <td
+                  colSpan={NUM_COLUMNS}
+                  style={{
+                    height:
+                      virtualizer.getTotalSize() - (virtualItems[virtualItems.length - 1].end || 0),
+                    padding: 0,
+                  }}
+                />
+              </tr>
+            )}
+          </tbody>
+        </EuiTable>
+        {isFetchingMore && (
+          <div className="agentTracesTable__loadingMore">
+            <EuiLoadingSpinner size="m" />
+            <EuiText size="xs" color="subdued">
+              <FormattedMessage
+                id="agentTraces.spansTable.loadingMore"
+                defaultMessage="Loading more spans..."
+              />
+            </EuiText>
+          </div>
+        )}
+        {!hasMore && spans.length > 0 && (
+          <div className="agentTracesTable__loadingMore">
+            <EuiText size="xs" color="subdued">
+              <FormattedMessage
+                id="agentTraces.spansTable.allLoaded"
+                defaultMessage="All spans loaded"
+              />
+            </EuiText>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };

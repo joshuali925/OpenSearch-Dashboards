@@ -17,18 +17,11 @@
 .agentTracesFlow__container {
   height: 100%;
   position: relative;
-}
 
-.agentTracesFlow__controls {
-  position: absolute;
-  top: $ouiSizeM;
-  right: $ouiSizeM;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: $ouiSizeXS;
-}
-
-.agentTracesFlow__controlButton {
-  padding: $ouiSizeXXS;
+  // Map EUI theme colors to CelestialMap node-kind CSS custom properties
+  // so agent card borders and badges match the trace tree label colors.
+  --osd-color-type-agent: #{$ouiColorPrimary};
+  --osd-color-type-llm: #{$ouiColorAccent};
+  --osd-color-type-tool: #{$ouiColorWarning};
+  --osd-color-type-other: #{$ouiColorMediumShade};
 }

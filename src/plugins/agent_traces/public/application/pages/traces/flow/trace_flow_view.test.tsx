@@ -18,21 +18,9 @@ jest.mock('@osd/i18n/react', () => ({
   FormattedMessage: ({ defaultMessage }: { defaultMessage: string }) => <>{defaultMessage}</>,
 }));
 
-jest.mock('@osd/ui-shared-deps/theme', () => ({
-  euiThemeVars: {
-    euiColorLightShade: '#D3DAE6',
-    euiColorLightestShade: '#f5f7fa',
-    euiColorEmptyShade: '#fff',
-  },
-}));
-
-jest.mock('@xyflow/react', () => ({
-  ReactFlow: ({ children }: any) => <div data-test-subj="mock-reactflow">{children}</div>,
-  Background: () => <div data-test-subj="mock-background" />,
-  MiniMap: () => <div data-test-subj="mock-minimap" />,
-  useNodesState: jest.fn(() => [[], jest.fn(), jest.fn()]),
-  useEdgesState: jest.fn(() => [[], jest.fn(), jest.fn()]),
-  BackgroundVariant: { Dots: 'dots' },
+jest.mock('@osd/apm-topology', () => ({
+  CelestialMap: ({ children }: any) => <div data-test-subj="mock-celestial-map">{children}</div>,
+  AgentCardNode: () => <div data-test-subj="mock-agent-card-node" />,
 }));
 
 jest.mock('../../../../services/span_categorization', () => ({
@@ -42,10 +30,6 @@ jest.mock('../../../../services/span_categorization', () => ({
 
 jest.mock('../../../../services/flow_transform', () => ({
   spansToFlow: jest.fn(() => ({ nodes: [], edges: [] })),
-}));
-
-jest.mock('./node_types', () => ({
-  nodeTypes: {},
 }));
 
 const mockTrace: TraceRow = {
@@ -83,20 +67,14 @@ describe('TraceFlowView', () => {
     expect(screen.getByText('No spans to display')).toBeInTheDocument();
   });
 
-  it('renders ReactFlow when spans exist', () => {
-    render(<TraceFlowView {...defaultProps} />);
-    expect(screen.getByTestId('mock-reactflow')).toBeInTheDocument();
+  it('renders error state', () => {
+    render(<TraceFlowView {...defaultProps} loadError="Connection failed" />);
+    expect(screen.getByText('Failed to load trace graph')).toBeInTheDocument();
+    expect(screen.getByText('Connection failed')).toBeInTheDocument();
   });
 
-  it('renders zoom controls', () => {
+  it('renders CelestialMap when spans exist', () => {
     render(<TraceFlowView {...defaultProps} />);
-    expect(screen.getByLabelText('Zoom in')).toBeInTheDocument();
-    expect(screen.getByLabelText('Zoom out')).toBeInTheDocument();
-    expect(screen.getByLabelText('Fit view')).toBeInTheDocument();
-  });
-
-  it('renders minimap toggle', () => {
-    render(<TraceFlowView {...defaultProps} />);
-    expect(screen.getByLabelText('Hide minimap')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-celestial-map')).toBeInTheDocument();
   });
 });

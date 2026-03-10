@@ -113,9 +113,16 @@ export const SpansDataTable: React.FC = () => {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Retain previous results while a new query loads (e.g. sort change)
+  const prevHitsRef = useRef<Array<OpenSearchSearchHit<Record<string, any>>>>([]);
   const hits: Array<OpenSearchSearchHit<Record<string, any>>> = useMemo(() => {
-    return results?.hits?.hits || [];
-  }, [results]);
+    const newHits = results?.hits?.hits || [];
+    if (newHits.length > 0) {
+      prevHitsRef.current = newHits;
+      return newHits;
+    }
+    return isQueryLoading ? prevHitsRef.current : newHits;
+  }, [results, isQueryLoading]);
 
   // Build row metadata map from hits (flat, no tree expansion)
   const rowMetaMap = useMemo(() => {
@@ -258,6 +265,15 @@ export const SpansDataTable: React.FC = () => {
       <div className="agentTracesTable__container">
         <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" gutterSize="m">
           <EuiFlexItem grow={false}>
+            <EuiText size="s" color="subdued">
+              <FormattedMessage
+                id="agentTraces.spansDataTable.showingCount"
+                defaultMessage="Showing {count} spans"
+                values={{ count: hits.length }}
+              />
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
             <EuiSwitch
               label={i18n.translate('agentTraces.spansDataTable.wrapCellText', {
                 defaultMessage: 'Wrap cell text',
@@ -267,15 +283,6 @@ export const SpansDataTable: React.FC = () => {
               data-test-subj="agentTracesWrapCellTextSwitch"
               compressed
             />
-          </EuiFlexItem>
-          <EuiFlexItem grow={false}>
-            <EuiText size="s" color="subdued">
-              <FormattedMessage
-                id="agentTraces.spansDataTable.showingCount"
-                defaultMessage="Showing {count} spans"
-                values={{ count: hits.length }}
-              />
-            </EuiText>
           </EuiFlexItem>
         </EuiFlexGroup>
         <DataTable

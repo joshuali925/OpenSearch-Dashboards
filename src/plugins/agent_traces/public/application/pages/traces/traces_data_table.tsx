@@ -113,10 +113,17 @@ export const TracesDataTable: React.FC = () => {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Extract hits from tab results
+  // Extract hits from tab results, retaining previous results while a new query loads
+  const prevHitsRef = useRef<Array<OpenSearchSearchHit<Record<string, any>>>>([]);
   const hits: Array<OpenSearchSearchHit<Record<string, any>>> = useMemo(() => {
-    return results?.hits?.hits || [];
-  }, [results]);
+    const newHits = results?.hits?.hits || [];
+    if (newHits.length > 0) {
+      prevHitsRef.current = newHits;
+      return newHits;
+    }
+    // While loading, keep showing previous results
+    return isQueryLoading ? prevHitsRef.current : newHits;
+  }, [results, isQueryLoading]);
 
   // Build row metadata map from hits
   const rowMetaMap = useMemo(() => {
@@ -456,6 +463,15 @@ export const TracesDataTable: React.FC = () => {
       <div className="agentTracesTable__container">
         <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" gutterSize="m">
           <EuiFlexItem grow={false}>
+            <EuiText size="s" color="subdued">
+              <FormattedMessage
+                id="agentTraces.tracesDataTable.showingCount"
+                defaultMessage="Showing {count} traces"
+                values={{ count: hits.length }}
+              />
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
             <EuiSwitch
               label={i18n.translate('agentTraces.tracesDataTable.wrapCellText', {
                 defaultMessage: 'Wrap cell text',
@@ -465,15 +481,6 @@ export const TracesDataTable: React.FC = () => {
               data-test-subj="agentTracesWrapCellTextSwitch"
               compressed
             />
-          </EuiFlexItem>
-          <EuiFlexItem grow={false}>
-            <EuiText size="s" color="subdued">
-              <FormattedMessage
-                id="agentTraces.tracesDataTable.showingCount"
-                defaultMessage="Showing {count} traces"
-                values={{ count: hits.length }}
-              />
-            </EuiText>
           </EuiFlexItem>
         </EuiFlexGroup>
         <DataTable

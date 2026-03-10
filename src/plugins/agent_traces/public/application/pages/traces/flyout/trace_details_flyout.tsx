@@ -19,10 +19,12 @@ import {
   EuiButtonIcon,
   EuiCopy,
   EuiResizableContainer,
+  EuiBadge,
 } from '@elastic/eui';
 import { TraceRow } from '../hooks/use_agent_traces';
 import { TraceFlowView } from '../flow/trace_flow_view';
 import { parseLatencyMs } from '../trace_details/utils/span_timerange_utils';
+import { getSpanCategory, getCategoryMeta } from '../../../../services/span_categorization';
 import {
   TreeNode,
   buildTreeFromTraceRow,
@@ -193,8 +195,24 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
         <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>
           <EuiFlexItem grow={false}>
             <EuiTitle size="m">
-              <h2 id="trace-details-flyout">{rootTrace.name || '—'}</h2>
+              <h2 id="trace-details-flyout">
+                {i18n.translate('agentTraces.flyout.traceTitle', {
+                  defaultMessage: 'Trace: {name}',
+                  values: { name: rootTrace.name || '—' },
+                })}
+              </h2>
             </EuiTitle>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            {(() => {
+              const category = getSpanCategory(rootTrace);
+              const meta = getCategoryMeta(category);
+              return (
+                <EuiBadge className="agentTraces__categoryBadge" color={meta.color}>
+                  {meta.label}
+                </EuiBadge>
+              );
+            })()}
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiHealth color={rootTrace.status === 'success' ? 'success' : 'danger'}>

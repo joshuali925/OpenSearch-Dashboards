@@ -10,7 +10,18 @@ import { TraceRow } from '../hooks/use_agent_traces';
 
 jest.mock('@osd/i18n', () => ({
   i18n: {
-    translate: (_key: string, opts: { defaultMessage: string }) => opts.defaultMessage,
+    translate: (
+      _key: string,
+      opts: { defaultMessage: string; values?: Record<string, string> }
+    ) => {
+      let msg = opts.defaultMessage;
+      if (opts.values) {
+        Object.entries(opts.values).forEach(([k, v]) => {
+          msg = msg.replace(`{${k}}`, String(v));
+        });
+      }
+      return msg;
+    },
   },
 }));
 
@@ -66,7 +77,7 @@ const defaultProps: TraceDetailsProps = {
 describe('TraceDetailsFlyout', () => {
   it('renders trace name in header', () => {
     render(<TraceDetailsFlyout {...defaultProps} />);
-    expect(screen.getByText('Test Agent Trace')).toBeInTheDocument();
+    expect(screen.getByText('Trace: Test Agent Trace')).toBeInTheDocument();
   });
 
   it('renders Success status for success status', () => {
@@ -117,7 +128,7 @@ describe('TraceDetailsFlyout', () => {
 
     render(<TraceDetailsFlyout {...defaultProps} trace={childTrace} fullTree={[rootTrace]} />);
 
-    expect(screen.getByText('Test Agent Trace')).toBeInTheDocument();
+    expect(screen.getByText('Trace: Test Agent Trace')).toBeInTheDocument();
     expect(screen.getByText('Success')).toBeInTheDocument();
     expect(screen.queryByText('invoke_agent')).not.toBeInTheDocument();
   });

@@ -77,9 +77,15 @@ export function groupFields(
   // https://github.com/opensearch-project/OpenSearch-Dashboards/blob/d7004dc5b0392477fdd54ac66b29d231975a173b/src/plugins/data/common/index_patterns/fields/field_list.ts
   const fieldsArray = Array.from(fields);
 
+  const GEN_AI_PREFIX = 'attributes.gen_ai.';
   const compareFn = (a: DataViewField, b: DataViewField) => {
     if (!a.displayName) {
       return 0;
+    }
+    const aIsGenAi = a.name.startsWith(GEN_AI_PREFIX);
+    const bIsGenAi = b.name.startsWith(GEN_AI_PREFIX);
+    if (aIsGenAi !== bIsGenAi) {
+      return aIsGenAi ? -1 : 1;
     }
     return a.displayName.localeCompare(b.displayName || '');
   };

@@ -16,7 +16,7 @@ import {
 } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import { SPAN_ID_FIELD_PATHS, TRACE_ID_FIELD_PATHS } from '../../../../utils/trace_field_constants';
-import { OpenSearchSearchHit } from '../../../../types/doc_views_types';
+import { DocViewFilterFn, OpenSearchSearchHit } from '../../../../types/doc_views_types';
 import { DataView as Dataset } from '../../../../../../data/common';
 import './trace_utils.scss';
 import { validateRequiredTraceFields } from '../../../../utils/trace_field_validation';
@@ -301,12 +301,101 @@ const AgentTracesTextCell: React.FC<{ value: string | number }> = ({ value }) =>
   <EuiText size="s">{value}</EuiText>
 );
 
+/** Time cell that shows the formatted startTime from the TraceRow as a clickable link. */
+export const AgentTracesTimeCell: React.FC<{ hitId: string }> = ({ hitId }) => {
+  const ctx = useTraceExpansion();
+  if (!ctx) return null;
+
+  const meta = ctx.getRowMeta(hitId);
+  if (!meta) return null;
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    ctx.onRowClick?.(hitId);
+  };
+
+  return (
+    <td className="agentTracesDocTableCell eui-textNoWrap">
+      <span
+        className="agentTracesDocTableCell__dataField"
+        data-test-subj="osdDocTableCellDataField"
+      >
+        <EuiLink color="primary" onClick={handleClick} data-test-subj="agentTracesTimeLink">
+          {meta.traceRow.startTime}
+        </EuiLink>
+      </span>
+    </td>
+  );
+};
+
+/** Map virtual column names to actual source field names for filtering. */
+const VIRTUAL_COL_SOURCE_FIELD: Record<string, string> = {
+  kind: 'kind',
+  status: 'status.code',
+  latency: 'durationInNanos',
+  totalTokens: 'attributes.gen_ai.usage.total_tokens',
+  input: 'attributes.gen_ai.input.messages',
+  output: 'attributes.gen_ai.output.messages',
+};
+
+const VirtualCellFilterButtons: React.FC<{
+  colName: string;
+  fieldMapping: unknown;
+  onFilter?: DocViewFilterFn;
+}> = ({ colName, fieldMapping, onFilter }) => {
+  if (!onFilter) return null;
+  const sourceField = VIRTUAL_COL_SOURCE_FIELD[colName] || colName;
+  return (
+    <span className="agentTracesDocTableCell__filter" data-test-subj="osdDocTableCellFilter">
+      <EuiToolTip
+        content={i18n.translate('agentTraces.filterForValue', {
+          defaultMessage: 'Filter for value',
+        })}
+      >
+        <EuiButtonIcon
+          size="xs"
+          onClick={() => onFilter(sourceField, fieldMapping, '+')}
+          iconType="magnifyWithPlus"
+          aria-label={i18n.translate('agentTraces.filterForValue', {
+            defaultMessage: 'Filter for value',
+          })}
+          data-test-subj="filterForValue"
+          className="agentTracesDocTableCell__filterButton"
+        />
+      </EuiToolTip>
+      <EuiToolTip
+        content={i18n.translate('agentTraces.filterOutValue', {
+          defaultMessage: 'Filter out value',
+        })}
+      >
+        <EuiButtonIcon
+          size="xs"
+          onClick={() => onFilter(sourceField, fieldMapping, '-')}
+          iconType="magnifyWithMinus"
+          aria-label={i18n.translate('agentTraces.filterOutValue', {
+            defaultMessage: 'Filter out value',
+          })}
+          data-test-subj="filterOutValue"
+          className="agentTracesDocTableCell__filterButton"
+        />
+      </EuiToolTip>
+    </span>
+  );
+};
+
 interface AgentTracesVirtualCellProps {
   colName: string;
   row: OpenSearchSearchHit<Record<string, unknown>>;
+  onFilter?: DocViewFilterFn;
+  fieldMapping?: unknown;
 }
 
-export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({ colName, row }) => {
+export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
+  colName,
+  row,
+  onFilter,
+  fieldMapping,
+}) => {
   const ctx = useTraceExpansion();
   const hitId = getHitId(row);
   const meta = ctx?.getRowMeta(hitId);
@@ -342,12 +431,19 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({ 
 
   return (
     <td className="agentTracesDocTableCell">
-      <span
-        className="agentTracesDocTableCell__dataField"
-        data-test-subj="osdDocTableCellDataField"
-      >
-        {content}
-      </span>
+      <div className="agentTracesDocTableCell__content">
+        <span
+          className="agentTracesDocTableCell__dataField"
+          data-test-subj="osdDocTableCellDataField"
+        >
+          {content}
+        </span>
+        <VirtualCellFilterButtons
+          colName={colName}
+          fieldMapping={fieldMapping}
+          onFilter={onFilter}
+        />
+      </div>
     </td>
   );
 };

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo, useCallback, useEffect } from 'react';
+import React, { useMemo, useCallback, useEffect, useRef } from 'react';
 import { EuiText } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -23,7 +23,8 @@ import {
 } from '../../../../common';
 import { UI_SETTINGS } from '../../../../../data/public';
 import { getDocViewsRegistry } from '../../legacy/discover/opensearch_dashboards_services';
-import { OpenSearchSearchHit } from '../../../types/doc_views_types';
+import { DocViewFilterFn, OpenSearchSearchHit } from '../../../types/doc_views_types';
+import { useChangeQueryEditor } from '../../hooks';
 import { TraceExpansionProvider, RowMeta } from './trace_expansion_context';
 import { traceHitToAgentSpan, unflattenSource } from './hooks/span_transforms';
 import { BaseRow, LoadingState, spanToRow, formatTimestamp } from './hooks/tree_utils';
@@ -31,6 +32,11 @@ import { TraceHit } from './trace_details/traces/ppl_to_trace_hits';
 import { TableLoadingState, TableEmptyState } from './table_shared';
 import { selectIsLoading } from '../../utils/state_management/selectors/query_editor/query_editor';
 import { getHitId } from '../../../components/data_table/table_cell/trace_utils/trace_utils';
+import { useTraceFlyout } from './flyout/trace_flyout_context';
+import { TraceRow } from './hooks/use_agent_traces';
+import { usePPLQueryDeps } from './hooks/use_ppl_query_deps';
+import { transformPPLDataToTraceHits } from './trace_details/traces/ppl_to_trace_hits';
+import { hitsToAgentSpans, buildFullSpanTree } from './hooks/tree_utils';
 import './traces_table.scss';
 
 const DEFAULT_SPAN_COLUMNS = [...AGENT_TRACES_DEFAULT_COLUMNS];
@@ -58,6 +64,11 @@ export const SpansDataTable: React.FC = () => {
   const { dataset } = useDatasetContext();
   const { results } = useTabResults();
   const isQueryLoading = useSelector(selectIsLoading);
+
+  const { openFlyout, updateFlyoutFullTree } = useTraceFlyout();
+  const { pplService, datasetParam } = usePPLQueryDeps();
+  const flyoutTraceIdRef = useRef<string | null>(null);
+  const spansCacheRef = useRef<Map<string, TraceRow[]>>(new Map());
 
   const docViewsRegistry = useMemo(() => getDocViewsRegistry(), []);
   const sampleSize = uiSettings.get(SAMPLE_SIZE_SETTING);
@@ -109,6 +120,42 @@ export const SpansDataTable: React.FC = () => {
     [rowMetaMap]
   );
 
+  // Open flyout for a span row
+  const handleRowClick = useCallback(
+    async (hitId: string) => {
+      const meta = getRowMeta(hitId);
+      if (!meta) return;
+      const traceRow = meta.traceRow as TraceRow;
+      flyoutTraceIdRef.current = traceRow.traceId;
+      openFlyout(traceRow);
+
+      const cached = spansCacheRef.current.get(traceRow.traceId);
+      if (cached) {
+        updateFlyoutFullTree(cached, false);
+        return;
+      }
+
+      // Fetch the full trace tree for the flyout
+      if (pplService && datasetParam) {
+        try {
+          const response = await pplService.fetchTraceSpans({
+            traceId: traceRow.traceId,
+            dataset: datasetParam,
+            limit: 1000,
+          });
+          const traceHits = transformPPLDataToTraceHits(response);
+          const agentSpans = hitsToAgentSpans(traceHits);
+          const fullTree = buildFullSpanTree(agentSpans, formatTs) as TraceRow[];
+          spansCacheRef.current.set(traceRow.traceId, fullTree);
+          updateFlyoutFullTree(fullTree, false);
+        } catch (err) {
+          updateFlyoutFullTree(undefined, false, (err as Error).message);
+        }
+      }
+    },
+    [getRowMeta, openFlyout, updateFlyoutFullTree, pplService, datasetParam, formatTs]
+  );
+
   // No tree expansion for spans — provide a no-op context
   const expansionContextValue = useMemo(
     () => ({
@@ -116,8 +163,9 @@ export const SpansDataTable: React.FC = () => {
       toggleExpansion: () => {},
       traceLoadingState: new Map<string, LoadingState>(),
       getRowMeta,
+      onRowClick: handleRowClick,
     }),
-    [getRowMeta]
+    [getRowMeta, handleRowClick]
   );
 
   const displayedColumns = useMemo(() => {
@@ -148,7 +196,7 @@ export const SpansDataTable: React.FC = () => {
     [columns, dispatch]
   );
 
-  const onFilter = useCallback(() => {}, []);
+  const { onAddFilter } = useChangeQueryEditor();
 
   if (isQueryLoading && hits.length === 0) {
     return (
@@ -206,7 +254,7 @@ export const SpansDataTable: React.FC = () => {
           docViewsRegistry={docViewsRegistry}
           onRemoveColumn={onRemoveColumn}
           onAddColumn={onAddColumn}
-          onFilter={onFilter}
+          onFilter={onAddFilter as DocViewFilterFn}
         />
       </div>
     </TraceExpansionProvider>

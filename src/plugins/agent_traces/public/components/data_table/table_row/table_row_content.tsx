@@ -23,6 +23,8 @@ import {
   isAgentTracesVirtualColumn,
   isOnAgentTracesPage,
   AgentTracesVirtualCell,
+  AgentTracesTimeCell,
+  getHitId,
 } from '../table_cell/trace_utils/trace_utils';
 
 export interface TableRowContentProps {
@@ -35,15 +37,20 @@ export interface TableRowContentProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   isOnTracesPage: boolean;
+  wrapCellText?: boolean;
 }
 
 // Helper functions
-const getCellClassName = (timeFieldName?: string, colName?: string): string => {
+const getCellClassName = (
+  timeFieldName?: string,
+  colName?: string,
+  wrapCellText?: boolean
+): string => {
   const baseClass = 'agentTracesDocTableCell';
   if (timeFieldName === colName) {
     return `${baseClass} eui-textNoWrap`;
   }
-  return `${baseClass} eui-textTruncate`;
+  return wrapCellText ? baseClass : `${baseClass} eui-textTruncate`;
 };
 
 const shouldShowEmptyCell = (row: any, formattedValue: any): boolean => {
@@ -68,6 +75,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
   isExpanded,
   onToggleExpand,
   isOnTracesPage,
+  wrapCellText,
 }) => {
   const [isRowSelected, setIsRowSelected] = useState(false);
 
@@ -97,9 +105,22 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
         </td>
       )}
       {columns.map((colName) => {
+        // Agent traces: custom time cell with formatted timestamp and clickable link
+        if (isOnAgentTracesPage() && dataset.timeFieldName === colName) {
+          return <AgentTracesTimeCell key={colName} hitId={getHitId(row)} />;
+        }
+
         // Agent traces virtual columns: bypass dataset formatField
         if (isAgentTracesVirtualColumn(colName) && isOnAgentTracesPage()) {
-          return <AgentTracesVirtualCell key={colName} colName={colName} row={row} />;
+          return (
+            <AgentTracesVirtualCell
+              key={colName}
+              colName={colName}
+              row={row}
+              onFilter={onFilter}
+              fieldMapping={flattened[colName]}
+            />
+          );
         }
 
         const fieldInfo = dataset.fields.getByName(colName);
@@ -128,7 +149,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
 
         const sanitizedCellValue = dompurify.sanitize(formattedValue);
 
-        if (fieldInfo?.filterable === false) {
+        if (fieldInfo?.filterable === false && !isOnAgentTracesPage()) {
           return (
             <NonFilterableTableCell
               colName={colName}

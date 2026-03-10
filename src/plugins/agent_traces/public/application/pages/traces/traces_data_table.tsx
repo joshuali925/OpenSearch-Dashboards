@@ -23,7 +23,8 @@ import {
 } from '../../../../common';
 import { UI_SETTINGS } from '../../../../../data/public';
 import { getDocViewsRegistry } from '../../legacy/discover/opensearch_dashboards_services';
-import { OpenSearchSearchHit } from '../../../types/doc_views_types';
+import { DocViewFilterFn, OpenSearchSearchHit } from '../../../types/doc_views_types';
+import { useChangeQueryEditor } from '../../hooks';
 import { TraceExpansionProvider, RowMeta } from './trace_expansion_context';
 import { useTraceFlyout } from './flyout/trace_flyout_context';
 import { traceHitToAgentSpan, unflattenSource } from './hooks/span_transforms';
@@ -79,7 +80,7 @@ export const TracesDataTable: React.FC = () => {
   const isQueryLoading = useSelector(selectIsLoading);
 
   const { pplService, datasetParam } = usePPLQueryDeps();
-  const { updateFlyoutFullTree } = useTraceFlyout();
+  const { openFlyout, updateFlyoutFullTree } = useTraceFlyout();
 
   const docViewsRegistry = useMemo(() => getDocViewsRegistry(), []);
   const sampleSize = uiSettings.get(SAMPLE_SIZE_SETTING);
@@ -356,8 +357,27 @@ export const TracesDataTable: React.FC = () => {
     [columns, dispatch]
   );
 
-  // No-op filter for agent traces page (virtual columns are not filterable)
-  const onFilter = useCallback(() => {}, []);
+  // Open flyout for a row by its hit ID
+  const handleRowClick = useCallback(
+    async (hitId: string) => {
+      const meta = getRowMeta(hitId);
+      if (!meta) return;
+      const traceRow = meta.traceRow as TraceRow;
+      flyoutTraceIdRef.current = traceRow.traceId;
+      openFlyout(traceRow);
+
+      const cached = traceSpansCacheRef.current.get(traceRow.traceId);
+      if (cached) {
+        updateFlyoutFullTree(cached as TraceRow[], false);
+        return;
+      }
+
+      await expandTrace(traceRow.traceId);
+    },
+    [getRowMeta, openFlyout, updateFlyoutFullTree, expandTrace]
+  );
+
+  const { onAddFilter } = useChangeQueryEditor();
 
   const expansionContextValue = useMemo(
     () => ({
@@ -365,8 +385,9 @@ export const TracesDataTable: React.FC = () => {
       toggleExpansion,
       traceLoadingState,
       getRowMeta,
+      onRowClick: handleRowClick,
     }),
-    [expandedRows, toggleExpansion, traceLoadingState, getRowMeta]
+    [expandedRows, toggleExpansion, traceLoadingState, getRowMeta, handleRowClick]
   );
 
   // Loading state
@@ -426,7 +447,7 @@ export const TracesDataTable: React.FC = () => {
           docViewsRegistry={docViewsRegistry}
           onRemoveColumn={onRemoveColumn}
           onAddColumn={onAddColumn}
-          onFilter={onFilter}
+          onFilter={onAddFilter as DocViewFilterFn}
         />
       </div>
     </TraceExpansionProvider>

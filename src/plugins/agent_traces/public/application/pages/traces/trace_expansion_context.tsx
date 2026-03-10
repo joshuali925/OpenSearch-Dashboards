@@ -17,6 +17,8 @@ export interface TraceExpansionState {
   toggleExpansion: (e: React.MouseEvent, id: string, traceId: string) => void;
   traceLoadingState: Map<string, LoadingState>;
   getRowMeta: (hitId: string) => RowMeta | null;
+  onRowClick?: (hitId: string) => void;
+  wrapCellText?: boolean;
 }
 
 const TraceExpansionContext = createContext<TraceExpansionState | null>(null);

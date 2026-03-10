@@ -12,7 +12,7 @@ import {
   EuiFlexItem,
   EuiTabbedContent,
   EuiIcon,
-  EuiBadge,
+  EuiHealth,
   EuiFlyout,
   EuiFlyoutHeader,
   EuiFlyoutBody,
@@ -197,15 +197,15 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
             </EuiTitle>
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
-            <EuiBadge color={rootTrace.status === 'success' ? 'success' : 'danger'}>
+            <EuiHealth color={rootTrace.status === 'success' ? 'success' : 'danger'}>
               {rootTrace.status === 'success'
                 ? i18n.translate('agentTraces.flyout.statusSuccess', {
-                    defaultMessage: 'SUCCESS',
+                    defaultMessage: 'Success',
                   })
                 : i18n.translate('agentTraces.flyout.statusError', {
-                    defaultMessage: 'ERROR',
+                    defaultMessage: 'Error',
                   })}
-            </EuiBadge>
+            </EuiHealth>
           </EuiFlexItem>
         </EuiFlexGroup>
 

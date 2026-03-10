@@ -4,8 +4,9 @@
  */
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { EuiText } from '@elastic/eui';
+import { EuiText, EuiSwitch, EuiFlexGroup, EuiFlexItem, EuiToolTip } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
+import { i18n } from '@osd/i18n';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment-timezone';
 import { DataTable } from '../../../components/data_table/data_table';
@@ -127,6 +128,9 @@ export const TracesDataTable: React.FC = () => {
     });
     return map;
   }, [hits, formatTs]);
+
+  // Wrap cell text toggle
+  const [wrapCellText, setWrapCellText] = useState(false);
 
   // Tree expansion state
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -386,8 +390,9 @@ export const TracesDataTable: React.FC = () => {
       traceLoadingState,
       getRowMeta,
       onRowClick: handleRowClick,
+      wrapCellText,
     }),
-    [expandedRows, toggleExpansion, traceLoadingState, getRowMeta, handleRowClick]
+    [expandedRows, toggleExpansion, traceLoadingState, getRowMeta, handleRowClick, wrapCellText]
   );
 
   // Loading state
@@ -429,13 +434,34 @@ export const TracesDataTable: React.FC = () => {
   return (
     <TraceExpansionProvider value={expansionContextValue}>
       <div className="agentTracesTable__container">
-        <EuiText size="s" color="subdued">
-          <FormattedMessage
-            id="agentTraces.tracesDataTable.showingCount"
-            defaultMessage="Showing {count} traces"
-            values={{ count: hits.length }}
-          />
-        </EuiText>
+        <EuiFlexGroup alignItems="center" gutterSize="m">
+          <EuiFlexItem grow={false}>
+            <EuiText size="s" color="subdued">
+              <FormattedMessage
+                id="agentTraces.tracesDataTable.showingCount"
+                defaultMessage="Showing {count} traces"
+                values={{ count: hits.length }}
+              />
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiToolTip
+              content={i18n.translate('agentTraces.tracesDataTable.wrapCellTextTooltip', {
+                defaultMessage: 'Toggle between truncated and wrapped cell text in the table',
+              })}
+            >
+              <EuiSwitch
+                label={i18n.translate('agentTraces.tracesDataTable.wrapCellText', {
+                  defaultMessage: 'Wrap cell text',
+                })}
+                checked={wrapCellText}
+                onChange={(e) => setWrapCellText(e.target.checked)}
+                data-test-subj="agentTracesWrapCellTextSwitch"
+                compressed
+              />
+            </EuiToolTip>
+          </EuiFlexItem>
+        </EuiFlexGroup>
         <DataTable
           columns={displayedColumns}
           rows={visibleRows}
@@ -448,6 +474,7 @@ export const TracesDataTable: React.FC = () => {
           onRemoveColumn={onRemoveColumn}
           onAddColumn={onAddColumn}
           onFilter={onAddFilter as DocViewFilterFn}
+          wrapCellText={wrapCellText}
         />
       </div>
     </TraceExpansionProvider>

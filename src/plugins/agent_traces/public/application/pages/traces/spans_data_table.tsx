@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo, useCallback, useEffect, useRef } from 'react';
-import { EuiText } from '@elastic/eui';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { EuiText, EuiSwitch, EuiFlexGroup, EuiFlexItem, EuiToolTip } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
+import { i18n } from '@osd/i18n';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment-timezone';
 import { DataTable } from '../../../components/data_table/data_table';
@@ -64,6 +65,9 @@ export const SpansDataTable: React.FC = () => {
   const { dataset } = useDatasetContext();
   const { results } = useTabResults();
   const isQueryLoading = useSelector(selectIsLoading);
+
+  // Wrap cell text toggle
+  const [wrapCellText, setWrapCellText] = useState(false);
 
   const { openFlyout, updateFlyoutFullTree } = useTraceFlyout();
   const { pplService, datasetParam } = usePPLQueryDeps();
@@ -164,8 +168,9 @@ export const SpansDataTable: React.FC = () => {
       traceLoadingState: new Map<string, LoadingState>(),
       getRowMeta,
       onRowClick: handleRowClick,
+      wrapCellText,
     }),
-    [getRowMeta, handleRowClick]
+    [getRowMeta, handleRowClick, wrapCellText]
   );
 
   const displayedColumns = useMemo(() => {
@@ -236,13 +241,34 @@ export const SpansDataTable: React.FC = () => {
   return (
     <TraceExpansionProvider value={expansionContextValue}>
       <div className="agentTracesTable__container">
-        <EuiText size="s" color="subdued">
-          <FormattedMessage
-            id="agentTraces.spansDataTable.showingCount"
-            defaultMessage="Showing {count} spans"
-            values={{ count: hits.length }}
-          />
-        </EuiText>
+        <EuiFlexGroup alignItems="center" gutterSize="m">
+          <EuiFlexItem grow={false}>
+            <EuiText size="s" color="subdued">
+              <FormattedMessage
+                id="agentTraces.spansDataTable.showingCount"
+                defaultMessage="Showing {count} spans"
+                values={{ count: hits.length }}
+              />
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiToolTip
+              content={i18n.translate('agentTraces.spansDataTable.wrapCellTextTooltip', {
+                defaultMessage: 'Toggle between truncated and wrapped cell text in the table',
+              })}
+            >
+              <EuiSwitch
+                label={i18n.translate('agentTraces.spansDataTable.wrapCellText', {
+                  defaultMessage: 'Wrap cell text',
+                })}
+                checked={wrapCellText}
+                onChange={(e) => setWrapCellText(e.target.checked)}
+                data-test-subj="agentTracesWrapCellTextSwitch"
+                compressed
+              />
+            </EuiToolTip>
+          </EuiFlexItem>
+        </EuiFlexGroup>
         <DataTable
           columns={displayedColumns}
           rows={hits}
@@ -255,6 +281,7 @@ export const SpansDataTable: React.FC = () => {
           onRemoveColumn={onRemoveColumn}
           onAddColumn={onAddColumn}
           onFilter={onAddFilter as DocViewFilterFn}
+          wrapCellText={wrapCellText}
         />
       </div>
     </TraceExpansionProvider>

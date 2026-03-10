@@ -301,6 +301,28 @@ const AgentTracesTextCell: React.FC<{ value: string | number }> = ({ value }) =>
   <EuiText size="s">{value}</EuiText>
 );
 
+const AgentTracesTokensCell: React.FC<{
+  total: number | string;
+  inputTokens: number | null;
+  outputTokens: number | null;
+}> = ({ total, inputTokens, outputTokens }) => {
+  const tooltipContent = (
+    <div>
+      <div>Tokens: {total}</div>
+      <hr
+        style={{ margin: '4px 0', border: 'none', borderTop: '1px solid rgba(255,255,255,0.3)' }}
+      />
+      <div>Input tokens: {inputTokens ?? '—'}</div>
+      <div>Output tokens: {outputTokens ?? '—'}</div>
+    </div>
+  );
+  return (
+    <EuiToolTip content={tooltipContent} position="top">
+      <EuiText size="s">{total}</EuiText>
+    </EuiToolTip>
+  );
+};
+
 /** Time cell that shows the formatted startTime from the TraceRow as a clickable link. */
 export const AgentTracesTimeCell: React.FC<{ hitId: string }> = ({ hitId }) => {
   const ctx = useTraceExpansion();
@@ -329,8 +351,8 @@ export const AgentTracesTimeCell: React.FC<{ hitId: string }> = ({ hitId }) => {
 };
 
 /** Map virtual column names to actual source field names for filtering. */
-const VIRTUAL_COL_SOURCE_FIELD: Record<string, string> = {
-  kind: 'kind',
+export const VIRTUAL_COL_SOURCE_FIELD: Record<string, string> = {
+  kind: 'attributes.gen_ai.operation.name',
   status: 'status.code',
   latency: 'durationInNanos',
   totalTokens: 'attributes.gen_ai.usage.total_tokens',
@@ -417,7 +439,13 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
       content = <AgentTracesTextCell value={traceRow.latency} />;
       break;
     case 'totalTokens':
-      content = <AgentTracesTextCell value={traceRow.totalTokens} />;
+      content = (
+        <AgentTracesTokensCell
+          total={traceRow.totalTokens}
+          inputTokens={traceRow.inputTokens}
+          outputTokens={traceRow.outputTokens}
+        />
+      );
       break;
     case 'input':
       content = <AgentTracesTruncatedCell value={traceRow.input} />;

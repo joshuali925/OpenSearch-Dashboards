@@ -25,6 +25,7 @@ import {
   AgentTracesVirtualCell,
   AgentTracesTimeCell,
   getHitId,
+  VIRTUAL_COL_SOURCE_FIELD,
 } from '../table_cell/trace_utils/trace_utils';
 
 export interface TableRowContentProps {
@@ -118,7 +119,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
               colName={colName}
               row={row}
               onFilter={onFilter}
-              fieldMapping={flattened[colName]}
+              fieldMapping={flattened[VIRTUAL_COL_SOURCE_FIELD[colName] || colName]}
             />
           );
         }
@@ -127,7 +128,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
         const fieldMapping = flattened[colName];
 
         if (shouldShowEmptyCell(row, null)) {
-          return <EmptyTableCell colName={colName} />;
+          return <EmptyTableCell colName={colName} wrapCellText={wrapCellText} />;
         }
 
         if (fieldInfo?.type === '_source') {
@@ -137,6 +138,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
               dataset={dataset}
               row={row}
               isShortDots={isShortDots}
+              wrapCellText={wrapCellText}
             />
           );
         }
@@ -144,7 +146,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
         const formattedValue = formatFieldValue(dataset, row, colName);
 
         if (shouldShowEmptyCell(row, formattedValue)) {
-          return <EmptyTableCell colName={colName} />;
+          return <EmptyTableCell colName={colName} wrapCellText={wrapCellText} />;
         }
 
         const sanitizedCellValue = dompurify.sanitize(formattedValue);
@@ -153,7 +155,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
           return (
             <NonFilterableTableCell
               colName={colName}
-              className={getCellClassName(dataset.timeFieldName, colName)}
+              className={getCellClassName(dataset.timeFieldName, colName, wrapCellText)}
               sanitizedCellValue={sanitizedCellValue}
               isTimeField={dataset.timeFieldName === colName}
               index={index}
@@ -175,6 +177,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
             rowData={row}
             isOnTracesPage={isOnTracesPage}
             setIsRowSelected={setIsRowSelected}
+            wrapCellText={wrapCellText}
           />
         );
       })}

@@ -149,13 +149,15 @@
       max-width: 400px;
     }
 
-    // Cell content truncation: handle nested structure
+    // Cell content layout
     td .agentTracesDocTableCell__content {
       display: flex;
       align-items: center;
       min-width: 0;
+    }
 
-      // Data field content: truncate with ellipsis
+    // Default: truncate cell text with ellipsis
+    &:not(.agentTraces-table--wrap) td .agentTracesDocTableCell__content {
       > span:first-child,
       .agentTracesDocTableCell__dataField {
         flex: 0 1 auto;
@@ -164,6 +166,12 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+    }
+
+    // Wrap mode: allow cell text to wrap and break words
+    // stylelint-disable-next-line @osd/stylelint/no_modifying_global_selectors
+    &.agentTraces-table--wrap td:not(.eui-textNoWrap) {
+      word-break: break-word;
     }
 
     // Allow expand/collapse column to be narrow

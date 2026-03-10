@@ -2,6 +2,8 @@
  * 1. Stack content vertically so the table can scroll when its constrained by a fixed container height.
  */
 .agentTraces-table-container {
+  overflow-x: auto;
+
   doc-table {
     @include euiScrollBar;
 

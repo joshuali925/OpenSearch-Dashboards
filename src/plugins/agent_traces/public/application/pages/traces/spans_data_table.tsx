@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { EuiText, EuiSwitch, EuiFlexGroup, EuiFlexItem, EuiToolTip } from '@elastic/eui';
+import { EuiText, EuiSwitch, EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
 import { i18n } from '@osd/i18n';
 import { useSelector, useDispatch } from 'react-redux';
@@ -14,9 +14,11 @@ import { useTabResults } from '../../utils/hooks/use_tab_results';
 import { useDatasetContext } from '../../context/dataset_context/dataset_context';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
 import { AgentTracesServices } from '../../../types';
-import { selectColumns } from '../../utils/state_management/selectors';
-import { setColumns } from '../../utils/state_management/slices/legacy/legacy_slice';
+import { selectColumns, selectSort } from '../../utils/state_management/selectors';
+import { setColumns, setSort } from '../../utils/state_management/slices/legacy/legacy_slice';
 import { getLegacyDisplayedColumns } from '../../../helpers/data_table_helper';
+import { SortOrder } from '../../../types/saved_agent_traces_types';
+import { executeQueries } from '../../utils/state_management/actions/query_actions';
 import {
   DOC_HIDE_TIME_COLUMN_SETTING,
   SAMPLE_SIZE_SETTING,
@@ -66,6 +68,17 @@ export const SpansDataTable: React.FC = () => {
   const { dataset } = useDatasetContext();
   const { results } = useTabResults();
   const isQueryLoading = useSelector(selectIsLoading);
+
+  // Sort state from Redux — sort changes trigger a backend PPL query re-execution
+  const sortOrder = useSelector(selectSort);
+
+  const handleSortChange = useCallback(
+    (newSort: SortOrder[]) => {
+      dispatch(setSort(newSort));
+      dispatch(executeQueries({ services }) as any);
+    },
+    [dispatch, services]
+  );
 
   // Wrap cell text toggle
   const [wrapCellText, setWrapCellText] = useState(false);
@@ -243,7 +256,18 @@ export const SpansDataTable: React.FC = () => {
   return (
     <TraceExpansionProvider value={expansionContextValue}>
       <div className="agentTracesTable__container">
-        <EuiFlexGroup alignItems="center" gutterSize="m">
+        <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" gutterSize="m">
+          <EuiFlexItem grow={false}>
+            <EuiSwitch
+              label={i18n.translate('agentTraces.spansDataTable.wrapCellText', {
+                defaultMessage: 'Wrap cell text',
+              })}
+              checked={wrapCellText}
+              onChange={(e) => setWrapCellText(e.target.checked)}
+              data-test-subj="agentTracesWrapCellTextSwitch"
+              compressed
+            />
+          </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiText size="s" color="subdued">
               <FormattedMessage
@@ -252,23 +276,6 @@ export const SpansDataTable: React.FC = () => {
                 values={{ count: hits.length }}
               />
             </EuiText>
-          </EuiFlexItem>
-          <EuiFlexItem grow={false}>
-            <EuiToolTip
-              content={i18n.translate('agentTraces.spansDataTable.wrapCellTextTooltip', {
-                defaultMessage: 'Toggle between truncated and wrapped cell text in the table',
-              })}
-            >
-              <EuiSwitch
-                label={i18n.translate('agentTraces.spansDataTable.wrapCellText', {
-                  defaultMessage: 'Wrap cell text',
-                })}
-                checked={wrapCellText}
-                onChange={(e) => setWrapCellText(e.target.checked)}
-                data-test-subj="agentTracesWrapCellTextSwitch"
-                compressed
-              />
-            </EuiToolTip>
           </EuiFlexItem>
         </EuiFlexGroup>
         <DataTable
@@ -284,6 +291,8 @@ export const SpansDataTable: React.FC = () => {
           onAddColumn={onAddColumn}
           onFilter={onAddFilter as DocViewFilterFn}
           wrapCellText={wrapCellText}
+          sortOrder={sortOrder}
+          onChangeSortOrder={handleSortChange}
         />
       </div>
     </TraceExpansionProvider>

@@ -13,7 +13,6 @@ describe('table_shared', () => {
       expect(PPL_SORT_FIELDS.startTime).toBe('startTime');
       expect(PPL_SORT_FIELDS.kind).toBe('`attributes.gen_ai.operation.name`');
       expect(PPL_SORT_FIELDS.latency).toBe('durationInNanos');
-      expect(PPL_SORT_FIELDS.totalTokens).toBe('`attributes.gen_ai.usage.output_tokens`');
       expect(PPL_SORT_FIELDS.name).toBe('name');
       expect(PPL_SORT_FIELDS.status).toBe('`status.code`');
     });
@@ -30,12 +29,6 @@ describe('table_shared', () => {
 
     it('maps latency field to durationInNanos', () => {
       expect(buildPplSortClause('latency', 'desc')).toBe('| sort - durationInNanos');
-    });
-
-    it('maps totalTokens to output_tokens field', () => {
-      expect(buildPplSortClause('totalTokens', 'asc')).toBe(
-        '| sort `attributes.gen_ai.usage.output_tokens`'
-      );
     });
 
     it('maps kind field to gen_ai.operation.name', () => {

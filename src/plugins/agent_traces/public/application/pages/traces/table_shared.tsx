@@ -12,7 +12,6 @@ export const PPL_SORT_FIELDS: Record<string, string> = {
   startTime: 'startTime',
   kind: '`attributes.gen_ai.operation.name`',
   latency: 'durationInNanos',
-  totalTokens: '`attributes.gen_ai.usage.output_tokens`',
   name: 'name',
   status: '`status.code`',
 };

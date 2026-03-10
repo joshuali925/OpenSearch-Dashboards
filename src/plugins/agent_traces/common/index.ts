@@ -46,13 +46,7 @@ export const AGENT_TRACES_COLUMN_DISPLAY_NAMES: Record<string, string> = {
 };
 
 /** Virtual columns that support sorting in the DataTable. */
-export const AGENT_TRACES_SORTABLE_COLUMNS = new Set<string>([
-  'kind',
-  'name',
-  'status',
-  'latency',
-  'totalTokens',
-]);
+export const AGENT_TRACES_SORTABLE_COLUMNS = new Set<string>(['kind', 'name', 'status', 'latency']);
 
 /** Map from virtual column key to the underlying source field(s) used for details/filtering. */
 export const AGENT_TRACES_VIRTUAL_COLUMN_SOURCE_FIELDS: Record<string, string> = {

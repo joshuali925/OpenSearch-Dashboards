@@ -368,9 +368,13 @@ const VirtualCellFilterButtons: React.FC<{
   colName: string;
   fieldMapping: unknown;
   onFilter?: DocViewFilterFn;
-}> = ({ colName, fieldMapping, onFilter }) => {
+  invertOperations?: boolean;
+}> = ({ colName, fieldMapping, onFilter, invertOperations }) => {
   if (!onFilter) return null;
   const sourceField = VIRTUAL_COL_SOURCE_FIELD[colName] || colName;
+  // When invertOperations is true, "filter for" uses '-' (negate) and "filter out" uses '+'
+  const filterForOp = invertOperations ? '-' : '+';
+  const filterOutOp = invertOperations ? '+' : '-';
   return (
     <span className="agentTracesDocTableCell__filter" data-test-subj="osdDocTableCellFilter">
       <EuiToolTip
@@ -380,7 +384,7 @@ const VirtualCellFilterButtons: React.FC<{
       >
         <EuiButtonIcon
           size="xs"
-          onClick={() => onFilter(sourceField, fieldMapping, '+')}
+          onClick={() => onFilter(sourceField, fieldMapping, filterForOp)}
           iconType="magnifyWithPlus"
           aria-label={i18n.translate('agentTraces.filterForValue', {
             defaultMessage: 'Filter for value',
@@ -396,7 +400,7 @@ const VirtualCellFilterButtons: React.FC<{
       >
         <EuiButtonIcon
           size="xs"
-          onClick={() => onFilter(sourceField, fieldMapping, '-')}
+          onClick={() => onFilter(sourceField, fieldMapping, filterOutOp)}
           iconType="magnifyWithMinus"
           aria-label={i18n.translate('agentTraces.filterOutValue', {
             defaultMessage: 'Filter out value',
@@ -461,11 +465,19 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
       content = null;
   }
 
-  // Resolve filter value: for Kind, use all operation names for the category
+  // Resolve filter value and operations per column
   let filterValue: unknown = fieldMapping;
+  let invertOperations = false;
+
   if (colName === 'kind') {
+    // Kind: use all operation names for the category (OR filter)
     const category = getSpanCategory(traceRow);
     filterValue = getOperationNamesForCategory(category);
+  } else if (colName === 'status') {
+    // Status: always filter on error code 2.
+    // For success rows, invert operations so "filter for" produces != 2
+    filterValue = 2;
+    invertOperations = traceRow.status === 'success';
   }
 
   // No filter buttons for totalTokens (composite value)
@@ -485,6 +497,7 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
             colName={colName}
             fieldMapping={filterValue}
             onFilter={onFilter}
+            invertOperations={invertOperations}
           />
         )}
       </div>

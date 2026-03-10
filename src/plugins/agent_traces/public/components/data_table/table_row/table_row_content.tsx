@@ -108,15 +108,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
       {columns.map((colName) => {
         // Agent traces: custom time cell with formatted timestamp and clickable link
         if (isOnAgentTracesPage() && dataset.timeFieldName === colName) {
-          return (
-            <AgentTracesTimeCell
-              key={colName}
-              hitId={getHitId(row)}
-              onFilter={onFilter}
-              fieldMapping={flattened[colName]}
-              colName={colName}
-            />
-          );
+          return <AgentTracesTimeCell key={colName} hitId={getHitId(row)} />;
         }
 
         // Agent traces virtual columns: bypass dataset formatField

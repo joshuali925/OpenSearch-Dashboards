@@ -362,10 +362,7 @@ const AgentTracesTokensCell: React.FC<{
 /** Time cell that shows the formatted startTime from the TraceRow as a clickable link. */
 export const AgentTracesTimeCell: React.FC<{
   hitId: string;
-  onFilter?: DocViewFilterFn;
-  fieldMapping?: unknown;
-  colName?: string;
-}> = ({ hitId, onFilter, fieldMapping, colName }) => {
+}> = ({ hitId }) => {
   const ctx = useTraceExpansion();
   if (!ctx) return null;
 
@@ -387,42 +384,6 @@ export const AgentTracesTimeCell: React.FC<{
           {meta.traceRow.startTime}
         </EuiLink>
       </span>
-      {onFilter && colName && (
-        <span className="agentTracesDocTableCell__filter" data-test-subj="osdDocTableCellFilter">
-          <EuiToolTip
-            content={i18n.translate('agentTraces.filterForValue', {
-              defaultMessage: 'Filter for value',
-            })}
-          >
-            <EuiButtonIcon
-              size="xs"
-              onClick={() => onFilter(colName, fieldMapping, '+')}
-              iconType="magnifyWithPlus"
-              aria-label={i18n.translate('agentTraces.filterForValue', {
-                defaultMessage: 'Filter for value',
-              })}
-              data-test-subj="filterForValue"
-              className="agentTracesDocTableCell__filterButton"
-            />
-          </EuiToolTip>
-          <EuiToolTip
-            content={i18n.translate('agentTraces.filterOutValue', {
-              defaultMessage: 'Filter out value',
-            })}
-          >
-            <EuiButtonIcon
-              size="xs"
-              onClick={() => onFilter(colName, fieldMapping, '-')}
-              iconType="magnifyWithMinus"
-              aria-label={i18n.translate('agentTraces.filterOutValue', {
-                defaultMessage: 'Filter out value',
-              })}
-              data-test-subj="filterOutValue"
-              className="agentTracesDocTableCell__filterButton"
-            />
-          </EuiToolTip>
-        </span>
-      )}
     </td>
   );
 };

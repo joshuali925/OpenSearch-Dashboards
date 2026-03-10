@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { TraceMetricsBar } from './trace_metrics_bar';
 import { TraceMetrics } from './hooks/use_trace_metrics';
 
@@ -104,5 +104,25 @@ describe('TraceMetricsBar', () => {
     const metrics = { ...mockMetrics, totalTraces: 15000 };
     render(<TraceMetricsBar metrics={metrics} loading={false} />);
     expect(screen.getByText('15K')).toBeInTheDocument();
+  });
+
+  it('calls onErrorClick with traces when trace error link is clicked', () => {
+    const onErrorClick = jest.fn();
+    render(<TraceMetricsBar metrics={mockMetrics} loading={false} onErrorClick={onErrorClick} />);
+    fireEvent.click(screen.getByTestId('agentTracesMetricsErrorTracesLink'));
+    expect(onErrorClick).toHaveBeenCalledWith('traces');
+  });
+
+  it('calls onErrorClick with spans when span error link is clicked', () => {
+    const onErrorClick = jest.fn();
+    render(<TraceMetricsBar metrics={mockMetrics} loading={false} onErrorClick={onErrorClick} />);
+    fireEvent.click(screen.getByTestId('agentTracesMetricsErrorSpansLink'));
+    expect(onErrorClick).toHaveBeenCalledWith('spans');
+  });
+
+  it('renders error counts as links', () => {
+    render(<TraceMetricsBar metrics={mockMetrics} loading={false} />);
+    expect(screen.getByTestId('agentTracesMetricsErrorTracesLink')).toBeInTheDocument();
+    expect(screen.getByTestId('agentTracesMetricsErrorSpansLink')).toBeInTheDocument();
   });
 });

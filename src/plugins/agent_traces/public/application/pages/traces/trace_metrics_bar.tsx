@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { EuiFlexGroup, EuiFlexItem, EuiStat, EuiText, EuiTextColor } from '@elastic/eui';
+import { EuiFlexGroup, EuiFlexItem, EuiLink, EuiStat, EuiText, EuiTextColor } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import { TraceMetrics } from './hooks/use_trace_metrics';
 import { formatDuration } from './hooks/span_transforms';
@@ -13,6 +13,7 @@ import './trace_metrics_bar.scss';
 interface TraceMetricsBarProps {
   metrics: TraceMetrics | null;
   loading: boolean;
+  onErrorClick?: (target: 'traces' | 'spans') => void;
 }
 
 const formatNumber = (value: number): string => {
@@ -25,7 +26,11 @@ const formatNumber = (value: number): string => {
   return value.toLocaleString();
 };
 
-export const TraceMetricsBar: React.FC<TraceMetricsBarProps> = ({ metrics, loading }) => {
+export const TraceMetricsBar: React.FC<TraceMetricsBarProps> = ({
+  metrics,
+  loading,
+  onErrorClick,
+}) => {
   const showLoading = loading || !metrics;
 
   return (
@@ -46,12 +51,20 @@ export const TraceMetricsBar: React.FC<TraceMetricsBarProps> = ({ metrics, loadi
             data-test-subj="agentTracesMetricsTotalTraces"
           >
             {metrics && metrics.errorTraces > 0 && (
-              <EuiText size="xs" color="danger">
-                {i18n.translate('agentTraces.metricsBar.errorTraces', {
-                  defaultMessage: '{count} errors',
-                  values: { count: formatNumber(metrics.errorTraces) },
-                })}
-              </EuiText>
+              <EuiLink
+                color="danger"
+                onClick={() => onErrorClick?.('traces')}
+                data-test-subj="agentTracesMetricsErrorTracesLink"
+              >
+                <EuiText size="xs" color="danger">
+                  <strong>
+                    {i18n.translate('agentTraces.metricsBar.errorTraces', {
+                      defaultMessage: '{count} errors',
+                      values: { count: formatNumber(metrics.errorTraces) },
+                    })}
+                  </strong>
+                </EuiText>
+              </EuiLink>
             )}
           </EuiStat>
         </EuiFlexItem>
@@ -70,12 +83,20 @@ export const TraceMetricsBar: React.FC<TraceMetricsBarProps> = ({ metrics, loadi
             data-test-subj="agentTracesMetricsTotalSpans"
           >
             {metrics && metrics.errorSpans > 0 && (
-              <EuiText size="xs" color="danger">
-                {i18n.translate('agentTraces.metricsBar.errorSpans', {
-                  defaultMessage: '{count} errors',
-                  values: { count: formatNumber(metrics.errorSpans) },
-                })}
-              </EuiText>
+              <EuiLink
+                color="danger"
+                onClick={() => onErrorClick?.('spans')}
+                data-test-subj="agentTracesMetricsErrorSpansLink"
+              >
+                <EuiText size="xs" color="danger">
+                  <strong>
+                    {i18n.translate('agentTraces.metricsBar.errorSpans', {
+                      defaultMessage: '{count} errors',
+                      values: { count: formatNumber(metrics.errorSpans) },
+                    })}
+                  </strong>
+                </EuiText>
+              </EuiLink>
             )}
           </EuiStat>
         </EuiFlexItem>

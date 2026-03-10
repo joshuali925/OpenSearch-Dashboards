@@ -19,6 +19,7 @@ export interface TraceExpansionState {
   getRowMeta: (hitId: string) => RowMeta | null;
   onRowClick?: (hitId: string) => void;
   wrapCellText?: boolean;
+  hasExpandableRows?: boolean;
 }
 
 const TraceExpansionContext = createContext<TraceExpansionState | null>(null);

@@ -279,7 +279,9 @@ const AgentTracesKindCell: React.FC<{ hitId: string }> = ({ hitId }) => {
           <EuiLoadingSpinner size="s" />
         </span>
       )}
-      {!isExpandable && <span className="agentTracesTable__expandSpacer" />}
+      {!isExpandable && ctx.hasExpandableRows && (
+        <span className="agentTracesTable__expandSpacer" />
+      )}
       <EuiBadge className="agentTraces__categoryBadge" color={catMeta.color}>
         {catMeta.label}
       </EuiBadge>

@@ -420,6 +420,7 @@ export const TracesDataTable: React.FC = () => {
       getRowMeta,
       onRowClick: handleRowClick,
       wrapCellText,
+      hasExpandableRows: true,
     }),
     [expandedRows, toggleExpansion, traceLoadingState, getRowMeta, handleRowClick, wrapCellText]
   );

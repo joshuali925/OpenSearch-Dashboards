@@ -16,7 +16,11 @@ import { AgentTracesServices } from '../../../types';
 import { selectColumns } from '../../utils/state_management/selectors';
 import { setColumns } from '../../utils/state_management/slices/legacy/legacy_slice';
 import { getLegacyDisplayedColumns } from '../../../helpers/data_table_helper';
-import { DOC_HIDE_TIME_COLUMN_SETTING, SAMPLE_SIZE_SETTING } from '../../../../common';
+import {
+  DOC_HIDE_TIME_COLUMN_SETTING,
+  SAMPLE_SIZE_SETTING,
+  AGENT_TRACES_DEFAULT_COLUMNS,
+} from '../../../../common';
 import { UI_SETTINGS } from '../../../../../data/public';
 import { getDocViewsRegistry } from '../../legacy/discover/opensearch_dashboards_services';
 import { OpenSearchSearchHit } from '../../../types/doc_views_types';
@@ -39,15 +43,7 @@ import { selectIsLoading } from '../../utils/state_management/selectors/query_ed
 import { getHitId } from '../../../components/data_table/table_cell/trace_utils/trace_utils';
 import './traces_table.scss';
 
-const DEFAULT_TRACE_COLUMNS = [
-  'kind',
-  'name',
-  'status',
-  'latency',
-  'totalTokens',
-  'input',
-  'output',
-];
+const DEFAULT_TRACE_COLUMNS = [...AGENT_TRACES_DEFAULT_COLUMNS];
 
 /** Convert an OpenSearchSearchHit _source to a BaseRow for metadata.
  *  The _source from OpenSearch uses flat dotted keys, so we unflatten first. */

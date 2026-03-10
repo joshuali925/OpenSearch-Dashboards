@@ -13,6 +13,7 @@ import {
   moveColumn,
   setColumns,
 } from '../../application/utils/state_management/slices';
+import { AGENT_TRACES_DEFAULT_COLUMNS_SET } from '../../../common';
 import { selectColumns } from '../../application/utils/state_management/selectors';
 import { DiscoverSidebar } from '.';
 import { AgentTracesServices } from '../../types';
@@ -94,6 +95,7 @@ export function DiscoverPanel({ collapsePanel }: IDiscoverPanelProps) {
         dispatch(addColumn({ column: fieldName }));
       }}
       onRemoveField={(fieldName) => {
+        if (AGENT_TRACES_DEFAULT_COLUMNS_SET.has(fieldName)) return;
         dispatch(removeColumn(fieldName));
       }}
       onReorderFields={(source, destination) => {

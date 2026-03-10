@@ -89,17 +89,39 @@ export interface DiscoverFieldProps {
    * Determines whether to show the field summary
    */
   showSummary?: boolean;
+  /**
+   * When true, the field cannot be removed from the table (no remove button shown)
+   */
+  nonRemovable?: boolean;
 }
 
 export const DiscoverField = ({
   field,
+  selected,
+  onAddField,
+  onRemoveField,
   columns,
   dataSet,
   onAddFilter,
   getDetails,
   useShortDots,
   showSummary,
+  nonRemovable,
 }: DiscoverFieldProps) => {
+  const addLabelAria = i18n.translate(
+    'agentTraces.discover.fieldChooser.discoverField.addButtonAriaLabel',
+    {
+      defaultMessage: 'Add {field} to table',
+      values: { field: field.name },
+    }
+  );
+  const removeLabelAria = i18n.translate(
+    'agentTraces.discover.fieldChooser.discoverField.removeButtonAriaLabel',
+    {
+      defaultMessage: 'Remove {field} from table',
+      values: { field: field.name },
+    }
+  );
   const infoLabelAria = i18n.translate(
     'agentTraces.discover.fieldChooser.discoverField.infoButtonAriaLabel',
     {
@@ -110,6 +132,14 @@ export const DiscoverField = ({
   const isSourceField = field.name === '_source';
 
   const [infoIsOpen, setOpen] = useState(false);
+
+  const toggleDisplay = (f: DataViewField) => {
+    if (selected) {
+      onRemoveField(f.name);
+    } else {
+      onAddField(f.name);
+    }
+  };
 
   const wrappedName = useMemo(
     () =>
@@ -124,6 +154,63 @@ export const DiscoverField = ({
       </span>
     </EuiToolTip>
   );
+
+  let actionButton;
+  if (!isSourceField && !selected) {
+    actionButton = (
+      <EuiToolTip
+        delay="long"
+        content={i18n.translate('agentTraces.discover.fieldChooser.discoverField.addFieldTooltip', {
+          defaultMessage: 'Add field as column',
+        })}
+      >
+        <EuiButtonIcon
+          iconType="plusInCircleFilled"
+          onClick={(ev: React.MouseEvent<HTMLButtonElement>) => {
+            if (ev.type === 'click') {
+              ev.currentTarget.focus();
+            }
+            ev.preventDefault();
+            ev.stopPropagation();
+            toggleDisplay(field);
+          }}
+          size="xs"
+          data-test-subj={`fieldToggle-${field.name}`}
+          aria-label={addLabelAria}
+          className="agentTracesSidebarField__actionButton"
+        />
+      </EuiToolTip>
+    );
+  } else if (!isSourceField && selected && !nonRemovable) {
+    actionButton = (
+      <EuiToolTip
+        delay="long"
+        content={i18n.translate(
+          'agentTraces.discover.fieldChooser.discoverField.removeFieldTooltip',
+          {
+            defaultMessage: 'Remove field from table',
+          }
+        )}
+      >
+        <EuiButtonIcon
+          color="danger"
+          iconType="cross"
+          onClick={(ev: React.MouseEvent<HTMLButtonElement>) => {
+            if (ev.type === 'click') {
+              ev.currentTarget.focus();
+            }
+            ev.preventDefault();
+            ev.stopPropagation();
+            toggleDisplay(field);
+          }}
+          size="xs"
+          data-test-subj={`fieldToggle-${field.name}`}
+          aria-label={removeLabelAria}
+          className="agentTracesSidebarField__actionButton"
+        />
+      </EuiToolTip>
+    );
+  }
 
   return (
     <EuiFlexGroup
@@ -194,6 +281,7 @@ export const DiscoverField = ({
               )}
             </EuiPopover>
           )}
+          {actionButton}
         </div>
       )}
     </EuiFlexGroup>

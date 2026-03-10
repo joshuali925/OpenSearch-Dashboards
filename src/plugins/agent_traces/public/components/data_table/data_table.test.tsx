@@ -6,7 +6,7 @@
 import { i18n } from '@osd/i18n';
 import React from 'react';
 import { IntlProvider } from 'react-intl';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DataTable } from './data_table';
 import { DocViewsRegistry, OpenSearchSearchHit } from '../../types/doc_views_types';
@@ -14,6 +14,20 @@ import { indexPatternMock } from '../../__mock__/index_pattern_mock';
 import { mockColumns, mockRows } from './data_table.mocks';
 import { DocViewTable } from '../doc_viewer/doc_viewer_table/table';
 import { JsonCodeBlock } from '../doc_viewer/json_code_block/json_code_block';
+
+// Mock IntersectionObserver for lazy loading tests
+let intersectionCallback: IntersectionObserverCallback;
+const mockObserve = jest.fn();
+const mockDisconnect = jest.fn();
+
+beforeEach(() => {
+  mockObserve.mockClear();
+  mockDisconnect.mockClear();
+  (window as any).IntersectionObserver = jest.fn((cb: IntersectionObserverCallback) => {
+    intersectionCallback = cb;
+    return { observe: mockObserve, disconnect: mockDisconnect, unobserve: jest.fn() };
+  });
+});
 
 describe('DefaultDiscoverTable', () => {
   const docViewsRegistry = new DocViewsRegistry();
@@ -55,11 +69,42 @@ describe('DefaultDiscoverTable', () => {
     );
   };
 
-  it('should render all rows at once when not paginated', () => {
+  it('should render only the first batch of rows initially (lazy loading)', () => {
     const { container } = render(getDataTable());
 
     const tableRows = container.querySelectorAll('tbody tr');
-    expect(tableRows.length).toBe(mockRows.length);
+    // mockRows has 138 entries, lazy load batch size is 50
+    expect(tableRows.length).toBe(50);
+    // Should show progress bar since there are more rows to load
+    expect(screen.getByTestId('discoverRenderedRowsProgress')).toBeInTheDocument();
+  });
+
+  it('should render more rows when IntersectionObserver fires', () => {
+    const { container } = render(getDataTable());
+
+    expect(container.querySelectorAll('tbody tr').length).toBe(50);
+
+    // Simulate the sentinel becoming visible
+    act(() => {
+      intersectionCallback(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver
+      );
+    });
+
+    expect(container.querySelectorAll('tbody tr').length).toBe(100);
+
+    // Fire again to load the remaining rows
+    act(() => {
+      intersectionCallback(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver
+      );
+    });
+
+    expect(container.querySelectorAll('tbody tr').length).toBe(mockRows.length);
+    // Progress bar should be gone since all rows are rendered
+    expect(screen.queryByTestId('discoverRenderedRowsProgress')).not.toBeInTheDocument();
   });
 
   it('should display the sample size callout when rows equal sample size', () => {

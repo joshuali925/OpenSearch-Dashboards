@@ -34,6 +34,7 @@ import {
   DataView as Dataset,
 } from '../../../../plugins/data/public';
 import { shortenDottedString } from './shorten_dotted_string';
+import { AGENT_TRACES_DEFAULT_COLUMNS_SET } from '../../common';
 
 export interface LegacyDisplayedColumn {
   name: string;
@@ -127,7 +128,9 @@ export function getLegacyDisplayedColumns(
       name: column,
       displayName: isShortDots ? shortenDottedString(columnDisplayName) : columnDisplayName,
       isSortable: osdFieldOverrides.sortable ?? !!field?.sortable,
-      isRemoveable: column !== '_source' || columns.length > 1,
+      isRemoveable:
+        !AGENT_TRACES_DEFAULT_COLUMNS_SET.has(column) &&
+        (column !== '_source' || columns.length > 1),
       colLeftIdx: idx - 1 < 0 ? -1 : idx - 1,
       colRightIdx: idx + 1 >= columns.length ? -1 : idx + 1,
     };

@@ -25,7 +25,11 @@ import {
   round,
   nanoToMilliSec,
 } from '../../../../application/pages/traces/trace_details/utils/helper_functions';
-import { getSpanCategory, getCategoryMeta } from '../../../../services/span_categorization';
+import {
+  getSpanCategory,
+  getCategoryMeta,
+  getOperationNamesForCategory,
+} from '../../../../services/span_categorization';
 import { useTraceExpansion } from '../../../../application/pages/traces/trace_expansion_context';
 
 export const isOnTracesPage = (): boolean => {
@@ -457,6 +461,16 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
       content = null;
   }
 
+  // Resolve filter value: for Kind, use all operation names for the category
+  let filterValue: unknown = fieldMapping;
+  if (colName === 'kind') {
+    const category = getSpanCategory(traceRow);
+    filterValue = getOperationNamesForCategory(category);
+  }
+
+  // No filter buttons for totalTokens (composite value)
+  const showFilter = colName !== 'totalTokens';
+
   return (
     <td className="agentTracesDocTableCell">
       <div className="agentTracesDocTableCell__content">
@@ -466,11 +480,13 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
         >
           {content}
         </span>
-        <VirtualCellFilterButtons
-          colName={colName}
-          fieldMapping={fieldMapping}
-          onFilter={onFilter}
-        />
+        {showFilter && (
+          <VirtualCellFilterButtons
+            colName={colName}
+            fieldMapping={filterValue}
+            onFilter={onFilter}
+          />
+        )}
       </div>
     </td>
   );

@@ -167,10 +167,10 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
         <EuiHealth color={row?.status === 'success' ? 'success' : 'danger'}>
           {row?.status === 'success'
             ? i18n.translate('agentTraces.detailPanel.statusOk', {
-                defaultMessage: 'OK',
+                defaultMessage: 'Success',
               })
             : i18n.translate('agentTraces.detailPanel.statusError', {
-                defaultMessage: 'ERROR',
+                defaultMessage: 'Error',
               })}
         </EuiHealth>
       ),

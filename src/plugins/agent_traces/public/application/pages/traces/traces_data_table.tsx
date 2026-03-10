@@ -21,6 +21,7 @@ import {
   DOC_HIDE_TIME_COLUMN_SETTING,
   SAMPLE_SIZE_SETTING,
   AGENT_TRACES_DEFAULT_COLUMNS,
+  AGENT_TRACES_DEFAULT_COLUMNS_SET,
 } from '../../../../common';
 import { UI_SETTINGS } from '../../../../../data/public';
 import { getDocViewsRegistry } from '../../legacy/discover/opensearch_dashboards_services';
@@ -345,6 +346,7 @@ export const TracesDataTable: React.FC = () => {
   // Column management callbacks
   const onRemoveColumn = useCallback(
     (column: string) => {
+      if (AGENT_TRACES_DEFAULT_COLUMNS_SET.has(column)) return;
       const newColumns = columns.filter((c) => c !== column);
       dispatch(setColumns(newColumns.length > 0 ? newColumns : ['_source']));
     },

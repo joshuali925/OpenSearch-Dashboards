@@ -173,7 +173,10 @@ const DataTableUI = ({
           sampleSize={sampleSize}
         />
       ) : null}
-      <table data-test-subj="docTable" className="agentTraces-table table">
+      <table
+        data-test-subj="docTable"
+        className={`agentTraces-table table${wrapCellText ? ' agentTraces-table--wrap' : ''}`}
+      >
         <thead>
           <TableHeader displayedColumns={columns} onRemoveColumn={onRemoveColumn} />
         </thead>

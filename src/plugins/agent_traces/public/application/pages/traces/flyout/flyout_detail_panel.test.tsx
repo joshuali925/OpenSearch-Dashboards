@@ -41,7 +41,10 @@ describe('FlyoutDetailPanel', () => {
     startTime: '01/01/2025, 12:00:00 AM',
     endTime: '01/01/2025, 12:00:01 AM',
     latency: '150ms',
+    durationNanos: 150000000,
     totalTokens: 200,
+    inputTokens: 100,
+    outputTokens: 100,
     totalCost: '—',
   };
 
@@ -92,7 +95,7 @@ describe('FlyoutDetailPanel', () => {
     expect(dashes.length).toBeGreaterThan(0);
   });
 
-  it('renders status as OK for success', () => {
+  it('renders status as Success for success', () => {
     render(
       <FlyoutDetailPanel
         selectedNode={mockTreeNode}
@@ -101,10 +104,10 @@ describe('FlyoutDetailPanel', () => {
       />
     );
 
-    expect(screen.getByText('OK')).toBeInTheDocument();
+    expect(screen.getByText('Success')).toBeInTheDocument();
   });
 
-  it('renders status as ERROR for error trace rows', () => {
+  it('renders status as Error for error trace rows', () => {
     const errorRow: TraceRow = { ...mockTraceRow, status: 'error' };
     const errorNode: TreeNode = { ...mockTreeNode, traceRow: errorRow };
 
@@ -116,6 +119,6 @@ describe('FlyoutDetailPanel', () => {
       />
     );
 
-    expect(screen.getByText('ERROR')).toBeInTheDocument();
+    expect(screen.getByText('Error')).toBeInTheDocument();
   });
 });

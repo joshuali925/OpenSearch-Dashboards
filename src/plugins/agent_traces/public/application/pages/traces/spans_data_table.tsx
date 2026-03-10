@@ -268,8 +268,12 @@ export const SpansDataTable: React.FC = () => {
             <EuiText size="s" color="subdued">
               <FormattedMessage
                 id="agentTraces.spansDataTable.showingCount"
-                defaultMessage="Showing {count} spans"
-                values={{ count: hits.length }}
+                defaultMessage="{count} of {total} Spans in {elapsed} ms"
+                values={{
+                  count: hits.length.toLocaleString(),
+                  total: (results?.hits?.total ?? hits.length).toLocaleString(),
+                  elapsed: results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—',
+                }}
               />
             </EuiText>
           </EuiFlexItem>

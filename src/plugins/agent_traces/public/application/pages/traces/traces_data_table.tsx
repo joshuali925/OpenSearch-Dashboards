@@ -466,8 +466,12 @@ export const TracesDataTable: React.FC = () => {
             <EuiText size="s" color="subdued">
               <FormattedMessage
                 id="agentTraces.tracesDataTable.showingCount"
-                defaultMessage="Showing {count} traces"
-                values={{ count: hits.length }}
+                defaultMessage="{count} of {total} Traces in {elapsed} ms"
+                values={{
+                  count: hits.length.toLocaleString(),
+                  total: (results?.hits?.total ?? hits.length).toLocaleString(),
+                  elapsed: results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—',
+                }}
               />
             </EuiText>
           </EuiFlexItem>

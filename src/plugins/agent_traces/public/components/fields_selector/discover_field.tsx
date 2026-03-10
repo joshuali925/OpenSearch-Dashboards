@@ -45,6 +45,7 @@ import { FieldDetails } from './types';
 import { DataViewField, DataView } from '../../../../data/public';
 import { shortenDottedString } from '../../application/legacy/discover/application/helpers';
 import { getFieldTypeName } from './lib/get_field_type_name';
+import { AGENT_TRACES_COLUMN_DISPLAY_NAMES } from '../../../common';
 import './discover_field.scss';
 
 export interface DiscoverFieldProps {
@@ -141,11 +142,11 @@ export const DiscoverField = ({
     }
   };
 
-  const wrappedName = useMemo(
-    () =>
-      useShortDots ? wrapOnDot(shortenDottedString(field.name)) : wrapOnDot(field.displayName),
-    [field.name, field.displayName, useShortDots]
-  );
+  const wrappedName = useMemo(() => {
+    const friendly = AGENT_TRACES_COLUMN_DISPLAY_NAMES[field.name];
+    if (friendly) return friendly;
+    return useShortDots ? wrapOnDot(shortenDottedString(field.name)) : wrapOnDot(field.displayName);
+  }, [field.name, field.displayName, useShortDots]);
 
   const fieldName = (
     <EuiToolTip delay="long" content={field.name}>

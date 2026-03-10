@@ -34,7 +34,7 @@ import {
   DataView as Dataset,
 } from '../../../../plugins/data/public';
 import { shortenDottedString } from './shorten_dotted_string';
-import { AGENT_TRACES_DEFAULT_COLUMNS_SET } from '../../common';
+import { AGENT_TRACES_DEFAULT_COLUMNS_SET, AGENT_TRACES_COLUMN_DISPLAY_NAMES } from '../../common';
 
 export interface LegacyDisplayedColumn {
   name: string;
@@ -69,9 +69,11 @@ export function getTimeColumn(
 }
 
 function getColumnDisplayName(column: string): string {
+  // Check shared virtual-column display names first
+  const virtualName = AGENT_TRACES_COLUMN_DISPLAY_NAMES[column];
+  if (virtualName) return virtualName;
+
   switch (column) {
-    case 'name':
-      return 'Name';
     case 'durationNano':
     case 'durationInNanos':
       return 'Duration';
@@ -83,18 +85,6 @@ function getColumnDisplayName(column: string): string {
       return 'Status';
     case 'spanId':
       return 'SpanID';
-    case 'kind':
-      return 'Kind';
-    case 'status':
-      return 'Status';
-    case 'latency':
-      return 'Latency';
-    case 'totalTokens':
-      return 'Tokens';
-    case 'input':
-      return 'Input';
-    case 'output':
-      return 'Output';
     default:
       return column;
   }

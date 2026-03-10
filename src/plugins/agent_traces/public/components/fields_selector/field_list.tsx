@@ -76,7 +76,9 @@ export const FieldList = ({
                 useShortDots={shortDotsEnabled}
                 showSummary
                 nonRemovable={
-                  category === 'selected' && AGENT_TRACES_DEFAULT_COLUMNS_SET.has(field.name)
+                  category === 'selected' &&
+                  (AGENT_TRACES_DEFAULT_COLUMNS_SET.has(field.name) ||
+                    field.name === selectedDataSet.timeFieldName)
                 }
               />
             </EuiPanel>

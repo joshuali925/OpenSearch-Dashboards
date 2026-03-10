@@ -30,6 +30,7 @@
 
 import { DataViewField } from '../../../../../data/public';
 import { FieldFilterState, isFieldFiltered } from './field_filter';
+import { AGENT_TRACES_COLUMN_DISPLAY_NAMES } from '../../../../common';
 
 // TODO: Use data set defined faceted field
 const FACET_FIELDS = [
@@ -111,7 +112,7 @@ export function groupFields(
             searchable: false,
             aggregatable: false,
           },
-          col
+          AGENT_TRACES_COLUMN_DISPLAY_NAMES[col] || col
         )
       );
     }

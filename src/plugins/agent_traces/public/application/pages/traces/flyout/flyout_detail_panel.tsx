@@ -56,6 +56,8 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
       borderRadius="none"
       className="agentTracesFlyout__detailPanel"
     >
+      <EuiSpacer size="s" />
+
       <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>
         <EuiFlexItem grow={false}>
           <EuiTitle size="s">
@@ -205,7 +207,7 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
         </EuiFlexGroup>
       </EuiAccordion>
 
-      <EuiSpacer size="m" />
+      <EuiSpacer size="s" />
 
       <EuiAccordion
         id="io-accordion"
@@ -258,7 +260,7 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
         </div>
       </EuiAccordion>
 
-      <EuiSpacer size="m" />
+      <EuiSpacer size="s" />
 
       <EuiAccordion
         id="raw-span-accordion"

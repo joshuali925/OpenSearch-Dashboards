@@ -21,13 +21,6 @@
   width: $ouiSizeL;
 }
 
-.agentTracesTable__truncatedText {
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .agentTracesTable__container {
   padding: $ouiSizeM;
   min-width: 0;

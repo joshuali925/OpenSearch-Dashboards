@@ -290,23 +290,11 @@ const AgentTracesKindCell: React.FC<{ hitId: string }> = ({ hitId }) => {
 };
 
 const AgentTracesStatusCell: React.FC<{ status: string }> = ({ status }) => (
-  <EuiHealth color={status === 'success' ? 'success' : 'danger'}>
+  <EuiHealth color={status === 'success' ? 'success' : 'danger'} textSize="xs">
     {status === 'success'
       ? i18n.translate('agentTraces.dataTable.statusSuccess', { defaultMessage: 'Success' })
       : i18n.translate('agentTraces.dataTable.statusError', { defaultMessage: 'Error' })}
   </EuiHealth>
-);
-
-const AgentTracesTruncatedCell: React.FC<{ value: string }> = ({ value }) => (
-  <EuiToolTip content={value} position="top" delay="long">
-    <EuiText size="s" className="agentTracesTable__truncatedText">
-      {value}
-    </EuiText>
-  </EuiToolTip>
-);
-
-const AgentTracesTextCell: React.FC<{ value: string | number }> = ({ value }) => (
-  <EuiText size="s">{value}</EuiText>
 );
 
 const TokenIcon: React.FC = () => (
@@ -337,7 +325,7 @@ const AgentTracesTokensCell: React.FC<{
   outputTokens: number | null;
 }> = ({ total, inputTokens, outputTokens }) => {
   if (total === '—' || total === null || total === undefined) {
-    return <EuiText size="s">—</EuiText>;
+    return <>—</>;
   }
 
   const tooltipContent = (
@@ -478,7 +466,7 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
       content = <AgentTracesStatusCell status={traceRow.status} />;
       break;
     case 'latency':
-      content = <AgentTracesTextCell value={traceRow.latency} />;
+      content = traceRow.latency;
       break;
     case 'totalTokens':
       content = (
@@ -490,10 +478,10 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
       );
       break;
     case 'input':
-      content = <AgentTracesTruncatedCell value={traceRow.input} />;
+      content = traceRow.input;
       break;
     case 'output':
-      content = <AgentTracesTruncatedCell value={traceRow.output} />;
+      content = traceRow.output;
       break;
     default:
       content = null;
@@ -519,8 +507,13 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
     colName !== 'totalTokens' &&
     !(colName === 'kind' && Array.isArray(filterValue) && filterValue.length === 0);
 
+  const tdClassName =
+    colName === 'input' || colName === 'output'
+      ? 'agentTracesDocTableCell agentTracesDocTableCell--wideText'
+      : 'agentTracesDocTableCell';
+
   return (
-    <td className="agentTracesDocTableCell">
+    <td className={tdClassName}>
       <div className="agentTracesDocTableCell__content">
         <span
           className="agentTracesDocTableCell__dataField"

@@ -186,14 +186,11 @@
         white-space: normal;
         word-break: break-word;
       }
+    }
 
-      // Override EuiText truncation styles in wrap mode
-      .agentTracesTable__truncatedText {
-        overflow: visible;
-        text-overflow: clip;
-        white-space: normal;
-        word-break: break-word;
-      }
+    // Give text-heavy columns (Input, Output) more horizontal space
+    td.agentTracesDocTableCell--wideText {
+      min-width: 200px;
     }
 
     // Allow expand/collapse column to be narrow

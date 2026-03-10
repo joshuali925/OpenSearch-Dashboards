@@ -458,6 +458,7 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
   }
 
   let content: React.ReactNode;
+  let truncationTooltipText = '';
   switch (colName) {
     case 'kind':
       content = <AgentTracesKindCell hitId={hitId} />;
@@ -467,6 +468,7 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
       break;
     case 'latency':
       content = traceRow.latency;
+      if (typeof traceRow.latency === 'string') truncationTooltipText = traceRow.latency;
       break;
     case 'totalTokens':
       content = (
@@ -479,9 +481,11 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
       break;
     case 'input':
       content = traceRow.input;
+      if (typeof traceRow.input === 'string') truncationTooltipText = traceRow.input;
       break;
     case 'output':
       content = traceRow.output;
+      if (typeof traceRow.output === 'string') truncationTooltipText = traceRow.output;
       break;
     default:
       content = null;
@@ -518,6 +522,14 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
         <span
           className="agentTracesDocTableCell__dataField"
           data-test-subj="osdDocTableCellDataField"
+          onMouseEnter={
+            truncationTooltipText
+              ? (e: React.MouseEvent<HTMLSpanElement>) => {
+                  const el = e.currentTarget;
+                  el.title = el.scrollWidth > el.clientWidth ? truncationTooltipText : '';
+                }
+              : undefined
+          }
         >
           {content}
         </span>

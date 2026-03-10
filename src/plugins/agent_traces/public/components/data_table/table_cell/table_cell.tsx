@@ -57,6 +57,10 @@ export const TableCellUI = ({
         data-test-subj="osdDocTableCellDataField"
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: sanitizedCellValue }}
+        onMouseEnter={(e: React.MouseEvent<HTMLSpanElement>) => {
+          const el = e.currentTarget;
+          el.title = el.scrollWidth > el.clientWidth ? el.textContent || '' : '';
+        }}
       />
     );
 

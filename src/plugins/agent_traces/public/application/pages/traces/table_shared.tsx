@@ -18,7 +18,7 @@ export const PPL_SORT_FIELDS: Record<string, string> = {
 
 /** Build a PPL sort clause from UI sort state */
 export const buildPplSortClause = (field: string, direction: 'asc' | 'desc'): string => {
-  const pplField = PPL_SORT_FIELDS[field] || 'startTime';
+  const pplField = PPL_SORT_FIELDS[field] || (field.includes('.') ? `\`${field}\`` : field);
   const prefix = direction === 'desc' ? '- ' : '';
   return `| sort ${prefix}${pplField}`;
 };

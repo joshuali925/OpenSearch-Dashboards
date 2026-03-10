@@ -122,9 +122,7 @@ export function getLegacyDisplayedColumns(
     return {
       name: column,
       displayName: isShortDots ? shortenDottedString(columnDisplayName) : columnDisplayName,
-      isSortable:
-        AGENT_TRACES_SORTABLE_COLUMNS.has(column) ||
-        (osdFieldOverrides.sortable ?? !!field?.sortable),
+      isSortable: AGENT_TRACES_SORTABLE_COLUMNS.has(column) || !!field,
       isRemoveable:
         !AGENT_TRACES_DEFAULT_COLUMNS_SET.has(column) &&
         (column !== '_source' || columns.length > 1),

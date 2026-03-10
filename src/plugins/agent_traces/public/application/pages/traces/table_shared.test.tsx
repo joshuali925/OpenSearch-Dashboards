@@ -35,8 +35,14 @@ describe('table_shared', () => {
       expect(buildPplSortClause('kind', 'asc')).toBe('| sort `attributes.gen_ai.operation.name`');
     });
 
-    it('falls back to startTime for unknown fields', () => {
-      expect(buildPplSortClause('unknownField', 'desc')).toBe('| sort - startTime');
+    it('passes through unknown simple fields as-is', () => {
+      expect(buildPplSortClause('unknownField', 'desc')).toBe('| sort - unknownField');
+    });
+
+    it('wraps dotted field names in backticks', () => {
+      expect(buildPplSortClause('resource.attributes.service.name', 'asc')).toBe(
+        '| sort `resource.attributes.service.name`'
+      );
     });
   });
 

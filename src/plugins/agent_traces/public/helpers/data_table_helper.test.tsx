@@ -165,7 +165,7 @@ describe('data_table_helper', () => {
       expect(result[0].displayName).toBe('field...dots');
     });
 
-    it('should handle field sortability from indexPattern when osdFieldOverrides.sortable is undefined', () => {
+    it('should mark any field present in the index pattern as sortable', () => {
       const columns = ['field1'];
       mockGetOsdFieldOverrides.mockReturnValue({});
       (mockIndexPattern.getFieldByName as jest.Mock).mockReturnValue({
@@ -174,7 +174,17 @@ describe('data_table_helper', () => {
 
       const result = getLegacyDisplayedColumns(columns, mockIndexPattern, false, true);
 
-      expect(result[0].isSortable).toBe(false); // Should use field.sortable when osdFieldOverrides.sortable is undefined
+      expect(result[0].isSortable).toBe(true); // PPL can sort any field
+    });
+
+    it('should mark columns without an index pattern field as not sortable', () => {
+      const columns = ['virtualColumn'];
+      mockGetOsdFieldOverrides.mockReturnValue({});
+      (mockIndexPattern.getFieldByName as jest.Mock).mockReturnValue(undefined);
+
+      const result = getLegacyDisplayedColumns(columns, mockIndexPattern, false, true);
+
+      expect(result[0].isSortable).toBe(false);
     });
 
     it('should handle _source column removability correctly', () => {

@@ -143,10 +143,11 @@ export const DiscoverField = ({
   };
 
   const wrappedName = useMemo(() => {
+    if (field.name === dataSet.timeFieldName) return 'Time';
     const friendly = AGENT_TRACES_COLUMN_DISPLAY_NAMES[field.name];
     if (friendly) return friendly;
     return useShortDots ? wrapOnDot(shortenDottedString(field.name)) : wrapOnDot(field.displayName);
-  }, [field.name, field.displayName, useShortDots]);
+  }, [field.name, field.displayName, useShortDots, dataSet.timeFieldName]);
 
   const fieldName = (
     <EuiToolTip delay="long" content={field.name}>
@@ -233,7 +234,7 @@ export const DiscoverField = ({
       </EuiFlexItem>
       {!isSourceField && (
         <div className="agentTracesSidebarField__actionButtons">
-          {showSummary && (
+          {showSummary && field.name !== 'totalTokens' && (
             <EuiPopover
               ownFocus
               display="block"

@@ -27,7 +27,7 @@ const getColumnFieldMappings = (
 ): ColumnFieldMapping[] | null => {
   // Time column: displayName is 'Time' but columnName is the dataset's timeFieldName
   if (displayName === 'Time') {
-    return [{ label: 'Time', field: 'startTime' }];
+    return [{ label: 'Time', field: columnName }];
   }
   switch (columnName) {
     case 'kind':

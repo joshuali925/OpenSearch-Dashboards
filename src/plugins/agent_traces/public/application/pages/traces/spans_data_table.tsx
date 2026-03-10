@@ -36,6 +36,7 @@ import { TraceHit } from './trace_details/traces/ppl_to_trace_hits';
 import { TableLoadingState, TableEmptyState } from './table_shared';
 import { selectIsLoading } from '../../utils/state_management/selectors/query_editor/query_editor';
 import { getHitId } from '../../../components/data_table/table_cell/trace_utils/trace_utils';
+import { useTraceMetricsContext } from './hooks/use_trace_metrics';
 import { useTraceFlyout } from './flyout/trace_flyout_context';
 import { TraceRow } from './hooks/use_agent_traces';
 import { usePPLQueryDeps } from './hooks/use_ppl_query_deps';
@@ -68,6 +69,7 @@ export const SpansDataTable: React.FC = () => {
   const { dataset } = useDatasetContext();
   const { results } = useTabResults();
   const isQueryLoading = useSelector(selectIsLoading);
+  const { metrics: traceMetrics } = useTraceMetricsContext();
 
   // Sort state from Redux — sort changes trigger a backend PPL query re-execution
   const sortOrder = useSelector(selectSort);
@@ -271,7 +273,7 @@ export const SpansDataTable: React.FC = () => {
                 defaultMessage="{count} of {total} Spans in {elapsed} ms"
                 values={{
                   count: hits.length.toLocaleString(),
-                  total: (results?.hits?.total ?? hits.length).toLocaleString(),
+                  total: (traceMetrics?.totalSpans ?? hits.length).toLocaleString(),
                   elapsed: results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—',
                 }}
               />

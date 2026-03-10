@@ -46,6 +46,7 @@ import { TraceRow } from './hooks/use_agent_traces';
 import { TableLoadingState, TableEmptyState } from './table_shared';
 import { selectIsLoading } from '../../utils/state_management/selectors/query_editor/query_editor';
 import { getHitId } from '../../../components/data_table/table_cell/trace_utils/trace_utils';
+import { useTraceMetricsContext } from './hooks/use_trace_metrics';
 import './traces_table.scss';
 
 const DEFAULT_TRACE_COLUMNS = [...AGENT_TRACES_DEFAULT_COLUMNS];
@@ -82,6 +83,7 @@ export const TracesDataTable: React.FC = () => {
   const { dataset } = useDatasetContext();
   const { results } = useTabResults();
   const isQueryLoading = useSelector(selectIsLoading);
+  const { metrics: traceMetrics } = useTraceMetricsContext();
 
   const { pplService, datasetParam } = usePPLQueryDeps();
   const { openFlyout, updateFlyoutFullTree } = useTraceFlyout();
@@ -469,7 +471,7 @@ export const TracesDataTable: React.FC = () => {
                 defaultMessage="{count} of {total} Traces in {elapsed} ms"
                 values={{
                   count: hits.length.toLocaleString(),
-                  total: (results?.hits?.total ?? hits.length).toLocaleString(),
+                  total: (traceMetrics?.totalTraces ?? hits.length).toLocaleString(),
                   elapsed: results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—',
                 }}
               />

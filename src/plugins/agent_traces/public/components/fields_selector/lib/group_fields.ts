@@ -100,5 +100,22 @@ export function groupFields(
     }
   }
 
+  // Add placeholder entries for Redux columns not found in the dataset (virtual columns)
+  for (const col of columns) {
+    if (!result.selectedFields.some((f) => f.name === col)) {
+      result.selectedFields.push(
+        new DataViewField(
+          {
+            name: col,
+            type: 'string',
+            searchable: false,
+            aggregatable: false,
+          },
+          col
+        )
+      );
+    }
+  }
+
   return result;
 }

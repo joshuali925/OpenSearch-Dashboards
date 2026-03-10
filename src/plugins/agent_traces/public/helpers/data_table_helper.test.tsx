@@ -207,7 +207,7 @@ describe('data_table_helper', () => {
 
       const result = getLegacyDisplayedColumns(columns, mockIndexPattern, false, true);
 
-      expect(result[0].displayName).toBe('Service Identifier');
+      expect(result[0].displayName).toBe('Name');
       expect(result[1].displayName).toBe('Duration');
       expect(result[2].displayName).toBe('Duration');
       expect(result[3].displayName).toBe('Service');

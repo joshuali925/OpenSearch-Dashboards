@@ -19,6 +19,11 @@ import { EmptyTableCell } from '../table_cell/empty_table_cell';
 import { SourceFieldTableCell } from '../table_cell/source_field_table_cell';
 import { NonFilterableTableCell } from '../table_cell/non_filterable_table_cell';
 import { DocViewFilterFn, OpenSearchSearchHit } from '../../../types/doc_views_types';
+import {
+  isAgentTracesVirtualColumn,
+  isOnAgentTracesPage,
+  AgentTracesVirtualCell,
+} from '../table_cell/trace_utils/trace_utils';
 
 export interface TableRowContentProps {
   row: OpenSearchSearchHit<Record<string, unknown>>;
@@ -69,7 +74,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
   const flattened = dataset.flattenHit(row);
   return (
     <tr
-      key={row._id}
+      key={row._id || (row._source as any)?.spanId}
       className={row.isAnchor || isRowSelected ? 'agentTracesDocTable__row--highlight' : ''}
     >
       {isOnTracesPage ? (
@@ -92,6 +97,11 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
         </td>
       )}
       {columns.map((colName) => {
+        // Agent traces virtual columns: bypass dataset formatField
+        if (isAgentTracesVirtualColumn(colName) && isOnAgentTracesPage()) {
+          return <AgentTracesVirtualCell key={colName} colName={colName} row={row} />;
+        }
+
         const fieldInfo = dataset.fields.getByName(colName);
         const fieldMapping = flattened[colName];
 

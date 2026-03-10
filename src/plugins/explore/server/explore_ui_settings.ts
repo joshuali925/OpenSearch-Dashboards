@@ -18,16 +18,7 @@ export const exploreUiSettings: Record<string, UiSettingsParams> = {
     name: i18n.translate('explore.advancedSettings.defaultTraceColumnsTitle', {
       defaultMessage: 'Default trace columns',
     }),
-    value: [
-      'spanId',
-      'status.code',
-      'attributes.http.status_code',
-      'resource.attributes.service.name',
-      'kind',
-      'name',
-      'durationNano',
-      'durationInNanos',
-    ],
+    value: ['kind', 'name', 'status', 'latency', 'totalTokens', 'input', 'output'],
     description: i18n.translate('explore.advancedSettings.defaultTraceColumnsText', {
       defaultMessage: 'Experimental: Columns displayed by default in the Explore traces tab',
     }),

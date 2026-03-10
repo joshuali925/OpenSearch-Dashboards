@@ -68,7 +68,8 @@ describe('redux_persistence', () => {
       uiSettings: {
         get: jest.fn((key) => {
           if (key === DEFAULT_COLUMNS_SETTING) return ['_source'];
-          if (key === DEFAULT_TRACE_COLUMNS_SETTING) return ['spanId'];
+          if (key === DEFAULT_TRACE_COLUMNS_SETTING)
+            return ['kind', 'name', 'status', 'latency', 'totalTokens', 'input', 'output'];
           if (key === DEFAULT_LOGS_COLUMNS_SETTING)
             return ['body', 'severityText', 'resource.attributes.service.name'];
           return undefined;
@@ -296,7 +297,15 @@ describe('redux_persistence', () => {
       expect(result.results).toEqual({});
       expect(result.tab.logs).toEqual({});
       // getPreloadedLegacyState uses DEFAULT_TRACE_COLUMNS_SETTING
-      expect(result.legacy.columns).toEqual(['spanId']);
+      expect(result.legacy.columns).toEqual([
+        'kind',
+        'name',
+        'status',
+        'latency',
+        'totalTokens',
+        'input',
+        'output',
+      ]);
       expect(result.queryEditor.promptModeIsAvailable).toBe(false);
       expect(result.queryEditor.queryStatusMap).toEqual({});
       expect(result.queryEditor.overallQueryStatus).toEqual({
@@ -557,7 +566,15 @@ describe('redux_persistence', () => {
       const result = await loadReduxState(mockServices);
 
       // Should use default columns from UI settings instead of empty array
-      expect(result.legacy.columns).toEqual(['spanId']);
+      expect(result.legacy.columns).toEqual([
+        'kind',
+        'name',
+        'status',
+        'latency',
+        'totalTokens',
+        'input',
+        'output',
+      ]);
     });
 
     it('should use default columns for traces flavor when URL state has empty columns', async () => {
@@ -600,10 +617,18 @@ describe('redux_persistence', () => {
       const result = await loadReduxState(tracesServices);
 
       // Should use default trace columns from UI settings
-      expect(result.legacy.columns).toEqual(['spanId']);
+      expect(result.legacy.columns).toEqual([
+        'kind',
+        'name',
+        'status',
+        'latency',
+        'totalTokens',
+        'input',
+        'output',
+      ]);
     });
 
-    it('should preserve existing columns when they are present in URL state', async () => {
+    it('should migrate old columns without virtual trace columns to defaults', async () => {
       const mockQueryState = {
         query: 'source=logs | head 10',
         language: 'PPL',
@@ -615,7 +640,7 @@ describe('redux_persistence', () => {
           logs: {},
         },
         legacy: {
-          columns: ['field1', 'field2'], // Valid columns
+          columns: ['field1', 'field2'], // Old columns without virtual trace columns
           sort: [],
           isDirty: false,
           interval: 'auto',
@@ -631,8 +656,48 @@ describe('redux_persistence', () => {
 
       const result = await loadReduxState(mockServices);
 
-      // Should preserve URL state columns when they exist
-      expect(result.legacy.columns).toEqual(['field1', 'field2']);
+      // Should migrate to default virtual trace columns
+      expect(result.legacy.columns).toEqual([
+        'kind',
+        'name',
+        'status',
+        'latency',
+        'totalTokens',
+        'input',
+        'output',
+      ]);
+    });
+
+    it('should preserve columns that contain virtual trace columns', async () => {
+      const mockQueryState = {
+        query: 'source=logs | head 10',
+        language: 'PPL',
+        dataset: { id: 'test-dataset', title: 'test-dataset', type: 'INDEX_PATTERN' },
+      };
+      const mockAppState = {
+        ui: { activeTabId: 'logs', showHistogram: true },
+        tab: {
+          logs: {},
+        },
+        legacy: {
+          columns: ['kind', 'name', 'status', 'latency'], // Contains virtual columns
+          sort: [],
+          isDirty: false,
+          interval: 'auto',
+          savedSearch: undefined,
+          savedQuery: undefined,
+          lineCount: undefined,
+        },
+      };
+
+      (mockServices.osdUrlStateStorage!.get as jest.Mock)
+        .mockReturnValueOnce(mockQueryState)
+        .mockReturnValueOnce(mockAppState);
+
+      const result = await loadReduxState(mockServices);
+
+      // Should preserve columns since they contain virtual trace columns
+      expect(result.legacy.columns).toEqual(['kind', 'name', 'status', 'latency']);
     });
   });
 

@@ -70,7 +70,7 @@ export function getTimeColumn(
 function getColumnDisplayName(column: string): string {
   switch (column) {
     case 'name':
-      return 'Service Identifier';
+      return 'Name';
     case 'durationNano':
     case 'durationInNanos':
       return 'Duration';
@@ -83,7 +83,17 @@ function getColumnDisplayName(column: string): string {
     case 'spanId':
       return 'SpanID';
     case 'kind':
-      return 'Service Kind';
+      return 'Kind';
+    case 'status':
+      return 'Status';
+    case 'latency':
+      return 'Latency';
+    case 'totalTokens':
+      return 'Tokens';
+    case 'input':
+      return 'Input';
+    case 'output':
+      return 'Output';
     default:
       return column;
   }

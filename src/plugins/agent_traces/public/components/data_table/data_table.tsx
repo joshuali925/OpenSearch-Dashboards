@@ -180,7 +180,7 @@ const DataTableUI = ({
             (row, index: number) => {
               return (
                 <TableRow
-                  key={row._id}
+                  key={row._id || (row._source as any)?.spanId || index}
                   row={row}
                   index={index}
                   columns={columnNames}

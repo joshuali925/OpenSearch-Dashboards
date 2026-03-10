@@ -4,7 +4,16 @@
  */
 
 import React from 'react';
-import { EuiToolTip, EuiLink, EuiIcon, EuiText } from '@elastic/eui';
+import {
+  EuiToolTip,
+  EuiLink,
+  EuiIcon,
+  EuiText,
+  EuiBadge,
+  EuiButtonIcon,
+  EuiHealth,
+  EuiLoadingSpinner,
+} from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import { SPAN_ID_FIELD_PATHS, TRACE_ID_FIELD_PATHS } from '../../../../utils/trace_field_constants';
 import { OpenSearchSearchHit } from '../../../../types/doc_views_types';
@@ -16,12 +25,11 @@ import {
   round,
   nanoToMilliSec,
 } from '../../../../application/pages/traces/trace_details/utils/helper_functions';
+import { getSpanCategory, getCategoryMeta } from '../../../../services/span_categorization';
+import { useTraceExpansion } from '../../../../application/pages/traces/trace_expansion_context';
 
 export const isOnTracesPage = (): boolean => {
-  return (
-    window.location.pathname.includes('/agentTraces/traces') ||
-    window.location.hash.includes('/agentTraces/traces')
-  );
+  return window.location.pathname.includes('/agentTraces');
 };
 
 export const isSpanIdColumn = (columnId: string): boolean => {
@@ -202,5 +210,144 @@ export const DurationTableCell: React.FC<DurationTableCellProps> = ({ sanitizedC
     <span className="agentTracesDocTableCell__dataField" data-test-subj="osdDocTableCellDataField">
       <span>{durationLabel}</span>
     </span>
+  );
+};
+
+// --- Agent Traces Virtual Column Support ---
+
+/** Get a stable unique ID for a hit row. PPL query results don't populate _id,
+ *  so we fall back to spanId from _source. */
+export const getHitId = (hit: OpenSearchSearchHit<Record<string, any>>): string => {
+  return hit._id || (hit._source as any)?.spanId || '';
+};
+
+const AGENT_TRACES_VIRTUAL_COLUMNS = new Set([
+  'kind',
+  'status',
+  'latency',
+  'totalTokens',
+  'input',
+  'output',
+]);
+
+export const isOnAgentTracesPage = (): boolean => {
+  return window.location.pathname.includes('/agentTraces');
+};
+
+export const isAgentTracesVirtualColumn = (col: string): boolean => {
+  return AGENT_TRACES_VIRTUAL_COLUMNS.has(col);
+};
+
+const AgentTracesKindCell: React.FC<{ hitId: string }> = ({ hitId }) => {
+  const ctx = useTraceExpansion();
+  if (!ctx) return null;
+
+  const meta = ctx.getRowMeta(hitId);
+  if (!meta) return null;
+
+  const { traceRow, level, isExpandable } = meta;
+  const isTraceLoading = ctx.traceLoadingState.get(traceRow.traceId)?.loading;
+
+  const category = getSpanCategory(traceRow);
+  const catMeta = getCategoryMeta(category);
+
+  return (
+    <div
+      className="agentTracesTable__kindCell"
+      style={level ? { paddingLeft: `${level * 20}px` } : undefined}
+    >
+      {isExpandable && !isTraceLoading && (
+        <EuiButtonIcon
+          size="xs"
+          iconType={ctx.expandedRows.has(traceRow.id) ? 'arrowDown' : 'arrowRight'}
+          onClick={(e: React.MouseEvent) => ctx.toggleExpansion(e, traceRow.id, traceRow.traceId)}
+          aria-label={
+            ctx.expandedRows.has(traceRow.id)
+              ? i18n.translate('agentTraces.dataTable.collapse', { defaultMessage: 'Collapse' })
+              : i18n.translate('agentTraces.dataTable.expand', { defaultMessage: 'Expand' })
+          }
+          color="subdued"
+          iconSize="s"
+        />
+      )}
+      {isExpandable && isTraceLoading && (
+        <span className="agentTracesTable__spinnerWrapper">
+          <EuiLoadingSpinner size="s" />
+        </span>
+      )}
+      {!isExpandable && <span className="agentTracesTable__expandSpacer" />}
+      <EuiBadge className="agentTraces__categoryBadge" color={catMeta.color}>
+        {catMeta.label}
+      </EuiBadge>
+    </div>
+  );
+};
+
+const AgentTracesStatusCell: React.FC<{ status: string }> = ({ status }) => (
+  <EuiHealth color={status === 'success' ? 'success' : 'danger'}>
+    {status === 'success'
+      ? i18n.translate('agentTraces.dataTable.statusSuccess', { defaultMessage: 'Success' })
+      : i18n.translate('agentTraces.dataTable.statusError', { defaultMessage: 'Error' })}
+  </EuiHealth>
+);
+
+const AgentTracesTruncatedCell: React.FC<{ value: string }> = ({ value }) => (
+  <EuiText size="s" className="agentTracesTable__truncatedText">
+    {value}
+  </EuiText>
+);
+
+const AgentTracesTextCell: React.FC<{ value: string | number }> = ({ value }) => (
+  <EuiText size="s">{value}</EuiText>
+);
+
+interface AgentTracesVirtualCellProps {
+  colName: string;
+  row: OpenSearchSearchHit<Record<string, unknown>>;
+}
+
+export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({ colName, row }) => {
+  const ctx = useTraceExpansion();
+  const hitId = getHitId(row);
+  const meta = ctx?.getRowMeta(hitId);
+  const traceRow = meta?.traceRow;
+
+  if (!traceRow) {
+    return <td className="agentTracesDocTableCell" />;
+  }
+
+  let content: React.ReactNode;
+  switch (colName) {
+    case 'kind':
+      content = <AgentTracesKindCell hitId={hitId} />;
+      break;
+    case 'status':
+      content = <AgentTracesStatusCell status={traceRow.status} />;
+      break;
+    case 'latency':
+      content = <AgentTracesTextCell value={traceRow.latency} />;
+      break;
+    case 'totalTokens':
+      content = <AgentTracesTextCell value={traceRow.totalTokens} />;
+      break;
+    case 'input':
+      content = <AgentTracesTruncatedCell value={traceRow.input} />;
+      break;
+    case 'output':
+      content = <AgentTracesTruncatedCell value={traceRow.output} />;
+      break;
+    default:
+      content = null;
+  }
+
+  return (
+    <td className="agentTracesDocTableCell">
+      <span
+        className="agentTracesDocTableCell__dataField"
+        data-test-subj="osdDocTableCellDataField"
+      >
+        {content}
+      </span>
+    </td>
   );
 };

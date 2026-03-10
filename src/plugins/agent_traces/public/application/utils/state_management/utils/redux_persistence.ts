@@ -415,7 +415,7 @@ export const getPreloadedLegacyState = async (
 
   return {
     savedSearch: undefined,
-    columns: defaultColumns || ['_source'],
+    columns: defaultColumns || DEFAULT_VIRTUAL_TRACE_COLUMNS,
     sort: [],
     isDirty: false,
     savedQuery: undefined,
@@ -435,21 +435,39 @@ const getPreloadedMetaState = (services: AgentTracesServices) => {
   };
 };
 
+// Virtual columns specific to the new DataTable-based traces view.
+// If none of these are present in persisted columns, the columns are from
+// the old EuiTable implementation and need to be migrated.
+const TRACE_VIRTUAL_COLUMNS = ['latency', 'totalTokens', 'status'];
+const DEFAULT_VIRTUAL_TRACE_COLUMNS = [
+  'kind',
+  'name',
+  'status',
+  'latency',
+  'totalTokens',
+  'input',
+  'output',
+];
+
 const getColumnsForDataset = async (
   services: AgentTracesServices,
   currentColumns?: string[]
 ): Promise<string[] | null> => {
-  if (currentColumns && currentColumns.length > 0) {
-    return null;
+  if (!currentColumns || currentColumns.length === 0) {
+    try {
+      return services.uiSettings?.get(DEFAULT_TRACE_COLUMNS_SETTING) || ['spanId'];
+    } catch (error) {
+      return null;
+    }
   }
 
-  try {
-    const tracesDefaultColumns = services.uiSettings?.get(DEFAULT_TRACE_COLUMNS_SETTING) || [
-      'spanId',
-    ];
-
-    return tracesDefaultColumns;
-  } catch (error) {
-    return null;
+  // Migrate old EuiTable columns to new virtual columns.
+  // Old columns (e.g. spanId, status.code, durationInNanos) won't contain
+  // any of the trace-specific virtual columns (latency, totalTokens, status).
+  const hasVirtualColumns = currentColumns.some((c) => TRACE_VIRTUAL_COLUMNS.includes(c));
+  if (!hasVirtualColumns) {
+    return DEFAULT_VIRTUAL_TRACE_COLUMNS;
   }
+
+  return null;
 };

@@ -107,15 +107,13 @@ export function TableHeaderColumn({
   const handleChangeSortOrder = () => {
     if (!onChangeSortOrder) return;
 
-    // Cycle: Unsorted → Asc → Desc → Unsorted
+    // Cycle: Unsorted → Asc → Desc → Unsorted (clears sorting)
     if (currentColumnSort === undefined) {
       onChangeSortOrder([...currentSortWithoutColumn, [name, 'asc']]);
     } else if (currentColumnSortDirection === 'asc') {
       onChangeSortOrder([...currentSortWithoutColumn, [name, 'desc']]);
-    } else if (currentColumnSortDirection === 'desc' && currentSortWithoutColumn.length === 0) {
-      // Only sort column — cycle back to asc instead of removing
-      onChangeSortOrder([...currentSortWithoutColumn, [name, 'asc']]);
     } else {
+      // desc → clear this column's sort (returns to natural order if last column)
       onChangeSortOrder(currentSortWithoutColumn);
     }
   };
@@ -147,8 +145,6 @@ export function TableHeaderColumn({
       return sortAscendingMessage;
     } else if (currentColumnSortDirection === 'asc') {
       return sortDescendingMessage;
-    } else if (currentColumnSortDirection === 'desc' && currentSortWithoutColumn.length === 0) {
-      return sortAscendingMessage;
     } else {
       return stopSortingMessage;
     }

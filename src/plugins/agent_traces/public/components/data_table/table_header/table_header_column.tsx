@@ -15,6 +15,61 @@ import { i18n } from '@osd/i18n';
 import React, { ReactNode } from 'react';
 import { EuiSmallButtonIcon, EuiToolTip } from '@elastic/eui';
 
+interface ColumnFieldMapping {
+  label: string;
+  field: string;
+}
+
+/** Returns raw-field mappings for agent traces default columns, or null for other columns. */
+const getColumnFieldMappings = (
+  columnName: string,
+  displayName: ReactNode
+): ColumnFieldMapping[] | null => {
+  // Time column: displayName is 'Time' but columnName is the dataset's timeFieldName
+  if (displayName === 'Time') {
+    return [{ label: 'Time', field: 'startTime' }];
+  }
+  switch (columnName) {
+    case 'kind':
+      return [{ label: 'Kind', field: 'attributes.gen_ai.operation.name' }];
+    case 'name':
+      return [{ label: 'Name', field: 'name' }];
+    case 'status':
+      return [{ label: 'Status', field: 'status.code' }];
+    case 'latency':
+      return [{ label: 'Latency', field: 'durationInNanos' }];
+    case 'totalTokens':
+      return [
+        { label: 'Input token', field: 'attributes.gen_ai.usage.input_tokens' },
+        { label: 'Output token', field: 'attributes.gen_ai.usage.output_tokens' },
+      ];
+    case 'input':
+      return [{ label: 'Input', field: 'attributes.gen_ai.input.messages' }];
+    case 'output':
+      return [{ label: 'Output', field: 'attributes.gen_ai.output.messages' }];
+    default:
+      return null;
+  }
+};
+
+const buildColumnTooltip = (columnName: string, displayName: ReactNode): ReactNode => {
+  const mappings = getColumnFieldMappings(columnName, displayName);
+  if (!mappings) return displayName;
+  return (
+    <div>
+      <div>{displayName}</div>
+      <hr
+        style={{ margin: '4px 0', border: 'none', borderTop: '1px solid rgba(255,255,255,0.3)' }}
+      />
+      {mappings.map((m) => (
+        <div key={m.field}>
+          {m.label}: {m.field}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 interface Props {
   displayName: ReactNode;
   isRemoveable: boolean;
@@ -79,7 +134,7 @@ export function TableHeaderColumn({ displayName, isRemoveable, name, onRemoveCol
       })}
     >
       <span data-test-subj={`docTableHeader-${name}`}>
-        <EuiToolTip content={displayName} position="top">
+        <EuiToolTip content={buildColumnTooltip(name, displayName)} position="top">
           <span className="header-text">{displayName}</span>
         </EuiToolTip>
         {buttons

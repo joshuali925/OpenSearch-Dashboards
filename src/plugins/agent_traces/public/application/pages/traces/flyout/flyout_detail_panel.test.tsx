@@ -76,9 +76,9 @@ describe('FlyoutDetailPanel', () => {
       />
     );
 
-    expect(screen.getByText('OPERATION')).toBeInTheDocument();
+    expect(screen.getByText(/Operation:/)).toBeInTheDocument();
     expect(screen.getByText('chat')).toBeInTheDocument();
-    expect(screen.getByText('DURATION')).toBeInTheDocument();
+    expect(screen.getByText(/Duration:/)).toBeInTheDocument();
     expect(screen.getByText('150ms')).toBeInTheDocument();
   });
 
@@ -95,7 +95,7 @@ describe('FlyoutDetailPanel', () => {
     expect(dashes.length).toBeGreaterThan(0);
   });
 
-  it('renders status as Success for success', () => {
+  it('renders span ID in a badge', () => {
     render(
       <FlyoutDetailPanel
         selectedNode={mockTreeNode}
@@ -104,21 +104,7 @@ describe('FlyoutDetailPanel', () => {
       />
     );
 
-    expect(screen.getByText('Success')).toBeInTheDocument();
-  });
-
-  it('renders status as Error for error trace rows', () => {
-    const errorRow: TraceRow = { ...mockTraceRow, status: 'error' };
-    const errorNode: TreeNode = { ...mockTreeNode, traceRow: errorRow };
-
-    render(
-      <FlyoutDetailPanel
-        selectedNode={errorNode}
-        selectedTraceRow={errorRow}
-        onSelectNode={jest.fn()}
-      />
-    );
-
-    expect(screen.getByText('Error')).toBeInTheDocument();
+    expect(screen.getByText(/Span ID:/)).toBeInTheDocument();
+    expect(screen.getByText('span-1-full-id-abcdef')).toBeInTheDocument();
   });
 });

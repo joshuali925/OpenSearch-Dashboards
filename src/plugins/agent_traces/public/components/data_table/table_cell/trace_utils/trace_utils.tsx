@@ -296,9 +296,11 @@ const AgentTracesStatusCell: React.FC<{ status: string }> = ({ status }) => (
 );
 
 const AgentTracesTruncatedCell: React.FC<{ value: string }> = ({ value }) => (
-  <EuiText size="s" className="agentTracesTable__truncatedText">
-    {value}
-  </EuiText>
+  <EuiToolTip content={value} position="top" delay="long">
+    <EuiText size="s" className="agentTracesTable__truncatedText">
+      {value}
+    </EuiText>
+  </EuiToolTip>
 );
 
 const AgentTracesTextCell: React.FC<{ value: string | number }> = ({ value }) => (
@@ -480,8 +482,10 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
     invertOperations = traceRow.status === 'success';
   }
 
-  // No filter buttons for totalTokens (composite value)
-  const showFilter = colName !== 'totalTokens';
+  // No filter buttons for totalTokens (composite value) or "Other" kind (no mapped operations)
+  const showFilter =
+    colName !== 'totalTokens' &&
+    !(colName === 'kind' && Array.isArray(filterValue) && filterValue.length === 0);
 
   return (
     <td className="agentTracesDocTableCell">

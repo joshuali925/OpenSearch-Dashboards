@@ -267,14 +267,20 @@ export const SpansDataTable: React.FC = () => {
       <div className="agentTracesTable__container">
         <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" gutterSize="m">
           <EuiFlexItem grow={false}>
-            <EuiText size="s" color="subdued">
+            <EuiText size="s">
               <FormattedMessage
                 id="agentTraces.spansDataTable.showingCount"
                 defaultMessage="{count} of {total} Spans in {elapsed} ms"
                 values={{
-                  count: hits.length.toLocaleString(),
-                  total: (traceMetrics?.totalSpans ?? hits.length).toLocaleString(),
-                  elapsed: results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—',
+                  count: <strong>{hits.length.toLocaleString()}</strong>,
+                  total: (
+                    <strong>{(traceMetrics?.totalSpans ?? hits.length).toLocaleString()}</strong>
+                  ),
+                  elapsed: (
+                    <strong>
+                      {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}
+                    </strong>
+                  ),
                 }}
               />
             </EuiText>

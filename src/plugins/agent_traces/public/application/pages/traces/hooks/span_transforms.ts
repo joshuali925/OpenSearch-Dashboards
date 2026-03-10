@@ -87,7 +87,7 @@ export const traceHitToAgentSpan = (hit: TraceHit, index: number): AgentSpan => 
   startTime: hit.startTime || '',
   endTime: hit.endTime || '',
   durationNanos: hit.durationInNanos || 0,
-  statusCode: hit['status.code'] ?? 0,
+  statusCode: hit['status.code'] ?? hit.status?.code ?? 0,
   statusMessage: hit.status?.message || '',
   serviceName: hit.serviceName || '',
   genAiSystem: hit.attributes?.gen_ai?.system || '',

@@ -12,6 +12,7 @@ import { OpenSearchDashboardsContextProvider } from '../../../../opensearch_dash
 import { uiReducer } from '../../application/utils/state_management/slices';
 import { queryReducer } from '../../application/utils/state_management/slices';
 import { resultsReducer } from '../../application/utils/state_management/slices';
+import { legacyReducer } from '../../application/utils/state_management/slices/legacy/legacy_slice';
 import {
   setActiveTab,
   clearQueryStatusMapByKey,
@@ -89,6 +90,7 @@ describe('AgentTracesTabsComponent', () => {
         ui: uiReducer,
         query: queryReducer,
         results: resultsReducer,
+        legacy: legacyReducer,
       },
       preloadedState: {
         ui: {
@@ -101,6 +103,11 @@ describe('AgentTracesTabsComponent', () => {
           dataset: { id: 'test-dataset', title: 'test-dataset', type: 'INDEX_PATTERN' },
         },
         results: {},
+        legacy: {
+          columns: [],
+          sort: [],
+          interval: 'auto',
+        },
         ...initialState,
       },
     });

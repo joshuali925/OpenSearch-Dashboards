@@ -9,7 +9,7 @@ import { RootState } from '../state_management/store';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
 import { AgentTracesServices } from '../../../types';
 import { defaultPrepareQueryString } from '../state_management/actions/query_actions';
-import { selectPatternsField } from '../state_management/selectors';
+import { selectPatternsField, selectSort } from '../state_management/selectors';
 import { selectQueryStatusMapByKey } from '../state_management/selectors/query_editor/query_editor';
 
 /**
@@ -20,14 +20,15 @@ export const useTabResults = () => {
   const query = useSelector((state: RootState) => state.query);
   const activeTabId = useSelector((state: RootState) => state.ui.activeTabId);
   const patternsField = useSelector(selectPatternsField); // for use in updating dependency array of cacheKey
+  const sort = useSelector(selectSort);
 
   const cacheKey = useMemo(() => {
     const activeTab = services.tabRegistry.getTab(activeTabId);
     const prepareQuery = activeTab?.prepareQuery || defaultPrepareQueryString;
-    return prepareQuery(query);
+    return prepareQuery(query, sort);
     // TODO: redo logic of using patternsField in dependency array when we have a better method to update cacheKey
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, activeTabId, services, patternsField]);
+  }, [query, activeTabId, services, patternsField, sort]);
 
   // Select only the specific result by cache key instead of the entire results map
   const result = useSelector((state: RootState) => (cacheKey ? state.results[cacheKey] : null));

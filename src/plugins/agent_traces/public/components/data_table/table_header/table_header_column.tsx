@@ -14,6 +14,7 @@ import './_table_header.scss';
 import { i18n } from '@osd/i18n';
 import React, { ReactNode } from 'react';
 import { EuiSmallButtonIcon, EuiToolTip } from '@elastic/eui';
+import { SortOrder } from '../../../helpers/data_table_helper';
 
 interface ColumnFieldMapping {
   label: string;
@@ -70,14 +71,89 @@ const buildColumnTooltip = (columnName: string, displayName: ReactNode): ReactNo
   );
 };
 
+const sortDirectionToIcon: Record<string, string> = {
+  desc: 'sortDown',
+  asc: 'sortUp',
+  '': 'sortable',
+};
+
 interface Props {
   displayName: ReactNode;
   isRemoveable: boolean;
+  isSortable?: boolean;
   name: string;
+  onChangeSortOrder?: (sortOrder: SortOrder[]) => void;
   onRemoveColumn?: (name: string) => void;
+  sortOrder?: SortOrder[];
 }
 
-export function TableHeaderColumn({ displayName, isRemoveable, name, onRemoveColumn }: Props) {
+export function TableHeaderColumn({
+  displayName,
+  isRemoveable,
+  isSortable,
+  name,
+  onChangeSortOrder,
+  onRemoveColumn,
+  sortOrder = [],
+}: Props) {
+  const currentSortWithoutColumn = sortOrder.filter((pair) => pair[0] !== name);
+  const currentColumnSort = sortOrder.find((pair) => pair[0] === name);
+  const currentColumnSortDirection = (currentColumnSort && currentColumnSort[1]) || '';
+
+  const btnSortIcon = sortDirectionToIcon[currentColumnSortDirection];
+  const btnSortClassName =
+    currentColumnSortDirection !== '' ? '' : 'agentTracesDocTableHeader__sortChange';
+
+  const handleChangeSortOrder = () => {
+    if (!onChangeSortOrder) return;
+
+    // Cycle: Unsorted → Asc → Desc → Unsorted
+    if (currentColumnSort === undefined) {
+      onChangeSortOrder([...currentSortWithoutColumn, [name, 'asc']]);
+    } else if (currentColumnSortDirection === 'asc') {
+      onChangeSortOrder([...currentSortWithoutColumn, [name, 'desc']]);
+    } else if (currentColumnSortDirection === 'desc' && currentSortWithoutColumn.length === 0) {
+      // Only sort column — cycle back to asc instead of removing
+      onChangeSortOrder([...currentSortWithoutColumn, [name, 'asc']]);
+    } else {
+      onChangeSortOrder(currentSortWithoutColumn);
+    }
+  };
+
+  const getSortButtonAriaLabel = () => {
+    const sortAscendingMessage = i18n.translate(
+      'agentTraces.docTable.tableHeader.sortByColumnAscendingAriaLabel',
+      {
+        defaultMessage: 'Sort {columnName} ascending',
+        values: { columnName: name },
+      }
+    );
+    const sortDescendingMessage = i18n.translate(
+      'agentTraces.docTable.tableHeader.sortByColumnDescendingAriaLabel',
+      {
+        defaultMessage: 'Sort {columnName} descending',
+        values: { columnName: name },
+      }
+    );
+    const stopSortingMessage = i18n.translate(
+      'agentTraces.docTable.tableHeader.sortByColumnUnsortedAriaLabel',
+      {
+        defaultMessage: 'Stop sorting on {columnName}',
+        values: { columnName: name },
+      }
+    );
+
+    if (currentColumnSort === undefined) {
+      return sortAscendingMessage;
+    } else if (currentColumnSortDirection === 'asc') {
+      return sortDescendingMessage;
+    } else if (currentColumnSortDirection === 'desc' && currentSortWithoutColumn.length === 0) {
+      return sortAscendingMessage;
+    } else {
+      return stopSortingMessage;
+    }
+  };
+
   const handleCopyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(name);
@@ -93,6 +169,16 @@ export function TableHeaderColumn({ displayName, isRemoveable, name, onRemoveCol
 
   // action buttons displayed on the right side of the column name
   const buttons = [
+    // Sort Button
+    {
+      active: isSortable && typeof onChangeSortOrder === 'function',
+      ariaLabel: getSortButtonAriaLabel(),
+      className: btnSortClassName,
+      onClick: handleChangeSortOrder,
+      testSubject: `docTableHeaderFieldSort_${name}`,
+      tooltip: getSortButtonAriaLabel(),
+      iconType: btnSortIcon,
+    },
     // Copy Button
     {
       active: true,
@@ -100,6 +186,7 @@ export function TableHeaderColumn({ displayName, isRemoveable, name, onRemoveCol
         defaultMessage: 'Copy {columnName} column name',
         values: { columnName: name },
       }),
+      className: '',
       onClick: handleCopyToClipboard,
       testSubject: `docTableCopyHeader-${name}`,
       tooltip: i18n.translate('agentTraces.docTable.tableHeader.copyColumnButtonTooltip', {
@@ -114,6 +201,7 @@ export function TableHeaderColumn({ displayName, isRemoveable, name, onRemoveCol
         defaultMessage: 'Remove {columnName} column',
         values: { columnName: name },
       }),
+      className: '',
       onClick: () => onRemoveColumn && onRemoveColumn(name),
       testSubject: `docTableRemoveHeader-${name}`,
       tooltip: i18n.translate('agentTraces.docTable.tableHeader.removeColumnButtonTooltip', {
@@ -148,7 +236,9 @@ export function TableHeaderColumn({ displayName, isRemoveable, name, onRemoveCol
               <EuiSmallButtonIcon
                 iconType={`${button.iconType}`}
                 aria-label={button.ariaLabel}
-                className="agentTracesDocTableHeaderField__actionButton"
+                className={`agentTracesDocTableHeaderField__actionButton${
+                  button.className ? ` ${button.className}` : ''
+                }`}
                 data-test-subj={button.testSubject}
                 onClick={button.onClick}
                 iconSize="s"

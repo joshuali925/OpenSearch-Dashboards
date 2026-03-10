@@ -53,6 +53,8 @@ export const AgentTracesTabs = () => {
     (a, b) => a.length === b.length && a.every((key, i) => key === b[i])
   );
 
+  const sort = useSelector((state: RootState) => state.legacy.sort);
+
   const filteredTabs = useMemo(
     () =>
       flavorId == null
@@ -95,7 +97,7 @@ export const AgentTracesTabs = () => {
       const tab = services.tabRegistry.getTab(tabId);
       if (!tab?.prepareQuery) return;
 
-      const newTabCacheKey = tab.prepareQuery(query);
+      const newTabCacheKey = tab.prepareQuery(query, sort);
       const needsExecution = !resultKeys.includes(newTabCacheKey);
 
       if (needsExecution) {
@@ -109,7 +111,7 @@ export const AgentTracesTabs = () => {
         );
       }
     },
-    [query, resultKeys, dispatch, services]
+    [query, sort, resultKeys, dispatch, services]
   );
 
   if (flavorId == null) {

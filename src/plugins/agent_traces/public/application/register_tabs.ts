@@ -15,6 +15,7 @@ import {
   AGENT_TRACES_SPANS_TAB_ID,
 } from '../../common';
 import { defaultPrepareQueryString } from './utils/state_management/actions/query_actions';
+import { buildPplSortClause } from './pages/traces/table_shared';
 
 /**
  * Registers built-in tabs with the tab registry
@@ -34,9 +35,10 @@ export const registerBuiltInTabs = (tabRegistry: TabRegistryService) => {
     // Traces tab handles its own PPL queries via useAgentTraces (server-side pagination),
     // but we still provide prepareQuery so the standard pipeline fetches a sample of hits.
     // The sidebar's field details popover (top 5 values) relies on these hits.
-    prepareQuery: (query) => {
+    prepareQuery: (query, sort) => {
       const baseQuery = defaultPrepareQueryString(query);
-      return `${baseQuery} | where parentSpanId = "" AND isnotnull(\`attributes.gen_ai.operation.name\`) | head 500`;
+      const sortClause = sort?.length ? ` ${buildPplSortClause(sort[0][0], sort[0][1])}` : '';
+      return `${baseQuery} | where parentSpanId = "" AND isnotnull(\`attributes.gen_ai.operation.name\`)${sortClause} | head 500`;
     },
 
     component: TracesTab,
@@ -54,9 +56,10 @@ export const registerBuiltInTabs = (tabRegistry: TabRegistryService) => {
     supportedLanguages: [AGENT_TRACES_DEFAULT_LANGUAGE],
 
     // Filter to all gen_ai spans (not just root spans)
-    prepareQuery: (query) => {
+    prepareQuery: (query, sort) => {
       const baseQuery = defaultPrepareQueryString(query);
-      return `${baseQuery} | where isnotnull(\`attributes.gen_ai.operation.name\`) | head 500`;
+      const sortClause = sort?.length ? ` ${buildPplSortClause(sort[0][0], sort[0][1])}` : '';
+      return `${baseQuery} | where isnotnull(\`attributes.gen_ai.operation.name\`)${sortClause} | head 500`;
     },
 
     component: SpansTab,

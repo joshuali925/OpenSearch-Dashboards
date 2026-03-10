@@ -53,13 +53,13 @@ describe('data_table_helper', () => {
       });
     });
 
-    it('should use sortable from osdFieldOverrides when provided', () => {
+    it('should always be sortable regardless of osdFieldOverrides', () => {
       const timeFieldName = '@timestamp';
       const osdFieldOverrides = { sortable: false };
 
       const result = getTimeColumn(timeFieldName, osdFieldOverrides);
 
-      expect(result.isSortable).toBe(false);
+      expect(result.isSortable).toBe(true);
     });
 
     it('should default to true when sortable is not provided', () => {

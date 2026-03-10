@@ -34,7 +34,13 @@ import {
   DataView as Dataset,
 } from '../../../../plugins/data/public';
 import { shortenDottedString } from './shorten_dotted_string';
-import { AGENT_TRACES_DEFAULT_COLUMNS_SET, AGENT_TRACES_COLUMN_DISPLAY_NAMES } from '../../common';
+import {
+  AGENT_TRACES_DEFAULT_COLUMNS_SET,
+  AGENT_TRACES_COLUMN_DISPLAY_NAMES,
+  AGENT_TRACES_SORTABLE_COLUMNS,
+} from '../../common';
+
+export type SortOrder = [string, 'asc' | 'desc'];
 
 export interface LegacyDisplayedColumn {
   name: string;
@@ -50,18 +56,17 @@ export interface LegacyDisplayedColumn {
  * If it's an IndexPattern with timefield, the time column is
  * prepended, not moveable and removeable
  * @param timeFieldName
- * @param osdFieldOverrides
  */
 export function getTimeColumn(
   timeFieldName: string,
-  osdFieldOverrides: {
+  _osdFieldOverrides?: {
     [key: string]: any;
   }
 ): LegacyDisplayedColumn {
   return {
     name: timeFieldName,
     displayName: 'Time',
-    isSortable: osdFieldOverrides.sortable ?? true,
+    isSortable: true,
     isRemoveable: false,
     colLeftIdx: -1,
     colRightIdx: -1,
@@ -117,7 +122,9 @@ export function getLegacyDisplayedColumns(
     return {
       name: column,
       displayName: isShortDots ? shortenDottedString(columnDisplayName) : columnDisplayName,
-      isSortable: osdFieldOverrides.sortable ?? !!field?.sortable,
+      isSortable:
+        AGENT_TRACES_SORTABLE_COLUMNS.has(column) ||
+        (osdFieldOverrides.sortable ?? !!field?.sortable),
       isRemoveable:
         !AGENT_TRACES_DEFAULT_COLUMNS_SET.has(column) &&
         (column !== '_source' || columns.length > 1),

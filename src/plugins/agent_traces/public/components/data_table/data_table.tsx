@@ -16,7 +16,7 @@ import {
   OpenSearchSearchHit,
 } from '../../types/doc_views_types';
 import { TableRow } from './table_row/table_row';
-import { LegacyDisplayedColumn } from '../../helpers/data_table_helper';
+import { LegacyDisplayedColumn, SortOrder } from '../../helpers/data_table_helper';
 import { Pagination } from './pagination/pagination';
 
 export interface DataTableProps {
@@ -35,6 +35,8 @@ export interface DataTableProps {
   scrollToTop?: () => void;
   expandedTableHeader?: string;
   wrapCellText?: boolean;
+  sortOrder?: SortOrder[];
+  onChangeSortOrder?: (sortOrder: SortOrder[]) => void;
 }
 
 // ToDo: These would need to be read from an upcoming config panel
@@ -59,6 +61,8 @@ const DataTableUI = ({
   scrollToTop,
   expandedTableHeader,
   wrapCellText,
+  sortOrder,
+  onChangeSortOrder,
 }: DataTableProps) => {
   const columnNames = columns.map((column) => column.name);
 
@@ -178,7 +182,12 @@ const DataTableUI = ({
         className={`agentTraces-table table${wrapCellText ? ' agentTraces-table--wrap' : ''}`}
       >
         <thead>
-          <TableHeader displayedColumns={columns} onRemoveColumn={onRemoveColumn} />
+          <TableHeader
+            displayedColumns={columns}
+            onRemoveColumn={onRemoveColumn}
+            sortOrder={sortOrder}
+            onChangeSortOrder={onChangeSortOrder}
+          />
         </thead>
         <tbody>
           {(showPagination ? displayedRows : rows.slice(0, renderedRowCount)).map(

@@ -466,14 +466,20 @@ export const TracesDataTable: React.FC = () => {
       <div className="agentTracesTable__container">
         <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" gutterSize="m">
           <EuiFlexItem grow={false}>
-            <EuiText size="s" color="subdued">
+            <EuiText size="s">
               <FormattedMessage
                 id="agentTraces.tracesDataTable.showingCount"
                 defaultMessage="{count} of {total} Traces in {elapsed} ms"
                 values={{
-                  count: hits.length.toLocaleString(),
-                  total: (traceMetrics?.totalTraces ?? hits.length).toLocaleString(),
-                  elapsed: results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—',
+                  count: <strong>{hits.length.toLocaleString()}</strong>,
+                  total: (
+                    <strong>{(traceMetrics?.totalTraces ?? hits.length).toLocaleString()}</strong>
+                  ),
+                  elapsed: (
+                    <strong>
+                      {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}
+                    </strong>
+                  ),
                 }}
               />
             </EuiText>

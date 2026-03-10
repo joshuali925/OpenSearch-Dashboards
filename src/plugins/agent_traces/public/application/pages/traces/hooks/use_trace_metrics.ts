@@ -16,6 +16,8 @@ export interface TraceMetrics {
   totalTokens: number;
   latencyP50Nanos: number;
   latencyP99Nanos: number;
+  errorTraces: number;
+  errorSpans: number;
 }
 
 export interface UseTraceMetricsResult {
@@ -69,12 +71,12 @@ const doFetchMetrics = async (
     // Query 1: Combined trace stats + token stats on root gen_ai traces
     (async () => {
       try {
-        const combinedQuery = `${rootQueryBase} | stats count() as total_traces, percentile(durationInNanos, 50) as p50_latency, percentile(durationInNanos, 99) as p99_latency, sum(\`attributes.gen_ai.usage.input_tokens\`) as input_tokens, sum(\`attributes.gen_ai.usage.output_tokens\`) as output_tokens`;
+        const combinedQuery = `${rootQueryBase} | eval is_error = if(\`status.code\` = 2, 1, 0) | stats count() as total_traces, percentile(durationInNanos, 50) as p50_latency, percentile(durationInNanos, 99) as p99_latency, sum(\`attributes.gen_ai.usage.input_tokens\`) as input_tokens, sum(\`attributes.gen_ai.usage.output_tokens\`) as output_tokens, sum(is_error) as error_traces`;
         const combinedResponse = await pplService.executeQuery(datasetParam, combinedQuery);
         return parseStatsResponse(combinedResponse);
       } catch {
         // Token fields may not exist — retry without them
-        const traceOnlyQuery = `${rootQueryBase} | stats count() as total_traces, percentile(durationInNanos, 50) as p50_latency, percentile(durationInNanos, 99) as p99_latency`;
+        const traceOnlyQuery = `${rootQueryBase} | eval is_error = if(\`status.code\` = 2, 1, 0) | stats count() as total_traces, percentile(durationInNanos, 50) as p50_latency, percentile(durationInNanos, 99) as p99_latency, sum(is_error) as error_traces`;
         const traceOnlyResponse = await pplService.executeQuery(datasetParam, traceOnlyQuery);
         return parseStatsResponse(traceOnlyResponse);
       }
@@ -82,7 +84,7 @@ const doFetchMetrics = async (
     // Query 2: Count agent spans (those with gen_ai.operation.name)
     (async () => {
       const agentSpanFilter = `where isnotnull(\`attributes.gen_ai.operation.name\`)`;
-      const totalSpansQuery = `${baseQueryString} | ${agentSpanFilter} | stats count() as total_spans`;
+      const totalSpansQuery = `${baseQueryString} | ${agentSpanFilter} | eval is_error = if(\`status.code\` = 2, 1, 0) | stats count() as total_spans, sum(is_error) as error_spans`;
       const totalSpansResponse = await pplService.executeQuery(datasetParam, totalSpansQuery);
       return parseStatsResponse(totalSpansResponse);
     })(),
@@ -94,6 +96,8 @@ const doFetchMetrics = async (
     totalTokens: (traceStats.input_tokens ?? 0) + (traceStats.output_tokens ?? 0),
     latencyP50Nanos: traceStats.p50_latency ?? 0,
     latencyP99Nanos: traceStats.p99_latency ?? 0,
+    errorTraces: traceStats.error_traces ?? 0,
+    errorSpans: spanStats.error_spans ?? 0,
   };
 };
 

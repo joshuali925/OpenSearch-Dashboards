@@ -10,7 +10,18 @@ import { TraceMetrics } from './hooks/use_trace_metrics';
 
 jest.mock('@osd/i18n', () => ({
   i18n: {
-    translate: (_key: string, opts: { defaultMessage: string }) => opts.defaultMessage,
+    translate: (
+      _key: string,
+      opts: { defaultMessage: string; values?: Record<string, string> }
+    ) => {
+      let msg = opts.defaultMessage;
+      if (opts.values) {
+        Object.entries(opts.values).forEach(([k, v]) => {
+          msg = msg.replace(`{${k}}`, v);
+        });
+      }
+      return msg;
+    },
   },
 }));
 
@@ -20,13 +31,18 @@ const mockMetrics: TraceMetrics = {
   totalTokens: 500,
   latencyP50Nanos: 250_000_000,
   latencyP99Nanos: 3_500_000_000,
+  errorTraces: 23,
+  errorSpans: 89,
 };
 
 describe('TraceMetricsBar', () => {
-  it('renders loading placeholders when loading', () => {
+  it('renders loading state when loading', () => {
     render(<TraceMetricsBar metrics={null} loading={true} />);
-    const dashes = screen.getAllByText('——');
-    expect(dashes.length).toBe(5);
+    expect(screen.getByText('Total Traces')).toBeInTheDocument();
+    expect(screen.getByText('Total Spans')).toBeInTheDocument();
+    expect(screen.getByText('Total Tokens')).toBeInTheDocument();
+    expect(screen.getByText('Latency P50')).toBeInTheDocument();
+    expect(screen.getByText('Latency P99')).toBeInTheDocument();
   });
 
   it('renders metric values when loaded', () => {
@@ -45,6 +61,25 @@ describe('TraceMetricsBar', () => {
     expect(screen.getByText('Total Tokens')).toBeInTheDocument();
     expect(screen.getByText('Latency P50')).toBeInTheDocument();
     expect(screen.getByText('Latency P99')).toBeInTheDocument();
+  });
+
+  it('renders error counts when present', () => {
+    render(<TraceMetricsBar metrics={mockMetrics} loading={false} />);
+    expect(screen.getByText('23 errors')).toBeInTheDocument();
+    expect(screen.getByText('89 errors')).toBeInTheDocument();
+  });
+
+  it('does not render error counts when zero', () => {
+    const metricsNoErrors = { ...mockMetrics, errorTraces: 0, errorSpans: 0 };
+    render(<TraceMetricsBar metrics={metricsNoErrors} loading={false} />);
+    expect(screen.queryByText(/errors/)).not.toBeInTheDocument();
+  });
+
+  it('formats error counts with K suffix for large numbers', () => {
+    const metricsLargeErrors = { ...mockMetrics, errorTraces: 15000, errorSpans: 2500000 };
+    render(<TraceMetricsBar metrics={metricsLargeErrors} loading={false} />);
+    expect(screen.getByText('15K errors')).toBeInTheDocument();
+    expect(screen.getByText('2.50M errors')).toBeInTheDocument();
   });
 
   it('formats small latency as ms', () => {

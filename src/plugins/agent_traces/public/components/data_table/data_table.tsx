@@ -89,9 +89,24 @@ const DataTableUI = ({
     [showPagination]
   );
 
-  // Reset rendered count when rows change (e.g. new query / sort)
+  // Reset rendered count only when the base data changes (new query / sort),
+  // not when rows change due to tree expansion (children inserted).
+  const prevFirstRowIdRef = useRef<string | undefined>();
+  const prevRowCountRef = useRef(rows.length);
   useEffect(() => {
-    setRenderedRowCount(LAZY_LOAD_BATCH_SIZE);
+    const firstId = rows[0]?._id || (rows[0]?._source as any)?.spanId;
+    if (prevFirstRowIdRef.current !== firstId) {
+      // New query / sort: reset lazy loading
+      setRenderedRowCount(LAZY_LOAD_BATCH_SIZE);
+    } else {
+      // Expansion: grow rendered count to accommodate inserted children
+      const delta = rows.length - prevRowCountRef.current;
+      if (delta > 0) {
+        setRenderedRowCount((prev) => prev + delta);
+      }
+    }
+    prevFirstRowIdRef.current = firstId;
+    prevRowCountRef.current = rows.length;
   }, [rows]);
 
   // Clean up observer on unmount

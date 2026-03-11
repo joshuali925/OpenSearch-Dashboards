@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { EuiText, EuiSwitch, EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
 import { i18n } from '@osd/i18n';
@@ -165,6 +165,8 @@ export const TracesDataTable: React.FC = () => {
   const inFlightRef = useRef<Set<string>>(new Set());
   const traceSpansCacheRef = useRef<Map<string, BaseRow[]>>(new Map());
   const flyoutTraceIdRef = useRef<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const pendingScrollRestoreRef = useRef<number | null>(null);
 
   // Reset tree expansion when hits change (e.g. sort re-query)
   useEffect(() => {
@@ -275,6 +277,11 @@ export const TracesDataTable: React.FC = () => {
     async (e: React.MouseEvent, id: string, traceId: string) => {
       e.stopPropagation();
 
+      // Save scroll position before expansion changes the DOM
+      if (scrollContainerRef.current) {
+        pendingScrollRestoreRef.current = scrollContainerRef.current.scrollTop;
+      }
+
       if (expandedRows.has(id)) {
         setExpandedRows((prev) => {
           const next = new Set(prev);
@@ -358,6 +365,16 @@ export const TracesDataTable: React.FC = () => {
 
     return result;
   }, [hits, expandedRows, rowMetaMap, getRowMeta]);
+
+  // Restore scroll position after expansion/collapse changes the DOM.
+  // useLayoutEffect fires synchronously after DOM mutations but before
+  // the browser paints, so the user never sees the scroll jump.
+  useLayoutEffect(() => {
+    if (pendingScrollRestoreRef.current !== null && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = pendingScrollRestoreRef.current;
+      pendingScrollRestoreRef.current = null;
+    }
+  }, [visibleRows]);
 
   // Build displayed columns from Redux state
   const displayedColumns = useMemo(() => {
@@ -501,7 +518,10 @@ export const TracesDataTable: React.FC = () => {
             />
           </EuiFlexItem>
         </EuiFlexGroup>
-        <div className="agentTracesTable__scrollContainer eui-xScrollWithShadows">
+        <div
+          ref={scrollContainerRef}
+          className="agentTracesTable__scrollContainer eui-xScrollWithShadows"
+        >
           <DataTable
             columns={displayedColumns}
             rows={visibleRows}

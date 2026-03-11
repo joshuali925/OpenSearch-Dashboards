@@ -114,7 +114,11 @@
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: $ouiSize;
+    padding: $ouiSizeS $ouiSize;
+
+    // Override inherited flex-column from .euiResizablePanel__content > div
+    // so children (title row, spacers, accordions) keep their natural height.
+    display: block;
   }
 }
 
@@ -169,6 +173,11 @@
       flex-direction: column;
       overflow: hidden;
       min-height: 0;
+    }
+
+    // Detail panel: use block layout so children keep natural height
+    > .agentTracesFlyout__detailPanel {
+      display: block;
     }
   }
 

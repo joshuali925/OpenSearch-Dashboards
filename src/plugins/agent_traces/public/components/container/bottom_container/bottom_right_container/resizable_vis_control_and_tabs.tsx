@@ -20,13 +20,11 @@ export const ResizableVisControlAndTabs = () => {
   return (
     <TraceMetricsContext.Provider value={metricsResult}>
       <TraceFlyoutProvider>
-        <div style={{ padding: '0 16px' }}>
-          <TraceMetricsBar
-            metrics={metricsResult.metrics}
-            loading={metricsResult.loading}
-            onErrorClick={handleErrorClick}
-          />
-        </div>
+        <TraceMetricsBar
+          metrics={metricsResult.metrics}
+          loading={metricsResult.loading}
+          onErrorClick={handleErrorClick}
+        />
         <AgentTracesTabs />
       </TraceFlyoutProvider>
     </TraceMetricsContext.Provider>

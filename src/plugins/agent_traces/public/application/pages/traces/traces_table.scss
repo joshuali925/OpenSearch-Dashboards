@@ -24,6 +24,8 @@
 .agentTracesTable__container {
   padding: $ouiSizeM;
   min-width: 0;
+  height: 100%;
+  mask-image: none;
 }
 
 .agentTracesTable__clickableRow {

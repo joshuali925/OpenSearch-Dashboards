@@ -264,7 +264,7 @@ export const SpansDataTable: React.FC = () => {
 
   return (
     <TraceExpansionProvider value={expansionContextValue}>
-      <div className="agentTracesTable__container">
+      <div className="agentTracesTable__container eui-xScrollWithShadows">
         <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" gutterSize="m">
           <EuiFlexItem grow={false}>
             <EuiText size="s">

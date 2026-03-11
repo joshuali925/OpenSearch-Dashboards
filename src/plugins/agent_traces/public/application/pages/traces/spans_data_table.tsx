@@ -264,8 +264,13 @@ export const SpansDataTable: React.FC = () => {
 
   return (
     <TraceExpansionProvider value={expansionContextValue}>
-      <div className="agentTracesTable__container eui-xScrollWithShadows">
-        <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" gutterSize="m">
+      <div className="agentTracesTable__container">
+        <EuiFlexGroup
+          className="agentTracesTable__infoBar"
+          alignItems="center"
+          justifyContent="spaceBetween"
+          gutterSize="m"
+        >
           <EuiFlexItem grow={false}>
             <EuiText size="s">
               <FormattedMessage
@@ -297,22 +302,24 @@ export const SpansDataTable: React.FC = () => {
             />
           </EuiFlexItem>
         </EuiFlexGroup>
-        <DataTable
-          columns={displayedColumns}
-          rows={hits}
-          dataset={dataset}
-          hits={results?.hits?.total}
-          sampleSize={sampleSize}
-          isShortDots={false}
-          showPagination={false}
-          docViewsRegistry={docViewsRegistry}
-          onRemoveColumn={onRemoveColumn}
-          onAddColumn={onAddColumn}
-          onFilter={onAddFilter as DocViewFilterFn}
-          wrapCellText={wrapCellText}
-          sortOrder={sortOrder}
-          onChangeSortOrder={handleSortChange}
-        />
+        <div className="agentTracesTable__scrollContainer eui-xScrollWithShadows">
+          <DataTable
+            columns={displayedColumns}
+            rows={hits}
+            dataset={dataset}
+            hits={results?.hits?.total}
+            sampleSize={sampleSize}
+            isShortDots={false}
+            showPagination={false}
+            docViewsRegistry={docViewsRegistry}
+            onRemoveColumn={onRemoveColumn}
+            onAddColumn={onAddColumn}
+            onFilter={onAddFilter as DocViewFilterFn}
+            wrapCellText={wrapCellText}
+            sortOrder={sortOrder}
+            onChangeSortOrder={handleSortChange}
+          />
+        </div>
       </div>
     </TraceExpansionProvider>
   );

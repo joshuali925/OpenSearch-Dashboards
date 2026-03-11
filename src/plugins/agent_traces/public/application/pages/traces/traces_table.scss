@@ -22,9 +22,22 @@
 }
 
 .agentTracesTable__container {
-  padding: $ouiSizeM;
+  display: flex;
+  flex-direction: column;
+  padding: $ouiSizeXS $ouiSizeM 0;
   min-width: 0;
   height: 100%;
+}
+
+.agentTracesTable__infoBar {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.agentTracesTable__scrollContainer {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   mask-image: none;
 }
 

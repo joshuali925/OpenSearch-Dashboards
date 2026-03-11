@@ -265,40 +265,38 @@ export const SpansDataTable: React.FC = () => {
   return (
     <TraceExpansionProvider value={expansionContextValue}>
       <div className="agentTracesTable__container">
-        <div className="agentTracesTable__stickyInfoBar">
-          <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" gutterSize="m">
-            <EuiFlexItem grow={false}>
-              <EuiText size="s">
-                <FormattedMessage
-                  id="agentTraces.spansDataTable.showingCount"
-                  defaultMessage="{count} of {total} Spans in {elapsed} ms"
-                  values={{
-                    count: <strong>{hits.length.toLocaleString()}</strong>,
-                    total: (
-                      <strong>{(traceMetrics?.totalSpans ?? hits.length).toLocaleString()}</strong>
-                    ),
-                    elapsed: (
-                      <strong>
-                        {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}
-                      </strong>
-                    ),
-                  }}
-                />
-              </EuiText>
-            </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              <EuiSwitch
-                label={i18n.translate('agentTraces.spansDataTable.wrapCellText', {
-                  defaultMessage: 'Wrap cell text',
-                })}
-                checked={wrapCellText}
-                onChange={(e) => setWrapCellText(e.target.checked)}
-                data-test-subj="agentTracesWrapCellTextSwitch"
-                compressed
+        <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" gutterSize="m">
+          <EuiFlexItem grow={false}>
+            <EuiText size="s">
+              <FormattedMessage
+                id="agentTraces.spansDataTable.showingCount"
+                defaultMessage="{count} of {total} Spans in {elapsed} ms"
+                values={{
+                  count: <strong>{hits.length.toLocaleString()}</strong>,
+                  total: (
+                    <strong>{(traceMetrics?.totalSpans ?? hits.length).toLocaleString()}</strong>
+                  ),
+                  elapsed: (
+                    <strong>
+                      {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}
+                    </strong>
+                  ),
+                }}
               />
-            </EuiFlexItem>
-          </EuiFlexGroup>
-        </div>
+            </EuiText>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiSwitch
+              label={i18n.translate('agentTraces.spansDataTable.wrapCellText', {
+                defaultMessage: 'Wrap cell text',
+              })}
+              checked={wrapCellText}
+              onChange={(e) => setWrapCellText(e.target.checked)}
+              data-test-subj="agentTracesWrapCellTextSwitch"
+              compressed
+            />
+          </EuiFlexItem>
+        </EuiFlexGroup>
         <DataTable
           columns={displayedColumns}
           rows={hits}

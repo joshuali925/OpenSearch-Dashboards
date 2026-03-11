@@ -18,12 +18,10 @@ export const ResizableVisControlAndTabs = () => {
   return (
     <TraceMetricsContext.Provider value={metricsResult}>
       <TraceFlyoutProvider>
-        <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 0', minHeight: 0 }}>
-          <div className="agentTracesMetrics__barWrapper">
-            <TraceMetricsBar metrics={metricsResult.metrics} loading={metricsResult.loading} />
-          </div>
-          <AgentTracesTabs />
+        <div style={{ padding: '0 16px' }}>
+          <TraceMetricsBar metrics={metricsResult.metrics} loading={metricsResult.loading} />
         </div>
+        <AgentTracesTabs />
       </TraceFlyoutProvider>
     </TraceMetricsContext.Provider>
   );

@@ -52,12 +52,6 @@ $osdHeaderOffset: $euiHeaderHeightCompensation;
 .agtCanvas {
   @include euiYScroll;
 
-  overflow-x: auto; // override mixin's hidden → enable horizontal scroll
-
-  /* stylelint-disable-next-line */
-  container-type: inline-size; // containment context
-  /* stylelint-disable-next-line */
-  container-name: canvas;
   height: 100%;
   display: flex;
   flex-direction: column;

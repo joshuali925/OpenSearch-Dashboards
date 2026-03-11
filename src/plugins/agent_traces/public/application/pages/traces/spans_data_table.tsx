@@ -227,27 +227,6 @@ export const SpansDataTable: React.FC = () => {
 
   const { onAddFilter } = useChangeQueryEditor();
 
-  // Measure info bar height and set CSS variable for sticky thead offset.
-  // Uses a callback ref so the ResizeObserver is created when the element
-  // actually mounts (after loading/empty early returns).
-  const infoBarObserverRef = useRef<ResizeObserver | null>(null);
-  const infoBarRef = useCallback((node: HTMLDivElement | null) => {
-    if (infoBarObserverRef.current) {
-      infoBarObserverRef.current.disconnect();
-      infoBarObserverRef.current = null;
-    }
-    if (!node) return;
-    const wrapper = node.closest('[style*="--tabs-height"]') as HTMLElement | null;
-    if (!wrapper) return;
-
-    const observer = new ResizeObserver(() => {
-      wrapper.style.setProperty('--info-bar-height', `${node.getBoundingClientRect().height}px`);
-    });
-    observer.observe(node);
-    infoBarObserverRef.current = observer;
-  }, []);
-  useEffect(() => () => infoBarObserverRef.current?.disconnect(), []);
-
   if (isQueryLoading && hits.length === 0) {
     return (
       <TableLoadingState
@@ -286,7 +265,7 @@ export const SpansDataTable: React.FC = () => {
   return (
     <TraceExpansionProvider value={expansionContextValue}>
       <div className="agentTracesTable__container">
-        <div ref={infoBarRef} className="agentTracesTable__stickyInfoBar">
+        <div className="agentTracesTable__stickyInfoBar">
           <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" gutterSize="m">
             <EuiFlexItem grow={false}>
               <EuiText size="s">

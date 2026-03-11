@@ -22,29 +22,21 @@
 }
 
 .agentTracesMetrics__barWrapper {
-  position: sticky;
-  left: 0;
-  /* stylelint-disable-next-line */
-  width: 100cqi; // match canvas viewport width
-  box-sizing: border-box;
   padding: 0 $ouiSizeM;
 }
 
 .agentTracesTable__stickyInfoBar {
-  position: sticky;
-  top: var(--tabs-height, 0px);
-  left: 0;
-  z-index: 3;
-  background-color: $euiColorEmptyShade;
-  /* stylelint-disable-next-line */
-  width: 100cqi; // match canvas viewport width
-  box-sizing: border-box;
+  flex-shrink: 0;
   padding: $ouiSizeM $ouiSizeM $ouiSizeXS;
 }
 
 .agentTracesTable__container {
-  padding: 0 $ouiSizeM $ouiSizeM;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
   min-width: 0;
+  padding: 0 $ouiSizeM $ouiSizeM;
 }
 
 .agentTracesTable__clickableRow {

@@ -2,7 +2,6 @@
  * 1. Stack content vertically so the table can scroll when its constrained by a fixed container height.
  */
 .agentTraces-table-container {
-  overflow-x: auto;
 
   doc-table {
     @include euiScrollBar;
@@ -135,9 +134,9 @@
 
     thead {
       position: sticky;
-      top: 0;
+      top: calc(var(--tabs-height, 0px) + var(--info-bar-height, 0px));
       background-color: $euiColorEmptyShade;
-      z-index: 1;
+      z-index: 2;
     }
 
     th,

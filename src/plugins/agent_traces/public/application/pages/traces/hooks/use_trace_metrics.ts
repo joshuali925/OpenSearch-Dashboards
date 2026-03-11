@@ -13,6 +13,8 @@ import { RootState } from '../../../utils/state_management/store';
 export interface TraceMetrics {
   totalTraces: number;
   totalSpans: number;
+  filteredTraces: number;
+  filteredSpans: number;
   totalTokens: number;
   latencyP50Nanos: number;
   latencyP99Nanos: number;
@@ -167,7 +169,6 @@ export const useTraceMetrics = (tracesLoaded: boolean): UseTraceMetricsResult =>
   }, [fetchMetrics, refreshCounter, timeVersion, fetchVersion]);
 
   const refresh = useCallback(() => {
-    setMetrics(null);
     pendingMetrics = null;
     setRefreshCounter((c) => c + 1);
   }, []);

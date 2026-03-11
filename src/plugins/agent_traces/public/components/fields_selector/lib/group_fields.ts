@@ -30,6 +30,7 @@
 
 import { DataViewField } from '../../../../../data/public';
 import { FieldFilterState, isFieldFiltered } from './field_filter';
+import { AGENT_TRACES_COLUMN_DISPLAY_NAMES } from '../../../../common';
 
 // TODO: Use data set defined faceted field
 const FACET_FIELDS = [
@@ -76,9 +77,15 @@ export function groupFields(
   // https://github.com/opensearch-project/OpenSearch-Dashboards/blob/d7004dc5b0392477fdd54ac66b29d231975a173b/src/plugins/data/common/index_patterns/fields/field_list.ts
   const fieldsArray = Array.from(fields);
 
+  const GEN_AI_PREFIX = 'attributes.gen_ai.';
   const compareFn = (a: DataViewField, b: DataViewField) => {
     if (!a.displayName) {
       return 0;
+    }
+    const aIsGenAi = a.name.startsWith(GEN_AI_PREFIX);
+    const bIsGenAi = b.name.startsWith(GEN_AI_PREFIX);
+    if (aIsGenAi !== bIsGenAi) {
+      return aIsGenAi ? -1 : 1;
     }
     return a.displayName.localeCompare(b.displayName || '');
   };
@@ -97,6 +104,23 @@ export function groupFields(
       result.queryFields.push(field);
     } else {
       result.discoveredFields.push(field);
+    }
+  }
+
+  // Add placeholder entries for Redux columns not found in the dataset (virtual columns)
+  for (const col of columns) {
+    if (!result.selectedFields.some((f) => f.name === col)) {
+      result.selectedFields.push(
+        new DataViewField(
+          {
+            name: col,
+            type: 'string',
+            searchable: false,
+            aggregatable: false,
+          },
+          AGENT_TRACES_COLUMN_DISPLAY_NAMES[col] || col
+        )
+      );
     }
   }
 

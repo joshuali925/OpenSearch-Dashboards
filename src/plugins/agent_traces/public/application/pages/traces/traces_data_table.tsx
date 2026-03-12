@@ -23,7 +23,6 @@ import {
   DOC_HIDE_TIME_COLUMN_SETTING,
   SAMPLE_SIZE_SETTING,
   AGENT_TRACES_DEFAULT_COLUMNS,
-  AGENT_TRACES_DEFAULT_COLUMNS_SET,
 } from '../../../../common';
 import { UI_SETTINGS } from '../../../../../data/public';
 import { getDocViewsRegistry } from '../../legacy/discover/opensearch_dashboards_services';

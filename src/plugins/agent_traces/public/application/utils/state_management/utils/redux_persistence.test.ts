@@ -614,7 +614,7 @@ describe('redux_persistence', () => {
       ]);
     });
 
-    it('should migrate old columns without virtual trace columns to defaults', async () => {
+    it('should preserve old columns without virtual trace columns', async () => {
       const mockQueryState = {
         query: 'source=logs | head 10',
         language: 'PPL',
@@ -642,16 +642,8 @@ describe('redux_persistence', () => {
 
       const result = await loadReduxState(mockServices);
 
-      // Should migrate to default virtual trace columns
-      expect(result.legacy.columns).toEqual([
-        'kind',
-        'name',
-        'status',
-        'latency',
-        'totalTokens',
-        'input',
-        'output',
-      ]);
+      // Non-empty columns are preserved as-is
+      expect(result.legacy.columns).toEqual(['field1', 'field2']);
     });
 
     it('should preserve columns that contain virtual trace columns', async () => {

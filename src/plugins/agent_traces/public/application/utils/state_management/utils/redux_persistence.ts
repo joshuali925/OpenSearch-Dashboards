@@ -448,13 +448,5 @@ const getColumnsForDataset = async (
     return DEFAULT_VIRTUAL_TRACE_COLUMNS;
   }
 
-  // Migrate old EuiTable columns to new virtual columns.
-  // Old columns (e.g. spanId, status.code, durationInNanos) won't contain
-  // any of the trace-specific virtual columns (latency, totalTokens, status).
-  const hasVirtualColumns = currentColumns.some((c) => TRACE_VIRTUAL_COLUMNS.includes(c));
-  if (!hasVirtualColumns) {
-    return DEFAULT_VIRTUAL_TRACE_COLUMNS;
-  }
-
   return null;
 };

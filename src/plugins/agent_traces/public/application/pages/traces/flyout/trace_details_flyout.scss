@@ -115,10 +115,6 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding: $ouiSizeS $ouiSize;
-
-    // Override inherited flex-column from .euiResizablePanel__content > div
-    // so children (title row, spacers, accordions) keep their natural height.
-    display: block;
   }
 }
 

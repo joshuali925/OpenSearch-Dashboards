@@ -59,7 +59,7 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
       <EuiSpacer size="s" />
 
       <EuiFlexGroup alignItems="flexStart" gutterSize="s" responsive={false}>
-        <EuiFlexItem>
+        <EuiFlexItem grow={false}>
           <EuiTitle size="s">
             <h3 style={{ wordBreak: 'break-word' }}>{selectedNode?.label || '—'}</h3>
           </EuiTitle>

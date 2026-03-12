@@ -90,7 +90,6 @@ export const executePPLQuery = async (
     throw new Error('Data service is not available');
   }
 
-  dataService.query.queryString.setQuery(request.params.body.query);
   const response = await dataService.search.search(request, {}).toPromise();
 
   return response;

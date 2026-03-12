@@ -51,7 +51,7 @@ export const useInitPage = () => {
           const query = {
             ...queryFromSavedSearch,
             ...queryFromUrl,
-            query: queryFromUrl.query || queryFromSavedSearch.query,
+            query: queryFromUrl.query ?? queryFromSavedSearch.query,
           };
           if (query) {
             dispatch(setQueryState(query));

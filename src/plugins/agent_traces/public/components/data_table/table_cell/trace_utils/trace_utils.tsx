@@ -229,10 +229,6 @@ export const isOnAgentTracesPage = (): boolean => {
   return window.location.pathname.includes('/agentTraces');
 };
 
-export const isAgentTracesVirtualColumn = (col: string): boolean => {
-  return AGENT_TRACES_VIRTUAL_COLUMNS.has(col);
-};
-
 const AgentTracesKindCell: React.FC<{ hitId: string }> = ({ hitId }) => {
   const ctx = useTraceExpansion();
   if (!ctx) return null;

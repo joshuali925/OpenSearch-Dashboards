@@ -95,7 +95,7 @@ export function DiscoverPanel({ collapsePanel }: IDiscoverPanelProps) {
         dispatch(addColumn({ column: fieldName }));
       }}
       onRemoveField={(fieldName) => {
-        if (AGENT_TRACES_DEFAULT_COLUMNS_SET.has(fieldName)) return;
+        if (AGENT_TRACES_DEFAULT_COLUMNS.includes(fieldName)) return;
         dispatch(removeColumn(fieldName));
       }}
       onReorderFields={(source, destination) => {

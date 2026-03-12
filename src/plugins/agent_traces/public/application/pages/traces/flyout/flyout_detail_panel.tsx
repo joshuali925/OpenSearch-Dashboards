@@ -93,7 +93,7 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
       >
         <EuiFlexGroup gutterSize="s" wrap responsive={false} alignItems="center">
           <EuiFlexItem grow={false}>
-            <EuiBadge color="default">
+            <EuiBadge color="hollow">
               <span className="euiTextColor--subdued">
                 {i18n.translate('agentTraces.detailPanel.operation', {
                   defaultMessage: 'Operation:',
@@ -103,7 +103,7 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
             </EuiBadge>
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
-            <EuiBadge color="default">
+            <EuiBadge color="hollow">
               <span className="euiTextColor--subdued">
                 {i18n.translate('agentTraces.detailPanel.duration', {
                   defaultMessage: 'Duration:',
@@ -115,7 +115,7 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
           <EuiFlexItem grow={false}>
             <EuiFlexGroup gutterSize="xs" alignItems="center" responsive={false}>
               <EuiFlexItem grow={false}>
-                <EuiBadge color="default">
+                <EuiBadge color="hollow">
                   <span className="euiTextColor--subdued">
                     {i18n.translate('agentTraces.detailPanel.spanId', {
                       defaultMessage: 'Span ID:',
@@ -145,7 +145,7 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
           <EuiFlexItem grow={false}>
             <EuiFlexGroup gutterSize="xs" alignItems="center" responsive={false}>
               <EuiFlexItem grow={false}>
-                <EuiBadge color="default">
+                <EuiBadge color="hollow">
                   <span className="euiTextColor--subdued">
                     {i18n.translate('agentTraces.detailPanel.parentSpan', {
                       defaultMessage: 'Parent span:',
@@ -185,7 +185,7 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
             </EuiFlexGroup>
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
-            <EuiBadge color="default">
+            <EuiBadge color="hollow">
               <span className="euiTextColor--subdued">
                 {i18n.translate('agentTraces.detailPanel.startTime', {
                   defaultMessage: 'Start time:',
@@ -195,7 +195,7 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
             </EuiBadge>
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
-            <EuiBadge color="default">
+            <EuiBadge color="hollow">
               <span className="euiTextColor--subdued">
                 {i18n.translate('agentTraces.detailPanel.endTime', {
                   defaultMessage: 'End time:',

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EuiButton, EuiEmptyPrompt, EuiLoadingSpinner, EuiText } from '@elastic/eui';
+import { EuiEmptyPrompt, EuiLoadingSpinner, EuiText } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
 import React from 'react';
 
@@ -38,9 +38,7 @@ export const TableLoadingState: React.FC<{ message: React.ReactNode }> = ({ mess
 /** Shared empty state */
 export const TableEmptyState: React.FC<{
   title: React.ReactNode;
-  onRefresh: () => void;
-  refreshLabel: React.ReactNode;
-}> = ({ title, onRefresh, refreshLabel }) => (
+}> = ({ title }) => (
   <EuiEmptyPrompt
     iconType="apmTrace"
     title={<h3>{title}</h3>}
@@ -55,11 +53,6 @@ export const TableEmptyState: React.FC<{
           }}
         />
       </p>
-    }
-    actions={
-      <EuiButton onClick={onRefresh} iconType="refresh">
-        {refreshLabel}
-      </EuiButton>
     }
   />
 );

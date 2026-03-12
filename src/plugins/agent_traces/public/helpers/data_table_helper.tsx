@@ -124,7 +124,7 @@ export function getLegacyDisplayedColumns(
       displayName: isShortDots ? shortenDottedString(columnDisplayName) : columnDisplayName,
       isSortable: AGENT_TRACES_SORTABLE_COLUMNS.has(column) || !!field,
       isRemoveable:
-        !AGENT_TRACES_DEFAULT_COLUMNS_SET.has(column) &&
+        !AGENT_TRACES_DEFAULT_COLUMNS.includes(column) &&
         (column !== '_source' || columns.length > 1),
       colLeftIdx: idx - 1 < 0 ? -1 : idx - 1,
       colRightIdx: idx + 1 >= columns.length ? -1 : idx + 1,

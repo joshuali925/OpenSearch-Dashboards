@@ -256,13 +256,6 @@ export const SpansDataTable: React.FC = () => {
             defaultMessage="No agent spans found"
           />
         }
-        onRefresh={() => {}}
-        refreshLabel={
-          <FormattedMessage
-            id="agentTraces.spansDataTable.refreshButton"
-            defaultMessage="Refresh"
-          />
-        }
       />
     );
   }
@@ -282,12 +275,13 @@ export const SpansDataTable: React.FC = () => {
             <EuiText size="s">
               <FormattedMessage
                 id="agentTraces.spansDataTable.showingCount"
-                defaultMessage="{count} of {total} Spans in {elapsed} ms"
+                defaultMessage="{count} of {total} {totalCount, plural, one {span} other {spans}} in {elapsed} ms"
                 values={{
                   count: <strong>{hits.length.toLocaleString()}</strong>,
                   total: (
                     <strong>{(traceMetrics?.filteredSpans ?? hits.length).toLocaleString()}</strong>
                   ),
+                  totalCount: traceMetrics?.filteredSpans ?? hits.length,
                   elapsed: (
                     <strong>
                       {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}

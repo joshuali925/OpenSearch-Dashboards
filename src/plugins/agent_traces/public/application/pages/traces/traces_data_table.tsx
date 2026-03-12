@@ -471,13 +471,6 @@ export const TracesDataTable: React.FC = () => {
             defaultMessage="No agent traces found"
           />
         }
-        onRefresh={() => {}}
-        refreshLabel={
-          <FormattedMessage
-            id="agentTraces.tracesDataTable.refreshButton"
-            defaultMessage="Refresh"
-          />
-        }
       />
     );
   }
@@ -497,7 +490,7 @@ export const TracesDataTable: React.FC = () => {
             <EuiText size="s">
               <FormattedMessage
                 id="agentTraces.tracesDataTable.showingCount"
-                defaultMessage="{count} of {total} Traces in {elapsed} ms"
+                defaultMessage="{count} of {total} {totalCount, plural, one {trace} other {traces}} in {elapsed} ms"
                 values={{
                   count: <strong>{hits.length.toLocaleString()}</strong>,
                   total: (
@@ -505,6 +498,7 @@ export const TracesDataTable: React.FC = () => {
                       {(traceMetrics?.filteredTraces ?? hits.length).toLocaleString()}
                     </strong>
                   ),
+                  totalCount: traceMetrics?.filteredTraces ?? hits.length,
                   elapsed: (
                     <strong>
                       {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}

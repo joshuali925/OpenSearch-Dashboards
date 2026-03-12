@@ -30,9 +30,7 @@ export const AGENT_TRACES_DEFAULT_COLUMNS: readonly string[] = [
   'totalTokens',
   'input',
   'output',
-] as const;
-
-export const AGENT_TRACES_DEFAULT_COLUMNS_SET = new Set<string>(AGENT_TRACES_DEFAULT_COLUMNS);
+];
 
 /** Map from virtual column key to its user-facing display name. */
 export const AGENT_TRACES_COLUMN_DISPLAY_NAMES: Record<string, string> = {

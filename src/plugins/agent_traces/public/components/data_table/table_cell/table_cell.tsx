@@ -111,6 +111,25 @@ export const TableCellUI = ({
             className="agentTracesDocTableCell__filterButton"
           />
         </EuiToolTip>
+        <EuiToolTip
+          content={i18n.translate('agentTraces.copyValue', {
+            defaultMessage: 'Copy value',
+          })}
+        >
+          <EuiButtonIcon
+            size="xs"
+            onClick={() => {
+              const textToCopy = sanitizedCellValue.replace(/<[^>]*>/g, '');
+              navigator.clipboard.writeText(textToCopy);
+            }}
+            iconType="copy"
+            aria-label={i18n.translate('agentTraces.copyValue', {
+              defaultMessage: 'Copy value',
+            })}
+            data-test-subj="copyValue"
+            className="agentTracesDocTableCell__filterButton"
+          />
+        </EuiToolTip>
       </span>
     </>
   );

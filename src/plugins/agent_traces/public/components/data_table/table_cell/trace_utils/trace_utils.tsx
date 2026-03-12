@@ -384,7 +384,8 @@ const VirtualCellFilterButtons: React.FC<{
   fieldMapping: unknown;
   onFilter?: DocViewFilterFn;
   invertOperations?: boolean;
-}> = ({ colName, fieldMapping, onFilter, invertOperations }) => {
+  contentToCopy?: string;
+}> = ({ colName, fieldMapping, onFilter, invertOperations, contentToCopy }) => {
   if (!onFilter) return null;
   const sourceField = VIRTUAL_COL_SOURCE_FIELD[colName] || colName;
   // When invertOperations is true, "filter for" uses '-' (negate) and "filter out" uses '+'
@@ -424,6 +425,26 @@ const VirtualCellFilterButtons: React.FC<{
           className="agentTracesDocTableCell__filterButton"
         />
       </EuiToolTip>
+      {contentToCopy && (
+        <EuiToolTip
+          content={i18n.translate('agentTraces.copyValue', {
+            defaultMessage: 'Copy value',
+          })}
+        >
+          <EuiButtonIcon
+            size="xs"
+            onClick={() => {
+              navigator.clipboard.writeText(contentToCopy);
+            }}
+            iconType="copy"
+            aria-label={i18n.translate('agentTraces.copyValue', {
+              defaultMessage: 'Copy value',
+            })}
+            data-test-subj="copyValue"
+            className="agentTracesDocTableCell__filterButton"
+          />
+        </EuiToolTip>
+      )}
     </span>
   );
 };
@@ -532,6 +553,9 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
             fieldMapping={filterValue}
             onFilter={onFilter}
             invertOperations={invertOperations}
+            contentToCopy={
+              truncationTooltipText || (typeof content === 'string' ? content : undefined)
+            }
           />
         )}
       </div>

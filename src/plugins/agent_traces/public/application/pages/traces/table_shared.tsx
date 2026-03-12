@@ -23,6 +23,49 @@ export const buildPplSortClause = (field: string, direction: 'asc' | 'desc'): st
   return `| sort ${prefix}${pplField}`;
 };
 
+/**
+ * Splits a PPL query string into the source+where portion and remaining
+ * non-where commands (head, sort, dedup, eval, etc.).
+ *
+ * This ensures user-entered non-where commands (like `| head 1`) are placed
+ * after hardcoded where clauses when assembling the final query.
+ */
+export const splitPplWhereAndTail = (
+  queryString: string
+): { whereQuery: string; tailCommands: string } => {
+  const parts = queryString.split(/\s*\|\s*/);
+  const whereParts: string[] = [];
+  const tailParts: string[] = [];
+
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+
+    const lower = trimmed.toLowerCase();
+    if (lower.startsWith('source') || lower.startsWith('where')) {
+      whereParts.push(trimmed);
+    } else {
+      tailParts.push(trimmed);
+    }
+  }
+
+  return {
+    whereQuery: whereParts.join(' | '),
+    tailCommands: tailParts.length > 0 ? '| ' + tailParts.join(' | ') : '',
+  };
+};
+
+/**
+ * Checks if the main query ends with a head command (optionally followed by `from N` or `| where`).
+ * Subquery brackets [...] are masked so that head inside subqueries is ignored.
+ *
+ * Aligned with the explore plugin's queryEndsWithHead implementation.
+ */
+export const queryEndsWithHead = (queryString: string): boolean => {
+  const masked = queryString.replace(/\[.*?\]/g, (match) => '\0'.repeat(match.length));
+  return /\|\s*head\b(\s+\d+)?(\s+from\s+\d+)?\s*(\|\s*where\b.*)?\s*$/i.test(masked);
+};
+
 /** Shared loading state */
 export const TableLoadingState: React.FC<{ message: React.ReactNode }> = ({ message }) => (
   <EuiEmptyPrompt

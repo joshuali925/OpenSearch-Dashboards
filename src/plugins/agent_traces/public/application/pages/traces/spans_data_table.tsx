@@ -18,7 +18,10 @@ import { selectColumns, selectSort } from '../../utils/state_management/selector
 import { setColumns, setSort } from '../../utils/state_management/slices/legacy/legacy_slice';
 import { getLegacyDisplayedColumns } from '../../../helpers/data_table_helper';
 import { SortOrder } from '../../../types/saved_agent_traces_types';
-import { executeQueries } from '../../utils/state_management/actions/query_actions';
+import {
+  executeQueries,
+  defaultPrepareQueryString,
+} from '../../utils/state_management/actions/query_actions';
 import {
   DOC_HIDE_TIME_COLUMN_SETTING,
   SAMPLE_SIZE_SETTING,
@@ -32,7 +35,7 @@ import { TraceExpansionProvider, RowMeta } from './trace_expansion_context';
 import { traceHitToAgentSpan, unflattenSource } from './hooks/span_transforms';
 import { BaseRow, LoadingState, spanToRow, formatTimestamp } from './hooks/tree_utils';
 import { TraceHit } from './trace_details/traces/ppl_to_trace_hits';
-import { TableLoadingState, TableEmptyState } from './table_shared';
+import { TableLoadingState, TableEmptyState, queryEndsWithHead } from './table_shared';
 import { selectIsLoading } from '../../utils/state_management/selectors/query_editor/query_editor';
 import { RootState } from '../../utils/state_management/store';
 import { getHitId } from '../../../components/data_table/table_cell/trace_utils/trace_utils';
@@ -71,6 +74,17 @@ export const SpansDataTable: React.FC = () => {
   const isQueryLoading = useSelector(selectIsLoading);
   const { isInitialized } = useSelector((state: RootState) => state.meta);
   const { metrics: traceMetrics } = useTraceMetricsContext();
+  const query = useSelector((state: RootState) => state.query);
+
+  // When user query has head command, hide "of X total" (total is meaningless with head)
+  const hasHead = useMemo(() => {
+    if (query.language !== 'PPL') return false;
+    try {
+      return queryEndsWithHead(defaultPrepareQueryString(query));
+    } catch {
+      return false;
+    }
+  }, [query]);
 
   // Sort state from Redux — sort changes trigger a backend PPL query re-execution
   const sortOrder = useSelector(selectSort);
@@ -276,22 +290,39 @@ export const SpansDataTable: React.FC = () => {
         >
           <EuiFlexItem grow={false}>
             <EuiText size="s">
-              <FormattedMessage
-                id="agentTraces.spansDataTable.showingCount"
-                defaultMessage="{count} of {total} {totalCount, plural, one {span} other {spans}} in {elapsed} ms"
-                values={{
-                  count: <strong>{hits.length.toLocaleString()}</strong>,
-                  total: (
-                    <strong>{(traceMetrics?.filteredSpans ?? hits.length).toLocaleString()}</strong>
-                  ),
-                  totalCount: traceMetrics?.filteredSpans ?? hits.length,
-                  elapsed: (
-                    <strong>
-                      {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}
-                    </strong>
-                  ),
-                }}
-              />
+              {hasHead ? (
+                <FormattedMessage
+                  id="agentTraces.spansDataTable.showingCountHeadOnly"
+                  defaultMessage="{count} {count, plural, one {span} other {spans}} in {elapsed} ms"
+                  values={{
+                    count: <strong>{hits.length.toLocaleString()}</strong>,
+                    elapsed: (
+                      <strong>
+                        {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}
+                      </strong>
+                    ),
+                  }}
+                />
+              ) : (
+                <FormattedMessage
+                  id="agentTraces.spansDataTable.showingCount"
+                  defaultMessage="{count} of {total} {totalCount, plural, one {span} other {spans}} in {elapsed} ms"
+                  values={{
+                    count: <strong>{hits.length.toLocaleString()}</strong>,
+                    total: (
+                      <strong>
+                        {(traceMetrics?.filteredSpans ?? hits.length).toLocaleString()}
+                      </strong>
+                    ),
+                    totalCount: traceMetrics?.filteredSpans ?? hits.length,
+                    elapsed: (
+                      <strong>
+                        {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}
+                      </strong>
+                    ),
+                  }}
+                />
+              )}
             </EuiText>
           </EuiFlexItem>
           <EuiFlexItem grow={false}>

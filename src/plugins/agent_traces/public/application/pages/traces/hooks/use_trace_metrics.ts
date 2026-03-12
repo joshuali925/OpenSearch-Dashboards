@@ -9,6 +9,7 @@ import { PPLService } from '../trace_details/data_fetching/ppl_request_helpers';
 import { Dataset } from '../../../../../../data/common';
 import { usePPLQueryDeps, useTimeVersion } from './use_ppl_query_deps';
 import { RootState } from '../../../utils/state_management/store';
+import { splitPplWhereAndTail } from '../table_shared';
 
 export interface TraceMetrics {
   totalTraces: number;
@@ -67,8 +68,12 @@ const doFetchMetrics = async (
   filteredQuery: string
 ): Promise<TraceMetrics> => {
   const genAiFilter = `where isnotnull(\`attributes.gen_ai.operation.name\`)`;
+  const { whereQuery } = splitPplWhereAndTail(filteredQuery);
 
   // Run all queries in parallel
+  // Note: User non-where commands (head, sort, etc.) are intentionally excluded from stats queries.
+  // When a user types `| head 10`, it limits the data display but should not affect aggregate counts
+  // or statistics. The UI hides the "of X total" text when head is detected (see queryEndsWithHead).
   const [countStats, filteredStats, filteredCounts] = await Promise.all([
     // Query A — Counts (source-only, no user filter):
     // Total Traces, Total Spans, and their error counts are unaffected by user query filters
@@ -77,18 +82,18 @@ const doFetchMetrics = async (
       const countsResponse = await pplService.executeQuery(datasetParam, countsQuery);
       return parseStatsResponse(countsResponse);
     })(),
-    // Query B — Filtered stats (with user query):
-    // Tokens and Latency respect user query filters
+    // Query B — Filtered stats (with user query where clauses only):
+    // Tokens and Latency respect user query where filters
     (async () => {
       const rootFilter = `where parentSpanId = "" AND isnotnull(\`attributes.gen_ai.operation.name\`)`;
-      const statsQuery = `${filteredQuery} | ${rootFilter} | stats percentile(durationInNanos, 50) as p50_latency, percentile(durationInNanos, 99) as p99_latency, sum(\`attributes.gen_ai.usage.input_tokens\`) as input_tokens, sum(\`attributes.gen_ai.usage.output_tokens\`) as output_tokens`;
+      const statsQuery = `${whereQuery} | ${rootFilter} | stats percentile(durationInNanos, 50) as p50_latency, percentile(durationInNanos, 99) as p99_latency, sum(\`attributes.gen_ai.usage.input_tokens\`) as input_tokens, sum(\`attributes.gen_ai.usage.output_tokens\`) as output_tokens`;
       const statsResponse = await pplService.executeQuery(datasetParam, statsQuery);
       return parseStatsResponse(statsResponse);
     })(),
-    // Query C — Filtered counts (with user query):
+    // Query C — Filtered counts (with user query where clauses only):
     // Total traces/spans matching the user's current query, shown in the info bar
     (async () => {
-      const query = `${filteredQuery} | ${genAiFilter} | stats count() as filtered_spans, sum(case(parentSpanId = "", 1 else 0)) as filtered_traces`;
+      const query = `${whereQuery} | ${genAiFilter} | stats count() as filtered_spans, sum(case(parentSpanId = "", 1 else 0)) as filtered_traces`;
       const response = await pplService.executeQuery(datasetParam, query);
       return parseStatsResponse(response);
     })(),

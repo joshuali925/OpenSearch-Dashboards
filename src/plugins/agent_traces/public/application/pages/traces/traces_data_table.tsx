@@ -18,7 +18,10 @@ import { selectColumns, selectSort } from '../../utils/state_management/selector
 import { setColumns, setSort } from '../../utils/state_management/slices/legacy/legacy_slice';
 import { getLegacyDisplayedColumns } from '../../../helpers/data_table_helper';
 import { SortOrder } from '../../../types/saved_agent_traces_types';
-import { executeQueries } from '../../utils/state_management/actions/query_actions';
+import {
+  executeQueries,
+  defaultPrepareQueryString,
+} from '../../utils/state_management/actions/query_actions';
 import {
   DOC_HIDE_TIME_COLUMN_SETTING,
   SAMPLE_SIZE_SETTING,
@@ -42,7 +45,7 @@ import {
 import { TraceHit, transformPPLDataToTraceHits } from './trace_details/traces/ppl_to_trace_hits';
 import { usePPLQueryDeps } from './hooks/use_ppl_query_deps';
 import { TraceRow } from './hooks/use_agent_traces';
-import { TableLoadingState, TableEmptyState } from './table_shared';
+import { TableLoadingState, TableEmptyState, queryEndsWithHead } from './table_shared';
 import { selectIsLoading } from '../../utils/state_management/selectors/query_editor/query_editor';
 import { RootState } from '../../utils/state_management/store';
 import { getHitId } from '../../../components/data_table/table_cell/trace_utils/trace_utils';
@@ -87,6 +90,17 @@ export const TracesDataTable: React.FC = () => {
   const { metrics: traceMetrics } = useTraceMetricsContext();
   const { pplService, datasetParam } = usePPLQueryDeps();
   const { openFlyout, updateFlyoutFullTree } = useTraceFlyout();
+  const query = useSelector((state: RootState) => state.query);
+
+  // When user query has head command, hide "of X total" (total is meaningless with head)
+  const hasHead = useMemo(() => {
+    if (query.language !== 'PPL') return false;
+    try {
+      return queryEndsWithHead(defaultPrepareQueryString(query));
+    } catch {
+      return false;
+    }
+  }, [query]);
 
   const docViewsRegistry = useMemo(() => getDocViewsRegistry(), []);
   const sampleSize = uiSettings.get(SAMPLE_SIZE_SETTING);
@@ -490,24 +504,39 @@ export const TracesDataTable: React.FC = () => {
         >
           <EuiFlexItem grow={false}>
             <EuiText size="s">
-              <FormattedMessage
-                id="agentTraces.tracesDataTable.showingCount"
-                defaultMessage="{count} of {total} {totalCount, plural, one {trace} other {traces}} in {elapsed} ms"
-                values={{
-                  count: <strong>{hits.length.toLocaleString()}</strong>,
-                  total: (
-                    <strong>
-                      {(traceMetrics?.filteredTraces ?? hits.length).toLocaleString()}
-                    </strong>
-                  ),
-                  totalCount: traceMetrics?.filteredTraces ?? hits.length,
-                  elapsed: (
-                    <strong>
-                      {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}
-                    </strong>
-                  ),
-                }}
-              />
+              {hasHead ? (
+                <FormattedMessage
+                  id="agentTraces.tracesDataTable.showingCountHeadOnly"
+                  defaultMessage="{count} {count, plural, one {trace} other {traces}} in {elapsed} ms"
+                  values={{
+                    count: <strong>{hits.length.toLocaleString()}</strong>,
+                    elapsed: (
+                      <strong>
+                        {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}
+                      </strong>
+                    ),
+                  }}
+                />
+              ) : (
+                <FormattedMessage
+                  id="agentTraces.tracesDataTable.showingCount"
+                  defaultMessage="{count} of {total} {totalCount, plural, one {trace} other {traces}} in {elapsed} ms"
+                  values={{
+                    count: <strong>{hits.length.toLocaleString()}</strong>,
+                    total: (
+                      <strong>
+                        {(traceMetrics?.filteredTraces ?? hits.length).toLocaleString()}
+                      </strong>
+                    ),
+                    totalCount: traceMetrics?.filteredTraces ?? hits.length,
+                    elapsed: (
+                      <strong>
+                        {results?.elapsedMs != null ? results.elapsedMs.toLocaleString() : '—'}
+                      </strong>
+                    ),
+                  }}
+                />
+              )}
             </EuiText>
           </EuiFlexItem>
           <EuiFlexItem grow={false}>

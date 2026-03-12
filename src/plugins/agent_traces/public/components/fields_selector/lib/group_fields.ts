@@ -33,11 +33,7 @@ import { FieldFilterState, isFieldFiltered } from './field_filter';
 import { AGENT_TRACES_COLUMN_DISPLAY_NAMES } from '../../../../common';
 
 // TODO: Use data set defined faceted field
-const FACET_FIELDS = [
-  'resource.attributes.service.name',
-  'attributes.http.status_code',
-  'status.code',
-] as const;
+const FACET_FIELDS = ['attributes.gen_ai.operation.name', 'status.code'] as const;
 
 function isFacetedField(fieldName: string): fieldName is typeof FACET_FIELDS[number] {
   // Remove invisiable char

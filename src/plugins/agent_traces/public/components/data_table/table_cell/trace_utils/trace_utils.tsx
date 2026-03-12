@@ -373,6 +373,12 @@ export const VIRTUAL_COL_SOURCE_FIELD: Record<string, string> = {
   output: 'attributes.gen_ai.output.messages',
 };
 
+const AGENT_TRACES_VIRTUAL_COLUMNS = new Set(Object.keys(VIRTUAL_COL_SOURCE_FIELD));
+
+export const isAgentTracesVirtualColumn = (col: string): boolean => {
+  return AGENT_TRACES_VIRTUAL_COLUMNS.has(col);
+};
+
 const VirtualCellFilterButtons: React.FC<{
   colName: string;
   fieldMapping: unknown;

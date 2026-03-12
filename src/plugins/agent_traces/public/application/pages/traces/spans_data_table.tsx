@@ -34,6 +34,7 @@ import { BaseRow, LoadingState, spanToRow, formatTimestamp } from './hooks/tree_
 import { TraceHit } from './trace_details/traces/ppl_to_trace_hits';
 import { TableLoadingState, TableEmptyState } from './table_shared';
 import { selectIsLoading } from '../../utils/state_management/selectors/query_editor/query_editor';
+import { RootState } from '../../utils/state_management/store';
 import { getHitId } from '../../../components/data_table/table_cell/trace_utils/trace_utils';
 import { useTraceMetricsContext } from './hooks/use_trace_metrics';
 import { useTraceFlyout } from './flyout/trace_flyout_context';
@@ -68,6 +69,7 @@ export const SpansDataTable: React.FC = () => {
   const { dataset } = useDatasetContext();
   const { results } = useTabResults();
   const isQueryLoading = useSelector(selectIsLoading);
+  const { isInitialized } = useSelector((state: RootState) => state.meta);
   const { metrics: traceMetrics } = useTraceMetricsContext();
 
   // Sort state from Redux — sort changes trigger a backend PPL query re-execution
@@ -234,7 +236,8 @@ export const SpansDataTable: React.FC = () => {
 
   const { onAddFilter } = useChangeQueryEditor();
 
-  if (isQueryLoading && hits.length === 0) {
+  // Loading state — show during active query or before initial query has completed
+  if ((isQueryLoading || !isInitialized) && hits.length === 0) {
     return (
       <TableLoadingState
         message={
@@ -247,7 +250,7 @@ export const SpansDataTable: React.FC = () => {
     );
   }
 
-  if (!isQueryLoading && hits.length === 0) {
+  if (!isQueryLoading && isInitialized && hits.length === 0) {
     return (
       <TableEmptyState
         title={

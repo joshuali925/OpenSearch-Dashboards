@@ -44,6 +44,7 @@ import { usePPLQueryDeps } from './hooks/use_ppl_query_deps';
 import { TraceRow } from './hooks/use_agent_traces';
 import { TableLoadingState, TableEmptyState } from './table_shared';
 import { selectIsLoading } from '../../utils/state_management/selectors/query_editor/query_editor';
+import { RootState } from '../../utils/state_management/store';
 import { getHitId } from '../../../components/data_table/table_cell/trace_utils/trace_utils';
 import { useTraceMetricsContext } from './hooks/use_trace_metrics';
 import './traces_table.scss';
@@ -82,6 +83,7 @@ export const TracesDataTable: React.FC = () => {
   const { dataset } = useDatasetContext();
   const { results } = useTabResults();
   const isQueryLoading = useSelector(selectIsLoading);
+  const { isInitialized } = useSelector((state: RootState) => state.meta);
   const { metrics: traceMetrics } = useTraceMetricsContext();
   const { pplService, datasetParam } = usePPLQueryDeps();
   const { openFlyout, updateFlyoutFullTree } = useTraceFlyout();
@@ -448,8 +450,8 @@ export const TracesDataTable: React.FC = () => {
     [expandedRows, toggleExpansion, traceLoadingState, getRowMeta, handleRowClick, wrapCellText]
   );
 
-  // Loading state
-  if (isQueryLoading && hits.length === 0) {
+  // Loading state — show during active query or before initial query has completed
+  if ((isQueryLoading || !isInitialized) && hits.length === 0) {
     return (
       <TableLoadingState
         message={
@@ -462,7 +464,7 @@ export const TracesDataTable: React.FC = () => {
     );
   }
 
-  if (!isQueryLoading && hits.length === 0) {
+  if (!isQueryLoading && isInitialized && hits.length === 0) {
     return (
       <TableEmptyState
         title={

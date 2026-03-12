@@ -174,6 +174,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
       setSelectedNodeIndex(index);
     }
   };
+  const meta = getCategoryMeta(getSpanCategory(rootTrace));
 
   return (
     <EuiFlyout
@@ -204,15 +205,9 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
             </EuiTitle>
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
-            {(() => {
-              const category = getSpanCategory(rootTrace);
-              const meta = getCategoryMeta(category);
-              return (
-                <EuiBadge className="agentTraces__categoryBadge" color={meta.color}>
-                  {meta.label}
-                </EuiBadge>
-              );
-            })()}
+            <EuiBadge className="agentTraces__categoryBadge" color={meta.color}>
+              {meta.label}
+            </EuiBadge>
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiHealth color={rootTrace.status === 'success' ? 'success' : 'danger'}>

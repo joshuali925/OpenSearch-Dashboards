@@ -225,15 +225,6 @@ export const getHitId = (hit: OpenSearchSearchHit<Record<string, any>>): string 
   return hit._id || (hit._source as any)?.spanId || '';
 };
 
-const AGENT_TRACES_VIRTUAL_COLUMNS = new Set([
-  'kind',
-  'status',
-  'latency',
-  'totalTokens',
-  'input',
-  'output',
-]);
-
 export const isOnAgentTracesPage = (): boolean => {
   return window.location.pathname.includes('/agentTraces');
 };

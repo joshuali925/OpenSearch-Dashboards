@@ -44,7 +44,11 @@ export const useChangeQueryEditor = () => {
   const isQueryEditorDirty = useSelector(selectIsQueryEditorDirty);
 
   const onAddFilter = useCallback(
-    (field: string | IndexPatternField | DataViewField, values: unknown, operation: '+' | '-') => {
+    (
+      field: string | IndexPatternField | DataViewField,
+      values: string | string[],
+      operation: '+' | '-'
+    ) => {
       if (!dataset) return;
       const languageConfig = queryString.getLanguageService().getLanguage(query.language);
       if (!languageConfig) return;

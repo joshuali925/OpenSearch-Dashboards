@@ -35,7 +35,7 @@ import {
 } from '../../../../plugins/data/public';
 import { shortenDottedString } from './shorten_dotted_string';
 import {
-  AGENT_TRACES_DEFAULT_COLUMNS_SET,
+  AGENT_TRACES_DEFAULT_COLUMNS,
   AGENT_TRACES_COLUMN_DISPLAY_NAMES,
   AGENT_TRACES_SORTABLE_COLUMNS,
 } from '../../common';

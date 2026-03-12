@@ -430,10 +430,6 @@ const getPreloadedMetaState = (services: AgentTracesServices) => {
   };
 };
 
-// Virtual columns specific to the new DataTable-based traces view.
-// If none of these are present in persisted columns, the columns are from
-// the old EuiTable implementation and need to be migrated.
-const TRACE_VIRTUAL_COLUMNS = ['latency', 'totalTokens', 'status'];
 const DEFAULT_VIRTUAL_TRACE_COLUMNS = [
   'kind',
   'name',

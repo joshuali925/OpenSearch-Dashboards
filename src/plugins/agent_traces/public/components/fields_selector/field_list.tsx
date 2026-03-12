@@ -77,7 +77,7 @@ export const FieldList = ({
                 showSummary
                 nonRemovable={
                   category === 'selected' &&
-                  (AGENT_TRACES_DEFAULT_COLUMNS_SET.has(field.name) ||
+                  (AGENT_TRACES_DEFAULT_COLUMNS.includes(field.name) ||
                     field.name === selectedDataSet.timeFieldName)
                 }
               />

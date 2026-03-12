@@ -396,7 +396,7 @@ export const TracesDataTable: React.FC = () => {
   // Column management callbacks
   const onRemoveColumn = useCallback(
     (column: string) => {
-      if (AGENT_TRACES_DEFAULT_COLUMNS_SET.has(column)) return;
+      if (AGENT_TRACES_DEFAULT_COLUMNS.includes(column)) return;
       const newColumns = columns.filter((c) => c !== column);
       dispatch(setColumns(newColumns.length > 0 ? newColumns : ['_source']));
     },

@@ -42,7 +42,7 @@ export function DiscoverPanel({ collapsePanel }: IDiscoverPanelProps) {
   const rawResults = useSelector((state: RootState) => {
     const activeTab = services.tabRegistry.getTab(activeTabId);
     const prepareQuery = activeTab?.prepareQuery || defaultPrepareQueryString;
-    const key = prepareQuery(state.query);
+    const key = prepareQuery(state.query, state.legacy.sort);
     return key ? state.results[key] : null;
   });
   const { dataset } = useDatasetContext();

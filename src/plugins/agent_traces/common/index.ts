@@ -22,7 +22,7 @@ export enum AgentTracesFlavor {
 
 /** Hardcoded default columns for agent traces / spans tables. These are always
  *  present and cannot be removed by the user via the fields sidebar. */
-export const AGENT_TRACES_DEFAULT_COLUMNS = [
+export const AGENT_TRACES_DEFAULT_COLUMNS: readonly string[] = [
   'kind',
   'name',
   'status',

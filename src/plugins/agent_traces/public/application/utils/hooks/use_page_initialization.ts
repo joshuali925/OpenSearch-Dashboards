@@ -91,13 +91,12 @@ export const useInitPage = () => {
         dispatch(clearResults());
         dispatch(clearQueryStatusMap());
         dispatch(setUsingRegexPatterns(false));
-        dispatch(executeQueries({ services }));
 
-        // Restore active tab from saved search AFTER executeQueries so queries
-        // run with activeTabId="" (all tabs get results). The dataset_change_middleware
-        // clears activeTabId when setQueryState fires; dispatching setActiveTab before
-        // executeQueries would limit execution to one tab whose results may not match
-        // the currently visible tab.
+        // Restore active tab AFTER clearQueryStatusMap (which the
+        // dataset_change_middleware also dispatches when setQueryState fires
+        // above, clearing activeTabId to '').  Dispatching here ensures
+        // BottomRightContainer sees a valid activeTabId and renders the tabs
+        // component instead of the "Start searching" placeholder.
         const uiState = savedAgentTraces.uiState;
         if (uiState) {
           const { activeTab } = JSON.parse(uiState);
@@ -105,9 +104,26 @@ export const useInitPage = () => {
         }
 
         // Mark as initialized so the table moves past the loading gate.
-        // useInitialQueryExecution skips when agentTracesId is present, so
-        // this hook is responsible for the flag on the saved-search path.
         dispatch(setIsInitialized(true));
+
+        // Fire-and-forget query execution.  The dataset_change_middleware
+        // also dispatches executeQueries; chaining sort/columns re-application
+        // onto whichever finishes ensures the cache key stays consistent.
+        dispatch(executeQueries({ services })).then(() => {
+          // Re-apply sort/columns — the dataset_change_middleware's
+          // resetLegacyStateActionCreator may have reset them via microtask
+          // while executeQueries was in-flight.
+          if (savedAgentTraces.sort && savedAgentTraces.sort.length > 0) {
+            dispatch(setSort(savedAgentTraces.sort));
+          }
+          if (savedAgentTraces.columns && savedAgentTraces.columns.length > 0) {
+            dispatch(setColumns(savedAgentTraces.columns));
+          }
+        });
+      } else {
+        // Reset breadcrumbs and doc title for new/unsaved search
+        chrome.docTitle.change('Agent Traces');
+        chrome.setBreadcrumbs([{ text: 'Agent Traces' }]);
       }
     }
     if (error) {

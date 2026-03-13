@@ -5,8 +5,8 @@
 
 import './data_table.scss';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { EuiSmallButtonEmpty, EuiCallOut, EuiProgress } from '@elastic/eui';
+import React, { useState } from 'react';
+import { EuiSmallButtonEmpty, EuiCallOut } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
 import { IndexPattern, DataView as Dataset } from 'src/plugins/data/public';
 import { TableHeader } from './table_header/table_header';
@@ -40,7 +40,6 @@ export interface DataTableProps {
 }
 
 const PAGINATED_PAGE_SIZE = 50;
-const LAZY_LOAD_BATCH_SIZE = 50;
 
 const DataTableUI = ({
   columns,
@@ -62,64 +61,6 @@ const DataTableUI = ({
   onChangeSortOrder,
 }: DataTableProps) => {
   const columnNames = columns.map((column) => column.name);
-
-  // Infinite-scroll lazy loading: render rows in batches as the user scrolls down.
-  // Only the IntersectionObserver drives new batches — no FPS monitoring needed.
-  const [renderedRowCount, setRenderedRowCount] = useState(LAZY_LOAD_BATCH_SIZE);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const sentinelRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      // Clean up previous observer
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-        observerRef.current = null;
-      }
-      if (node && !showPagination) {
-        observerRef.current = new IntersectionObserver(
-          (entries) => {
-            if (entries[0].isIntersecting) {
-              setRenderedRowCount((prev) => prev + LAZY_LOAD_BATCH_SIZE);
-            }
-          },
-          { threshold: 0.1 }
-        );
-        observerRef.current.observe(node);
-      }
-    },
-    [showPagination]
-  );
-
-  // Reset rendered count only when the base data changes (new query / sort),
-  // not when rows change due to tree expansion (children inserted).
-  const prevFirstRowIdRef = useRef<string | undefined>();
-  const prevRowCountRef = useRef(rows.length);
-  useEffect(() => {
-    const firstId = rows[0]?._id || (rows[0]?._source as any)?.spanId;
-    const isNewQuery = prevFirstRowIdRef.current !== firstId;
-    if (isNewQuery) {
-      setRenderedRowCount(LAZY_LOAD_BATCH_SIZE);
-    } else {
-      // Expansion: grow rendered count to accommodate inserted children
-      const delta = rows.length - prevRowCountRef.current;
-      if (delta > 0) {
-        setRenderedRowCount((prev) => prev + delta);
-      }
-    }
-    prevFirstRowIdRef.current = firstId;
-    prevRowCountRef.current = rows.length;
-  }, [rows]);
-
-  // Clean up observer on unmount
-  useEffect(() => {
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, []);
-
-  const visibleRows = showPagination ? rows : rows.slice(0, renderedRowCount);
-  const hasMoreRows = !showPagination && renderedRowCount < rows.length;
 
   // Pagination state (only used when showPagination=true)
   const [displayedRows, setDisplayedRows] = useState(rows.slice(0, PAGINATED_PAGE_SIZE));
@@ -170,7 +111,7 @@ const DataTableUI = ({
           />
         </thead>
         <tbody>
-          {(showPagination ? displayedRows : visibleRows).map((row, index: number) => {
+          {(showPagination ? displayedRows : rows).map((row, index: number) => {
             return (
               <TableRow
                 key={row._id || (row._source as any)?.spanId || index}
@@ -191,11 +132,6 @@ const DataTableUI = ({
           })}
         </tbody>
       </table>
-      {hasMoreRows && (
-        <div ref={sentinelRef}>
-          <EuiProgress size="xs" color="accent" data-test-subj="discoverRenderedRowsProgress" />
-        </div>
-      )}
       {!showPagination && rows.length === sampleSize && (
         <EuiCallOut className="agentTracesTable__footer" data-test-subj="discoverDocTableFooter">
           <FormattedMessage

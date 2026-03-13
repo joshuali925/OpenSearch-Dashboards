@@ -106,6 +106,20 @@ export const TracesDataTable: React.FC = () => {
   useEffect(() => {
     const traceOnlyVirtualColumns = ['latency', 'totalTokens', 'status'];
     const hasTraceVirtualColumns = columns.some((c) => traceOnlyVirtualColumns.includes(c));
+    
+    // Migration: Add 'evaluation' column if it's missing but other virtual columns exist
+    const hasEvaluationColumn = columns.includes('evaluation');
+    if (hasTraceVirtualColumns && !hasEvaluationColumn) {
+      // Insert evaluation column after totalTokens
+      const totalTokensIndex = columns.indexOf('totalTokens');
+      if (totalTokensIndex !== -1) {
+        const newColumns = [...columns];
+        newColumns.splice(totalTokensIndex + 1, 0, 'evaluation');
+        dispatch(setColumns(newColumns));
+        return;
+      }
+    }
+    
     if (
       columns.length === 0 ||
       (columns.length === 1 && columns[0] === '_source') ||

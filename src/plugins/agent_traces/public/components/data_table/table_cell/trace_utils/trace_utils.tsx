@@ -31,6 +31,9 @@ import {
   getOperationNamesForCategory,
 } from '../../../../services/span_categorization';
 import { useTraceExpansion } from '../../../../application/pages/traces/trace_expansion_context';
+import { EvalBadges } from '../../../eval_badge';
+import type { EvalResult } from '../../../eval_badge';
+import { EvalModal } from '../../../eval_modal';
 
 export const isOnTracesPage = (): boolean => {
   return window.location.pathname.includes('/agentTraces');
@@ -232,6 +235,7 @@ const AGENT_TRACES_VIRTUAL_COLUMNS = new Set([
   'totalTokens',
   'input',
   'output',
+  'evaluation',
 ]);
 
 export const isOnAgentTracesPage = (): boolean => {
@@ -474,6 +478,9 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
   const meta = ctx?.getRowMeta(hitId);
   const traceRow = meta?.traceRow;
 
+  // State for evaluation modal
+  const [selectedEval, setSelectedEval] = React.useState<EvalResult | null>(null);
+
   if (!traceRow) {
     return <td className="agentTracesDocTableCell" />;
   }
@@ -508,6 +515,57 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
       content = traceRow.output;
       if (typeof traceRow.output === 'string') truncationTooltipText = traceRow.output;
       break;
+    case 'evaluation':
+      // Hardcoded dummy data for testing - only show on 60% of top-level traces and randomly on Agent kind spans
+      const category = getSpanCategory(traceRow);
+      const isTopLevel = meta?.level === 0;
+      const isAgentKind = category === 'AGENT';
+      
+      // Use hitId for consistent randomization
+      const hashCode = hitId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const showOnTopLevel = isTopLevel && (hashCode % 10 < 6); // 60% of top-level traces
+      const showOnAgentSpan = isAgentKind && !isTopLevel && (hashCode % 3 === 0); // ~33% of Agent spans
+      
+      let dummyEvaluations: EvalResult[] = [];
+      
+      if (showOnTopLevel || showOnAgentSpan) {
+        // Vary the evaluation type based on hash - following OTEL convention
+        const evalType = hashCode % 4;
+        if (evalType === 0) {
+          dummyEvaluations = [{ 
+            name: 'Relevance', 
+            scoreLabel: 'Correct',
+            scoreValue: 1,
+            explanation: 'The response directly addresses the user query with high relevance. All information provided is pertinent to the question asked.' 
+          }];
+        } else if (evalType === 1) {
+          dummyEvaluations = [{ 
+            name: 'Faithfulness', 
+            scoreLabel: 'Pass',
+            scoreValue: 0.92,
+            explanation: 'The response accurately reflects the information retrieved from the knowledge base. All factual claims are well-supported by the source documents.' 
+          }];
+        } else if (evalType === 2) {
+          dummyEvaluations = [{ 
+            name: 'IntentResolution', 
+            scoreLabel: 'Relevant',
+            scoreValue: 0.85,
+            explanation: 'The agent successfully identified and addressed the user intent. The response demonstrates understanding of the underlying goal.' 
+          }];
+        } else {
+          dummyEvaluations = [{ 
+            name: 'Coherence', 
+            scoreLabel: 'Correct',
+            scoreValue: 0.88,
+            explanation: 'The response demonstrates strong logical flow and coherence. Ideas are well-organized and transitions between concepts are smooth.' 
+          }];
+        }
+      }
+      
+      content = dummyEvaluations.length > 0 
+        ? <EvalBadges evaluations={dummyEvaluations} onBadgeClick={setSelectedEval} />
+        : <span>—</span>;
+      break;
     default:
       content = null;
   }
@@ -527,9 +585,10 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
     invertOperations = traceRow.status === 'success';
   }
 
-  // No filter buttons for totalTokens (composite value) or "Other" kind (no mapped operations)
+  // No filter buttons for totalTokens (composite value), evaluation (custom component), or "Other" kind (no mapped operations)
   const showFilter =
     colName !== 'totalTokens' &&
+    colName !== 'evaluation' &&
     !(colName === 'kind' && Array.isArray(filterValue) && filterValue.length === 0);
 
   const tdClassName =
@@ -566,6 +625,15 @@ export const AgentTracesVirtualCell: React.FC<AgentTracesVirtualCellProps> = ({
           />
         )}
       </div>
+      
+      {/* Evaluation Modal */}
+      {selectedEval && (
+        <EvalModal
+          evaluation={selectedEval}
+          onClose={() => setSelectedEval(null)}
+          traceMethod={traceRow.name || undefined}
+        />
+      )}
     </td>
   );
 };

@@ -1,0 +1,65 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+.evalBadge {
+  font-weight: 400;
+  border: 1px solid #D7D9DD;
+  background-color: #FCFEFF;
+  padding: 2px 12px;
+  border-radius: 9px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  
+  &__content {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1;
+  }
+  
+  &__icon {
+    flex-shrink: 0;
+    color: #2A3947;
+    display: flex;
+    align-items: center;
+  }
+  
+  &__text {
+    white-space: nowrap;
+    color: #2A3947;
+    font-size: 12px;
+  }
+  
+  &__name {
+    font-weight: 600;
+    color: #2A3947;
+  }
+  
+  &__label {
+    font-weight: 400;
+    color: #69707D;
+  }
+  
+  &__value {
+    font-weight: 500;
+    color: #2A3947;
+  }
+  
+  &--clickable {
+    cursor: pointer;
+    transition: all 0.1s ease;
+    
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-color: #98A2B3;
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}

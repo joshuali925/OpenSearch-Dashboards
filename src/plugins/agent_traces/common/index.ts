@@ -28,6 +28,7 @@ export const AGENT_TRACES_DEFAULT_COLUMNS = [
   'status',
   'latency',
   'totalTokens',
+  'evaluation',
   'input',
   'output',
 ] as const;
@@ -41,6 +42,7 @@ export const AGENT_TRACES_COLUMN_DISPLAY_NAMES: Record<string, string> = {
   status: 'Status',
   latency: 'Latency',
   totalTokens: 'Tokens',
+  evaluation: 'Evaluation',
   input: 'Input',
   output: 'Output',
 };
@@ -54,6 +56,7 @@ export const AGENT_TRACES_VIRTUAL_COLUMN_SOURCE_FIELDS: Record<string, string> =
   status: 'status.code',
   latency: 'durationInNanos',
   totalTokens: 'attributes.gen_ai.usage.input_tokens',
+  evaluation: 'evaluations',
   input: 'attributes.gen_ai.input.messages',
   output: 'attributes.gen_ai.output.messages',
 };

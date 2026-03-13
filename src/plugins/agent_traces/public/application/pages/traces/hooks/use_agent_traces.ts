@@ -20,6 +20,7 @@ import {
   formatTimestamp,
 } from './tree_utils';
 import { buildPplSortClause } from '../table_shared';
+import { injectMockEvals } from '../../../../services/mock_eval_injector';
 
 export interface TraceRow extends BaseRow {
   displayName?: string;
@@ -171,7 +172,11 @@ export const useAgentTraces = (
         const traceHits = transformPPLDataToTraceHits(response);
         const agentSpans = hitsToAgentSpans(traceHits);
         const rows = buildSpanTree(agentSpans, timezone);
-        setTraces(rows);
+        
+        // Inject mock evaluation data for UI development
+        const rowsWithEvals = injectMockEvals(rows);
+        
+        setTraces(rowsWithEvals);
       } catch (err) {
         if (cancelled) return;
         // eslint-disable-next-line no-console
@@ -240,8 +245,11 @@ export const useAgentTraces = (
         const agentSpans = hitsToAgentSpans(traceHits);
         const fmt = (ts: string) => formatTimestamp(ts, timezone);
         const fullTree = buildFullSpanTree(agentSpans, fmt) as TraceRow[];
+        
+        // Inject mock evaluation data for UI development
+        const fullTreeWithEvals = injectMockEvals(fullTree);
 
-        traceSpansCacheRef.current.set(traceId, fullTree);
+        traceSpansCacheRef.current.set(traceId, fullTreeWithEvals);
         setTraceSpansCache(new Map(traceSpansCacheRef.current));
         setTraceLoadingState((prev) => {
           const next = new Map(prev);

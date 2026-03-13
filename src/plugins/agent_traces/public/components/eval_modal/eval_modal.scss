@@ -1,0 +1,95 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+.evalModal {
+  &__label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #69707D;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__subtitle {
+    font-size: 12px;
+    font-weight: 400;
+    color: #98A2B3;
+    margin-top: 2px;
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1c21;
+  }
+
+  &__method {
+    font-size: 16px;
+    font-weight: 400;
+    color: #69707D;
+  }
+
+  // Metadata row - horizontal inline style matching trace flyout
+  &__metaRow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 12px 0;
+    border-bottom: 1px solid #D3DAE6;
+    flex-wrap: wrap;
+  }
+
+  &__metaItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 16px;
+
+    &:first-child {
+      padding-left: 0;
+    }
+  }
+
+  &__metaKey {
+    font-size: 12px;
+    font-weight: 600;
+    color: #69707D;
+    letter-spacing: 0.5px;
+  }
+
+  &__metaVal {
+    font-size: 14px;
+    font-weight: 400;
+    color: #1a1c21;
+  }
+
+  &__metaDivider {
+    width: 1px;
+    height: 16px;
+    background-color: #D3DAE6;
+    flex-shrink: 0;
+  }
+
+  &__sectionTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1c21;
+    margin: 0;
+  }
+
+  &__explanationText {
+    padding: 20px;
+    background-color: #F5F7FA;
+    border-radius: 6px;
+    border: 1px solid #D3DAE6;
+
+    p {
+      margin: 0;
+      line-height: 1.7;
+      color: #343741;
+      font-size: 14px;
+    }
+  }
+}

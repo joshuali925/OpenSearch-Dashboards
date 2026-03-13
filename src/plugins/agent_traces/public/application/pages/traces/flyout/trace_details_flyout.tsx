@@ -38,6 +38,8 @@ import { TraceTreeView } from './trace_tree_view';
 import { TimelineGantt } from './timeline_gantt';
 import { useFlyoutResize } from './use_flyout_resize';
 import { FlyoutDetailPanel } from './flyout_detail_panel';
+import type { EvalResult } from '../../../../components/eval_badge';
+import { EvalModal } from '../../../../components/eval_modal';
 import './trace_details_flyout.scss';
 
 export interface TraceDetailsProps {
@@ -106,6 +108,9 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
   }, [traceTreeData, trace.totalTokens]);
 
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+
+  // State for evaluation modal triggered from tree eval pills
+  const [selectedEval, setSelectedEval] = useState<{ eval: EvalResult; traceMethod?: string } | null>(null);
 
   useEffect(() => {
     const allExpandable = new Set<string>();
@@ -320,6 +325,9 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
                           fullTreeError={fullTreeError}
                           onSelectNode={selectNode}
                           onToggleExpanded={toggleExpanded}
+                          onEvalPillClick={(evaluation, traceMethod) =>
+                            setSelectedEval({ eval: evaluation, traceMethod })
+                          }
                         />
                       ),
                     },
@@ -382,6 +390,14 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
           )}
         </EuiResizableContainer>
       </EuiFlyoutBody>
+
+      {selectedEval && (
+        <EvalModal
+          evaluation={selectedEval.eval}
+          onClose={() => setSelectedEval(null)}
+          traceMethod={selectedEval.traceMethod}
+        />
+      )}
     </EuiFlyout>
   );
 };

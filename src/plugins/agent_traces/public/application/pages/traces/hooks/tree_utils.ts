@@ -41,6 +41,13 @@ export interface BaseRow {
   level?: number;
   children?: BaseRow[];
   rawDocument?: Record<string, unknown>;
+  evaluations?: Array<{
+    name: string;
+    score: number;
+    label: 'pass' | 'fail';
+    rationale?: string;
+    timestamp?: string;
+  }>;
 }
 
 export interface LoadingState {

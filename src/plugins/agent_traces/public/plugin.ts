@@ -43,6 +43,7 @@ import { createSavedAgentTracesLoader } from './saved_agent_traces';
 import { TabRegistryService } from './services/tab_registry/tab_registry_service';
 import { setUsageCollector } from './services/usage_collector';
 import { QueryPanelActionsRegistryService } from './services/query_panel_actions_registry';
+import { setupMockEvalControls } from './services/mock_eval_injector';
 import {
   AgentTracesPluginSetup,
   AgentTracesPluginStart,
@@ -346,6 +347,9 @@ export class AgentTracesPlugin
     };
 
     this.initializeServices();
+
+    // Setup mock evaluation controls for development
+    setupMockEvalControls();
 
     // Register Log Actions
     // Always register Ask AI action - let isCompatible handle enablement logic

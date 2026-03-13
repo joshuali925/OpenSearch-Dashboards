@@ -209,3 +209,65 @@
 }
 
 /* stylelint-enable @osd/stylelint/no_modifying_global_selectors */
+
+// Evaluation section in detail panel
+.agentTracesFlyout__evalMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 8px 0;
+  border-bottom: 1px solid #D3DAE6;
+  flex-wrap: wrap;
+}
+
+.agentTracesFlyout__evalMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+
+  &:first-child {
+    padding-left: 0;
+  }
+}
+
+.agentTracesFlyout__evalMetaKey {
+  font-size: 11px;
+  font-weight: 600;
+  color: #69707D;
+  letter-spacing: 0.5px;
+}
+
+.agentTracesFlyout__evalMetaVal {
+  font-size: 13px;
+  font-weight: 400;
+  color: #1a1c21;
+}
+
+.agentTracesFlyout__evalMetaDivider {
+  width: 1px;
+  height: 14px;
+  background-color: #D3DAE6;
+  flex-shrink: 0;
+}
+
+.agentTracesFlyout__evalExplanation {
+  padding: 12px 16px;
+  background-color: #F5F7FA;
+  border-radius: 6px;
+  border: 1px solid #D3DAE6;
+
+  p {
+    margin: 0;
+    line-height: 1.6;
+    color: #343741;
+    font-size: 13px;
+  }
+}
+
+// Eval count badge in tree
+.agentTracesFlyout__evalCountBadge {
+  font-size: 11px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}

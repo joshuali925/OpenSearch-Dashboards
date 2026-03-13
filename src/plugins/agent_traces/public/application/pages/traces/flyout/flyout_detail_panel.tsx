@@ -18,10 +18,14 @@ import {
   EuiButtonIcon,
   EuiCopy,
   EuiAccordion,
+  EuiText,
+  EuiToolTip,
 } from '@elastic/eui';
 
 import { TraceRow } from '../hooks/use_agent_traces';
 import { TreeNode } from './tree_helpers';
+import type { EvalResult } from '../../../../components/eval_badge';
+import { getSpanCategory } from '../../../../services/span_categorization';
 
 export const formatJsonOrString = (value: string | undefined): string => {
   if (!value || value === '—')
@@ -33,6 +37,31 @@ export const formatJsonOrString = (value: string | undefined): string => {
     return JSON.stringify(parsed, null, 2);
   } catch {
     return value;
+  }
+};
+
+/** Get dummy evaluation for a row (same logic as table column) */
+const getDummyEval = (row: TraceRow): EvalResult | null => {
+  const category = getSpanCategory(row);
+  const isAgent = category === 'AGENT';
+  const level = row.level ?? 0;
+  const isTopLevel = level === 0;
+  const hitId = row.id;
+  const hashCode = hitId.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+  const showOnTopLevel = isTopLevel && (hashCode % 10 < 6);
+  const showOnAgentSpan = isAgent && !isTopLevel && (hashCode % 3 === 0);
+
+  if (!showOnTopLevel && !showOnAgentSpan) return null;
+
+  const evalType = hashCode % 4;
+  if (evalType === 0) {
+    return { name: 'Relevance', scoreLabel: 'Correct', scoreValue: 1, explanation: 'The response directly addresses the user query with high relevance. All information provided is pertinent to the question asked.' };
+  } else if (evalType === 1) {
+    return { name: 'Faithfulness', scoreLabel: 'Pass', scoreValue: 0.92, explanation: 'The response accurately reflects the information retrieved from the knowledge base. All factual claims are well-supported by the source documents.' };
+  } else if (evalType === 2) {
+    return { name: 'IntentResolution', scoreLabel: 'Relevant', scoreValue: 0.85, explanation: 'The agent successfully identified and addressed the user intent. The response demonstrates understanding of the underlying goal.' };
+  } else {
+    return { name: 'Coherence', scoreLabel: 'Correct', scoreValue: 0.88, explanation: 'The response demonstrates strong logical flow and coherence. Ideas are well-organized and transitions between concepts are smooth.' };
   }
 };
 
@@ -259,6 +288,93 @@ export const FlyoutDetailPanel: React.FC<FlyoutDetailPanelProps> = ({
           </EuiCodeBlock>
         </div>
       </EuiAccordion>
+
+      <EuiSpacer size="s" />
+
+      {/* Evaluation Section */}
+      {row && (() => {
+        const evalResult = getDummyEval(row);
+        if (!evalResult) return null;
+        return (
+          <EuiAccordion
+            id="evaluation-accordion"
+            buttonContent={
+              <strong>
+                {i18n.translate('agentTraces.detailPanel.evaluation', {
+                  defaultMessage: 'Evaluation',
+                })}
+              </strong>
+            }
+            initialIsOpen
+            paddingSize="m"
+          >
+            {/* Metadata Row */}
+            <div className="agentTracesFlyout__evalMetaRow">
+              <span className="agentTracesFlyout__evalMetaItem">
+                <span className="agentTracesFlyout__evalMetaKey">NAME</span>
+                <span className="agentTracesFlyout__evalMetaVal">{evalResult.name}</span>
+              </span>
+              {evalResult.scoreLabel && (
+                <>
+                  <span className="agentTracesFlyout__evalMetaDivider" />
+                  <span className="agentTracesFlyout__evalMetaItem">
+                    <span className="agentTracesFlyout__evalMetaKey">LABEL</span>
+                    <span className="agentTracesFlyout__evalMetaVal">{evalResult.scoreLabel}</span>
+                  </span>
+                </>
+              )}
+              {evalResult.scoreValue !== undefined && (
+                <>
+                  <span className="agentTracesFlyout__evalMetaDivider" />
+                  <span className="agentTracesFlyout__evalMetaItem">
+                    <span className="agentTracesFlyout__evalMetaKey">VALUE</span>
+                    <span className="agentTracesFlyout__evalMetaVal">{evalResult.scoreValue.toFixed(2)}</span>
+                  </span>
+                </>
+              )}
+            </div>
+
+            <EuiSpacer size="m" />
+
+            {/* Explanation */}
+            {evalResult.explanation && (
+              <>
+                <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false} justifyContent="spaceBetween">
+                  <EuiFlexItem grow={false}>
+                    <EuiTitle size="xxs">
+                      <span>EXPLANATION</span>
+                    </EuiTitle>
+                  </EuiFlexItem>
+                  <EuiFlexItem grow={false}>
+                    <EuiFlexGroup gutterSize="xs" responsive={false} alignItems="center">
+                      <EuiFlexItem grow={false}>
+                        <EuiText size="xs" color="subdued">Helpful?</EuiText>
+                      </EuiFlexItem>
+                      <EuiFlexItem grow={false}>
+                        <EuiButtonIcon iconType="thumbsUp" aria-label="Helpful" size="xs" color="text" />
+                      </EuiFlexItem>
+                      <EuiFlexItem grow={false}>
+                        <EuiButtonIcon iconType="thumbsDown" aria-label="Not helpful" size="xs" color="text" />
+                      </EuiFlexItem>
+                      <EuiFlexItem grow={false}>
+                        <EuiCopy textToCopy={evalResult.explanation}>
+                          {(copy) => (
+                            <EuiButtonIcon iconType="copy" aria-label="Copy" size="xs" color="text" onClick={copy} />
+                          )}
+                        </EuiCopy>
+                      </EuiFlexItem>
+                    </EuiFlexGroup>
+                  </EuiFlexItem>
+                </EuiFlexGroup>
+                <EuiSpacer size="xs" />
+                <div className="agentTracesFlyout__evalExplanation">
+                  <EuiText size="s"><p>{evalResult.explanation}</p></EuiText>
+                </div>
+              </>
+            )}
+          </EuiAccordion>
+        );
+      })()}
 
       <EuiSpacer size="s" />
 

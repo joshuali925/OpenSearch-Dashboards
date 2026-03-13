@@ -33,6 +33,10 @@
       - [Build](../src/dev/build/README.md)
       - [I18n](../src/dev/i18n/README.md)
     - plugins
+      - agent_traces
+        - public
+          - services
+            - [MOCK_EVAL_README](../src/plugins/agent_traces/public/services/MOCK_EVAL_README.md)
       - [Application_config](../src/plugins/application_config/README.md)
       - [Banner](../src/plugins/banner/README.md)
       - [Bfetch](../src/plugins/bfetch/README.md)
@@ -223,6 +227,7 @@
   - [COMMUNICATIONS](../COMMUNICATIONS.md)
   - [CONTRIBUTING](../CONTRIBUTING.md)
   - [DEVELOPER_GUIDE](../DEVELOPER_GUIDE.md)
+  - [EVAL_COLUMN_TESTING](../EVAL_COLUMN_TESTING.md)
   - [MAINTAINERS](../MAINTAINERS.md)
   - [README](../README.md)
   - [RELEASING](../RELEASING.md)

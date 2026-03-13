@@ -213,7 +213,7 @@ export const TraceDetailsFlyout: React.FC<TraceDetailsProps> = ({
               const category = getSpanCategory(rootTrace);
               const meta = getCategoryMeta(category);
               return (
-                <EuiBadge className="agentTraces__categoryBadge" color={meta.color}>
+                <EuiBadge className="agentTraces__categoryBadge" color={meta.bgColor} style={{ color: meta.textColor }}>
                   {meta.label}
                 </EuiBadge>
               );

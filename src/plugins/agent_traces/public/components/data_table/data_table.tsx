@@ -5,7 +5,7 @@
 
 import './data_table.scss';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { EuiSmallButtonEmpty, EuiCallOut } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
 import { IndexPattern, DataView as Dataset } from 'src/plugins/data/public';
@@ -60,7 +60,7 @@ const DataTableUI = ({
   sortOrder,
   onChangeSortOrder,
 }: DataTableProps) => {
-  const columnNames = columns.map((column) => column.name);
+  const columnNames = useMemo(() => columns.map((column) => column.name), [columns]);
 
   // Pagination state (only used when showPagination=true)
   const [displayedRows, setDisplayedRows] = useState(rows.slice(0, PAGINATED_PAGE_SIZE));

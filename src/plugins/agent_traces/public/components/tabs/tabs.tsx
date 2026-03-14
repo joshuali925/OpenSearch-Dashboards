@@ -15,7 +15,7 @@ import React, {
   useSyncExternalStore,
 } from 'react';
 import { EuiTab, EuiTabs } from '@elastic/eui';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore, Provider } from 'react-redux';
 import { setActiveTab } from '../../application/utils/state_management/slices';
 import { clearQueryStatusMapByKey } from '../../application/utils/state_management/slices';
 import { executeTabQuery } from '../../application/utils/state_management/actions/query_actions';
@@ -245,15 +245,56 @@ const TabPanelContent = React.memo(({ tab }: { tab: TabDefinition }) => (
 ));
 
 /**
- * Outer panel shell.  Receives only `tab` (stable registry reference),
- * so React.memo always bails out after the initial mount.  Visibility is
- * toggled imperatively by the parent via `useLayoutEffect` + classList,
- * which avoids React traversing the heavy content subtree entirely.
+ * Freezes Redux subscriptions for hidden tabs.
+ *
+ * When `active` is false a proxy store with a no-op `subscribe` is provided,
+ * so every `useSelector` inside the subtree stops receiving notifications and
+ * the hidden tab does zero work between switches.
+ *
+ * When `active` flips back to true the real store is provided, the Provider
+ * value changes, and all selectors re-evaluate with the latest state in a
+ * single render pass.
+ */
+const StoreGate: React.FC<{ active: boolean; children: React.ReactNode }> = ({
+  active,
+  children,
+}) => {
+  const realStore = useStore();
+  const frozenStore = useMemo(
+    () => ({
+      getState: realStore.getState,
+      dispatch: realStore.dispatch,
+      subscribe: () => () => {},
+      replaceReducer: realStore.replaceReducer,
+      [Symbol.observable]: (realStore as any)[Symbol.observable],
+    }),
+    [realStore]
+  );
+
+  return <Provider store={(active ? realStore : frozenStore) as any}>{children}</Provider>;
+};
+
+/**
+ * Inner wrapper that lives INSIDE TabIdContext.Provider so it can
+ * call useIsTabActive() (which needs useOwnTabId() → TabIdContext).
+ */
+const TabPanelGate: React.FC<{ tab: TabDefinition }> = ({ tab }) => {
+  const isActive = useIsTabActive();
+  return (
+    <StoreGate active={isActive}>
+      <TabPanelContent tab={tab} />
+    </StoreGate>
+  );
+};
+
+/**
+ * Outer panel shell.  TabIdContext.Provider must wrap StoreGate so that
+ * useIsTabActive() inside TabPanelGate can read the correct tab ID.
  */
 const TabPanel = React.memo(({ tab }: { tab: TabDefinition }) => (
   <div role="tabpanel" data-tab-id={tab.id} className="agentTracesTabs__panel">
     <TabIdContext.Provider value={tab.id}>
-      <TabPanelContent tab={tab} />
+      <TabPanelGate tab={tab} />
     </TabIdContext.Provider>
   </div>
 ));

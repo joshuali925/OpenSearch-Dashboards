@@ -40,12 +40,21 @@ export const createOverallStatusMiddleware = (): Middleware => {
       // Otherwise, compute overall status from the status map
       const statusMap = state.queryEditor.queryStatusMap;
       const newOverallStatus = computeOverallStatus(statusMap);
-      store.dispatch(setOverallQueryStatus(newOverallStatus));
 
-      // Reset hasUserInitiatedQuery flag when queries complete (READY, NO_RESULTS, or ERROR)
+      // Only dispatch if status actually changed — avoids unnecessary store
+      // notifications and the cascading re-renders they cause.
+      if (
+        newOverallStatus.status !== currentOverallStatus.status ||
+        newOverallStatus.elapsedMs !== currentOverallStatus.elapsedMs
+      ) {
+        store.dispatch(setOverallQueryStatus(newOverallStatus));
+      }
+
+      // Reset hasUserInitiatedQuery flag when queries complete
       if (
         newOverallStatus.status !== QueryExecutionStatus.LOADING &&
-        newOverallStatus.status !== QueryExecutionStatus.UNINITIALIZED
+        newOverallStatus.status !== QueryExecutionStatus.UNINITIALIZED &&
+        state.queryEditor.hasUserInitiatedQuery
       ) {
         store.dispatch(setHasUserInitiatedQuery(false));
       }

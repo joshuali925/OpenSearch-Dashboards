@@ -9,7 +9,6 @@ import { DataTable } from '../../../components/data_table/data_table';
 import { AGENT_TRACES_DEFAULT_COLUMNS } from '../../../../common';
 import { DocViewFilterFn } from '../../../types/doc_views_types';
 import { TraceExpansionProvider, RowMeta } from './trace_expansion_context';
-import { LoadingState } from './hooks/tree_utils';
 import {
   TableLoadingState,
   TableEmptyState,
@@ -26,10 +25,6 @@ import { hitsToAgentSpans, buildFullSpanTree } from './hooks/tree_utils';
 import './traces_table.scss';
 
 const DEFAULT_SPAN_COLUMNS = [...AGENT_TRACES_DEFAULT_COLUMNS];
-
-// Stable module-level constants to avoid creating new references on every render
-const EMPTY_EXPANDED_ROWS = new Set<string>();
-const EMPTY_LOADING_STATE = new Map<string, LoadingState>();
 
 export const SpansDataTable: React.FC = () => {
   const {
@@ -118,9 +113,7 @@ export const SpansDataTable: React.FC = () => {
   // No tree expansion for spans — provide a no-op context
   const expansionContextValue = useMemo(
     () => ({
-      expandedRows: EMPTY_EXPANDED_ROWS,
       toggleExpansion: () => {},
-      traceLoadingState: EMPTY_LOADING_STATE,
       getRowMeta,
       onRowClick: handleRowClick,
       wrapCellText,

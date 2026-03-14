@@ -12,7 +12,7 @@
 import { EuiButtonIcon } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import dompurify from 'dompurify';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { IndexPattern, DataView as Dataset } from 'src/plugins/data/public';
 import { TableCell } from '../table_cell/table_cell';
 import { EmptyTableCell } from '../table_cell/empty_table_cell';
@@ -21,7 +21,6 @@ import { NonFilterableTableCell } from '../table_cell/non_filterable_table_cell'
 import { DocViewFilterFn, OpenSearchSearchHit } from '../../../types/doc_views_types';
 import {
   isAgentTracesVirtualColumn,
-  isOnAgentTracesPage,
   AgentTracesVirtualCell,
   AgentTracesTimeCell,
   getHitId,
@@ -66,7 +65,7 @@ const formatFieldValue = (
   return dataset.formatField(row, colName);
 };
 
-export const TableRowContent: React.FC<TableRowContentProps> = ({
+export const TableRowContent: React.FC<TableRowContentProps> = React.memo(({
   row,
   index,
   columns,
@@ -80,7 +79,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
 }) => {
   const [isRowSelected, setIsRowSelected] = useState(false);
 
-  const flattened = dataset.flattenHit(row);
+  const flattened = useMemo(() => dataset.flattenHit(row), [dataset, row]);
   return (
     <tr
       key={row._id || (row._source as any)?.spanId}
@@ -107,12 +106,12 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
       )}
       {columns.map((colName) => {
         // Agent traces: custom time cell with formatted timestamp and clickable link
-        if (isOnAgentTracesPage() && dataset.timeFieldName === colName) {
+        if (isOnTracesPage && dataset.timeFieldName === colName) {
           return <AgentTracesTimeCell key={colName} hitId={getHitId(row)} />;
         }
 
         // Agent traces virtual columns: bypass dataset formatField
-        if (isAgentTracesVirtualColumn(colName) && isOnAgentTracesPage()) {
+        if (isAgentTracesVirtualColumn(colName) && isOnTracesPage) {
           return (
             <AgentTracesVirtualCell
               key={colName}
@@ -151,7 +150,7 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
 
         const sanitizedCellValue = dompurify.sanitize(formattedValue);
 
-        if (fieldInfo?.filterable === false && !isOnAgentTracesPage()) {
+        if (fieldInfo?.filterable === false && !isOnTracesPage) {
           return (
             <NonFilterableTableCell
               colName={colName}
@@ -183,4 +182,4 @@ export const TableRowContent: React.FC<TableRowContentProps> = ({
       })}
     </tr>
   );
-};
+});

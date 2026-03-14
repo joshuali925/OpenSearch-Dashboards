@@ -8,7 +8,7 @@ import { FormattedMessage } from '@osd/i18n/react';
 import { DataTable } from '../../../components/data_table/data_table';
 import { AGENT_TRACES_DEFAULT_COLUMNS } from '../../../../common';
 import { DocViewFilterFn, OpenSearchSearchHit } from '../../../types/doc_views_types';
-import { TraceExpansionProvider, RowMeta } from './trace_expansion_context';
+import { TraceExpansionProvider, RowMeta, expansionStore } from './trace_expansion_context';
 import { useTraceFlyout } from './flyout/trace_flyout_context';
 import { BaseRow, LoadingState, buildFullSpanTree, hitsToAgentSpans } from './hooks/tree_utils';
 import { transformPPLDataToTraceHits } from './trace_details/traces/ppl_to_trace_hits';
@@ -73,19 +73,58 @@ export const TracesDataTable: React.FC = () => {
     return map;
   }, [hits, formatTs]);
 
-  // Tree expansion state
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [childHitsMap, setChildHitsMap] = useState<
-    Map<string, Array<OpenSearchSearchHit<Record<string, any>>>>
-  >(new Map());
+  // Tree expansion state — expandedRows drives visibleRows computation,
+  // and is also synced to the external store so cell components can
+  // subscribe without triggering context re-renders.
+  const [expandedRows, setExpandedRowsRaw] = useState<Set<string>>(new Set());
+  const expandedRowsRef = useRef(expandedRows);
+  expandedRowsRef.current = expandedRows;
+
+  // Wrapper that syncs React state + external store in one call
+  const setExpandedRows = useCallback(
+    (updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+      setExpandedRowsRaw((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        expansionStore.setExpandedRows(next);
+        return next;
+      });
+    },
+    []
+  );
+
   const [childMetaMap, setChildMetaMap] = useState<Map<string, Map<string, RowMeta>>>(new Map());
-  const [traceLoadingState, setTraceLoadingState] = useState<Map<string, LoadingState>>(new Map());
+  const [traceLoadingState, setTraceLoadingStateRaw] = useState<Map<string, LoadingState>>(
+    new Map()
+  );
+
+  // Wrapper that syncs React state + external store
+  const setTraceLoadingState = useCallback(
+    (updater: (prev: Map<string, LoadingState>) => Map<string, LoadingState>) => {
+      setTraceLoadingStateRaw((prev) => {
+        const next = updater(prev);
+        expansionStore.setTraceLoadingState(next);
+        return next;
+      });
+    },
+    []
+  );
   const inFlightRef = useRef<Set<string>>(new Set());
   const traceSpansCacheRef = useRef<Map<string, BaseRow[]>>(new Map());
   const abortControllerRef = useRef<AbortController | null>(null);
   const flyoutTraceIdRef = useRef<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pendingScrollRestoreRef = useRef<number | null>(null);
+
+  // Merged meta map: O(1) lookup combining root and all child metadata.
+  // Stored in a ref so getRowMeta callback stays stable.
+  const mergedMetaRef = useRef(new Map<string, RowMeta>());
+  useMemo(() => {
+    const merged = new Map<string, RowMeta>(rowMetaMap);
+    childMetaMap.forEach((childMap) => {
+      childMap.forEach((meta, key) => merged.set(key, meta));
+    });
+    mergedMetaRef.current = merged;
+  }, [rowMetaMap, childMetaMap]);
 
   // Abort in-flight fetches on unmount
   useEffect(() => {
@@ -98,14 +137,14 @@ export const TracesDataTable: React.FC = () => {
   useEffect(() => {
     abortControllerRef.current?.abort();
     setExpandedRows(new Set());
-    setChildHitsMap(new Map());
     setChildMetaMap(new Map());
-    setTraceLoadingState(new Map());
+    setTraceLoadingState(() => new Map());
     traceSpansCacheRef.current.clear();
     inFlightRef.current.clear();
-  }, [hits]);
+  }, [hits, setExpandedRows, setTraceLoadingState]);
 
-  // Sync full tree to flyout
+  // Sync full tree to flyout when child data changes
+  const childMetaVersion = childMetaMap.size;
   useEffect(() => {
     const traceId = flyoutTraceIdRef.current;
     if (!traceId) return;
@@ -113,7 +152,7 @@ export const TracesDataTable: React.FC = () => {
     if (cached) {
       updateFlyoutFullTree(cached as TraceRow[], false);
     }
-  }, [childHitsMap, updateFlyoutFullTree]);
+  }, [childMetaVersion, updateFlyoutFullTree]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show error state in flyout when fetch fails
   useEffect(() => {
@@ -151,11 +190,15 @@ export const TracesDataTable: React.FC = () => {
         const fullTree = buildFullSpanTree(agentSpans, formatTs);
         traceSpansCacheRef.current.set(traceId, fullTree);
 
-        // Build child hits and metadata for displaying expanded rows
-        const childRows: BaseRow[] = [];
+        // Flatten tree into child metadata
+        const newChildMeta = new Map<string, RowMeta>();
         const flattenTree = (rows: BaseRow[]) => {
           for (const row of rows) {
-            childRows.push(row);
+            newChildMeta.set(row.spanId, {
+              level: row.level || 0,
+              isExpandable: !!(row.children && row.children.length > 0),
+              traceRow: row,
+            });
             if (row.children && row.children.length > 0) {
               flattenTree(row.children);
             }
@@ -163,23 +206,7 @@ export const TracesDataTable: React.FC = () => {
         };
         flattenTree(fullTree);
 
-        const newChildHits = childRows
-          .filter((r) => r.parentSpanId) // exclude root (already in parent hits)
-          .map((r) => traceRowToHit(r));
-        const newChildMeta = new Map<string, RowMeta>();
-        childRows.forEach((r) => {
-          newChildMeta.set(r.spanId, {
-            level: r.level || 0,
-            isExpandable: !!(r.children && r.children.length > 0),
-            traceRow: r,
-          });
-        });
-
-        setChildHitsMap((prev) => {
-          const next = new Map(prev);
-          next.set(traceId, newChildHits);
-          return next;
-        });
+        // Batch both state updates together
         setChildMetaMap((prev) => {
           const next = new Map(prev);
           next.set(traceId, newChildMeta);
@@ -207,6 +234,7 @@ export const TracesDataTable: React.FC = () => {
     [pplService, datasetParam, formatTs]
   );
 
+  // Stable toggleExpansion — reads expandedRows from ref, no dependency on expandedRows state
   const toggleExpansion = useCallback(
     async (e: React.MouseEvent, id: string, traceId: string) => {
       e.stopPropagation();
@@ -216,7 +244,7 @@ export const TracesDataTable: React.FC = () => {
         pendingScrollRestoreRef.current = scrollContainerRef.current.scrollTop;
       }
 
-      if (expandedRows.has(id)) {
+      if (expandedRowsRef.current.has(id)) {
         setExpandedRows((prev) => {
           const next = new Set(prev);
           next.delete(id);
@@ -232,35 +260,25 @@ export const TracesDataTable: React.FC = () => {
         return next;
       });
     },
-    [expandedRows, expandTrace]
+    [expandTrace]
   );
 
-  // Combined getRowMeta that checks both root-level and child metadata
-  const getRowMeta = useCallback(
-    (hitId: string): RowMeta | null => {
-      const rootMeta = rowMetaMap.get(hitId);
-      if (rootMeta) return rootMeta;
-
-      // Search child meta maps
-      for (const meta of childMetaMap.values()) {
-        const childMeta = meta.get(hitId);
-        if (childMeta) return childMeta;
-      }
-      return null;
-    },
-    [rowMetaMap, childMetaMap]
-  );
+  // Stable getRowMeta — reads from merged ref, O(1) lookup
+  const getRowMeta = useCallback((hitId: string): RowMeta | null => {
+    return mergedMetaRef.current.get(hitId) || null;
+  }, []);
 
   // Build visible rows: root hits (already sorted by backend) + expanded children after parents
   const visibleRows = useMemo(() => {
     const result: Array<OpenSearchSearchHit<Record<string, any>>> = [];
+    const merged = mergedMetaRef.current;
 
     const addRowAndChildren = (hit: OpenSearchSearchHit<Record<string, any>>, hitId: string) => {
       result.push(hit);
 
       if (!expandedRows.has(hitId)) return;
 
-      const meta = getRowMeta(hitId);
+      const meta = merged.get(hitId);
       if (!meta) return;
 
       const traceId = meta.traceRow.traceId;
@@ -298,7 +316,7 @@ export const TracesDataTable: React.FC = () => {
     });
 
     return result;
-  }, [hits, expandedRows, rowMetaMap, getRowMeta]);
+  }, [hits, expandedRows, rowMetaMap]);
 
   // Restore scroll position after expansion/collapse changes the DOM.
   // useLayoutEffect fires synchronously after DOM mutations but before
@@ -310,10 +328,10 @@ export const TracesDataTable: React.FC = () => {
     }
   }, [visibleRows]);
 
-  // Open flyout for a row by its hit ID
+  // Open flyout for a row by its hit ID — reads meta from ref for stability
   const handleRowClick = useCallback(
     async (hitId: string) => {
-      const meta = getRowMeta(hitId);
+      const meta = mergedMetaRef.current.get(hitId);
       if (!meta) return;
       const traceRow = meta.traceRow as TraceRow;
       flyoutTraceIdRef.current = traceRow.traceId;
@@ -327,20 +345,20 @@ export const TracesDataTable: React.FC = () => {
 
       await expandTrace(traceRow.traceId);
     },
-    [getRowMeta, openFlyout, updateFlyoutFullTree, expandTrace]
+    [openFlyout, updateFlyoutFullTree, expandTrace]
   );
 
+  // Context value is now stable — expandedRows and traceLoadingState
+  // live in the external store, so only cells that subscribe re-render.
   const expansionContextValue = useMemo(
     () => ({
-      expandedRows,
       toggleExpansion,
-      traceLoadingState,
       getRowMeta,
       onRowClick: handleRowClick,
       wrapCellText,
       hasExpandableRows: true,
     }),
-    [expandedRows, toggleExpansion, traceLoadingState, getRowMeta, handleRowClick, wrapCellText]
+    [toggleExpansion, getRowMeta, handleRowClick, wrapCellText]
   );
 
   // Loading state — show during active query or before initial query has completed

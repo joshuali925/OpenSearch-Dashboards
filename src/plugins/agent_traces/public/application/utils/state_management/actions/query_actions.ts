@@ -13,7 +13,8 @@ import {
 } from '../../../../../../../../src/plugins/data/common';
 import { QueryExecutionStatus } from '../types';
 import { setResults, ISearchResult } from '../slices';
-import { setIndividualQueryStatus } from '../slices/query_editor/query_editor_slice';
+import { setIndividualQueryStatus, clearQueryStatusMapByKey } from '../slices/query_editor/query_editor_slice';
+import { clearResultsByKey } from '../slices/results/results_slice';
 import { AgentTracesServices } from '../../../../types';
 import { indexPatterns as indexPatternUtils } from '../../../../../../data/public';
 import { SAMPLE_SIZE_SETTING } from '../../../../../common';
@@ -25,6 +26,15 @@ import { defaultPreparePplQuery } from '../../languages';
 
 // Module-level storage for abort controllers keyed by cacheKey
 const activeQueryAbortControllers = new Map<string, AbortController>();
+
+// Debounce timer for field autocomplete updates
+let pendingFieldUpdateTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Schedule a debounced autocomplete field update. Call OUTSIDE useMemo. */
+export const scheduleFieldTopQueryValues = (hits: any[], dataset: DataView) => {
+  clearTimeout(pendingFieldUpdateTimer);
+  pendingFieldUpdateTimer = setTimeout(() => updateFieldTopQueryValues(hits, dataset), 300) as any;
+};
 
 // Helper function to abort all active queries
 // Backend cancellation is handled automatically via AbortSignal in search strategies
@@ -100,7 +110,8 @@ export const defaultResultsProcessor: DefaultDataProcessor = (
     // Defer autocomplete updates to avoid blocking the main thread during
     // the critical rendering path. This work iterates over ALL string fields ×
     // ALL hits and is not needed for the initial render.
-    setTimeout(() => updateFieldTopQueryValues(rawResults.hits.hits, dataset), 0);
+    // Note: this is a side effect — callers from useMemo should use
+    // scheduleFieldTopQueryValues separately instead.
   }
 
   const result: ProcessedSearchResults = {
@@ -193,6 +204,31 @@ export const executeQueries = createAsyncThunk<
   // Early exit if query should be skipped
   if (shouldSkipQueryExecution(query)) {
     return;
+  }
+
+  // Evict stale results and status entries from previous queries.
+  // Compute the set of cache keys that are still relevant (current tabs with current query).
+  const allTabs = services.tabRegistry.getAllTabs();
+  const activeCacheKeys = new Set<string>();
+  for (const tab of allTabs) {
+    if (tab.prepareQuery) {
+      try {
+        activeCacheKeys.add(tab.prepareQuery(query, sort));
+      } catch {
+        // ignore — tab may not support current language
+      }
+    }
+  }
+  // Remove results and status entries for cache keys that are no longer active
+  // Guard: only evict when we successfully computed at least one active key,
+  // otherwise a transient error could wipe all cached data.
+  if (activeCacheKeys.size > 0) {
+    for (const key of Object.keys(results)) {
+      if (!activeCacheKeys.has(key)) {
+        dispatch(clearResultsByKey(key));
+        dispatch(clearQueryStatusMapByKey(key));
+      }
+    }
   }
 
   // Collect all tab cache keys that need execution
@@ -356,6 +392,11 @@ const executeQueryBase = async (
     };
 
     dispatch(setResults({ cacheKey, results: rawResultsWithMeta }));
+
+    // Schedule debounced autocomplete field update (side effect, not in useMemo)
+    if (rawResults.hits?.hits?.length && dataView) {
+      scheduleFieldTopQueryValues(rawResults.hits.hits, dataView);
+    }
 
     dispatch(
       setIndividualQueryStatus({

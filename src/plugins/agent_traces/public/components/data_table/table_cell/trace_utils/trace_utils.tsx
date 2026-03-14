@@ -30,7 +30,7 @@ import {
   getCategoryMeta,
   getOperationNamesForCategory,
 } from '../../../../services/span_categorization';
-import { useTraceExpansion } from '../../../../application/pages/traces/trace_expansion_context';
+import { useTraceExpansion, useExpansionSnapshot } from '../../../../application/pages/traces/trace_expansion_context';
 
 export const isOnTracesPage = (): boolean => {
   return window.location.pathname.includes('/agentTraces');
@@ -229,15 +229,16 @@ export const isOnAgentTracesPage = (): boolean => {
   return window.location.pathname.includes('/agentTraces');
 };
 
-const AgentTracesKindCell: React.FC<{ hitId: string }> = ({ hitId }) => {
+const AgentTracesKindCell: React.FC<{ hitId: string }> = React.memo(({ hitId }) => {
   const ctx = useTraceExpansion();
+  const { expandedRows, traceLoadingState } = useExpansionSnapshot();
   if (!ctx) return null;
 
   const meta = ctx.getRowMeta(hitId);
   if (!meta) return null;
 
   const { traceRow, level, isExpandable } = meta;
-  const isTraceLoading = ctx.traceLoadingState.get(traceRow.traceId)?.loading;
+  const isTraceLoading = traceLoadingState.get(traceRow.traceId)?.loading;
 
   const category = getSpanCategory(traceRow);
   const catMeta = getCategoryMeta(category);
@@ -250,10 +251,10 @@ const AgentTracesKindCell: React.FC<{ hitId: string }> = ({ hitId }) => {
       {isExpandable && !isTraceLoading && (
         <EuiButtonIcon
           size="xs"
-          iconType={ctx.expandedRows.has(traceRow.id) ? 'arrowDown' : 'arrowRight'}
+          iconType={expandedRows.has(traceRow.id) ? 'arrowDown' : 'arrowRight'}
           onClick={(e: React.MouseEvent) => ctx.toggleExpansion(e, traceRow.id, traceRow.traceId)}
           aria-label={
-            ctx.expandedRows.has(traceRow.id)
+            expandedRows.has(traceRow.id)
               ? i18n.translate('agentTraces.dataTable.collapse', { defaultMessage: 'Collapse' })
               : i18n.translate('agentTraces.dataTable.expand', { defaultMessage: 'Expand' })
           }
@@ -278,7 +279,7 @@ const AgentTracesKindCell: React.FC<{ hitId: string }> = ({ hitId }) => {
       </EuiBadge>
     </div>
   );
-};
+});
 
 const AgentTracesStatusCell: React.FC<{ status: string }> = ({ status }) => (
   <EuiHealth color={status === 'success' ? 'success' : 'danger'} textSize="xs">

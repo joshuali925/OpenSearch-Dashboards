@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { FormattedMessage } from '@osd/i18n/react';
 import { DataTable } from '../../../components/data_table/data_table';
 import { AGENT_TRACES_DEFAULT_COLUMNS } from '../../../../common';
@@ -26,13 +26,17 @@ import './traces_table.scss';
 
 const DEFAULT_TRACE_COLUMNS = [...AGENT_TRACES_DEFAULT_COLUMNS];
 
-/** Create a synthetic OpenSearchSearchHit from a BaseRow */
-const traceRowToHit = (row: BaseRow): OpenSearchSearchHit<Record<string, any>> => ({
-  _index: '',
-  _id: row.spanId,
-  _score: null,
-  _source: row.rawDocument || {},
-});
+/** Create a synthetic OpenSearchSearchHit from a BaseRow — cached so the same
+ *  BaseRow always returns the same object reference (preserves React.memo). */
+const hitCache = new WeakMap<BaseRow, OpenSearchSearchHit<Record<string, any>>>();
+const traceRowToHit = (row: BaseRow): OpenSearchSearchHit<Record<string, any>> => {
+  let hit = hitCache.get(row);
+  if (!hit) {
+    hit = { _index: '', _id: row.spanId, _score: null, _source: row.rawDocument || {} };
+    hitCache.set(row, hit);
+  }
+  return hit;
+};
 
 export const TracesDataTable: React.FC = () => {
   const {
@@ -113,7 +117,6 @@ export const TracesDataTable: React.FC = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const flyoutTraceIdRef = useRef<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const pendingScrollRestoreRef = useRef<number | null>(null);
 
   // Merged meta map: O(1) lookup combining root and all child metadata.
   // Stored in a ref so getRowMeta callback stays stable.
@@ -239,15 +242,20 @@ export const TracesDataTable: React.FC = () => {
     async (e: React.MouseEvent, id: string, traceId: string) => {
       e.stopPropagation();
 
-      // Save scroll position before expansion changes the DOM
-      if (scrollContainerRef.current) {
-        pendingScrollRestoreRef.current = scrollContainerRef.current.scrollTop;
-      }
-
       if (expandedRowsRef.current.has(id)) {
         setExpandedRows((prev) => {
           const next = new Set(prev);
           next.delete(id);
+          return next;
+        });
+        return;
+      }
+
+      // Fast path: tree already cached — update synchronously (no await/microtask)
+      if (traceSpansCacheRef.current.has(traceId)) {
+        setExpandedRows((prev) => {
+          const next = new Set(prev);
+          next.add(id);
           return next;
         });
         return;
@@ -268,44 +276,20 @@ export const TracesDataTable: React.FC = () => {
     return mergedMetaRef.current.get(hitId) || null;
   }, []);
 
-  // Build visible rows: root hits (already sorted by backend) + expanded children after parents
+  // Build visible rows: root hits + expanded children, O(V) via direct lookup.
   const visibleRows = useMemo(() => {
     const result: Array<OpenSearchSearchHit<Record<string, any>>> = [];
     const merged = mergedMetaRef.current;
 
     const addRowAndChildren = (hit: OpenSearchSearchHit<Record<string, any>>, hitId: string) => {
       result.push(hit);
-
       if (!expandedRows.has(hitId)) return;
-
       const meta = merged.get(hitId);
-      if (!meta) return;
-
-      const traceId = meta.traceRow.traceId;
-      const fullTree = traceSpansCacheRef.current.get(traceId);
-      if (!fullTree) return;
-
-      // Find this node in the full tree and add its children
-      const findAndAddChildren = (rows: BaseRow[]) => {
-        for (const row of rows) {
-          if (row.spanId === meta.traceRow.spanId) {
-            if (row.children && row.children.length > 0) {
-              const addTreeChildren = (children: BaseRow[]) => {
-                for (const child of children) {
-                  const childHit = traceRowToHit(child);
-                  addRowAndChildren(childHit, child.spanId);
-                }
-              };
-              addTreeChildren(row.children);
-            }
-            return true;
-          }
-          if (row.children && findAndAddChildren(row.children)) return true;
-        }
-        return false;
-      };
-
-      findAndAddChildren(fullTree);
+      const children = meta?.traceRow.children;
+      if (!children) return;
+      for (const child of children) {
+        addRowAndChildren(traceRowToHit(child), child.spanId);
+      }
     };
 
     hits.forEach((hit) => {
@@ -317,16 +301,6 @@ export const TracesDataTable: React.FC = () => {
 
     return result;
   }, [hits, expandedRows, rowMetaMap]);
-
-  // Restore scroll position after expansion/collapse changes the DOM.
-  // useLayoutEffect fires synchronously after DOM mutations but before
-  // the browser paints, so the user never sees the scroll jump.
-  useLayoutEffect(() => {
-    if (pendingScrollRestoreRef.current !== null && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = pendingScrollRestoreRef.current;
-      pendingScrollRestoreRef.current = null;
-    }
-  }, [visibleRows]);
 
   // Open flyout for a row by its hit ID — reads meta from ref for stability
   const handleRowClick = useCallback(

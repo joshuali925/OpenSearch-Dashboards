@@ -39,6 +39,9 @@
   min-height: 0;
   overflow-y: auto;
   mask-image: none;
+  // Isolate layout: forced reflows from EUI ResizeObserver won't
+  // propagate outside this container.
+  contain: layout;
 }
 
 .agentTracesTable__clickableRow {

@@ -113,4 +113,16 @@ export const TableRowUI = ({
   );
 };
 
-export const TableRow = React.memo(TableRowUI);
+export const TableRow = React.memo(TableRowUI, (prev, next) =>
+  prev.row === next.row &&
+  prev.columns === next.columns &&
+  prev.dataset === next.dataset &&
+  prev.onAddColumn === next.onAddColumn &&
+  prev.onRemoveColumn === next.onRemoveColumn &&
+  prev.onFilter === next.onFilter &&
+  prev.onClose === next.onClose &&
+  prev.isShortDots === next.isShortDots &&
+  prev.docViewsRegistry === next.docViewsRegistry &&
+  prev.expandedTableHeader === next.expandedTableHeader &&
+  prev.wrapCellText === next.wrapCellText
+);

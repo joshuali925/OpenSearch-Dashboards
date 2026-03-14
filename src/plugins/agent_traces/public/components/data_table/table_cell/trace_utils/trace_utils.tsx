@@ -30,7 +30,7 @@ import {
   getCategoryMeta,
   getOperationNamesForCategory,
 } from '../../../../services/span_categorization';
-import { useTraceExpansion, useExpansionSnapshot } from '../../../../application/pages/traces/trace_expansion_context';
+import { useTraceExpansion, useIsExpanded, useIsTraceLoading } from '../../../../application/pages/traces/trace_expansion_context';
 
 export const isOnTracesPage = (): boolean => {
   return window.location.pathname.includes('/agentTraces');
@@ -231,14 +231,14 @@ export const isOnAgentTracesPage = (): boolean => {
 
 const AgentTracesKindCell: React.FC<{ hitId: string }> = React.memo(({ hitId }) => {
   const ctx = useTraceExpansion();
-  const { expandedRows, traceLoadingState } = useExpansionSnapshot();
   if (!ctx) return null;
 
   const meta = ctx.getRowMeta(hitId);
   if (!meta) return null;
 
   const { traceRow, level, isExpandable } = meta;
-  const isTraceLoading = traceLoadingState.get(traceRow.traceId)?.loading;
+  const isExpanded = useIsExpanded(traceRow.id);
+  const isTraceLoading = useIsTraceLoading(traceRow.traceId);
 
   const category = getSpanCategory(traceRow);
   const catMeta = getCategoryMeta(category);
@@ -251,10 +251,10 @@ const AgentTracesKindCell: React.FC<{ hitId: string }> = React.memo(({ hitId }) 
       {isExpandable && !isTraceLoading && (
         <EuiButtonIcon
           size="xs"
-          iconType={expandedRows.has(traceRow.id) ? 'arrowDown' : 'arrowRight'}
+          iconType={isExpanded ? 'arrowDown' : 'arrowRight'}
           onClick={(e: React.MouseEvent) => ctx.toggleExpansion(e, traceRow.id, traceRow.traceId)}
           aria-label={
-            expandedRows.has(traceRow.id)
+            isExpanded
               ? i18n.translate('agentTraces.dataTable.collapse', { defaultMessage: 'Collapse' })
               : i18n.translate('agentTraces.dataTable.expand', { defaultMessage: 'Expand' })
           }

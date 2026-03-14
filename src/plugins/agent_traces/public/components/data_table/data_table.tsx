@@ -63,7 +63,7 @@ const DataTableUI = ({
   const columnNames = useMemo(() => columns.map((column) => column.name), [columns]);
 
   // Pagination state (only used when showPagination=true)
-  const [displayedRows, setDisplayedRows] = useState(rows.slice(0, PAGINATED_PAGE_SIZE));
+  const [displayedRows, setDisplayedRows] = useState(() => rows.slice(0, PAGINATED_PAGE_SIZE));
   const [currentRowCounts, setCurrentRowCounts] = useState({
     startRow: 0,
     endRow: rows.length < PAGINATED_PAGE_SIZE ? rows.length : PAGINATED_PAGE_SIZE,

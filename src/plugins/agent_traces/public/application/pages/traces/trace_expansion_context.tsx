@@ -78,3 +78,21 @@ export const expansionStore = createExpansionStore();
 export const useExpansionSnapshot = (): ExpansionSnapshot => {
   return useSyncExternalStore(expansionStore.subscribe, expansionStore.getSnapshot);
 };
+
+/** Subscribe to a single node's expanded state — returns a boolean.
+ *  Only re-renders when THIS node's expansion actually changes. */
+export const useIsExpanded = (id: string): boolean => {
+  return useSyncExternalStore(
+    expansionStore.subscribe,
+    () => expansionStore.getSnapshot().expandedRows.has(id)
+  );
+};
+
+/** Subscribe to a single trace's loading state — returns a boolean.
+ *  Only re-renders when THIS trace's loading flag actually changes. */
+export const useIsTraceLoading = (traceId: string): boolean => {
+  return useSyncExternalStore(
+    expansionStore.subscribe,
+    () => !!expansionStore.getSnapshot().traceLoadingState.get(traceId)?.loading
+  );
+};

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { FormattedMessage } from '@osd/i18n/react';
 import { DataTable } from '../../../components/data_table/data_table';
 import { AGENT_TRACES_DEFAULT_COLUMNS } from '../../../../common';
@@ -81,10 +81,17 @@ export const TracesDataTable: React.FC = () => {
   // and is also synced to the external store so cell components can
   // subscribe without triggering context re-renders.
   const [expandedRows, setExpandedRowsRaw] = useState<Set<string>>(new Set());
-  const expandedRowsRef = useRef(expandedRows);
-  expandedRowsRef.current = expandedRows;
+  const expandedRowsRef = useRef<Set<string>>(new Set());
 
-  // Wrapper that syncs React state + external store in one call
+  // Keep ref in sync after React commits — safe in concurrent mode.
+  useLayoutEffect(() => {
+    expandedRowsRef.current = expandedRows;
+  }, [expandedRows]);
+
+  // Wrapper that syncs React state + external store.
+  // The external store is updated synchronously inside the updater so that
+  // useSyncExternalStore subscribers and the React state update are processed
+  // in the same render batch (React 18 automatic batching).
   const setExpandedRows = useCallback(
     (updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
       setExpandedRowsRaw((prev) => {
@@ -121,13 +128,14 @@ export const TracesDataTable: React.FC = () => {
   // Merged meta map: O(1) lookup combining root and all child metadata.
   // Stored in a ref so getRowMeta callback stays stable.
   const mergedMetaRef = useRef(new Map<string, RowMeta>());
-  useMemo(() => {
+  const mergedMeta = useMemo(() => {
     const merged = new Map<string, RowMeta>(rowMetaMap);
     childMetaMap.forEach((childMap) => {
       childMap.forEach((meta, key) => merged.set(key, meta));
     });
-    mergedMetaRef.current = merged;
+    return merged;
   }, [rowMetaMap, childMetaMap]);
+  mergedMetaRef.current = mergedMeta;
 
   // Abort in-flight fetches on unmount
   useEffect(() => {
@@ -147,7 +155,6 @@ export const TracesDataTable: React.FC = () => {
   }, [hits, setExpandedRows, setTraceLoadingState]);
 
   // Sync full tree to flyout when child data changes
-  const childMetaVersion = childMetaMap.size;
   useEffect(() => {
     const traceId = flyoutTraceIdRef.current;
     if (!traceId) return;
@@ -155,7 +162,7 @@ export const TracesDataTable: React.FC = () => {
     if (cached) {
       updateFlyoutFullTree(cached as TraceRow[], false);
     }
-  }, [childMetaVersion, updateFlyoutFullTree]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [childMetaMap, updateFlyoutFullTree]);
 
   // Show error state in flyout when fetch fails
   useEffect(() => {
@@ -234,7 +241,7 @@ export const TracesDataTable: React.FC = () => {
         inFlightRef.current.delete(traceId);
       }
     },
-    [pplService, datasetParam, formatTs]
+    [pplService, datasetParam, formatTs, setTraceLoadingState]
   );
 
   // Stable toggleExpansion — reads expandedRows from ref, no dependency on expandedRows state
@@ -268,7 +275,7 @@ export const TracesDataTable: React.FC = () => {
         return next;
       });
     },
-    [expandTrace]
+    [expandTrace, setExpandedRows]
   );
 
   // Stable getRowMeta — reads from merged ref, O(1) lookup

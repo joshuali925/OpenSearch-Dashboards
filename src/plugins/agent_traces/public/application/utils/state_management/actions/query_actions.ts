@@ -13,8 +13,11 @@ import {
 } from '../../../../../../../../src/plugins/data/common';
 import { QueryExecutionStatus } from '../types';
 import { setResults, ISearchResult } from '../slices';
-import { setIndividualQueryStatus, clearQueryStatusMapByKey } from '../slices/query_editor/query_editor_slice';
-import { clearResultsByKey } from '../slices/results/results_slice';
+import {
+  setIndividualQueryStatus,
+  clearQueryStatusMapByKeys,
+} from '../slices/query_editor/query_editor_slice';
+import { clearResultsByKeys } from '../slices/results/results_slice';
 import { AgentTracesServices } from '../../../../types';
 import { indexPatterns as indexPatternUtils } from '../../../../../../data/public';
 import { SAMPLE_SIZE_SETTING } from '../../../../../common';
@@ -223,11 +226,10 @@ export const executeQueries = createAsyncThunk<
   // Guard: only evict when we successfully computed at least one active key,
   // otherwise a transient error could wipe all cached data.
   if (activeCacheKeys.size > 0) {
-    for (const key of Object.keys(results)) {
-      if (!activeCacheKeys.has(key)) {
-        dispatch(clearResultsByKey(key));
-        dispatch(clearQueryStatusMapByKey(key));
-      }
+    const staleKeys = Object.keys(results).filter((key) => !activeCacheKeys.has(key));
+    if (staleKeys.length > 0) {
+      dispatch(clearResultsByKeys(staleKeys));
+      dispatch(clearQueryStatusMapByKeys(staleKeys));
     }
   }
 
@@ -247,8 +249,8 @@ export const executeQueries = createAsyncThunk<
   } else {
     // No active tab yet (initial load) — execute queries for all registered tabs
     // so results are ready when the active tab is determined
-    const allTabs = services.tabRegistry.getAllTabs();
-    for (const tab of allTabs) {
+    const registeredTabs = services.tabRegistry.getAllTabs();
+    for (const tab of registeredTabs) {
       if (tab.prepareQuery) {
         const tabCacheKey = tab.prepareQuery(query, sort);
         if (!results[tabCacheKey]) {

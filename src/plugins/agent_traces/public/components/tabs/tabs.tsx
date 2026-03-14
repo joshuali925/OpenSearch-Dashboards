@@ -254,6 +254,15 @@ const TabPanelContent = React.memo(({ tab }: { tab: TabDefinition }) => (
  * When `active` flips back to true the real store is provided, the Provider
  * value changes, and all selectors re-evaluate with the latest state in a
  * single render pass.
+ *
+ * Caveats:
+ * - `dispatch` remains available on the frozen store, so hidden tabs can still
+ *   dispatch actions that affect the active tab. This is intentional — async
+ *   thunks that started before the tab was hidden should be able to complete.
+ * - Components that cache derived state in local `useState` (initialized from
+ *   a selector) will NOT auto-update when the tab becomes active again.
+ *   Prefer `useSelector` over `useState` + selector for data that may change
+ *   while the tab is hidden.
  */
 const StoreGate: React.FC<{ active: boolean; children: React.ReactNode }> = ({
   active,

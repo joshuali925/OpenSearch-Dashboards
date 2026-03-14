@@ -30,7 +30,11 @@ import {
   getCategoryMeta,
   getOperationNamesForCategory,
 } from '../../../../services/span_categorization';
-import { useTraceExpansion, useIsExpanded, useIsTraceLoading } from '../../../../application/pages/traces/trace_expansion_context';
+import {
+  useTraceExpansion,
+  useIsExpanded,
+  useIsTraceLoading,
+} from '../../../../application/pages/traces/trace_expansion_context';
 
 export const isOnTracesPage = (): boolean => {
   return window.location.pathname.includes('/agentTraces');
@@ -231,14 +235,16 @@ export const isOnAgentTracesPage = (): boolean => {
 
 const AgentTracesKindCell: React.FC<{ hitId: string }> = React.memo(({ hitId }) => {
   const ctx = useTraceExpansion();
-  if (!ctx) return null;
+  const meta = ctx?.getRowMeta(hitId) ?? null;
+  const traceRow = meta?.traceRow;
 
-  const meta = ctx.getRowMeta(hitId);
-  if (!meta) return null;
+  // Hooks must be called unconditionally (Rules of Hooks)
+  const isExpanded = useIsExpanded(traceRow?.id ?? '');
+  const isTraceLoading = useIsTraceLoading(traceRow?.traceId ?? '');
 
-  const { traceRow, level, isExpandable } = meta;
-  const isExpanded = useIsExpanded(traceRow.id);
-  const isTraceLoading = useIsTraceLoading(traceRow.traceId);
+  if (!ctx || !meta || !traceRow) return null;
+
+  const { level, isExpandable } = meta;
 
   const category = getSpanCategory(traceRow);
   const catMeta = getCategoryMeta(category);

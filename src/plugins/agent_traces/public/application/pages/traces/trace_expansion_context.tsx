@@ -72,6 +72,9 @@ const createExpansionStore = () => {
   };
 };
 
+// Module-level singleton — all TracesDataTable instances share this store.
+// If the traces view is ever mounted in multiple places simultaneously
+// (e.g. split view), they will share expansion state.
 export const expansionStore = createExpansionStore();
 
 /** Subscribe to the expansion store snapshot. Only components calling this re-render on expansion changes. */
@@ -82,9 +85,8 @@ export const useExpansionSnapshot = (): ExpansionSnapshot => {
 /** Subscribe to a single node's expanded state — returns a boolean.
  *  Only re-renders when THIS node's expansion actually changes. */
 export const useIsExpanded = (id: string): boolean => {
-  return useSyncExternalStore(
-    expansionStore.subscribe,
-    () => expansionStore.getSnapshot().expandedRows.has(id)
+  return useSyncExternalStore(expansionStore.subscribe, () =>
+    expansionStore.getSnapshot().expandedRows.has(id)
   );
 };
 

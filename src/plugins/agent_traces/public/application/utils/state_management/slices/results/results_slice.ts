@@ -37,6 +37,11 @@ const resultsSlice = createSlice({
       const cacheKey = action.payload;
       delete state[cacheKey];
     },
+    clearResultsByKeys: (state, action: PayloadAction<string[]>) => {
+      for (const key of action.payload) {
+        delete state[key];
+      }
+    },
   },
 });
 
@@ -45,6 +50,7 @@ export const {
   setResults,
   clearResults,
   clearResultsByKey,
+  clearResultsByKeys,
 } = resultsSlice.actions;
 export const resultsReducer = resultsSlice.reducer;
 export const resultsInitialState = resultsSlice.getInitialState();

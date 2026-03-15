@@ -65,121 +65,126 @@ const formatFieldValue = (
   return dataset.formatField(row, colName);
 };
 
-export const TableRowContent: React.FC<TableRowContentProps> = React.memo(({
-  row,
-  index,
-  columns,
-  dataset,
-  onFilter,
-  isShortDots,
-  isExpanded,
-  onToggleExpand,
-  isOnTracesPage,
-  wrapCellText,
-}) => {
-  const [isRowSelected, setIsRowSelected] = useState(false);
+export const TableRowContent: React.FC<TableRowContentProps> = React.memo(
+  ({
+    row,
+    index,
+    columns,
+    dataset,
+    onFilter,
+    isShortDots,
+    isExpanded,
+    onToggleExpand,
+    isOnTracesPage,
+    wrapCellText,
+  }) => {
+    const [isRowSelected, setIsRowSelected] = useState(false);
 
-  const flattened = useMemo(() => dataset.flattenHit(row), [dataset, row]);
-  return (
-    <tr
-      key={row._id || (row._source as any)?.spanId}
-      className={row.isAnchor || isRowSelected ? 'agentTracesDocTable__row--highlight' : ''}
-    >
-      {isOnTracesPage ? (
-        <td />
-      ) : (
-        <td
-          data-test-subj="docTableExpandToggleColumn"
-          className="agentTracesDocTableCell__toggleDetails"
-        >
-          <EuiButtonIcon
-            color="text"
-            onClick={onToggleExpand}
-            iconType={isExpanded ? 'arrowDown' : 'arrowRight'}
-            aria-label={i18n.translate('agentTraces.defaultTable.docTableExpandToggleColumnLabel', {
-              defaultMessage: `Toggle row details`,
-            })}
-            size="xs"
+    const flattened = useMemo(() => dataset.flattenHit(row), [dataset, row]);
+    return (
+      <tr
+        key={row._id || (row._source as any)?.spanId}
+        className={row.isAnchor || isRowSelected ? 'agentTracesDocTable__row--highlight' : ''}
+      >
+        {isOnTracesPage ? (
+          <td />
+        ) : (
+          <td
             data-test-subj="docTableExpandToggleColumn"
-          />
-        </td>
-      )}
-      {columns.map((colName) => {
-        // Agent traces: custom time cell with formatted timestamp and clickable link
-        if (isOnTracesPage && dataset.timeFieldName === colName) {
-          return <AgentTracesTimeCell key={colName} hitId={getHitId(row)} />;
-        }
-
-        // Agent traces virtual columns: bypass dataset formatField
-        if (isAgentTracesVirtualColumn(colName) && isOnTracesPage) {
-          return (
-            <AgentTracesVirtualCell
-              key={colName}
-              colName={colName}
-              row={row}
-              onFilter={onFilter}
-              fieldMapping={flattened[VIRTUAL_COL_SOURCE_FIELD[colName] || colName]}
+            className="agentTracesDocTableCell__toggleDetails"
+          >
+            <EuiButtonIcon
+              color="text"
+              onClick={onToggleExpand}
+              iconType={isExpanded ? 'arrowDown' : 'arrowRight'}
+              aria-label={i18n.translate(
+                'agentTraces.defaultTable.docTableExpandToggleColumnLabel',
+                {
+                  defaultMessage: `Toggle row details`,
+                }
+              )}
+              size="xs"
+              data-test-subj="docTableExpandToggleColumn"
             />
-          );
-        }
+          </td>
+        )}
+        {columns.map((colName) => {
+          // Agent traces: custom time cell with formatted timestamp and clickable link
+          if (isOnTracesPage && dataset.timeFieldName === colName) {
+            return <AgentTracesTimeCell key={colName} hitId={getHitId(row)} />;
+          }
 
-        const fieldInfo = dataset.fields.getByName(colName);
-        const fieldMapping = flattened[colName];
+          // Agent traces virtual columns: bypass dataset formatField
+          if (isAgentTracesVirtualColumn(colName) && isOnTracesPage) {
+            return (
+              <AgentTracesVirtualCell
+                key={colName}
+                colName={colName}
+                row={row}
+                onFilter={onFilter}
+                fieldMapping={flattened[VIRTUAL_COL_SOURCE_FIELD[colName] || colName]}
+              />
+            );
+          }
 
-        if (shouldShowEmptyCell(row, null)) {
-          return <EmptyTableCell colName={colName} wrapCellText={wrapCellText} />;
-        }
+          const fieldInfo = dataset.fields.getByName(colName);
+          const fieldMapping = flattened[colName];
 
-        if (fieldInfo?.type === '_source') {
+          if (shouldShowEmptyCell(row, null)) {
+            return <EmptyTableCell colName={colName} wrapCellText={wrapCellText} />;
+          }
+
+          if (fieldInfo?.type === '_source') {
+            return (
+              <SourceFieldTableCell
+                colName={colName}
+                dataset={dataset}
+                row={row}
+                isShortDots={isShortDots}
+                wrapCellText={wrapCellText}
+              />
+            );
+          }
+
+          const formattedValue = formatFieldValue(dataset, row, colName);
+
+          if (shouldShowEmptyCell(row, formattedValue)) {
+            return <EmptyTableCell colName={colName} wrapCellText={wrapCellText} />;
+          }
+
+          const sanitizedCellValue = dompurify.sanitize(formattedValue);
+
+          if (fieldInfo?.filterable === false && !isOnTracesPage) {
+            return (
+              <NonFilterableTableCell
+                colName={colName}
+                className={getCellClassName(dataset.timeFieldName, colName, wrapCellText)}
+                sanitizedCellValue={sanitizedCellValue}
+                isTimeField={dataset.timeFieldName === colName}
+                index={index}
+                rowData={row}
+                columnId={colName}
+              />
+            );
+          }
+
           return (
-            <SourceFieldTableCell
-              colName={colName}
-              dataset={dataset}
-              row={row}
-              isShortDots={isShortDots}
+            <TableCell
+              key={colName}
+              columnId={colName}
+              index={index}
+              onFilter={onFilter}
+              isTimeField={dataset.timeFieldName === colName}
+              fieldMapping={fieldMapping}
+              sanitizedCellValue={sanitizedCellValue}
+              rowData={row}
+              isOnTracesPage={isOnTracesPage}
+              setIsRowSelected={setIsRowSelected}
               wrapCellText={wrapCellText}
             />
           );
-        }
-
-        const formattedValue = formatFieldValue(dataset, row, colName);
-
-        if (shouldShowEmptyCell(row, formattedValue)) {
-          return <EmptyTableCell colName={colName} wrapCellText={wrapCellText} />;
-        }
-
-        const sanitizedCellValue = dompurify.sanitize(formattedValue);
-
-        if (fieldInfo?.filterable === false && !isOnTracesPage) {
-          return (
-            <NonFilterableTableCell
-              colName={colName}
-              className={getCellClassName(dataset.timeFieldName, colName, wrapCellText)}
-              sanitizedCellValue={sanitizedCellValue}
-              isTimeField={dataset.timeFieldName === colName}
-              index={index}
-              rowData={row}
-              columnId={colName}
-            />
-          );
-        }
-
-        return (
-          <TableCell
-            key={colName}
-            columnId={colName}
-            index={index}
-            onFilter={onFilter}
-            isTimeField={dataset.timeFieldName === colName}
-            fieldMapping={fieldMapping}
-            sanitizedCellValue={sanitizedCellValue}
-            rowData={row}
-            isOnTracesPage={isOnTracesPage}
-            setIsRowSelected={setIsRowSelected}
-            wrapCellText={wrapCellText}
-          />
-        );
-      })}
-    </tr>
-  );
-});
+        })}
+      </tr>
+    );
+  }
+);

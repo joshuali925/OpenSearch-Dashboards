@@ -87,12 +87,6 @@ const queryEditorSlice = createSlice({
       }
     },
 
-    clearQueryStatusMapByKeys: (state, action: PayloadAction<string[]>) => {
-      for (const key of action.payload) {
-        delete state.queryStatusMap[key];
-      }
-    },
-
     clearQueryStatusMap: (state) => {
       state.queryStatusMap = {};
       state.overallQueryStatus = {
@@ -164,7 +158,6 @@ export const {
   setOverallQueryStatus,
   updateOverallQueryStatus,
   clearQueryStatusMapByKey,
-  clearQueryStatusMapByKeys,
   clearQueryStatusMap,
   setQueryStatus,
   updateQueryStatus,

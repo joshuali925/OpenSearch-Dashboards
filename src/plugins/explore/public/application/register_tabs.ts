@@ -7,6 +7,7 @@ import { i18n } from '@osd/i18n';
 import { LogsTab } from '../components/tabs/logs_tab';
 import { MetricsTab } from '../components/tabs/metrics_tab';
 import { MetricsRawTab } from '../components/tabs/metrics_raw_tab';
+import { MetricsExploreTab } from '../components/tabs/metrics_explore_tab';
 import { FieldStatsTab } from '../components/tabs/field_stats_tab';
 import { TabDefinition, TabRegistryService } from '../services/tab_registry/tab_registry_service';
 import { ExploreServices } from '../types';
@@ -17,6 +18,7 @@ import {
   EXPLORE_VISUALIZATION_TAB_ID,
   EXPLORE_PATTERNS_TAB_ID,
   EXPLORE_FIELD_STATS_TAB_ID,
+  EXPLORE_METRICS_EXPLORE_TAB_ID,
   ENABLE_EXPERIMENTAL_SETTING,
 } from '../../common';
 import { VisTab } from '../components/tabs/vis_tab';
@@ -44,6 +46,17 @@ export const registerBuiltInTabs = (
   const isExperimentalEnabled = services.uiSettings.get(ENABLE_EXPERIMENTAL_SETTING, false);
 
   if (registryFlavor === ExploreFlavor.Metrics) {
+    tabRegistry.registerTab({
+      id: EXPLORE_METRICS_EXPLORE_TAB_ID,
+      label: i18n.translate('explore.metricsTab.exploreLabel', {
+        defaultMessage: 'Explore',
+      }),
+      flavor: [ExploreFlavor.Metrics],
+      order: 5,
+      supportedLanguages: ['PROMQL'],
+      component: MetricsExploreTab,
+    });
+
     tabRegistry.registerTab({
       id: 'metrics',
       label: i18n.translate('explore.metricsTab.tableLabel', {

@@ -12,6 +12,7 @@ import { clearQueryStatusMapByKey } from '../../application/utils/state_manageme
 import {
   defaultPrepareQueryString,
   executeTabQuery,
+  shouldSkipQueryExecution,
 } from '../../application/utils/state_management/actions/query_actions';
 import { selectActiveTab } from '../../application/utils/state_management/selectors';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
@@ -19,8 +20,9 @@ import { ExploreServices } from '../../types';
 import { RootState } from '../../application/utils/state_management/store';
 import { useFlavorId } from '../../helpers/use_flavor_id';
 import { ErrorGuard } from './error_guard/error_guard';
-import { EXPLORE_PATTERNS_TAB_ID } from '../../../common';
+import { EXPLORE_PATTERNS_TAB_ID, EXPLORE_METRICS_EXPLORE_TAB_ID } from '../../../common';
 import { DEFAULT_DATA } from '../../../../data/common';
+import { DiscoverUninitialized } from '../../application/legacy/discover/application/components/uninitialized/uninitialized';
 
 export const EXPLORE_ACTION_BAR_SLOT_ID = 'explore-action-bar-slot';
 
@@ -36,6 +38,11 @@ export const ExploreTabs = () => {
   const onTabClick = useCallback(
     (tabId: string) => {
       dispatch(setActiveTab(tabId));
+
+      // Skip query execution if query should be skipped (e.g. empty PROMQL)
+      if (shouldSkipQueryExecution(query)) {
+        return;
+      }
 
       const activeTab = services.tabRegistry.getTab(tabId);
       const prepareQuery = activeTab?.prepareQuery || defaultPrepareQueryString;
@@ -81,6 +88,20 @@ export const ExploreTabs = () => {
     return null;
   }
 
+  function renderTabPanel() {
+    if (
+      shouldSkipQueryExecution(query) &&
+      activeRegistryTab.id !== EXPLORE_METRICS_EXPLORE_TAB_ID
+    ) {
+      return <DiscoverUninitialized onRefresh={() => {}} />;
+    }
+    return (
+      <ErrorGuard registryTab={activeRegistryTab}>
+        <activeRegistryTab.component />
+      </ErrorGuard>
+    );
+  }
+
   return (
     <div className="exploreTabs" data-test-subj="exploreTabs">
       <EuiFlexGroup
@@ -109,9 +130,7 @@ export const ExploreTabs = () => {
         </EuiFlexItem>
       </EuiFlexGroup>
       <div role="tabpanel" className="exploreTabs__tabPanel">
-        <ErrorGuard registryTab={activeRegistryTab}>
-          <activeRegistryTab.component />
-        </ErrorGuard>
+        {renderTabPanel()}
       </div>
     </div>
   );

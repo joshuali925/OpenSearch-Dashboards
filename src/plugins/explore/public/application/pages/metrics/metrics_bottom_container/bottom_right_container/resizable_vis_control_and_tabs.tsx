@@ -20,7 +20,11 @@ import { PanelDirection } from '@elastic/eui/src/components/resizable_container/
 
 import { getVisualizationBuilder } from '../../../../../components/visualizations/visualization_builder';
 import { ExploreTabs } from '../../../../../components/tabs/tabs';
+import {
+  shouldSkipQueryExecution,
+} from '../../../../utils/state_management/actions/query_actions';
 import { selectActiveTab } from '../../../../utils/state_management/selectors';
+import { RootState } from '../../../../utils/state_management/store';
 import { useOpenSearchDashboards } from '../../../../../../../opensearch_dashboards_react/public';
 import { useTabError } from '../../../../utils/hooks/use_tab_error';
 import { ExploreServices } from '../../../../../types';
@@ -33,6 +37,7 @@ export const ResizableVisControlAndTabs = () => {
   const visualizationBuilder = getVisualizationBuilder();
   const data = useObservable(visualizationBuilder.data$);
   const activeTabId = useSelector(selectActiveTab);
+  const query = useSelector((state: RootState) => state.query);
   const collapseFn = useRef((id: string, direction: PanelDirection) => {});
 
   const onChange = (panelId: string) => {
@@ -43,8 +48,8 @@ export const ResizableVisControlAndTabs = () => {
     return <ExploreTabs />;
   }
 
-  // Do not display style panel if there are errors
-  if (activeTabId === EXPLORE_VISUALIZATION_TAB_ID && !!visualizationTabError) {
+  // Do not display style panel if there are errors or query is empty
+  if (!!visualizationTabError || shouldSkipQueryExecution(query)) {
     return <ExploreTabs />;
   }
 

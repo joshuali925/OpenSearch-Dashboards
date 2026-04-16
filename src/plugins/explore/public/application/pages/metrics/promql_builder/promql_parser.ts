@@ -13,7 +13,6 @@ import {
   AggregationContext,
 } from '@osd/antlr-grammar';
 
-// Re-export types so they can be shared between parser and builder
 export interface LabelFilter {
   label: string;
   op: string;
@@ -63,23 +62,6 @@ export const RANGE_FUNCTIONS = new Set([
   'changes',
   'resets',
   'absent_over_time',
-]);
-
-const AGGREGATIONS = new Set([
-  'sum',
-  'avg',
-  'min',
-  'max',
-  'count',
-  'group',
-  'stddev',
-  'stdvar',
-  'count_values',
-  'topk',
-  'bottomk',
-  'quantile',
-  'limitk',
-  'limit_ratio',
 ]);
 
 const OP_MAP: Record<number, string> = {

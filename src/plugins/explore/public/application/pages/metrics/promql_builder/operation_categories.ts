@@ -36,7 +36,7 @@ export const OPERATION_CATEGORIES: OperationCategory[] = [
       {
         id: 'rate',
         name: 'rate',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description:
           'Calculates the per-second average rate of increase of the time series in the range vector.',
@@ -44,7 +44,7 @@ export const OPERATION_CATEGORIES: OperationCategory[] = [
       {
         id: 'irate',
         name: 'irate',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description:
           'Calculates the per-second instant rate of increase of the time series in the range vector.',
@@ -52,14 +52,14 @@ export const OPERATION_CATEGORIES: OperationCategory[] = [
       {
         id: 'increase',
         name: 'increase',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description: 'Calculates the increase in the time series in the range vector.',
       },
       {
         id: 'delta',
         name: 'delta',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description:
           'Calculates the difference between the first and last value of each time series element in a range vector.',
@@ -67,42 +67,42 @@ export const OPERATION_CATEGORIES: OperationCategory[] = [
       {
         id: 'avg_over_time',
         name: 'avg_over_time',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description: 'The average value of all points in the specified interval.',
       },
       {
         id: 'min_over_time',
         name: 'min_over_time',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description: 'The minimum value of all points in the specified interval.',
       },
       {
         id: 'max_over_time',
         name: 'max_over_time',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description: 'The maximum value of all points in the specified interval.',
       },
       {
         id: 'sum_over_time',
         name: 'sum_over_time',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description: 'The sum of all values in the specified interval.',
       },
       {
         id: 'count_over_time',
         name: 'count_over_time',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description: 'The count of all values in the specified interval.',
       },
       {
         id: 'absent_over_time',
         name: 'absent_over_time',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description:
           'Returns an empty vector if the range vector passed to it has any elements and a 1-element vector with the value 1 if the range vector passed to it has no elements.',
@@ -110,7 +110,7 @@ export const OPERATION_CATEGORIES: OperationCategory[] = [
       {
         id: 'changes',
         name: 'changes',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description:
           'Returns the number of times its value has changed within the provided time range as an instant vector.',
@@ -118,7 +118,7 @@ export const OPERATION_CATEGORIES: OperationCategory[] = [
       {
         id: 'resets',
         name: 'resets',
-        params: ['$__rate_interval'],
+        params: [''],
         paramNames: ['Range'],
         description:
           'Returns the number of counter resets within the provided time range as an instant vector.',

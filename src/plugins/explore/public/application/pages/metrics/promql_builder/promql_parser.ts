@@ -228,7 +228,7 @@ class BuilderStateVisitor extends PromQLParserVisitor<void> {
     if (RANGE_FUNCTIONS.has(fnName)) {
       // For range functions, the first param should be a matrixSelector or expression
       // Extract the range duration from the matrix selector inside
-      let rangeDuration = '$__rate_interval';
+      let rangeDuration = '';
 
       // Visit children to extract the inner selector
       for (const param of params) {
@@ -240,7 +240,7 @@ class BuilderStateVisitor extends PromQLParserVisitor<void> {
       if (matrixCtx) {
         const timeRange = matrixCtx.timeRange();
         if (timeRange) {
-          rangeDuration = timeRange.duration()?.getText() || '$__rate_interval';
+          rangeDuration = timeRange.duration()?.getText() || '';
         }
       }
 

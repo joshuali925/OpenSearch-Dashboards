@@ -15,7 +15,7 @@ import {
   getCategoryLabel,
 } from './operation_categories';
 import { useAggregationGrouping } from './aggregation_grouping';
-import { comboBoxWidth } from './measure_text';
+import { comboBoxWidth, inputWidth } from './measure_text';
 
 interface OperationPillProps {
   op: Operation;
@@ -56,29 +56,36 @@ export const OperationPill: React.FC<OperationPillProps> = ({
               });
             }
           }}
-          style={{ minWidth: comboBoxWidth(op.name) }}
+          style={{ minWidth: comboBoxWidth(op.name, 60, 140) }}
         />
         {isAgg && <div className="pqbSep" />}
         {isAgg && grouping.modeEl}
         {isAgg && <div className="pqbSep" />}
         {isAgg && grouping.labelsComboEl}
         {op.params.length > 0 &&
-          op.params.map((p, pi) => (
-            <input
-              key={pi}
-              value={p}
-              placeholder={opDef?.paramNames?.[pi] || ''}
-              onChange={(e) =>
-                dispatch({
-                  type: 'SET_OPERATION_PARAM',
-                  index: idx,
-                  paramIndex: pi,
-                  value: e.target.value,
-                })
-              }
-              className="pqbParamInput"
-            />
-          ))}
+          op.params.map((p, pi) => {
+            const placeholder = opDef?.paramNames?.[pi] || '';
+            const displayText = p || placeholder;
+            return (
+              <React.Fragment key={pi}>
+                <div className="pqbSep" />
+                <input
+                  value={p}
+                  placeholder={placeholder}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET_OPERATION_PARAM',
+                      index: idx,
+                      paramIndex: pi,
+                      value: e.target.value,
+                    })
+                  }
+                  className="pqbParamInput"
+                  style={{ width: inputWidth(displayText) }}
+                />
+              </React.Fragment>
+            );
+          })}
         <div className="pqbSep" />
         <EuiButtonIcon
           iconType="cross"

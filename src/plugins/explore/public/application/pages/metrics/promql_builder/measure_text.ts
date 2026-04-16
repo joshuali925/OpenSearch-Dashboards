@@ -23,3 +23,13 @@ const measureCanvas = (() => {
 export function comboBoxWidth(text: string, padding = 60, min = 80, max = 350): number {
   return Math.min(Math.max(measureCanvas(text) + padding, min), max);
 }
+
+export function inputWidth(
+  text: string,
+  padding = 16,
+  min = 50,
+  max = 200,
+  font = '12px Rubik, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
+): number {
+  return Math.min(Math.max(measureCanvas(text, font) + padding, min), max);
+}

@@ -53,7 +53,7 @@ export const useAggregationGrouping = (
       options={MODE_OPTIONS}
       valueOfSelected={mode}
       onChange={(val) => setMode(val)}
-      style={{ width: 80 }}
+      style={{ width: 100 }}
     />
   );
 
@@ -72,7 +72,7 @@ export const useAggregationGrouping = (
           onLabelsChange([...selectedLabelOptions, { label: v }]);
         }
       }}
-      style={{ minWidth: 140 }}
+      style={{ minWidth: 400 }}
     />
   );
 

@@ -1,0 +1,28 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+.mqpQueryRow {
+  padding: $euiSizeXS 0;
+  border-bottom: $euiBorderThin;
+
+  &--dragging {
+    background: $euiColorLightestShade;
+  }
+}
+
+.mqpRowLabel {
+  font-weight: $euiFontWeightSemiBold;
+  min-width: $euiSizeM;
+  text-align: center;
+  line-height: $euiSizeXL;
+}
+
+.mqpDragHandle {
+  cursor: grab;
+}
+
+.mqpAddQueryRow {
+  padding: $euiSizeXS 0;
+}

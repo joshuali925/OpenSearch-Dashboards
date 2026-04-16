@@ -1,0 +1,98 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+.pqbPill {
+  display: inline-block;
+  border: $euiBorderThin;
+  border-radius: $euiBorderRadius;
+  padding: $euiSizeXS 0;
+  background: $euiColorLightestShade;
+
+  &__label {
+    font-size: $euiFontSizeXS;
+    color: $euiColorDarkShade;
+    padding: 0 $euiSizeS;
+    border-bottom: $euiBorderThin;
+    margin-bottom: $euiSizeXS;
+    padding-bottom: $euiSizeXS;
+  }
+
+  &__body {
+    padding: 0 $euiSizeXS;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+}
+
+.pqbParamInput {
+  width: 80px;
+  font-size: $euiFontSizeXS;
+  border: $euiBorderThin;
+  border-radius: $euiBorderRadius;
+  padding: $euiSizeXS $euiSizeS;
+}
+
+.pqbGroupingButton {
+  background: $euiFormInputGroupLabelBackground;
+  border: none;
+  padding: 0 $euiSizeS;
+  font-size: $euiFontSizeXS;
+  cursor: pointer;
+  white-space: nowrap;
+  height: 100%;
+}
+
+.pqbGroupingPanel {
+  min-width: 200px;
+  max-width: 280px;
+}
+
+.pqbGroupingSearch {
+  width: 100%;
+  font-size: $euiFontSizeXS;
+  border: $euiBorderThin;
+  border-radius: $euiBorderRadius;
+  padding: $euiSizeXS $euiSizeS;
+  margin-bottom: $euiSizeS;
+}
+
+.pqbCheckboxLabel {
+  padding: 2px 0;
+  cursor: pointer;
+  font-size: $euiFontSizeXS;
+  display: block;
+
+  input {
+    margin-right: $euiSizeS;
+  }
+}
+
+.pqbCheckboxList {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.pqbLabelFilterRow {
+  display: flex;
+  align-items: center;
+}
+
+.pqbBuilder {
+  padding: 0 $euiSizeXS;
+}
+
+.pqbLabelPopoverValues {
+  max-height: 120px;
+  overflow-y: auto;
+  margin-bottom: $euiSizeS;
+}
+
+.pqbLabelValueRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+}

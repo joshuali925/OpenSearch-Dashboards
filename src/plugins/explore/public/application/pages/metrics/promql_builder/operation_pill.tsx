@@ -37,8 +37,8 @@ export const OperationPill: React.FC<OperationPillProps> = ({
   const opDef = OP_DEF_MAP[op.id];
 
   return (
-    <div className="pqbPill">
-      <div className="pqbPill__label">{getCategoryLabel(op.id)}</div>
+    <div className="pqbGroup">
+      <span className="pqbGroup__label">{getCategoryLabel(op.id)}</span>
       <div className="pqbPill__body">
         <EuiComboBox
           compressed
@@ -57,9 +57,11 @@ export const OperationPill: React.FC<OperationPillProps> = ({
             }
           }}
           style={{ minWidth: comboBoxWidth(op.name) }}
-          append={isAgg ? grouping.appendEl : undefined}
         />
-        {isAgg && grouping.badgesEl}
+        {isAgg && <div className="pqbSep" />}
+        {isAgg && grouping.modeEl}
+        {isAgg && <div className="pqbSep" />}
+        {isAgg && grouping.labelsComboEl}
         {op.params.length > 0 &&
           op.params.map((p, pi) => (
             <input
@@ -77,6 +79,7 @@ export const OperationPill: React.FC<OperationPillProps> = ({
               className="pqbParamInput"
             />
           ))}
+        <div className="pqbSep" />
         <EuiButtonIcon
           iconType="cross"
           size="s"

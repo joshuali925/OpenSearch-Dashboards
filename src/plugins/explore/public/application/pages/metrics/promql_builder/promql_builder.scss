@@ -4,23 +4,8 @@
  */
 
 .pqbPill {
-  display: inline-block;
-  border: $euiBorderThin;
-  border-radius: $euiBorderRadius;
-  padding: $euiSizeXS 0;
-  background: $euiColorLightestShade;
-
-  &__label {
-    font-size: $euiFontSizeXS;
-    color: $euiColorDarkShade;
-    padding: 0 $euiSizeS;
-    border-bottom: $euiBorderThin;
-    margin-bottom: $euiSizeXS;
-    padding-bottom: $euiSizeXS;
-  }
-
   &__body {
-    padding: 0 $euiSizeXS;
+    padding: 0;
     display: flex;
     align-items: center;
     gap: 2px;
@@ -29,10 +14,16 @@
 
 .pqbParamInput {
   width: 80px;
-  font-size: $euiFontSizeXS;
-  border: $euiBorderThin;
-  border-radius: $euiBorderRadius;
-  padding: $euiSizeXS $euiSizeS;
+  height: $euiFormControlCompressedHeight;
+  font-size: $euiFontSizeS;
+  border: none;
+  background: transparent;
+  padding: 0 $euiSizeS;
+  outline: none;
+
+  &::placeholder {
+    color: $euiColorMediumShade;
+  }
 }
 
 .pqbGroupingButton {
@@ -78,6 +69,63 @@
 .pqbLabelFilterRow {
   display: flex;
   align-items: center;
+}
+
+// Outlined group with a floating label on the top border
+.pqbGroup {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid $euiBorderColor;
+  border-radius: $euiSizeM;
+  padding: 0 2px;
+  background: $euiColorEmptyShade;
+  margin-top: 2px;
+
+  &__label {
+    position: absolute;
+    top: -0.6em;
+    left: $euiSizeS;
+    z-index: 1;
+    padding: 0 $euiSizeXS;
+    font-size: $euiFontSizeXS;
+    font-weight: 500;
+    color: $euiColorDarkShade;
+    background: inherit;
+    line-height: 1;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  // Remove all inner borders/shadows — the group border is the only outline
+  .euiFormControlLayout,
+  .euiFormControlLayout__childrenWrapper,
+  .euiComboBox-isOpen .euiFormControlLayout,
+  .euiComboBox__inputWrap {
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  .euiSuperSelectControl {
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  // Clip the last button's hover shade to match the rounded right edge
+  > .pqbPill__body > .euiButtonIcon:last-child,
+  > .pqbPill__body > .euiToolTipAnchor:last-child .euiButtonIcon,
+  > .euiButtonIcon:last-child {
+    border-radius: 0 calc(#{$euiSizeM} - 2px) calc(#{$euiSizeM} - 2px) 0;
+  }
+}
+
+.pqbSep {
+  width: 1px;
+  align-self: stretch;
+  background: $euiBorderColor;
+  flex-shrink: 0;
 }
 
 .pqbBuilder {

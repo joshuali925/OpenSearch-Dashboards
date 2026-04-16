@@ -11,13 +11,15 @@ import { euiThemeVars } from '@osd/ui-shared-deps/theme';
  * vertical line from above, horizontal branch at child's vertical center.
  * anchorY: fixed pixel offset for the horizontal branch (defaults to 50%).
  */
+const LEVEL_GAP = 12;
+
 export const withConnector = (
   depth: number,
   content: React.ReactNode,
   isLast = false,
   anchorY?: number
 ) => (
-  <div style={{ marginLeft: depth * 24, display: 'flex', alignItems: 'center' }}>
+  <div style={{ marginLeft: depth * 24, display: 'flex', alignItems: 'center', marginTop: LEVEL_GAP }}>
     <div
       style={{
         alignSelf: 'stretch',
@@ -29,7 +31,7 @@ export const withConnector = (
       <div
         style={{
           position: 'absolute',
-          top: 0,
+          top: -LEVEL_GAP,
           left: 6,
           bottom: isLast ? (anchorY !== undefined ? `calc(100% - ${anchorY}px)` : '50%') : 0,
           borderLeft: `2px solid ${euiThemeVars.euiColorLightShade}`,

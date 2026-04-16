@@ -230,49 +230,41 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
   const metricRow = (
     <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false} wrap>
       <EuiFlexItem grow={false}>
-        <EuiText size="xs">
-          <strong>
+        <div className="pqbGroup">
+          <span className="pqbGroup__label">
             {i18n.translate('explore.promqlBuilder.metric', { defaultMessage: 'Metric' })}
-          </strong>
-        </EuiText>
-      </EuiFlexItem>
-      <EuiFlexItem
-        grow={false}
-        style={{ minWidth: comboBoxWidth(state.metric || 'Select metric name') }}
-      >
-        <EuiComboBox
-          compressed
-          singleSelection={{ asPlainText: true }}
-          placeholder={i18n.translate('explore.promqlBuilder.selectMetric', {
-            defaultMessage: 'Select metric name',
-          })}
-          options={metricOptions}
-          selectedOptions={state.metric ? [{ label: state.metric }] : []}
-          onChange={(selected) =>
-            dispatch({ type: 'SET_METRIC', metric: selected[0]?.label || '' })
-          }
-          onCreateOption={(val) => {
-            const v = val.trim();
-            if (v) dispatch({ type: 'SET_METRIC', metric: v });
-          }}
-          onFocus={onMetricFocus}
-          onSearchChange={onMetricSearchChange}
-          isLoading={metricSearchLoading}
-          async
-          data-test-subj="promqlBuilderMetricSelect"
-        />
-      </EuiFlexItem>
-      <EuiFlexItem grow={false}>
-        <EuiText size="xs">
-          <strong>
-            {i18n.translate('explore.promqlBuilder.label', { defaultMessage: 'Label' })}
-          </strong>
-        </EuiText>
+          </span>
+          <EuiComboBox
+            compressed
+            singleSelection={{ asPlainText: true }}
+            placeholder={i18n.translate('explore.promqlBuilder.selectMetric', {
+              defaultMessage: 'Select metric name',
+            })}
+            options={metricOptions}
+            selectedOptions={state.metric ? [{ label: state.metric }] : []}
+            onChange={(selected) =>
+              dispatch({ type: 'SET_METRIC', metric: selected[0]?.label || '' })
+            }
+            onCreateOption={(val) => {
+              const v = val.trim();
+              if (v) dispatch({ type: 'SET_METRIC', metric: v });
+            }}
+            onFocus={onMetricFocus}
+            onSearchChange={onMetricSearchChange}
+            isLoading={metricSearchLoading}
+            async
+            style={{ width: comboBoxWidth(state.metric || 'Select metric name') }}
+            data-test-subj="promqlBuilderMetricSelect"
+          />
+        </div>
       </EuiFlexItem>
       {state.labelFilters.map((filter, idx) => (
         <React.Fragment key={idx}>
           <EuiFlexItem grow={false}>
-            <div className="pqbLabelFilterRow">
+            <div className="pqbGroup">
+              <span className="pqbGroup__label">
+                {i18n.translate('explore.promqlBuilder.label', { defaultMessage: 'Label' })}
+              </span>
               <EuiComboBox
                 compressed
                 singleSelection={{ asPlainText: true }}
@@ -304,6 +296,7 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
                 }}
                 style={{ width: comboBoxWidth(filter.label || 'Label name'), flex: '0 0 auto' }}
               />
+              <div className="pqbSep" />
               <EuiSuperSelect
                 compressed
                 options={OPERATORS.map((op) => ({ value: op, inputDisplay: op }))}
@@ -317,6 +310,7 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
                 }
                 style={{ width: 70 }}
               />
+              <div className="pqbSep" />
               <EuiComboBox
                 compressed
                 singleSelection={{ asPlainText: true }}
@@ -335,13 +329,15 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
                 }
                 onCreateOption={(val) => {
                   const v = val.trim();
-                  if (v) dispatch({ type: 'SET_LABEL_FILTER', index: idx, filter: { value: v } });
+                  if (v)
+                    dispatch({ type: 'SET_LABEL_FILTER', index: idx, filter: { value: v } });
                 }}
                 onFocus={() => {
                   if (filter.label) loadLabelValues(filter.label);
                 }}
                 style={{ width: comboBoxWidth(filter.value || 'Label value'), flex: '0 0 auto' }}
               />
+              <div className="pqbSep" />
               <EuiButtonIcon
                 iconType="cross"
                 color="text"

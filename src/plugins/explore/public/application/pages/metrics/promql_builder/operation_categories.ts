@@ -29,6 +29,15 @@ export const AGGREGATION_IDS = new Set([
   'stdvar',
 ]);
 
+/** All aggregation operators that support by/without grouping clauses. */
+export const GROUPABLE_AGGREGATION_IDS = new Set([
+  ...AGGREGATION_IDS,
+  'topk',
+  'bottomk',
+  'count_values',
+  'quantile',
+]);
+
 export const OPERATION_CATEGORIES: OperationCategory[] = [
   {
     name: 'Add range',
@@ -285,48 +294,18 @@ export const OPERATION_CATEGORIES: OperationCategory[] = [
   {
     name: 'Add binary operation',
     items: [
-      {
-        id: 'add',
-        name: '+ (add)',
-        params: [''],
-        paramNames: ['Value'],
-        description: 'Add a scalar value to each sample value.',
-      },
-      {
-        id: 'sub',
-        name: '- (subtract)',
-        params: [''],
-        paramNames: ['Value'],
-        description: 'Subtract a scalar value from each sample value.',
-      },
-      {
-        id: 'mul',
-        name: '* (multiply)',
-        params: [''],
-        paramNames: ['Value'],
-        description: 'Multiply each sample value by a scalar.',
-      },
-      {
-        id: 'div',
-        name: '/ (divide)',
-        params: [''],
-        paramNames: ['Value'],
-        description: 'Divide each sample value by a scalar.',
-      },
-      {
-        id: 'mod',
-        name: '% (modulo)',
-        params: [''],
-        paramNames: ['Value'],
-        description: 'Modulo of each sample value by a scalar.',
-      },
-      {
-        id: 'pow',
-        name: '^ (power)',
-        params: [''],
-        paramNames: ['Value'],
-        description: 'Raise each sample value to the power of a scalar.',
-      },
+      { id: 'add', name: '+', params: [''], paramNames: ['Value'], description: 'Add a scalar value to each sample value.' },
+      { id: 'sub', name: '-', params: [''], paramNames: ['Value'], description: 'Subtract a scalar value from each sample value.' },
+      { id: 'mul', name: '*', params: [''], paramNames: ['Value'], description: 'Multiply each sample value by a scalar.' },
+      { id: 'div', name: '/', params: [''], paramNames: ['Value'], description: 'Divide each sample value by a scalar.' },
+      { id: 'mod', name: '%', params: [''], paramNames: ['Value'], description: 'Modulo of each sample value by a scalar.' },
+      { id: 'pow', name: '^', params: [''], paramNames: ['Value'], description: 'Raise each sample value to the power of a scalar.' },
+      { id: 'eq', name: '==', params: [''], paramNames: ['Value'], description: 'Returns 1 for elements where the expression is equal to the value, 0 otherwise.' },
+      { id: 'neq', name: '!=', params: [''], paramNames: ['Value'], description: 'Returns 1 for elements where the expression is not equal to the value, 0 otherwise.' },
+      { id: 'gt', name: '>', params: [''], paramNames: ['Value'], description: 'Returns 1 for elements where the expression is greater than the value, 0 otherwise.' },
+      { id: 'lt', name: '<', params: [''], paramNames: ['Value'], description: 'Returns 1 for elements where the expression is less than the value, 0 otherwise.' },
+      { id: 'gte', name: '>=', params: [''], paramNames: ['Value'], description: 'Returns 1 for elements where the expression is greater than or equal to the value, 0 otherwise.' },
+      { id: 'lte', name: '<=', params: [''], paramNames: ['Value'], description: 'Returns 1 for elements where the expression is less than or equal to the value, 0 otherwise.' },
     ],
   },
   {

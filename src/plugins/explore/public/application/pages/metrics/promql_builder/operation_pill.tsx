@@ -10,7 +10,7 @@ import { Operation } from './promql_parser';
 import { BuilderAction } from './build_promql';
 import {
   OperationDef,
-  AGGREGATION_IDS,
+  GROUPABLE_AGGREGATION_IDS,
   OP_DEF_MAP,
   getCategoryLabel,
 } from './operation_categories';
@@ -32,7 +32,7 @@ export const OperationPill: React.FC<OperationPillProps> = ({
   labelOptions,
   getOperationSiblings,
 }) => {
-  const isAgg = AGGREGATION_IDS.has(op.id);
+  const isAgg = GROUPABLE_AGGREGATION_IDS.has(op.id);
   const grouping = useAggregationGrouping(op, idx, labelOptions, dispatch);
   const opDef = OP_DEF_MAP[op.id];
 
@@ -49,9 +49,9 @@ export const OperationPill: React.FC<OperationPillProps> = ({
             const newName = selected[0]?.label || op.name;
             const newDef = getOperationSiblings(op.id).find((s) => s.name === newName);
             if (newDef) {
-              dispatch({ type: 'REMOVE_OPERATION', index: idx });
               dispatch({
-                type: 'ADD_OPERATION',
+                type: 'REPLACE_OPERATION',
+                index: idx,
                 operation: { id: newDef.id, name: newDef.name, params: [...newDef.params] },
               });
             }

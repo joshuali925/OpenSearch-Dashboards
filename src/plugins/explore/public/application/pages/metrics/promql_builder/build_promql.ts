@@ -12,6 +12,11 @@ import {
 } from './promql_parser';
 import { AGGREGATION_IDS } from './operation_categories';
 
+const BINARY_OP_SYMBOLS: Record<string, string> = {
+  add: '+', sub: '-', mul: '*', div: '/', mod: '%', pow: '^',
+  eq: '==', neq: '!=', gt: '>', lt: '<', gte: '>=', lte: '<=',
+};
+
 export type BuilderAction =
   | { type: 'SET_METRIC'; metric: string }
   | { type: 'SET_LABEL_FILTER'; index: number; filter: Partial<LabelFilter> }
@@ -19,6 +24,7 @@ export type BuilderAction =
   | { type: 'REMOVE_LABEL_FILTER'; index: number }
   | { type: 'ADD_OPERATION'; operation: Operation }
   | { type: 'REMOVE_OPERATION'; index: number }
+  | { type: 'REPLACE_OPERATION'; index: number; operation: Operation }
   | { type: 'SET_OPERATION_PARAM'; index: number; paramIndex: number; value: string }
   | { type: 'SET_OPERATION_GROUPING'; index: number; grouping: OperationGrouping | undefined }
   | { type: 'INIT'; state: BuilderState }
@@ -43,6 +49,11 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
       return { ...state, operations: [...state.operations, action.operation] };
     case 'REMOVE_OPERATION':
       return { ...state, operations: state.operations.filter((_, i) => i !== action.index) };
+    case 'REPLACE_OPERATION': {
+      const ops = [...state.operations];
+      ops[action.index] = action.operation;
+      return { ...state, operations: ops };
+    }
     case 'SET_OPERATION_PARAM': {
       const ops = [...state.operations];
       const params = [...ops[action.index].params];
@@ -64,6 +75,12 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
   }
 }
 
+function groupingClause(op: Operation): string {
+  return op.grouping?.labels?.length
+    ? ` ${op.grouping.mode} (${op.grouping.labels.join(', ')})`
+    : '';
+}
+
 export function buildPromQL(state: BuilderState): string {
   if (!state.metric) return '';
 
@@ -82,28 +99,17 @@ export function buildPromQL(state: BuilderState): string {
       const interval = op.params[0] || '5m';
       expr = `${op.id}(${expr}[${interval}])`;
     } else if (AGGREGATION_IDS.has(op.id)) {
-      const groupingClause = op.grouping?.labels?.length
-        ? ` ${op.grouping.mode} (${op.grouping.labels.join(', ')})`
-        : '';
-      expr = `${op.id}${groupingClause}(${expr})`;
+      expr = `${op.id}${groupingClause(op)}(${expr})`;
     } else if (['topk', 'bottomk'].includes(op.id)) {
-      expr = `${op.id}(${op.params[0] || '5'}, ${expr})`;
+      expr = `${op.id}${groupingClause(op)}(${op.params[0] || '5'}, ${expr})`;
     } else if (op.id === 'count_values') {
-      expr = `count_values("${op.params[0] || 'value'}", ${expr})`;
+      expr = `count_values${groupingClause(op)}("${op.params[0] || 'value'}", ${expr})`;
     } else if (op.id === 'quantile') {
-      expr = `quantile(${op.params[0] || '0.95'}, ${expr})`;
+      expr = `quantile${groupingClause(op)}(${op.params[0] || '0.95'}, ${expr})`;
     } else if (op.id === 'histogram_quantile') {
       expr = `histogram_quantile(${op.params[0] || '0.95'}, ${expr})`;
-    } else if (['add', 'sub', 'mul', 'div', 'mod', 'pow'].includes(op.id)) {
-      const opSymbol: Record<string, string> = {
-        add: '+',
-        sub: '-',
-        mul: '*',
-        div: '/',
-        mod: '%',
-        pow: '^',
-      };
-      expr = `${expr} ${opSymbol[op.id]} ${op.params[0] || '0'}`;
+    } else if (BINARY_OP_SYMBOLS[op.id]) {
+      expr = `${expr} ${BINARY_OP_SYMBOLS[op.id]} ${op.params[0] || '0'}`;
     } else if (op.id === 'label_replace') {
       const [dst = '', replacement = '', src = '', regex = ''] = op.params;
       expr = `label_replace(${expr}, "${dst}", "${replacement}", "${src}", "${regex}")`;

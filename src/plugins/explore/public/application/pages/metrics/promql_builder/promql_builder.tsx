@@ -329,8 +329,7 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
                 }
                 onCreateOption={(val) => {
                   const v = val.trim();
-                  if (v)
-                    dispatch({ type: 'SET_LABEL_FILTER', index: idx, filter: { value: v } });
+                  if (v) dispatch({ type: 'SET_LABEL_FILTER', index: idx, filter: { value: v } });
                 }}
                 onFocus={() => {
                   if (filter.label) loadLabelValues(filter.label);
@@ -541,7 +540,7 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
       <EuiCode language="promql" transparentBackground style={{ fontSize: 12 }}>
         {buildPromQL(state) ||
           i18n.translate('explore.promqlBuilder.queryPreviewPlaceholder', {
-            defaultMessage: 'Fetch all series matching metric name and label filters.',
+            defaultMessage: 'Select a metric to start.',
           })}
       </EuiCode>
     </div>

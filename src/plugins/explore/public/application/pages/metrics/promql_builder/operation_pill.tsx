@@ -56,7 +56,7 @@ export const OperationPill: React.FC<OperationPillProps> = ({
               });
             }
           }}
-          style={{ minWidth: comboBoxWidth(op.name, 60, 140) }}
+          style={{ minWidth: comboBoxWidth(op.name) }}
         />
         {isAgg && <div className="pqbSep" />}
         {isAgg && grouping.modeEl}

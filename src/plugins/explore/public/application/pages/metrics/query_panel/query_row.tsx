@@ -3,14 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { i18n } from '@osd/i18n';
 import {
+  EuiButton,
   EuiButtonGroup,
   EuiButtonIcon,
   EuiFlexGroup,
   EuiFlexItem,
   EuiIcon,
+  EuiPopover,
+  EuiSpacer,
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
@@ -50,6 +53,8 @@ export const QueryRowComponent: React.FC<QueryRowProps> = React.memo(
     isDragging,
     dragHandleProps,
   }) => {
+    const [showCodeConfirm, setShowCodeConfirm] = useState(false);
+
     const handleBuilderQueryChange = useCallback(
       (query: string) => {
         const result = parsePromQL(query);
@@ -60,13 +65,34 @@ export const QueryRowComponent: React.FC<QueryRowProps> = React.memo(
 
     const canSwitchToBuilder =
       row.mode === 'builder' || !row.query || parsePromQL(row.query).canBuild;
-    const builderTooltip =
+    const modeToggleTooltip =
       row.mode === 'code' && !canSwitchToBuilder
         ? i18n.translate('explore.promqlBuilder.cannotSwitchToBuilder', {
             defaultMessage:
               'This query cannot be represented in Builder mode. Simplify it or use Code mode.',
           })
+        : row.mode === 'builder'
+        ? i18n.translate('explore.promqlBuilder.codeMayBeIrreversible', {
+            defaultMessage: 'Switching to Code mode may prevent switching back to Builder mode.',
+          })
         : undefined;
+
+    const handleModeChange = useCallback(
+      (id: string) => {
+        const newMode = id as RowMode;
+        if (
+          row.mode === 'builder' &&
+          newMode === 'code' &&
+          row.query &&
+          !parsePromQL(row.query).canBuild
+        ) {
+          setShowCodeConfirm(true);
+        } else {
+          onModeChange(row.id, newMode);
+        }
+      },
+      [row.id, row.mode, row.query, onModeChange]
+    );
 
     return (
       <div
@@ -137,15 +163,58 @@ export const QueryRowComponent: React.FC<QueryRowProps> = React.memo(
           <EuiFlexItem grow={false}>
             <EuiFlexGroup gutterSize="xs" alignItems="flexStart" responsive={false}>
               <EuiFlexItem grow={false}>
-                <EuiToolTip content={builderTooltip} position="top">
-                  <EuiButtonGroup
-                    legend={`Query ${label} mode`}
-                    options={modeButtons}
-                    idSelected={row.mode}
-                    onChange={(id) => onModeChange(row.id, id as RowMode)}
-                    buttonSize="compressed"
-                  />
-                </EuiToolTip>
+                <EuiPopover
+                  isOpen={showCodeConfirm}
+                  closePopover={() => setShowCodeConfirm(false)}
+                  anchorPosition="downRight"
+                  button={
+                    <EuiToolTip content={modeToggleTooltip} position="top">
+                      <EuiButtonGroup
+                        legend={`Query ${label} mode`}
+                        options={modeButtons}
+                        idSelected={row.mode}
+                        onChange={handleModeChange}
+                        buttonSize="compressed"
+                      />
+                    </EuiToolTip>
+                  }
+                >
+                  <div style={{ maxWidth: 280 }}>
+                    <EuiText size="s">
+                      <p>
+                        {i18n.translate('explore.promqlBuilder.switchToCodeWarning', {
+                          defaultMessage:
+                            'This query cannot be represented in Builder mode. Switching to Code is irreversible.',
+                        })}
+                      </p>
+                    </EuiText>
+                    <EuiSpacer />
+                    <EuiFlexGroup gutterSize="s" justifyContent="flexEnd" responsive={false}>
+                      <EuiFlexItem grow={false}>
+                        <EuiButton size="s" onClick={() => setShowCodeConfirm(false)}>
+                          {i18n.translate('explore.promqlBuilder.switchToCodeCancel', {
+                            defaultMessage: 'Cancel',
+                          })}
+                        </EuiButton>
+                      </EuiFlexItem>
+                      <EuiFlexItem grow={false}>
+                        <EuiButton
+                          size="s"
+                          color="warning"
+                          fill
+                          onClick={() => {
+                            setShowCodeConfirm(false);
+                            onModeChange(row.id, 'code');
+                          }}
+                        >
+                          {i18n.translate('explore.promqlBuilder.switchToCodeConfirm', {
+                            defaultMessage: 'Switch',
+                          })}
+                        </EuiButton>
+                      </EuiFlexItem>
+                    </EuiFlexGroup>
+                  </div>
+                </EuiPopover>
               </EuiFlexItem>
               {canRemove && (
                 <EuiFlexItem grow={false}>

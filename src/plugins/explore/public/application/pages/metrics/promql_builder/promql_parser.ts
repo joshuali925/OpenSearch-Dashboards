@@ -12,6 +12,7 @@ import {
   LabelMatcherContext,
   AggregationContext,
 } from '@osd/antlr-grammar';
+import { OP_DEF_MAP } from './operation_categories';
 
 export interface LabelFilter {
   label: string;
@@ -189,7 +190,11 @@ class BuilderStateVisitor extends PromQLParserVisitor<void> {
         if (opId) {
           // Visit LHS to extract metric/operations, then append the binary op
           this.visit(ctx.vectorOperation(0));
-          this.operations.push({ id: opId, name: opId, params: [scalar] });
+          this.operations.push({
+            id: opId,
+            name: OP_DEF_MAP[opId]?.name || opId,
+            params: [scalar],
+          });
           return;
         }
       }
@@ -209,15 +214,35 @@ class BuilderStateVisitor extends PromQLParserVisitor<void> {
   };
 
   /**
-   * If a vectorOperation node is a bare scalar literal (vector → literal → NUMBER),
-   * return its text; otherwise return undefined.
+   * If the RHS vectorOperation is a simple scalar-like value the builder can
+   * represent as a binary-op param, return its text; otherwise return undefined.
+   * Accepts: NUMBER literals, bare metric names (identifiers), and STRING literals.
    */
   private extractScalarLiteral(ctx: any): string | undefined {
     const vector = ctx?.vector?.();
-    const literal = vector?.literal?.();
-    if (!literal) return undefined;
-    const num = literal.NUMBER?.();
-    return num ? num.getText() : undefined;
+    if (!vector) return undefined;
+    const literal = vector.literal?.();
+    if (literal) {
+      const num = literal.NUMBER?.();
+      if (num) return num.getText();
+      const str = literal.STRING?.();
+      if (str) {
+        let text = str.getText();
+        if (
+          (text.startsWith('"') && text.endsWith('"')) ||
+          (text.startsWith("'") && text.endsWith("'"))
+        )
+          text = text.slice(1, -1);
+        return text;
+      }
+      return undefined;
+    }
+    // Bare identifier (metric name with no labels/braces)
+    const sel = vector.instantSelector?.();
+    if (sel && sel.metricName?.() && !sel.LEFT_BRACE?.()) {
+      return sel.metricName().getText();
+    }
+    return undefined;
   }
 
   visitInstantSelector = (ctx: InstantSelectorContext) => {

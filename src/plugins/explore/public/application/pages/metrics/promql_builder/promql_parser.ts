@@ -36,6 +36,7 @@ export interface BuilderState {
   metric: string;
   labelFilters: LabelFilter[];
   operations: Operation[];
+  range?: string;
 }
 
 export interface ParseResult {
@@ -63,6 +64,8 @@ export const RANGE_FUNCTIONS = new Set([
   'changes',
   'resets',
   'absent_over_time',
+  'holt_winters',
+  'predict_linear',
 ]);
 
 const OP_MAP: Record<number, string> = {

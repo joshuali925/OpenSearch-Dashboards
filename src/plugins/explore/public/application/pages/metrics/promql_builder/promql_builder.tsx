@@ -29,7 +29,7 @@ import { builderReducer, buildPromQL, emptyFilter } from './build_promql';
 import { OPERATION_CATEGORIES, OPERATORS, getOperationSiblings } from './operation_categories';
 import { OperationPill } from './operation_pill';
 import { withConnector } from './tree_connector';
-import { comboBoxWidth } from './measure_text';
+import { comboBoxWidth, inputWidth } from './measure_text';
 
 interface PromQLBuilderProps {
   client: PrometheusClient;
@@ -195,10 +195,23 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
     () => [
       {
         id: 0,
-        items: OPERATION_CATEGORIES.map((cat, i) => ({
-          name: cat.name,
-          panel: i + 1,
-        })),
+        items: [
+          ...(state.range === undefined
+            ? [
+                {
+                  name: 'Add range',
+                  onClick: () => {
+                    dispatch({ type: 'SET_RANGE', range: '5m' });
+                    setOpsPopoverOpen(false);
+                  },
+                },
+              ]
+            : []),
+          ...OPERATION_CATEGORIES.map((cat, i) => ({
+            name: cat.name,
+            panel: i + 1,
+          })),
+        ],
       },
       ...OPERATION_CATEGORIES.map((cat, i) => ({
         id: i + 1,
@@ -222,7 +235,7 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
         })),
       })),
     ],
-    []
+    [state.range]
   );
 
   const reversedOps = useMemo(() => [...state.operations].reverse(), [state.operations]);
@@ -368,6 +381,32 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
           onClick={() => dispatch({ type: 'ADD_LABEL_FILTER' })}
         />
       </EuiFlexItem>
+      {state.range !== undefined && (
+        <EuiFlexItem grow={false}>
+          <div className="pqbGroup">
+            <span className="pqbGroup__label">
+              {i18n.translate('explore.promqlBuilder.range', { defaultMessage: 'Range' })}
+            </span>
+            <input
+              value={state.range}
+              placeholder="5m"
+              onChange={(e) => dispatch({ type: 'SET_RANGE', range: e.target.value })}
+              className="pqbParamInput"
+              style={{ width: inputWidth(state.range || '5m') }}
+            />
+            <div className="pqbSep" />
+            <EuiButtonIcon
+              iconType="cross"
+              size="s"
+              color="text"
+              aria-label={i18n.translate('explore.promqlBuilder.removeRange', {
+                defaultMessage: 'Remove range',
+              })}
+              onClick={() => dispatch({ type: 'REMOVE_RANGE' })}
+            />
+          </div>
+        </EuiFlexItem>
+      )}
       <EuiFlexItem grow={false}>
         <EuiPopover
           button={
@@ -523,6 +562,7 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
             dispatch={dispatch}
             labelOptions={labelOptions}
             getOperationSiblings={getOperationSiblings}
+            hasRange={state.range !== undefined}
           />
         );
         return (

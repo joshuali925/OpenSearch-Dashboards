@@ -6,7 +6,7 @@
 import React from 'react';
 import { i18n } from '@osd/i18n';
 import { EuiComboBox, EuiComboBoxOptionOption, EuiButtonIcon, EuiToolTip } from '@elastic/eui';
-import { Operation } from './promql_parser';
+import { Operation, RANGE_FUNCTIONS } from './promql_parser';
 import { BuilderAction } from './build_promql';
 import {
   OperationDef,
@@ -23,6 +23,7 @@ interface OperationPillProps {
   dispatch: React.Dispatch<BuilderAction>;
   labelOptions: EuiComboBoxOptionOption[];
   getOperationSiblings: (opId: string) => OperationDef[];
+  hasRange?: boolean;
 }
 
 export const OperationPill: React.FC<OperationPillProps> = ({
@@ -31,10 +32,15 @@ export const OperationPill: React.FC<OperationPillProps> = ({
   dispatch,
   labelOptions,
   getOperationSiblings,
+  hasRange,
 }) => {
   const isAgg = GROUPABLE_AGGREGATION_IDS.has(op.id);
   const grouping = useAggregationGrouping(op, idx, labelOptions, dispatch);
   const opDef = OP_DEF_MAP[op.id];
+  const isRangeFn = RANGE_FUNCTIONS.has(op.id);
+  // When hasRange is set, the range param (first param for most range fns,
+  // second for quantile_over_time) is on the metric row — skip it in the pill.
+  const rangeParamIdx = isRangeFn && hasRange ? (op.id === 'quantile_over_time' ? 1 : 0) : -1;
 
   return (
     <div className="pqbGroup">
@@ -64,6 +70,7 @@ export const OperationPill: React.FC<OperationPillProps> = ({
         {isAgg && grouping.labelsComboEl}
         {op.params.length > 0 &&
           op.params.map((p, pi) => {
+            if (pi === rangeParamIdx) return null;
             const placeholder = opDef?.paramNames?.[pi] || '';
             const displayText = p || placeholder;
             return (

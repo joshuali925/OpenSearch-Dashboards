@@ -71,6 +71,22 @@ const OP_MAP: Record<number, string> = {
   [PromQLParser.NRE]: '!~',
 };
 
+/** Maps grammar token types to builder binary-operation IDs. */
+const BINARY_OP_ID_MAP: Record<number, string> = {
+  [PromQLParser.ADD]: 'add',
+  [PromQLParser.SUB]: 'sub',
+  [PromQLParser.MULT]: 'mul',
+  [PromQLParser.DIV]: 'div',
+  [PromQLParser.MOD]: 'mod',
+  [PromQLParser.POW]: 'pow',
+  [PromQLParser.DEQ]: 'eq',
+  [PromQLParser.NE]: 'neq',
+  [PromQLParser.GT]: 'gt',
+  [PromQLParser.LT]: 'lt',
+  [PromQLParser.GE]: 'gte',
+  [PromQLParser.LE]: 'lte',
+};
+
 const emptyState = (): BuilderState => ({
   metric: '',
   labelFilters: [{ label: '', op: '=', value: '' }],
@@ -161,17 +177,26 @@ class BuilderStateVisitor extends PromQLParserVisitor<void> {
   };
 
   visitVectorOperation = (ctx: any) => {
-    // Binary ops: if vectorOperation has operator children (addOp, multOp, etc.)
-    // that means it's `expr OP expr` — too complex for builder
-    if (
-      ctx.addOp?.() ||
-      ctx.multOp?.() ||
-      ctx.compareOp?.() ||
-      ctx.andUnlessOp?.() ||
-      ctx.orOp?.() ||
-      ctx.powOp?.() ||
-      ctx.vectorMatchOp?.()
-    ) {
+    // Identify which binary op (if any) is present
+    const opCtx = ctx.compareOp?.() || ctx.addOp?.() || ctx.multOp?.() || ctx.powOp?.();
+    if (opCtx) {
+      // Binary op: allow only if RHS is a scalar literal
+      const rhs = ctx.vectorOperation?.(1);
+      const scalar = this.extractScalarLiteral(rhs);
+      if (scalar !== undefined) {
+        const opToken = opCtx.start?.type;
+        const opId = opToken !== undefined ? BINARY_OP_ID_MAP[opToken] : undefined;
+        if (opId) {
+          // Visit LHS to extract metric/operations, then append the binary op
+          this.visit(ctx.vectorOperation(0));
+          this.operations.push({ id: opId, name: opId, params: [scalar] });
+          return;
+        }
+      }
+      this.canBuild = false;
+      return;
+    }
+    if (ctx.andUnlessOp?.() || ctx.orOp?.() || ctx.vectorMatchOp?.()) {
       this.canBuild = false;
       return;
     }
@@ -182,6 +207,18 @@ class BuilderStateVisitor extends PromQLParserVisitor<void> {
     }
     this.visitChildren(ctx);
   };
+
+  /**
+   * If a vectorOperation node is a bare scalar literal (vector → literal → NUMBER),
+   * return its text; otherwise return undefined.
+   */
+  private extractScalarLiteral(ctx: any): string | undefined {
+    const vector = ctx?.vector?.();
+    const literal = vector?.literal?.();
+    if (!literal) return undefined;
+    const num = literal.NUMBER?.();
+    return num ? num.getText() : undefined;
+  }
 
   visitInstantSelector = (ctx: InstantSelectorContext) => {
     this.selectorCount++;

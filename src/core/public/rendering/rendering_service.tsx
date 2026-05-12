@@ -28,6 +28,7 @@
  * under the License.
  */
 
+import type { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
 import { I18nProvider } from '@osd/i18n/react';
 
@@ -35,6 +36,12 @@ import { InternalChromeStart } from '../chrome';
 import { InternalApplicationStart } from '../application';
 import { OverlayStart } from '../overlays';
 import { AppWrapper, AppContainer } from './app_containers';
+
+const Agentation: ComponentType | null =
+  process.env.NODE_ENV === 'development'
+    ? // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+      require('agentation').Agentation
+    : null;
 
 export interface StartDeps {
   application: InternalApplicationStart;
@@ -74,6 +81,7 @@ export class RenderingService {
               <AppContainer classes$={chrome.getApplicationClasses$()}>{appUi}</AppContainer>
             </div>
           </AppWrapper>
+          {Agentation ? <Agentation /> : null}
         </div>
       </I18nProvider>
     );

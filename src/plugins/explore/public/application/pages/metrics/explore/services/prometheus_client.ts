@@ -248,13 +248,19 @@ export class PrometheusClient {
     const dataView = await this.resolveDataView();
     if (!dataView) return [];
 
+    // Mirror the query-tab path (createSearchSourceWithQuery): spread the live
+    // query state and only override the query string. This preserves the
+    // original dataset — and crucially its `dataSource.meta` (the data
+    // connection meta populated by prometheus_type.toDataset) — which the
+    // server-side PromQL search strategy relies on. Overriding the dataset with
+    // convertToDataset(dataView) here would strip `meta`, since convertToDataset
+    // only emits { id, title, type, version } for dataSource.
     const queryState = this.services.data.query.queryString.getQuery();
-    const dataset = await this.services.data.dataViews.convertToDataset(dataView);
     const searchSource = await this.services.data.search.searchSource.create();
     searchSource.setFields({
       index: dataView,
       size: 2000,
-      query: { ...queryState, dataset, query: promql },
+      query: { ...queryState, query: promql },
       highlightAll: false,
       version: false,
     });

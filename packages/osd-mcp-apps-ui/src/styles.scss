@@ -1,0 +1,17 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/* The mcp-apps glass theme, carried into OSD verbatim (decision: "scope
+   existing CSS", not an EUI rewrite). The vendored global.css is the project's
+   full Tailwind v4 + glass token layer. CSS @import rules must precede all
+   other statements and cannot be nested, so it is pulled in at the top here;
+   the plugin wraps every mounted view in a `.mcp-apps-root` container, and the
+   theme's tokens/utilities apply within it.
+
+   Follow-up (Phase 7): post-process the vendored CSS to confine bare `:root` /
+   `body` selectors under `.mcp-apps-root` so the theme cannot bleed onto EUI
+   chrome. For the first cut the container class + the theme's own scoping keep
+   it contained in practice. */
+@import "./vendor/global.css";

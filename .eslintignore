@@ -23,6 +23,8 @@ cypress/fixtures
 /src/plugins/**/_generated_/**
 
 # package overrides
+# Pre-bundled artifact synced from the mcp-apps project (not authored here).
+/packages/osd-mcp-apps-ui/src/vendor
 /packages/opensearch-eslint-config-opensearch-dashboards
 /packages/opensearch-safer-lodash-set
 /packages/osd-interpreter/src/common/lib/grammar.js

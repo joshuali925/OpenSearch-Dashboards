@@ -1,0 +1,498 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500&display=swap");
+@import "tailwindcss";
+
+/* Explicitly register the source trees Tailwind must scan for utility classes.
+   The production shell builds from the project root (which would auto-detect
+   these), but the gallery dev server roots at `gallery/`, so without these the
+   app views' classes — including arbitrary values like `shadow-[var(--…)]` —
+   would be dropped. Listing them keeps both entry points consistent. */
+@source "./apps";
+@source "./components";
+
+/* ===========================================================================
+   DRAFT GLASS DESIGN SYSTEM — token layer
+   ---------------------------------------------------------------------------
+   A luminous, glass-forward console for the Olly observability agent.
+   - Opal canvas (#f8f7fc) washed with four soft corner blobs.
+   - Mostly-solid white cards w/ hairline borders + feather-light shadows.
+   - Indigo accent (#6366f1) used scarcely; periwinkle (#a5b4fc) in dark.
+   - Plus Jakarta Sans everywhere; Space Grotesk mono for numerics/eyebrows.
+   The existing shadcn CSS variables (--background, --card, --primary, …) are
+   mapped onto Glass values so all `bg-card`, `text-muted-foreground`, `border`
+   utilities inherit the Glass look automatically. Those vars stay HSL triples
+   because @theme inline wraps them with hsl(var(--x)).
+   =========================================================================== */
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Space Grotesk", ui-monospace, SFMono-Regular, monospace;
+  /* True fixed-width face for *code* — queries (PPL/PromQL/SQL), JSON, log
+     bodies, ids. Distinct from --font-mono (Space Grotesk) which is a
+     proportional display face used for numerics/eyebrows: it does NOT align
+     columns and reads poorly for multi-line code. Code must be genuinely
+     monospaced so JSON/queries line up and key-glyphs (0/O, 1/l/I, {}/[]) are
+     unambiguous.
+
+     Deliberately a SYSTEM monospace stack — no webfont. MCP apps render inside
+     a sandboxed null-origin `srcdoc` iframe in some hosts (e.g. Goose), where
+     an external Google-Fonts `@import` never loads (it hangs pending and the
+     gstatic .woff2 is never fetched). So a webfont here would be dead weight
+     that silently falls back anyway. These faces ship with the OS: SF Mono /
+     Menlo (macOS), Cascadia/Consolas/Segoe UI Mono (Windows), and the generic
+     `ui-monospace` / `monospace` backstops elsewhere. */
+  --font-code: ui-monospace, "SF Mono", "SFMono-Regular", "Menlo", "Cascadia Code", "Segoe UI Mono", "Consolas", "Roboto Mono", "Liberation Mono", monospace;
+}
+
+/* ------------------------------------------------------------------ LIGHT */
+:root {
+  color-scheme: light;
+
+  /* --- shadcn compatibility ramp (HSL triples, mapped to Glass) --- */
+  --background: 250 38% 98%;        /* opal #f8f7fc */
+  --foreground: 0 0% 4%;            /* ink #0a0a0a */
+  --card: 0 0% 100%;                /* surface #ffffff */
+  --card-foreground: 0 0% 4%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 4%;
+  --primary: 239 84% 60%;           /* accent-bright #4f46e5 */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 60 9% 97%;           /* surface-muted #f7f7f5 */
+  --secondary-foreground: 0 0% 4%;
+  --muted: 60 9% 97%;               /* surface-muted */
+  --muted-foreground: 0 0% 40%;     /* ink-mute — darkened to clear WCAG AA (≈5.9:1) */
+  --accent: 226 100% 97%;           /* accent-soft-ish wash */
+  --accent-foreground: 239 84% 60%; /* accent-bright */
+  --destructive: 0 72% 51%;         /* danger #dc2626 */
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 9% 93%;             /* surface-border #ececef */
+  --input: 240 9% 93%;
+  --ring: 239 84% 67%;              /* accent #6366f1 */
+  --radius: 0.75rem;                /* 12px surface radius default */
+
+  /* --- Glass raw tokens (use directly via var(...) or arbitrary values) --- */
+  --accent-color: #6366f1;
+  --accent-bright: #4f46e5;
+  --accent-dim: rgba(99, 102, 241, 0.5);
+  --accent-soft: rgba(99, 102, 241, 0.1);
+  --accent-tint: rgba(99, 102, 241, 0.18);
+
+  --ink: #0a0a0a;
+  --ink-bright: #000000;
+  --ink-soft: rgba(10, 10, 10, 0.72);
+  /* ink-mute was .46 (≈3.0:1 on white — fails WCAG AA for text). Bumped to .60
+     (≈4.6:1) so muted labels/eyebrows/table-heads stay legible in light mode
+     while still reading as clearly secondary against --ink / --ink-soft. */
+  --ink-mute: rgba(10, 10, 10, 0.6);
+  --ink-fade: rgba(10, 10, 10, 0.42);
+  --ink-ghost: rgba(10, 10, 10, 0.1);
+  --ink-hairline: rgba(10, 10, 10, 0.07);
+
+  --bg: #f8f7fc;
+  --surface: #ffffff;
+  --surface-muted: #f7f7f5;
+  --surface-subtle: #fbfbf9;
+  --surface-border: #ececef;
+  --surface-border-strong: #e0e0e4;
+
+  --glass: rgba(255, 255, 255, 0.65);
+  --glass-hi: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.9);
+
+  --ring-from: hsl(245 90% 78%);
+  --ring-to: hsl(210 95% 80%);
+
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.1);
+  --warn: #d97706;
+  --warn-soft: rgba(217, 119, 6, 0.1);
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.1);
+  --info: #0284c7;
+  --info-soft: rgba(2, 132, 199, 0.1);
+
+  /* --- agent-trajectory "kind" colors (light) ---
+     Fixed hues for the recurring agent / tool / llm step kinds in a trajectory
+     Timeline — kept distinct from the status tones so a normal tool call reads
+     as "tool" (pink), not "error" (red). Tuned for ≥4.5:1 on --surface-muted. */
+  --kind-agent: #7c3aed;                  /* violet */
+  --kind-agent-soft: rgba(124, 58, 237, 0.1);
+  --kind-tool: #db2777;                   /* pink */
+  --kind-tool-soft: rgba(219, 39, 119, 0.1);
+  --kind-llm: #059669;                    /* emerald */
+  --kind-llm-soft: rgba(5, 150, 105, 0.1);
+
+  /* --- code syntax tokens (light) ---
+     A restrained, on-brand highlight ramp for the CodeBlock highlighter. Indigo
+     keywords echo the accent; the rest are muted jewel tones tuned for ≥4.5:1
+     on the --surface-subtle code background. */
+  --code-fg: #1f2330;            /* default code text */
+  --code-keyword: #5b21b6;       /* violet — SQL/PPL/PromQL keywords */
+  --code-string: #047857;        /* emerald — string literals */
+  --code-number: #b45309;        /* amber — numerics */
+  --code-property: #0369a1;      /* sky — JSON keys */
+  --code-punct: rgba(31, 35, 48, 0.55); /* braces/commas/operators */
+  --code-comment: rgba(31, 35, 48, 0.5);
+  --code-boolean: #be123c;       /* rose — true/false/null */
+  --code-fn: #9333ea;            /* function/aggregate names */
+
+  /* --- shadow tokens --- */
+  --shadow-surface: 0 1px 2px rgba(15, 15, 15, 0.04), 0 8px 24px rgba(15, 15, 15, 0.04);
+  --shadow-surface-hi: 0 4px 12px rgba(15, 15, 15, 0.06), 0 24px 48px rgba(15, 15, 15, 0.06);
+  --shadow-glass: 0 2px 6px rgba(15, 15, 15, 0.06), 0 16px 36px rgba(15, 15, 15, 0.08);
+  --shadow-context-panel: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 24px 60px -30px rgba(31, 31, 60, 0.28);
+  --shadow-widget: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(15, 15, 15, 0.04), 0 10px 30px -18px rgba(31, 31, 60, 0.18);
+  --shadow-focus-ring: 0 0 0 1px var(--accent-bright), 0 0 0 6px rgba(99, 102, 241, 0.22), 0 1px 2px rgba(15, 15, 15, 0.04), 0 18px 44px -12px rgba(99, 102, 241, 0.45);
+
+  /* corner-blob colors (light) */
+  --blob-1: rgba(99, 102, 241, 0.16);   /* indigo TL */
+  --blob-2: rgba(56, 189, 248, 0.13);   /* sky TR */
+  --blob-3: rgba(167, 139, 250, 0.14);  /* violet BR */
+  --blob-4: rgba(96, 165, 250, 0.1);    /* blue BL */
+
+  /* OpenSearch logo — standard brand blues on light */
+  --os-primary: #005EB8;
+  --os-secondary: #003B5C;
+}
+
+/* ------------------------------------------------------------------- DARK */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: 230 16% 6%;          /* obsidian #0c0d12 */
+  --foreground: 0 0% 98%;            /* ink #fafafa */
+  --card: 228 11% 9%;                /* surface #15161a */
+  --card-foreground: 0 0% 98%;
+  --popover: 228 11% 9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 234 89% 74%;            /* accent-bright #818cf8 */
+  --primary-foreground: 230 16% 6%;
+  --secondary: 225 8% 12%;           /* surface-muted #1b1d22 */
+  --secondary-foreground: 0 0% 98%;
+  --muted: 225 8% 12%;
+  --muted-foreground: 0 0% 70%;      /* ink-soft-ish */
+  --accent: 230 14% 14%;
+  --accent-foreground: 231 100% 82%; /* accent #a5b4fc */
+  --destructive: 0 91% 71%;          /* danger #f87171 */
+  --destructive-foreground: 0 0% 100%;
+  --border: 228 9% 15%;              /* surface-border #23252b */
+  --input: 228 9% 15%;
+  --ring: 231 100% 82%;              /* accent #a5b4fc */
+
+  --accent-color: #a5b4fc;
+  --accent-bright: #818cf8;
+  --accent-dim: rgba(165, 180, 252, 0.5);
+  --accent-soft: rgba(165, 180, 252, 0.12);
+  --accent-tint: rgba(165, 180, 252, 0.2);
+
+  --ink: #fafafa;
+  --ink-bright: #ffffff;
+  --ink-soft: rgba(250, 250, 250, 0.74);
+  --ink-mute: rgba(250, 250, 250, 0.6);
+  --ink-fade: rgba(250, 250, 250, 0.4);
+  --ink-ghost: rgba(250, 250, 250, 0.12);
+  --ink-hairline: rgba(250, 250, 250, 0.08);
+
+  --bg: #0c0d12;
+  --surface: #15161a;
+  --surface-muted: #1b1d22;
+  --surface-subtle: #101115;
+  --surface-border: #23252b;
+  --surface-border-strong: #2e3037;
+
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-hi: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.1);
+
+  --ring-from: hsl(245 90% 65%);
+  --ring-to: hsl(210 95% 68%);
+
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --info: #7dd3fc;
+  --info-soft: rgba(125, 211, 252, 0.12);
+
+  /* --- agent-trajectory "kind" colors (dark) --- pastel hues matching the
+     reference badge-agent / tool / llm, kept distinct from the status tones. */
+  --kind-agent: #a78bfa;                  /* violet */
+  --kind-agent-soft: rgba(167, 139, 250, 0.12);
+  --kind-tool: #f472b6;                   /* pink */
+  --kind-tool-soft: rgba(244, 114, 182, 0.12);
+  --kind-llm: #34d399;                    /* emerald */
+  --kind-llm-soft: rgba(52, 211, 153, 0.12);
+
+  /* --- code syntax tokens (dark) --- pastel ramp tuned for ≥4.5:1 on the
+     dark --surface-subtle code background. */
+  --code-fg: #e6e7ee;
+  --code-keyword: #c4b5fd;       /* violet */
+  --code-string: #6ee7b7;        /* emerald */
+  --code-number: #fcd34d;        /* amber */
+  --code-property: #7dd3fc;      /* sky — JSON keys */
+  --code-punct: rgba(230, 231, 238, 0.55);
+  --code-comment: rgba(230, 231, 238, 0.45);
+  --code-boolean: #fda4af;       /* rose */
+  --code-fn: #d8b4fe;
+
+  --shadow-surface: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.36);
+  --shadow-surface-hi: 0 4px 12px rgba(0, 0, 0, 0.45), 0 24px 48px rgba(0, 0, 0, 0.4);
+  --shadow-glass: 0 2px 6px rgba(0, 0, 0, 0.4), 0 16px 36px rgba(0, 0, 0, 0.45);
+  --shadow-context-panel: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 60px -30px rgba(0, 0, 0, 0.7);
+  --shadow-widget: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -18px rgba(0, 0, 0, 0.55);
+  --shadow-focus-ring: 0 0 0 1px var(--accent-bright), 0 0 0 6px rgba(129, 140, 248, 0.28), 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 44px -12px rgba(129, 140, 248, 0.5);
+
+  --blob-1: rgba(99, 102, 241, 0.12);
+  --blob-2: rgba(56, 189, 248, 0.08);
+  --blob-3: rgba(167, 139, 250, 0.1);
+  --blob-4: rgba(96, 165, 250, 0.07);
+
+  /* OpenSearch logo — brighter on dark for legibility */
+  --os-primary: #4da6ff;
+  --os-secondary: #6ec0ff;
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+    box-sizing: border-box;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    color: hsl(var(--foreground));
+    font-family: var(--font-sans);
+    font-size: 14.5px;
+    line-height: 1.62;
+    letter-spacing: -0.05px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  /* The Opal canvas: near-white floor washed with four soft low-alpha radial
+     corner blobs (fixed), NOT a flat fill and NOT a loud gradient.
+     The body itself stays transparent so the embedding host's own background
+     shows through — the wash lives on a fixed ::before layer (below) that is
+     feathered to transparent at the edges, so the iframe blends seamlessly
+     into the host instead of reading as a hard off-white rectangle. */
+  body {
+    /* No 100vh floor: the host's auto-resize observer measures the body, so a
+       fixed viewport floor leaves tall blank space below short content. The
+       wash layer below is `position: fixed`, so it still paints the full
+       visible viewport regardless of how short the body is. */
+    min-height: 0;
+    background: transparent;
+  }
+  /* Full-viewport opal wash + corner blobs, masked so it fades to fully
+     transparent toward the edges. This lets the host background blend in at
+     the iframe border (no visible seam) while keeping the luminous opal core
+     behind the centered content column. Fixed + inset:0 keeps it out of the
+     layout flow, so it never inflates the body height the host measures. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(60% 50% at 0% 0%, var(--blob-1) 0%, transparent 70%),
+      radial-gradient(55% 50% at 100% 0%, var(--blob-2) 0%, transparent 70%),
+      radial-gradient(60% 55% at 100% 100%, var(--blob-3) 0%, transparent 72%),
+      radial-gradient(55% 50% at 0% 100%, var(--blob-4) 0%, transparent 70%);
+    background-repeat: no-repeat;
+    /* Feather the wash to fully transparent over a band along every edge so the
+       host background blends in seamlessly at the iframe border. Two linear
+       masks (one horizontal, one vertical) intersected give a uniform border
+       fade regardless of the iframe's aspect ratio — unlike a single radial,
+       which only feathers the corners on a wide viewport. The 14% band leaves
+       the opal core intact behind the centered content while dissolving the
+       surround into the host. */
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 14%, #000 86%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 14%, #000 86%, transparent 100%);
+    mask-composite: intersect;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.4px;
+  }
+}
+
+/* ----------------------------------------------- Glass utility helpers --- */
+/* Mono numeric / timestamp / eyebrow face. */
+.font-glass-mono,
+.glass-mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  letter-spacing: 0.1px;
+}
+.glass-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+/* True-monospace code face — for the CodeBlock/Code primitives and any raw
+   query/JSON/log text. Slightly looser line-height than body for scannability;
+   normal letter-spacing (code must not be tracked). */
+.glass-code {
+  font-family: var(--font-code);
+  font-feature-settings: "liga" 0, "calt" 0; /* no ligatures — code stays literal */
+  letter-spacing: 0;
+  font-variant-ligatures: none;
+  tab-size: 2;
+}
+
+/* ============================================================ HOST SHELL */
+/* The per-view root. Per the spec, content is a centered, max-width column
+   that breathes — NOT a full-bleed slab. We deliberately do NOT repaint the
+   Opal wash here (GLASS.md: "build surfaces on top of the wash"); the body /
+   host iframe already paints it full-bleed, so the centered column floats on
+   the wash with the surround seamlessly washed too. In a narrow host (e.g. a
+   chat side-panel) the max-width never binds and the column is simply 100%.
+   The cap is generous (1440px) so timeline-heavy views like the trace span
+   waterfall get room for their duration bars when the host iframe is wide;
+   narrow hosts still collapse gracefully because width is 100% until the cap. */
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  /* spec page padding: generous top/sides, a little extra at the bottom */
+  padding: 28px 32px 36px;
+  color: var(--ink);
+}
+/* On genuinely narrow hosts, tighten the gutters so content isn't starved. */
+@media (max-width: 640px) {
+  .app {
+    padding: 16px 16px 24px;
+    gap: 14px;
+  }
+}
+/* Error/empty states that are the SOLE content of a view opt into
+   `app--collapse` to tighten the page padding around a short message. */
+.app--collapse {
+  gap: 12px;
+  padding: 20px 24px 22px;
+}
+.app-error {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid color-mix(in oklab, var(--danger) 22%, transparent);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 13px;
+}
+/* A dashboard panel whose query failed renders here instead of a chart. Unlike
+   a whole-view `.app-error`, this is a CONTAINED, clearly-labeled "this panel
+   failed" state: a badge + a height-capped, scrollable message so a long raw
+   OpenSearch 400 body can't masquerade as the panel's content. */
+.panel-error {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px dashed color-mix(in oklab, var(--danger) 35%, transparent);
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+}
+.panel-error__badge {
+  align-self: flex-start;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--danger) 16%, transparent);
+}
+.panel-error__msg {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 5.5em;
+  overflow-y: auto;
+}
+.app-muted {
+  color: var(--ink-mute);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.1px;
+}
+.generated-host-prompt {
+  font-size: 12px;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-muted);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  color: var(--ink-soft);
+}
+.generating-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-surface);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.generating-banner__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--surface-border);
+  border-top-color: var(--accent-bright);
+  border-radius: 50%;
+  animation: gen-spin 0.8s linear infinite;
+}
+@keyframes gen-spin {
+  to { transform: rotate(360deg); }
+}
+.inline-sandbox-root { padding: 0.75rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .generating-banner__spinner { animation-duration: 1.6s; }
+}

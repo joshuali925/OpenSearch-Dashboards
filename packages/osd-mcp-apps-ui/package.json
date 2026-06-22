@@ -1,0 +1,22 @@
+{
+  "name": "@osd/mcp-apps-ui",
+  "version": "1.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "OpenSearch observability widgets (views + data logic) shared from the mcp-apps project, consumed by OSD WITHOUT the MCP protocol.",
+  "main": "./target/node/index.js",
+  "browser": "./target/web/index.js",
+  "scripts": {
+    "build:babel:node": "babel src --env-name node --out-dir target/node --extensions .ts,.tsx --copy-files --quiet",
+    "build:babel:web": "babel src --env-name web --out-dir target/web --extensions .ts,.tsx --copy-files --quiet",
+    "build:babel": "yarn build:babel:node && yarn build:babel:web",
+    "build": "yarn build:babel",
+    "osd:bootstrap": "yarn build",
+    "osd:watch": "babel src --env-name web --out-dir target/web --extensions .ts,.tsx --copy-files --watch",
+    "sync-vendor": "node scripts/sync-vendor.mjs"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  }
+}

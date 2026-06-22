@@ -6,6 +6,7 @@
   "description": "OpenSearch observability widgets (views + data logic) shared from the mcp-apps project, consumed by OSD WITHOUT the MCP protocol.",
   "main": "./target/node/index.js",
   "browser": "./target/web/index.js",
+  "types": "./src/index.ts",
   "scripts": {
     "build:babel:node": "babel src --env-name node --out-dir target/node --extensions .ts,.tsx --copy-files --quiet",
     "build:babel:web": "babel src --env-name web --out-dir target/web --extensions .ts,.tsx --copy-files --quiet",

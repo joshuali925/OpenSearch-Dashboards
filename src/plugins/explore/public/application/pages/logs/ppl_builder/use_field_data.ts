@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { EuiComboBoxOptionOption } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
+import { useDatasetContext } from '../../../context';
 
 interface FieldInfo {
   name: string;
@@ -16,36 +17,28 @@ interface FieldInfo {
 
 /**
  * Provides the current dataset's field list (for the search/group comboboxes)
- * and lazy value suggestions for a field (for the search-row value combobox).
- * Reads the dataset from the shared QueryStringManager so it stays in sync with
- * the dataset selector. No new client — reuses `data.autocomplete`.
+ * and lazy value suggestions for a field (for the search-box value autocomplete).
+ *
+ * The resolved `DataView` comes from {@link useDatasetContext} (the same source
+ * the histogram uses), NOT from `queryString.getQuery().dataset` — the latter is
+ * a lightweight descriptor with no `fields`/`timeFieldName`, which is why field
+ * and value suggestions were previously always empty. No new client — reuses
+ * `data.autocomplete`.
  */
 export const useFieldData = () => {
   const { services } = useOpenSearchDashboards<ExploreServices>();
   const { data } = services;
+  const { dataset } = useDatasetContext();
 
-  const [fields, setFields] = useState<FieldInfo[]>([]);
   const [valueOptions, setValueOptions] = useState<Record<string, EuiComboBoxOptionOption[]>>({});
   const [valueLoading, setValueLoading] = useState<Record<string, boolean>>({});
 
-  const getDataset = useCallback(() => data.query.queryString.getQuery().dataset, [data]);
-
-  const loadFields = useCallback(() => {
-    const dataset = getDataset();
-    // `dataset.fields` is an IndexPatternFieldList when the dataset is resolved.
+  const fields = useMemo<FieldInfo[]>(() => {
     const all = (dataset as any)?.fields?.getAll?.() ?? [];
-    setFields(
-      all
-        .filter((f: any) => f?.name && !f.name.startsWith('_'))
-        .map((f: any) => ({ name: f.name, type: f.type, aggregatable: f.aggregatable }))
-    );
-  }, [getDataset]);
-
-  useEffect(() => {
-    loadFields();
-    const sub = data.query.queryString.getUpdates$().subscribe(() => loadFields());
-    return () => sub.unsubscribe();
-  }, [data, loadFields]);
+    return all
+      .filter((f: any) => f?.name && !f.name.startsWith('_'))
+      .map((f: any) => ({ name: f.name, type: f.type, aggregatable: f.aggregatable }));
+  }, [dataset]);
 
   const fieldOptions = useMemo<EuiComboBoxOptionOption[]>(
     () => fields.map((f) => ({ label: f.name })),
@@ -58,14 +51,10 @@ export const useFieldData = () => {
     [fields]
   );
 
-  const timeFieldName = useMemo(() => {
-    const dataset = getDataset();
-    return (dataset as any)?.timeFieldName || '@timestamp';
-  }, [getDataset]);
+  const timeFieldName = useMemo(() => (dataset as any)?.timeFieldName || '@timestamp', [dataset]);
 
   const loadValues = useCallback(
     async (fieldName: string, queryText = '') => {
-      const dataset = getDataset();
       const indexPattern = dataset as any;
       const field = indexPattern?.fields?.getByName?.(fieldName);
       if (!indexPattern || !field || !data.autocomplete?.getValueSuggestions) return;
@@ -90,7 +79,7 @@ export const useFieldData = () => {
         setValueLoading((prev) => ({ ...prev, [fieldName]: false }));
       }
     },
-    [data, getDataset]
+    [data, dataset]
   );
 
   return {

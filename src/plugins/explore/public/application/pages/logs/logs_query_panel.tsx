@@ -1,0 +1,200 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { i18n } from '@osd/i18n';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  EuiButtonGroup,
+  EuiFlexGroup,
+  EuiFlexItem,
+  EuiPanel,
+  EuiProgress,
+  EuiToolTip,
+} from '@elastic/eui';
+import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
+import { ExploreServices } from '../../../types';
+import { QueryPanelWidgets } from '../../../components/query_panel/query_panel_widgets';
+import { QueryPanelEditor } from '../../../components/query_panel/query_panel_editor';
+import { QueryPanelGeneratedQuery } from '../../../components/query_panel/query_panel_generated_query';
+import { usePPLExecuteQueryAction } from '../../../components/query_panel/actions/ppl_execute_query_action';
+import { useSetEditorTextWithQuery } from '../../../application/hooks';
+import { useSetEditorText } from '../../../application/hooks/editor_hooks/use_set_editor_text/use_set_editor_text';
+import {
+  selectIsLoading,
+  selectIsPromptEditorMode,
+  selectPromptToQueryIsLoading,
+  selectQueryString,
+  selectSavedSearch,
+} from '../../../application/utils/state_management/selectors';
+import { setIsQueryEditorDirty } from '../../../application/utils/state_management/slices/query_editor/query_editor_slice';
+import { PPLBuilder, PPLBuilderState, parsePPL } from './ppl_builder';
+import { LogsBuilderMode, logsModeButtons } from './logs_query_panel_mode';
+import '../../../components/query_panel/query_panel.scss';
+
+/**
+ * Logs query panel with a PPL visual builder / code toggle. Gated behind the
+ * `explore:enableLogsQueryBuilder` UI setting; the plain `QueryPanel` is used
+ * otherwise. The PPL string in Redux is the single source of truth — builder
+ * state is derived via `parsePPL` and serialized back via the builder's
+ * `buildPPL` (see plan decisions 1, 5, 6).
+ */
+export const LogsQueryPanel: React.FC = () => {
+  const { services } = useOpenSearchDashboards<ExploreServices>();
+  const dispatch = useDispatch();
+  const queryIsLoading = useSelector(selectIsLoading);
+  const promptToQueryIsLoading = useSelector(selectPromptToQueryIsLoading);
+  const isLoading = queryIsLoading || promptToQueryIsLoading;
+  const isPromptMode = useSelector(selectIsPromptEditorMode);
+  const reduxQuery = useSelector(selectQueryString);
+  const savedSearch = useSelector(selectSavedSearch);
+
+  const setEditorTextWithQuery = useSetEditorTextWithQuery();
+  const setEditorText = useSetEditorText();
+  usePPLExecuteQueryAction(setEditorTextWithQuery);
+
+  const { queryString } = services.data.query;
+
+  // Source prefix (e.g. `source = logs`) is owned by the dataset selector; the
+  // builder only appends the trailing pipes. Prefer the parsed prefix from the
+  // current query, falling back to the dataset's initial query.
+  const initialParse = useMemo(() => parsePPL(reduxQuery), []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const sourcePrefix = useMemo(() => {
+    if (initialParse.sourcePrefix) return initialParse.sourcePrefix;
+    const dataset = queryString.getQuery().dataset;
+    if (dataset) {
+      const initial = queryString.getInitialQueryByDataset(dataset);
+      const parsedInitial = parsePPL(String(initial.query || ''));
+      return parsedInitial.sourcePrefix || String(initial.query || '');
+    }
+    return '';
+  }, [initialParse.sourcePrefix, queryString]);
+
+  // A query loaded from a saved object opens in code and can't switch to builder
+  // (plan decision 6). Otherwise default to builder when the query is parseable.
+  const loadedFromSaved = !!savedSearch;
+  const [mode, setMode] = useState<LogsBuilderMode>(() =>
+    !loadedFromSaved && initialParse.canBuild ? 'builder' : 'code'
+  );
+  // Once a query has been edited in code this session, the builder is locked
+  // for that query (plan decision 5: builder->code is one-way in-session).
+  const [builderLocked, setBuilderLocked] = useState<boolean>(loadedFromSaved);
+
+  const [builderState, setBuilderState] = useState<PPLBuilderState>(initialParse.state);
+  // Bumped whenever we re-seed builder state from a parse, so PPLBuilder remounts
+  // and picks up the new initialState in its useReducer.
+  const [builderKey, setBuilderKey] = useState(0);
+
+  const lastDispatchedRef = useRef(reduxQuery);
+
+  // Reflect external query changes (dataset switch, saved-query load, AI) back
+  // into the builder when possible.
+  useEffect(() => {
+    if (reduxQuery === lastDispatchedRef.current) return;
+    lastDispatchedRef.current = reduxQuery;
+    const parsed = parsePPL(reduxQuery);
+    if (parsed.canBuild && !builderLocked && !loadedFromSaved) {
+      setBuilderState(parsed.state);
+    }
+  }, [reduxQuery, builderLocked, loadedFromSaved]);
+
+  // Sync builder output to the QueryStringManager (not Redux) so TopNav's submit
+  // reads it via queryString.getQuery().query — mirrors MetricsQueryPanel.
+  const onBuilderChange = useCallback(
+    (query: string, state: PPLBuilderState) => {
+      setBuilderState(state);
+      if (query === lastDispatchedRef.current) return;
+      lastDispatchedRef.current = query;
+      setEditorText(query);
+      const currentQuery = queryString.getQuery();
+      queryString.setQuery({ ...currentQuery, query });
+      dispatch(setIsQueryEditorDirty(true));
+    },
+    [setEditorText, dispatch, queryString]
+  );
+
+  const canSwitchToBuilder = !builderLocked && parsePPL(reduxQuery).canBuild;
+
+  const handleModeChange = useCallback(
+    (id: string) => {
+      const newMode = id as LogsBuilderMode;
+      if (newMode === 'code') {
+        // Switching to code locks the builder for this query.
+        setBuilderLocked(true);
+        setMode('code');
+      } else if (canSwitchToBuilder) {
+        const parsed = parsePPL(reduxQuery);
+        setBuilderState(parsed.state);
+        setBuilderKey((k) => k + 1);
+        setMode('builder');
+      }
+    },
+    [canSwitchToBuilder, reduxQuery]
+  );
+
+  const modeToggleTooltip = !canSwitchToBuilder
+    ? i18n.translate('explore.logsQueryPanel.cannotSwitchToBuilder', {
+        defaultMessage:
+          'This query cannot be represented in Builder mode. Simplify it or use Code mode.',
+      })
+    : undefined;
+
+  const showBuilder = mode === 'builder' && !isPromptMode;
+
+  return (
+    <EuiPanel paddingSize="s" borderRadius="none" className="exploreQueryPanel">
+      <EuiFlexGroup gutterSize="none" alignItems="center" responsive={false}>
+        <EuiFlexItem>
+          <QueryPanelWidgets />
+        </EuiFlexItem>
+        {!isPromptMode && (
+          <EuiFlexItem grow={false}>
+            <EuiToolTip content={modeToggleTooltip} position="top">
+              <EuiButtonGroup
+                legend={i18n.translate('explore.logsQueryPanel.queryModeLabel', {
+                  defaultMessage: 'Query builder mode',
+                })}
+                options={logsModeButtons}
+                idSelected={mode}
+                onChange={handleModeChange}
+                buttonSize="compressed"
+                data-test-subj="logsQueryPanelModeToggle"
+              />
+            </EuiToolTip>
+          </EuiFlexItem>
+        )}
+      </EuiFlexGroup>
+
+      {isPromptMode ? (
+        <div className="exploreQueryPanel__editorsWrapper">
+          <QueryPanelEditor />
+          <QueryPanelGeneratedQuery />
+        </div>
+      ) : showBuilder ? (
+        <PPLBuilder
+          key={builderKey}
+          sourcePrefix={sourcePrefix}
+          initialState={builderState}
+          onQueryChange={onBuilderChange}
+        />
+      ) : (
+        <div className="exploreQueryPanel__editorsWrapper">
+          <QueryPanelEditor />
+          <QueryPanelGeneratedQuery />
+        </div>
+      )}
+
+      {isLoading && (
+        <EuiProgress
+          size="xs"
+          color="accent"
+          position="absolute"
+          data-test-subj="exploreQueryPanelIsLoading"
+        />
+      )}
+    </EuiPanel>
+  );
+};

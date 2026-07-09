@@ -1,0 +1,112 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+.plqBuilder {
+  padding: $euiSizeS;
+  background: transparentize($euiColorLightestShade, 0.75);
+  border-radius: $euiBorderRadiusSmall;
+}
+
+.plqRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $euiSizeXS;
+  padding: $euiSizeXS 0;
+}
+
+.plqRow__label {
+  font-size: $euiFontSizeXS;
+  font-weight: $euiFontWeightBold;
+  color: $euiColorDarkShade;
+  white-space: nowrap;
+  margin-right: $euiSizeXS;
+}
+
+// Outlined group with a floating label on the top border (mirrors metrics .pqbGroup)
+.plqGroup {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid $euiBorderColor;
+  border-radius: $euiSizeM;
+  padding: 0 2px;
+  background: $euiColorEmptyShade;
+  margin-top: 2px;
+
+  &__label {
+    position: absolute;
+    top: -0.6em;
+    left: $euiSizeS;
+    z-index: 1;
+    padding: 0 $euiSizeXS;
+    font-size: $euiFontSizeXS;
+    font-weight: 500;
+    color: $euiColorDarkShade;
+    background: inherit;
+    line-height: 1;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .euiFormControlLayout,
+  .euiFormControlLayout__childrenWrapper,
+  .euiComboBox-isOpen .euiFormControlLayout,
+  .euiComboBox__inputWrap {
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  .euiSuperSelectControl {
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+}
+
+.plqSep {
+  width: 1px;
+  align-self: stretch;
+  background: $euiBorderColor;
+  flex-shrink: 0;
+}
+
+.plqOperatorSelect {
+  width: 64px;
+}
+
+.plqParamInput {
+  height: $euiFormControlCompressedHeight;
+  font-size: $euiFontSizeXS;
+  border: none;
+  background: transparent;
+  padding: 0 $euiSizeS;
+  outline: none;
+
+  &::placeholder {
+    color: $euiColorMediumShade;
+  }
+}
+
+.plqQueryPreviewStrip {
+  display: flex;
+  align-items: flex-start;
+  padding: $euiSizeXS $euiSizeS;
+  margin-top: $euiSizeS;
+  border-left: 2px solid $euiColorPrimary;
+  background: transparentize($euiColorPrimary, 0.96);
+  border-radius: 0 $euiBorderRadiusSmall $euiBorderRadiusSmall 0;
+}
+
+.plqQueryPreview {
+  font-size: $euiFontSizeXS;
+  background: transparent !important;
+  padding: 0 !important;
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

@@ -59,10 +59,11 @@ const renderBuilder = (initialState: PPLBuilderState = emptyState()) => {
 };
 
 describe('PPLBuilder', () => {
-  it('renders the search and group rows with a preview placeholder', () => {
+  it('renders the search box and group rows with a preview placeholder', () => {
     renderBuilder();
     expect(screen.getByText('Search for')).toBeInTheDocument();
     expect(screen.getByText('Group into')).toBeInTheDocument();
+    expect(screen.getByTestId('pplBuilderSearchBox')).toBeInTheDocument();
     expect(screen.getByTestId('pplBuilderQueryPreview')).toBeInTheDocument();
   });
 
@@ -71,7 +72,7 @@ describe('PPLBuilder', () => {
     expect(onQueryChange).toHaveBeenCalledWith('source = logs', expect.anything());
   });
 
-  it('renders an existing field filter and emits its where clause', () => {
+  it('seeds the search box from existing filters and emits their where clause', () => {
     const { onQueryChange } = renderBuilder({
       ...emptyState(),
       filters: [{ id: 'a', field: 'service', op: '=', value: 'web-store', isFullText: false }],
@@ -80,7 +81,18 @@ describe('PPLBuilder', () => {
       "source = logs | where service = 'web-store'",
       expect.anything()
     );
-    expect(screen.getByTestId('pplBuilderFilter-0')).toBeInTheDocument();
+    expect(screen.getByTestId('pplBuilderSearchBox')).toHaveValue('service:web-store');
+  });
+
+  it('parses typed search text into a where clause', () => {
+    const { onQueryChange } = renderBuilder();
+    fireEvent.change(screen.getByTestId('pplBuilderSearchBox'), {
+      target: { value: 'status:>=500 error' },
+    });
+    expect(onQueryChange).toHaveBeenLastCalledWith(
+      "source = logs | where status >= 500 and query_string('error')",
+      expect.anything()
+    );
   });
 
   it('adds an aggregation when "Add metric" is clicked', () => {
@@ -100,12 +112,5 @@ describe('PPLBuilder', () => {
     });
     expect(screen.getByTestId('pplBuilderSpanChip')).toBeInTheDocument();
     expect(screen.getByTestId('pplBuilderSpanInterval')).toHaveValue('5m');
-  });
-
-  it('offers the add-filter menu with field and full-text options', () => {
-    renderBuilder();
-    fireEvent.click(screen.getByTestId('pplBuilderAddFilter'));
-    expect(screen.getByTestId('pplBuilderAddFieldFilter')).toBeInTheDocument();
-    expect(screen.getByTestId('pplBuilderAddFullTextFilter')).toBeInTheDocument();
   });
 });

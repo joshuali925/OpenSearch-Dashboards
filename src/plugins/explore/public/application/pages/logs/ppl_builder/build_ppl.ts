@@ -17,6 +17,7 @@ import {
 
 export type BuilderAction =
   | { type: 'SET_FILTER'; index: number; filter: Partial<SearchFilter> }
+  | { type: 'SET_FILTERS'; filters: SearchFilter[] }
   | { type: 'ADD_FILTER' }
   | { type: 'ADD_FILTER_WITH_VALUE'; filter: Omit<SearchFilter, 'id'> }
   | { type: 'REMOVE_FILTER'; index: number }
@@ -36,6 +37,8 @@ export function builderReducer(state: PPLBuilderState, action: BuilderAction): P
       filters[action.index] = { ...filters[action.index], ...action.filter };
       return { ...state, filters };
     }
+    case 'SET_FILTERS':
+      return { ...state, filters: action.filters };
     case 'ADD_FILTER':
       return { ...state, filters: [...state.filters, emptyFilter()] };
     case 'ADD_FILTER_WITH_VALUE':

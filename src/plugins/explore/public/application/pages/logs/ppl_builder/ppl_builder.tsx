@@ -5,17 +5,14 @@
 
 import './ppl_builder.scss';
 
-import React, { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import React, { useCallback, useMemo, useReducer, useRef, useState, useEffect } from 'react';
 import { i18n } from '@osd/i18n';
 import {
   EuiButtonEmpty,
   EuiCode,
   EuiComboBox,
-  EuiContextMenuItem,
-  EuiContextMenuPanel,
   EuiFieldText,
   EuiFlexItem,
-  EuiPopover,
   EuiButtonIcon,
 } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
@@ -23,9 +20,11 @@ import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
 import { builderReducer, buildPPL } from './build_ppl';
 import { PPLBuilderState, emptyState } from './types';
-import { SearchFilterRow } from './search_filter_row';
+import { filtersToSearchText, searchTextToFilters } from './search_syntax';
+import { SearchBox } from './search_box';
 import { AggregationRow } from './aggregation_row';
 import { useFieldData } from './use_field_data';
+import { useDatasetContext } from '../../../context';
 
 interface PPLBuilderProps {
   sourcePrefix: string;
@@ -42,8 +41,10 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
   onQueryChange,
 }) => {
   const { services } = useOpenSearchDashboards<ExploreServices>();
+  const { dataset } = useDatasetContext();
   const [state, dispatch] = useReducer(builderReducer, initialState || emptyState());
   const {
+    fields,
     fieldOptions,
     numericAndAggregatableOptions,
     timeFieldName,
@@ -52,12 +53,21 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     loadValues,
   } = useFieldData();
 
-  const [addFilterOpen, setAddFilterOpen] = React.useState(false);
+  // The search box owns its text (a view over state.filters). Seeded once from
+  // the initial filters; the parent remounts (via key) to re-seed on external
+  // changes, mirroring how MetricsQueryPanel re-inits rows.
+  const [searchText, setSearchText] = useState(() =>
+    filtersToSearchText((initialState || emptyState()).filters)
+  );
+  // Field whose value suggestions are currently being requested by the box.
+  const [activeValueField, setActiveValueField] = useState('');
 
   // Derive an adaptive span interval from the current time range, reusing the
   // same createHistogramConfigs path the logs histogram uses.
   const deriveAutoInterval = useCallback((): string => {
-    const dataset = services.data.query.queryString.getQuery().dataset as any;
+    // Use the fully-resolved DataView (with timeFieldName + fields) so
+    // createAggConfigs succeeds and the interval actually adapts to the range.
+    // The lightweight queryString descriptor lacks these and forces the fallback.
     if (!dataset?.timeFieldName) return '1m';
     try {
       const configs = createHistogramConfigs(
@@ -73,7 +83,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     } catch {
       return '1m';
     }
-  }, [services]);
+  }, [services, dataset]);
 
   const query = useMemo(() => buildPPL(state, sourcePrefix), [state, sourcePrefix]);
 
@@ -83,19 +93,30 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     onQueryChangeRef.current(query, state);
   }, [query, state]);
 
-  const hasAggregation = state.aggregations.length > 0;
+  const fieldNames = useMemo(() => fields.map((f) => f.name), [fields]);
 
-  const addFieldFilter = () => {
-    dispatch({ type: 'ADD_FILTER' });
-    setAddFilterOpen(false);
-  };
-  const addFullTextFilter = () => {
-    dispatch({
-      type: 'ADD_FILTER_WITH_VALUE',
-      filter: { value: '', isFullText: true },
-    });
-    setAddFilterOpen(false);
-  };
+  const onSearchChange = useCallback(
+    (text: string) => {
+      setSearchText(text);
+      dispatch({ type: 'SET_FILTERS', filters: searchTextToFilters(text) });
+    },
+    [dispatch]
+  );
+
+  const onRequestValues = useCallback(
+    (field: string, queryText: string) => {
+      setActiveValueField(field);
+      loadValues(field, queryText);
+    },
+    [loadValues]
+  );
+
+  const valueSuggestions = useMemo(
+    () => (valueOptions[activeValueField] || []).map((o) => String(o.label)),
+    [valueOptions, activeValueField]
+  );
+
+  const hasAggregation = state.aggregations.length > 0;
 
   const toggleSpan = () => {
     if (state.groupBy.span) {
@@ -115,60 +136,16 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
         <span className="plqRow__label">
           {i18n.translate('explore.pplBuilder.searchFor', { defaultMessage: 'Search for' })}
         </span>
-        {state.filters.map((filter, idx) => (
-          <SearchFilterRow
-            key={filter.id}
-            filter={filter}
-            idx={idx}
-            fieldOptions={fieldOptions}
-            valueOptions={valueOptions[filter.field || ''] || []}
-            valueLoading={!!valueLoading[filter.field || '']}
-            dispatch={dispatch}
-            onLoadValues={loadValues}
+        <div className="plqSearchBoxWrap">
+          <SearchBox
+            value={searchText}
+            fieldNames={fieldNames}
+            valueSuggestions={valueSuggestions}
+            valueLoading={!!valueLoading[activeValueField]}
+            onChange={onSearchChange}
+            onRequestValues={onRequestValues}
           />
-        ))}
-        <EuiPopover
-          isOpen={addFilterOpen}
-          closePopover={() => setAddFilterOpen(false)}
-          anchorPosition="downLeft"
-          panelPaddingSize="none"
-          button={
-            <EuiButtonEmpty
-              size="xs"
-              iconType="plusInCircle"
-              onClick={() => setAddFilterOpen((o) => !o)}
-              data-test-subj="pplBuilderAddFilter"
-            >
-              {i18n.translate('explore.pplBuilder.addFilter', { defaultMessage: 'Add filter' })}
-            </EuiButtonEmpty>
-          }
-        >
-          <EuiContextMenuPanel
-            size="s"
-            items={[
-              <EuiContextMenuItem
-                key="field"
-                icon="tokenKey"
-                onClick={addFieldFilter}
-                data-test-subj="pplBuilderAddFieldFilter"
-              >
-                {i18n.translate('explore.pplBuilder.addFieldFilter', {
-                  defaultMessage: 'Field filter',
-                })}
-              </EuiContextMenuItem>,
-              <EuiContextMenuItem
-                key="fulltext"
-                icon="search"
-                onClick={addFullTextFilter}
-                data-test-subj="pplBuilderAddFullTextFilter"
-              >
-                {i18n.translate('explore.pplBuilder.addFullTextFilter', {
-                  defaultMessage: 'Full-text term',
-                })}
-              </EuiContextMenuItem>,
-            ]}
-          />
-        </EuiPopover>
+        </div>
       </div>
 
       {/* Group / aggregate row */}

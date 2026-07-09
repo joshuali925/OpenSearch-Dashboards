@@ -210,8 +210,8 @@ describe('LogsPage', () => {
       </TestHarness>
     );
 
-    expect(screen.getByTestId('query-panel')).toBeInTheDocument();
-    expect(screen.queryByTestId('logs-query-panel')).not.toBeInTheDocument();
+    expect(screen.getByTestId('logs-query-panel')).toBeInTheDocument();
+    expect(screen.queryByTestId('query-panel')).not.toBeInTheDocument();
     expect(screen.getByTestId('bottom-container')).toBeInTheDocument();
     expect(screen.getByTestId('new-experience-banner')).toBeInTheDocument();
     expect(screen.getByTestId('top-nav')).toBeInTheDocument();
@@ -266,7 +266,7 @@ describe('LogsPage', () => {
       </TestHarness>
     );
 
-    expect(screen.getByTestId('query-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('logs-query-panel')).toBeInTheDocument();
     expect(screen.getByTestId('top-nav')).toBeInTheDocument();
   });
 

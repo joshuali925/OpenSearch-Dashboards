@@ -30,6 +30,7 @@ import {
   selectSavedSearch,
 } from '../../../application/utils/state_management/selectors';
 import { setIsQueryEditorDirty } from '../../../application/utils/state_management/slices/query_editor/query_editor_slice';
+import { setQueryState } from '../../../application/utils/state_management/slices';
 import { PPLBuilder, PPLBuilderState, parsePPL } from './ppl_builder';
 import { LogsBuilderMode, logsModeButtons } from './logs_query_panel_mode';
 import '../../../components/query_panel/query_panel.scss';
@@ -90,14 +91,33 @@ export const LogsQueryPanel: React.FC = () => {
 
   const lastDispatchedRef = useRef(reduxQuery);
 
-  // Reflect external query changes (dataset switch, saved-query load, AI) back
-  // into the builder when possible.
+  // Reflect external query changes (dataset switch, saved-query load, AI, or a
+  // cleared/new search) back into the builder when possible.
   useEffect(() => {
     if (reduxQuery === lastDispatchedRef.current) return;
     lastDispatchedRef.current = reduxQuery;
+    if (loadedFromSaved) return; // saved queries always stay in code (decision 6)
+
     const parsed = parsePPL(reduxQuery);
-    if (parsed.canBuild && !builderLocked && !loadedFromSaved) {
+    const isEmptyBuilder =
+      parsed.canBuild &&
+      parsed.state.filters.length === 0 &&
+      parsed.state.aggregations.length === 0;
+
+    if (isEmptyBuilder) {
+      // A cleared / fresh query returns to Builder and releases the code lock
+      // (fixes staying stuck in Code with a "cannot represent" tooltip after a
+      // New search).
+      setBuilderLocked(false);
       setBuilderState(parsed.state);
+      setBuilderKey((k) => k + 1);
+      setMode('builder');
+    } else if (parsed.canBuild && !builderLocked) {
+      setBuilderState(parsed.state);
+      setBuilderKey((k) => k + 1);
+      setMode('builder');
+    } else if (!parsed.canBuild) {
+      setMode('code');
     }
   }, [reduxQuery, builderLocked, loadedFromSaved]);
 
@@ -111,6 +131,10 @@ export const LogsQueryPanel: React.FC = () => {
       setEditorText(query);
       const currentQuery = queryString.getQuery();
       queryString.setQuery({ ...currentQuery, query });
+      // Also push into Redux so the (Redux-seeded) code editor mounts with this
+      // text on toggle and the query persists to the URL for refresh survival.
+      // setQueryState carries no history entry and doesn't trigger execution.
+      dispatch(setQueryState({ ...currentQuery, query }));
       dispatch(setIsQueryEditorDirty(true));
     },
     [setEditorText, dispatch, queryString]

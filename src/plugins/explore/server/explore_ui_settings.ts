@@ -62,7 +62,7 @@ export const exploreUiSettings: Record<string, UiSettingsParams> = {
     name: i18n.translate('explore.advancedSettings.enableLogsQueryBuilderTitle', {
       defaultMessage: 'Enable logs query builder',
     }),
-    value: false,
+    value: true,
     description: i18n.translate('explore.advancedSettings.enableLogsQueryBuilderText', {
       defaultMessage:
         'Experimental: Enable the visual PPL query builder in the Explore logs flavor. When enabled, new logs queries open in a builder that can be toggled to a raw PPL code editor.',

@@ -63,13 +63,16 @@ const COMPARISON_OPS = new Set<number>([
   PPLSearchParser.LE,
 ]);
 
+/** Exclusive 0-based char offset where a token ends. */
+const tokenEnd = (t: Token) => t.column + (t.text?.length || 0);
+
 /** Find the 1-based-safe token index the caret sits in/before (0-based column). */
 function findCursorTokenIndex(tokenStream: CommonTokenStream, cursorColumn: number): number {
   for (let i = 0; i < tokenStream.size; i++) {
     const token = tokenStream.get(i);
     if (token.type === Token.EOF) return i;
     const start = token.column;
-    const end = token.column + (token.text?.length || 0);
+    const end = tokenEnd(token);
     if (end >= cursorColumn) {
       // If the caret is just past a whitespace/operator/paren/comma boundary, the
       // relevant candidates belong to the next slot.
@@ -153,7 +156,6 @@ export function findFilterRanges(query: string): FilterRange[] {
       tokens.push(t);
     }
 
-    const tokenEnd = (t: Token) => t.column + (t.text?.length || 0);
     const nextNonWs = (from: number) => {
       let j = from;
       while (j < tokens.length && tokens[j].type === WS) j++;
@@ -247,7 +249,7 @@ export function analyzeSearchExpression(query: string, cursorColumn: number): Se
         here.type === PPLSearchParser.BACKTICK)
     ) {
       const start = here.column;
-      const end = here.column + (here.text?.length || 0);
+      const end = tokenEnd(here);
       if (cursorColumn >= start && cursorColumn <= end) {
         replaceStart = start;
         replaceEnd = end;

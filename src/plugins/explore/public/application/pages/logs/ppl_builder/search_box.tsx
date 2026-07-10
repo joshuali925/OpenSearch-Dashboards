@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { i18n } from '@osd/i18n';
 import { monaco } from '@osd/monaco';
 import { CodeEditor } from '../../../../../../opensearch_dashboards_react/public';
@@ -11,6 +11,13 @@ import { analyzeSearchExpression, findFilterRanges } from './search_completion';
 
 /** Dedicated Monaco language id for the restricted PPL search-expression box. */
 export const PPL_SEARCH_LANGUAGE_ID = 'pplSearchExpression';
+
+// Auto-grow bounds for the search box. It starts at a single line and grows with
+// the content (wrapped lines included), capping before it takes over the panel;
+// past the cap the box scrolls internally.
+const LINE_HEIGHT = 18;
+const MIN_HEIGHT = 20;
+const MAX_HEIGHT = 120;
 
 let languageRegistered = false;
 function ensureLanguageRegistered() {
@@ -67,6 +74,22 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   // Pending deferred suggestion-trigger (cursor moves; see handleEditorDidMount).
   const suggestTimerRef = useRef<number | undefined>(undefined);
 
+  // The editor's height, grown to fit its content so multi-line (wrapped)
+  // expressions are fully visible instead of clipped to one line. Driven by
+  // Monaco's onDidContentSizeChange, clamped to [MIN_HEIGHT, MAX_HEIGHT].
+  const [editorHeight, setEditorHeight] = useState(MIN_HEIGHT);
+
+  // Resize the editor to fit its content, capping at MAX_HEIGHT (beyond which it
+  // scrolls). Mirrors the code editor's auto-grow (use_query_panel_editor).
+  const syncHeight = useCallback((editor: monaco.editor.IStandaloneCodeEditor) => {
+    const contentHeight = editor.getContentHeight();
+    const nextHeight = Math.min(Math.max(contentHeight, MIN_HEIGHT), MAX_HEIGHT);
+    setEditorHeight(nextHeight);
+    editor.updateOptions({
+      scrollbar: { vertical: contentHeight > MAX_HEIGHT ? 'visible' : 'hidden' },
+    });
+  }, []);
+
   // Draw / refresh a colored box around every complete filter in the expression,
   // so the user reads the query as a set of discrete `field=value` conditions.
   const updateFilterBoxes = useCallback((editor: monaco.editor.IStandaloneCodeEditor) => {
@@ -95,6 +118,11 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   const handleEditorDidMount = useCallback(
     (editor: monaco.editor.IStandaloneCodeEditor) => {
       updateFilterBoxes(editor);
+      syncHeight(editor);
+
+      // Grow / shrink the box to fit its content as the user types or wraps
+      // onto new lines, so the whole expression stays visible.
+      editor.onDidContentSizeChange(() => syncHeight(editor));
 
       // Keep suggestions available at all times: re-open the widget after any
       // content change (typing, delete/backspace) and after the caret moves by
@@ -119,7 +147,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
         suggestTimerRef.current = window.setTimeout(() => triggerSuggest(editor), 0);
       });
     },
-    [updateFilterBoxes, triggerSuggest]
+    [updateFilterBoxes, triggerSuggest, syncHeight]
   );
 
   // Clear any pending deferred trigger on unmount.
@@ -232,14 +260,16 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
       lineDecorationsWidth: 0,
       minimap: { enabled: false },
       scrollBeyondLastLine: false,
-      wordWrap: 'off',
+      // Wrap long expressions onto new lines so they grow the box vertically
+      // instead of scrolling horizontally out of view.
+      wordWrap: 'on',
       wrappingIndent: 'none',
       overviewRulerLanes: 0,
       hideCursorInOverviewRuler: true,
       renderLineHighlight: 'none',
       scrollbar: { vertical: 'hidden', horizontal: 'hidden', horizontalScrollbarSize: 0 },
       fontSize: 12,
-      lineHeight: 18,
+      lineHeight: LINE_HEIGHT,
       fixedOverflowWidgets: true,
       suggest: { showWords: false },
     }),
@@ -249,7 +279,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   return (
     <div className="plqSearchBoxEditor" data-test-subj="pplBuilderSearchBox">
       <CodeEditor
-        height={20}
+        height={editorHeight}
         languageId={PPL_SEARCH_LANGUAGE_ID}
         value={value}
         onChange={onChange}

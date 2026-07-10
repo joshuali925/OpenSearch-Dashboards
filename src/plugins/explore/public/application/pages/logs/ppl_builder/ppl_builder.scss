@@ -17,12 +17,124 @@
   padding: $euiSizeXS 0;
 }
 
+// The aggregation row when rendered as a tree branch under "Search for": the
+// tree connector supplies the vertical spacing, so drop the row's own padding
+// to keep the branch line meeting the row at its center.
+.plqRow--branch {
+  padding: 0;
+}
+
+// "Group into" branch: the label connects — via a short connector line and a
+// vertical trunk — to its stacked child rows (metrics + the group-by/time
+// bucket), so the whole aggregation reads as one connected group rather than
+// an isolated pill sitting beside the metrics.
+.plqGroupBranch {
+  flex-wrap: nowrap;
+  align-items: stretch;
+
+  // No flex gaps between label / connector / kids: the connector line and each
+  // row's stub must meet edge-to-edge so they read as one continuous line
+  // rather than a row of detached dashes.
+  gap: 0;
+
+  .plqRow__label {
+    align-self: center;
+  }
+
+  // Horizontal line from the label to the trunk, at the block's vertical
+  // center. With two rows it meets the trunk at its midpoint (a "├"); with a
+  // single child row it is collinear with that row's stub, so label and row
+  // read as one straight horizontal bar.
+  &__connector {
+    position: relative;
+    align-self: stretch;
+    flex-shrink: 0;
+    width: $euiSizeS;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      border-top: 2px solid $euiColorLightShade;
+    }
+  }
+
+  // Stacked child rows. The vertical trunk is drawn by the rows themselves (see
+  // .plqGroupChildRow) so it tracks their real centers instead of a fixed
+  // offset that can overshoot taller rows.
+  &__kids {
+    display: flex;
+    flex-direction: column;
+    gap: $euiSizeXS;
+    min-width: 0;
+    padding-left: $euiSizeM;
+  }
+}
+
+// One child row within the "Group into" group. Each row hangs a horizontal stub
+// off the trunk at its own vertical center.
+.plqGroupChildRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $euiSizeXS;
+  min-height: $euiFormControlCompressedHeight;
+
+  // Horizontal arm from the trunk into the row.
+  &::before {
+    content: "";
+    position: absolute;
+    left: -#{$euiSizeM};
+    top: 50%;
+    width: $euiSizeM;
+    border-top: 2px solid $euiColorLightShade;
+  }
+
+  // Vertical trunk segments, drawn only when there are two or more rows — so a
+  // lone row renders as a single horizontal bar with no dangling vertical stub.
+  // Each segment anchors to its row's center (50%) and extends through the
+  // inter-row gap ($euiSizeXS) to meet the neighbour, so the trunk sits flush
+  // between the top and bottom arms and never overshoots past them regardless
+  // of row height. First row runs center→down, last row top→center, and any
+  // middle row spans full height.
+  &:not(:only-child)::after {
+    content: "";
+    position: absolute;
+    left: -#{$euiSizeM};
+    top: -#{$euiSizeXS};
+    bottom: -#{$euiSizeXS};
+    border-left: 2px solid $euiColorLightShade;
+  }
+
+  &:first-child:not(:only-child)::after {
+    top: 50%;
+  }
+
+  &:last-child:not(:only-child)::after {
+    bottom: 50%;
+  }
+}
+
+// Leading row labels ("Search for", "Group into") rendered as a filled tag
+// chip prepended to their control — matching the datadog builder, where the
+// label reads as an attached token rather than bare floating text.
 .plqRow__label {
+  display: inline-flex;
+  align-items: center;
+  height: $euiFormControlCompressedHeight;
+  padding: 0 $euiSizeS;
   font-size: $euiFontSizeXS;
-  font-weight: $euiFontWeightBold;
+  font-weight: $euiFontWeightMedium;
   color: $euiColorDarkShade;
   white-space: nowrap;
-  margin-right: $euiSizeXS;
+  background: $euiColorLightestShade;
+  border: 1px solid $euiBorderColor;
+
+  // Match the rounded corners of the aggregation groups / "Show" combobox.
+  border-radius: $euiSizeM;
 }
 
 // Outlined group with a floating label on the top border (mirrors metrics .pqbGroup)
@@ -65,6 +177,24 @@
     border: none !important;
     background: transparent !important;
   }
+
+  // Size the inline icon buttons (remove, info) to the full compressed control
+  // height so their hover shade fills the group's content area (mirrors metrics
+  // .pqbPill__body). Without this the default `size="s"` button is smaller than
+  // the row and its highlight reads as a tiny disc.
+  > .euiButtonIcon.euiButtonIcon,
+  > .euiToolTipAnchor > .euiButtonIcon.euiButtonIcon {
+    min-width: $euiFormControlCompressedHeight;
+    width: $euiFormControlCompressedHeight;
+    height: $euiFormControlCompressedHeight;
+    flex-shrink: 0;
+  }
+
+  // Clip the last button's hover shade to match the group's rounded right edge.
+  > .euiButtonIcon:last-child,
+  > .euiToolTipAnchor:last-child .euiButtonIcon {
+    border-radius: 0 calc(#{$euiSizeM} - 2px) calc(#{$euiSizeM} - 2px) 0;
+  }
 }
 
 .plqSep {
@@ -74,14 +204,50 @@
   flex-shrink: 0;
 }
 
-// Scalar-function name inside a function pill (e.g. "round"). Reads as a
-// keyword token, matching how functions render in the code editor.
-.plqFnName {
-  padding: 0 $euiSizeS;
-  font-size: $euiFontSizeXS;
-  font-weight: $euiFontWeightMedium;
-  color: $euiColorPrimaryText;
+// A scalar function applied to the aggregation field (e.g. `round(…, 2)`),
+// rendered as a filled inline chip rather than a nested outlined box — so it
+// reads as a token attached to the field, not a box-inside-a-box. Sits inside
+// the aggregation's .plqGroup, to the left of the field combobox.
+.plqFnChip {
+  display: inline-flex;
+  align-items: center;
+  gap: $euiSizeXS;
+  height: $euiFormControlCompressedHeight;
+  padding: 0 2px 0 $euiSizeS;
+  border-radius: $euiSizeM;
+  background: $euiColorLightestShade;
   white-space: nowrap;
+
+  // Function name reads as a keyword token, matching the code editor / preview.
+  &__name {
+    font-size: $euiFontSizeXS;
+    font-weight: $euiFontWeightMedium;
+    color: $euiColorPrimaryText;
+    cursor: default;
+  }
+
+  // Extra args (e.g. round's decimals). Width is set inline to fit the
+  // placeholder/value so labels like "Decimals" render without truncation.
+  &__param {
+    height: $euiFormControlCompressedHeight - 4;
+    font-size: $euiFontSizeXS;
+    border: none;
+    border-radius: $euiBorderRadiusSmall;
+    background: $euiColorEmptyShade;
+    padding: 0 $euiSizeXS;
+    outline: none;
+
+    &::placeholder {
+      color: $euiColorMediumShade;
+    }
+  }
+
+  // Keep the remove button snug within the chip's compact height.
+  &__remove.euiButtonIcon {
+    width: $euiSize;
+    height: $euiSize;
+    border-radius: $euiSizeM;
+  }
 }
 
 // Description line under each function name in the Add-function menu.
@@ -152,11 +318,31 @@
   border: $euiBorderThin;
   border-radius: $euiBorderRadius;
   padding: $euiSizeXS 0;
-  background: $euiFormBackgroundColor;
+
+  // White fill matching the Monaco surface. Monaco's own background is painted
+  // transparent below so the padding strip and the editor read as one uniform
+  // white area (no gray inner border showing through the wrapper's padding).
+  background: $euiColorEmptyShade;
 
   .monaco-editor,
   .monaco-editor .overflow-guard {
     border-radius: $euiBorderRadius;
+  }
+
+  // Let the wrapper's white show through Monaco's surfaces so the inside is a
+  // single flat color rather than a near-white editor inset in a gray frame.
+  .monaco-editor,
+  .monaco-editor-background,
+  .monaco-editor .margin {
+    background: transparent;
+  }
+
+  // Monaco draws its own blue focus outline on the editor; the wrapper already
+  // provides the form-control border, so suppress Monaco's to avoid a doubled
+  // blue ring inside the box when the search field is focused.
+  .monaco-editor,
+  .monaco-editor.focused {
+    outline: none;
   }
 
   // Colored highlight drawn behind each `field=value` filter so the user reads

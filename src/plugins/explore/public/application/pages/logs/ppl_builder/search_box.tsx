@@ -287,6 +287,14 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
         suggestionProvider={suggestionProvider}
         editorDidMount={handleEditorDidMount}
         triggerSuggestOnFocus
+        // CodeEditor registers a single shared Monaco theme ('euiColors') whose
+        // suggestion-widget colors depend on this flag. The code-mode query
+        // editor mounts with useLatestTheme; without it here the search box
+        // would re-register the theme in its default variant (which styles the
+        // suggest widget with a grey selected row + light-blue matched text,
+        // unreadable against each other). Match code mode so the shared theme
+        // stays consistent regardless of mount order.
+        useLatestTheme
       />
     </div>
   );

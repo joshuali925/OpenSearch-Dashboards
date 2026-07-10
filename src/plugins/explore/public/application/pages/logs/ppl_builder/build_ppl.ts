@@ -66,23 +66,6 @@ export function compileAggregation(agg: Aggregation): string | null {
   }
 }
 
-/** Matches a leading `source =` / `index =` clause (the dataset-owned prefix). */
-const SOURCE_CLAUSE_RE = /^\s*(source|index)\s*=/i;
-
-/**
- * Guarantee the generated PPL names an index. The dataset selector normally
- * supplies `source = <index>` as the prefix, but when that clause is missing
- * (e.g. a query with no source segment) we fall back to the dataset title so the
- * built query — shown in the builder preview and seeded into Code mode on toggle
- * — always starts with `source = <index>`.
- */
-export function ensureSourcePrefix(sourcePrefix: string, index?: string): string {
-  const prefix = (sourcePrefix || '').trim();
-  if (SOURCE_CLAUSE_RE.test(prefix)) return prefix;
-  const table = (index || '').trim();
-  return table ? `source = ${table}` : prefix;
-}
-
 function compileGroupBy(groupBy: GroupBy): string {
   const parts: string[] = [...groupBy.fields.filter(Boolean)];
   if (groupBy.span) {
@@ -92,23 +75,19 @@ function compileGroupBy(groupBy: GroupBy): string {
 }
 
 /**
- * Serialize builder state to a PPL query. `sourcePrefix` is the dataset-owned
- * leading command (e.g. `source = logs`). The search expression is appended to
- * the source segment (the PPL `search` command syntax:
- * `source=<index> <search-expression>`), and aggregations become a trailing
- * `| stats … by …`. Returns just the prefix when the builder is empty.
- *
- * `index` is the dataset title, used to synthesize `source = <index>` when the
- * prefix is missing one so the query always names an index (see
- * {@link ensureSourcePrefix}).
+ * Serialize builder state to a **source-less** PPL query — just the user's
+ * search expression plus any trailing `| stats … by …`. The leading
+ * `source = <index>` clause is deliberately omitted: it is the dataset's
+ * concern, hidden from the builder UI, and prepended automatically by the
+ * execution layer (`addPPLSourceClause`) when the query is run. This keeps the
+ * builder preview and the Code editor showing only what the user typed
+ * (e.g. `event.dataset=sample_web_logs`), mirroring how a user types in Code
+ * mode.
  */
-export function buildPPL(state: PPLBuilderState, sourcePrefix: string, index?: string): string {
-  const prefix = ensureSourcePrefix(sourcePrefix, index);
+export function buildPPL(state: PPLBuilderState): string {
   const searchExpr = (state.searchExpression || '').trim();
 
-  // The search expression lives on the same segment as source= (no pipe).
-  const sourceSegment = [prefix, searchExpr].filter(Boolean).join(' ');
-  const parts: string[] = sourceSegment ? [sourceSegment] : [];
+  const parts: string[] = searchExpr ? [searchExpr] : [];
 
   if (state.aggregations.length > 0) {
     const aggStr = state.aggregations
@@ -125,5 +104,11 @@ export function buildPPL(state: PPLBuilderState, sourcePrefix: string, index?: s
     }
   }
 
+  // A stats clause with no leading search expression must start with a pipe so
+  // that the auto-prepended source clause produces valid PPL
+  // (`source = <index> | stats …`, not `source = <index> stats …`).
+  if (parts.length > 0 && !searchExpr) {
+    return `| ${parts.join(' | ')}`;
+  }
   return parts.join(' | ');
 }

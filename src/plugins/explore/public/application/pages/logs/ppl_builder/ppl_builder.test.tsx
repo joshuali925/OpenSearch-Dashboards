@@ -63,13 +63,7 @@ jest.mock('./use_field_data', () => ({
 
 const renderBuilder = (initialState: PPLBuilderState = emptyState()) => {
   const onQueryChange = jest.fn();
-  const utils = render(
-    <PPLBuilder
-      sourcePrefix="source = logs"
-      initialState={initialState}
-      onQueryChange={onQueryChange}
-    />
-  );
+  const utils = render(<PPLBuilder initialState={initialState} onQueryChange={onQueryChange} />);
   return { ...utils, onQueryChange };
 };
 
@@ -82,41 +76,32 @@ describe('PPLBuilder', () => {
     expect(screen.getByTestId('pplBuilderQueryPreview')).toBeInTheDocument();
   });
 
-  it('emits the source prefix immediately on mount for an empty state', () => {
+  it('emits a source-less (empty) query on mount for an empty state', () => {
     const { onQueryChange } = renderBuilder();
-    expect(onQueryChange).toHaveBeenCalledWith('source = logs', expect.anything());
+    expect(onQueryChange).toHaveBeenCalledWith('', expect.anything());
   });
 
-  it('seeds the search box from the existing search expression and emits it', () => {
+  it('seeds the search box from the existing search expression and emits it source-less', () => {
     const { onQueryChange } = renderBuilder({
       ...emptyState(),
       searchExpression: 'service="web-store"',
     });
-    expect(onQueryChange).toHaveBeenCalledWith(
-      'source = logs service="web-store"',
-      expect.anything()
-    );
+    expect(onQueryChange).toHaveBeenCalledWith('service="web-store"', expect.anything());
     expect(screen.getByTestId('pplBuilderSearchBoxInput')).toHaveValue('service="web-store"');
   });
 
-  it('appends typed search text to the source segment', () => {
+  it('emits typed search text without a source clause', () => {
     const { onQueryChange } = renderBuilder();
     fireEvent.change(screen.getByTestId('pplBuilderSearchBoxInput'), {
       target: { value: 'status>=500 AND error' },
     });
-    expect(onQueryChange).toHaveBeenLastCalledWith(
-      'source = logs status>=500 AND error',
-      expect.anything()
-    );
+    expect(onQueryChange).toHaveBeenLastCalledWith('status>=500 AND error', expect.anything());
   });
 
-  it('adds an aggregation when "Add metric" is clicked', () => {
+  it('emits a leading pipe for a stats-only query so source prepends cleanly', () => {
     const { onQueryChange } = renderBuilder();
     fireEvent.click(screen.getByTestId('pplBuilderAddAggregation'));
-    expect(onQueryChange).toHaveBeenLastCalledWith(
-      'source = logs | stats count()',
-      expect.anything()
-    );
+    expect(onQueryChange).toHaveBeenLastCalledWith('| stats count()', expect.anything());
   });
 
   it('renders a span chip and interval for an aggregated state', () => {

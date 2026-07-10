@@ -17,6 +17,7 @@ import { BuilderAction } from './build_ppl';
 import { Aggregation, AggFn, ScalarCall } from './types';
 import { AGG_FN_MAP, AGG_FUNCTIONS, SCALAR_FN_MAP } from './operations';
 import { FunctionMenu } from './function_menu';
+import { comboBoxWidth, inputWidth } from '../../metrics/promql_builder/measure_text';
 
 interface AggregationRowProps {
   agg: Aggregation;
@@ -29,11 +30,11 @@ interface AggregationRowProps {
 }
 
 /**
- * One scalar-function pill wrapping the aggregation's field: e.g. `round`, with
- * inline inputs for any extra args (round's decimals). The wrapped field is the
- * function's first argument and is shown by the field combobox to the right, so
- * the pill reads "round( … )" from left, matching the compiled nesting order
- * (outermost function is rendered rightmost / last in the chain array).
+ * One scalar-function chip wrapping the aggregation's field: e.g. `round`, with
+ * inline inputs for any extra args (round's decimals). Rendered as a filled
+ * inline token (`.plqFnChip`) rather than a nested outlined box, so it reads as
+ * a tag attached to the field — not a box-inside-a-box. The wrapped field is the
+ * function's first argument and is shown by the field combobox to the right.
  */
 const FunctionPill: React.FC<{
   fn: ScalarCall;
@@ -43,17 +44,18 @@ const FunctionPill: React.FC<{
 }> = ({ fn, aggIdx, fnIdx, dispatch }) => {
   const def = SCALAR_FN_MAP[fn.id];
   return (
-    <div className="plqGroup" data-test-subj={`pplBuilderFn-${aggIdx}-${fnIdx}`}>
-      <span className="plqGroup__label">
-        {i18n.translate('explore.pplBuilder.functionLabel', { defaultMessage: 'fn' })}
-      </span>
-      <span className="plqFnName">{fn.name}</span>
-      {fn.params.map((p, pi) => (
-        <React.Fragment key={pi}>
-          <div className="plqSep" />
+    <div className="plqFnChip" data-test-subj={`pplBuilderFn-${aggIdx}-${fnIdx}`}>
+      <EuiToolTip content={def?.description || fn.name}>
+        <span className="plqFnChip__name">{fn.name}</span>
+      </EuiToolTip>
+      {fn.params.map((p, pi) => {
+        const placeholder = def?.paramNames?.[pi] || '';
+        const displayText = p || placeholder;
+        return (
           <input
+            key={pi}
             value={p}
-            placeholder={def?.paramNames?.[pi] || ''}
+            placeholder={placeholder}
             onChange={(e) =>
               dispatch({
                 type: 'SET_FUNCTION_PARAM',
@@ -63,20 +65,15 @@ const FunctionPill: React.FC<{
                 value: e.target.value,
               })
             }
-            className="plqParamInput"
-            style={{ width: 56 }}
-            aria-label={def?.paramNames?.[pi] || fn.name}
+            className="plqFnChip__param"
+            style={{ width: inputWidth(displayText, 12, 48, 120) }}
+            aria-label={placeholder || fn.name}
             data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
           />
-        </React.Fragment>
-      ))}
-      <div className="plqSep" />
-      {def?.description ? (
-        <EuiToolTip content={def.description}>
-          <EuiButtonIcon iconType="iInCircle" color="text" size="s" aria-label={fn.name} />
-        </EuiToolTip>
-      ) : null}
+        );
+      })}
       <EuiButtonIcon
+        className="plqFnChip__remove"
         iconType="cross"
         color="text"
         size="s"
@@ -151,7 +148,7 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
               const v = val.trim();
               if (v) dispatch({ type: 'SET_AGGREGATION', index: idx, agg: { field: v } });
             }}
-            style={{ minWidth: 120 }}
+            style={{ minWidth: comboBoxWidth(agg.field || 'of field') }}
             data-test-subj={`pplBuilderAggField-${idx}`}
           />
           <div className="plqSep" />

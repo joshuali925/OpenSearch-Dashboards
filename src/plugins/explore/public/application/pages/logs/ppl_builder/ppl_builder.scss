@@ -317,7 +317,7 @@
   width: 100%;
   border: $euiBorderThin;
   border-radius: $euiBorderRadius;
-  padding: $euiSizeXS 0;
+  padding: $euiSizeXS $euiSizeS;
 
   // White fill matching the Monaco surface. Monaco's own background is painted
   // transparent below so the padding strip and the editor read as one uniform

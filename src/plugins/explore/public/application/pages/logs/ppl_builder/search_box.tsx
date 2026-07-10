@@ -81,7 +81,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
             }),
             insertText: name,
             range,
-            sortText: `1_${name}`,
+            sortText: `2_${name}`,
           });
         }
       }
@@ -125,7 +125,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
               }),
           insertText: kw,
           range,
-          sortText: `2_${kw}`,
+          sortText: `1_${kw}`,
         });
       }
 

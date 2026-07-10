@@ -24,21 +24,18 @@ describe('parsePPL — canBuild gating', () => {
   it('parses a plain source with no search expression', () => {
     const result = parsePPL('source = logs');
     expect(result.canBuild).toBe(true);
-    expect(result.sourcePrefix).toBe('source = logs');
     expect(result.state.searchExpression).toBe('');
   });
 
-  it('captures a field-comparison search expression verbatim', () => {
+  it('captures a field-comparison search expression verbatim (source dropped)', () => {
     const result = parsePPL('source = logs service="web-store"');
     expect(result.canBuild).toBe(true);
-    expect(result.sourcePrefix).toBe('source = logs');
     expect(result.state.searchExpression).toBe('service="web-store"');
   });
 
-  it('captures a boolean search expression verbatim', () => {
+  it('captures a boolean search expression verbatim (source dropped)', () => {
     const result = parsePPL('source = logs status>=500 AND service="web-store"');
     expect(result.canBuild).toBe(true);
-    expect(result.sourcePrefix).toBe('source = logs');
     expect(result.state.searchExpression).toBe('status>=500 AND service="web-store"');
   });
 

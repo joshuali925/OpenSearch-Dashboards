@@ -211,7 +211,6 @@
 .plqFnChip {
   display: inline-flex;
   align-items: center;
-  gap: $euiSizeXS;
   height: $euiFormControlCompressedHeight;
   padding: 0 2px 0 $euiSizeS;
   border-radius: $euiSizeM;
@@ -226,15 +225,29 @@
     cursor: default;
   }
 
-  // Extra args (e.g. round's decimals). Width is set inline to fit the
-  // placeholder/value so labels like "Decimals" render without truncation.
+  // Thin vertical divider between the fn name and its extra arg, matching the
+  // .plqSep dividers used elsewhere in the builder — so the arg reads as another
+  // segment of the same chip rather than a detached box floating inside it.
+  &__sep {
+    width: 1px;
+    align-self: stretch;
+    margin: 0 $euiSizeXS;
+    background: transparentize($euiColorDarkShade, 0.7);
+    flex-shrink: 0;
+  }
+
+  // Extra args (e.g. round's decimals). Flat and transparent so it blends into
+  // the chip fill — no inner fill, border, or rounded corners (which would read
+  // as a box-inside-a-box). Width is set inline to fit the placeholder/value so
+  // labels like "Decimals" render without truncation.
   &__param {
     height: $euiFormControlCompressedHeight - 4;
     font-size: $euiFontSizeXS;
+    color: $euiColorPrimaryText;
     border: none;
-    border-radius: $euiBorderRadiusSmall;
-    background: $euiColorEmptyShade;
-    padding: 0 $euiSizeXS;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
     outline: none;
 
     &::placeholder {
@@ -246,6 +259,7 @@
   &__remove.euiButtonIcon {
     width: $euiSize;
     height: $euiSize;
+    margin-left: $euiSizeXS;
     border-radius: $euiSizeM;
   }
 }

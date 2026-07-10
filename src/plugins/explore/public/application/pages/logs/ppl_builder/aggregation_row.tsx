@@ -52,24 +52,26 @@ const FunctionPill: React.FC<{
         const placeholder = def?.paramNames?.[pi] || '';
         const displayText = p || placeholder;
         return (
-          <input
-            key={pi}
-            value={p}
-            placeholder={placeholder}
-            onChange={(e) =>
-              dispatch({
-                type: 'SET_FUNCTION_PARAM',
-                index: aggIdx,
-                fnIndex: fnIdx,
-                paramIndex: pi,
-                value: e.target.value,
-              })
-            }
-            className="plqFnChip__param"
-            style={{ width: inputWidth(displayText, 12, 48, 120) }}
-            aria-label={placeholder || fn.name}
-            data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
-          />
+          <React.Fragment key={pi}>
+            <div className="plqFnChip__sep" />
+            <input
+              value={p}
+              placeholder={placeholder}
+              onChange={(e) =>
+                dispatch({
+                  type: 'SET_FUNCTION_PARAM',
+                  index: aggIdx,
+                  fnIndex: fnIdx,
+                  paramIndex: pi,
+                  value: e.target.value,
+                })
+              }
+              className="plqFnChip__param"
+              style={{ width: inputWidth(displayText, 16, 44, 120) }}
+              aria-label={placeholder || fn.name}
+              data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
+            />
+          </React.Fragment>
         );
       })}
       <EuiButtonIcon

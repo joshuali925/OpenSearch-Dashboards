@@ -101,7 +101,9 @@ describe('PPLBuilder', () => {
 
   it('emits a leading pipe for a stats-only query so source prepends cleanly', () => {
     const { onQueryChange } = renderBuilder();
+    // "Add metric" opens an aggregation picker; choosing Count appends the row.
     fireEvent.click(screen.getByTestId('pplBuilderAddAggregation'));
+    fireEvent.click(screen.getByText('Count'));
     expect(onQueryChange).toHaveBeenLastCalledWith('| stats count()', expect.anything());
   });
 

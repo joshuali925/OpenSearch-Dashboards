@@ -15,6 +15,7 @@ import { builderReducer, buildPPL } from './build_ppl';
 import { PPLBuilderState, emptyState } from './types';
 import { SearchBox } from './search_box';
 import { AggregationRow } from './aggregation_row';
+import { AddMetricMenu } from './add_metric_menu';
 import { useFieldData } from './use_field_data';
 import { useDatasetContext } from '../../../context';
 
@@ -133,14 +134,10 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
             dispatch={dispatch}
           />
         ))}
-        <EuiButtonEmpty
-          size="xs"
-          iconType="plusInCircle"
-          onClick={() => dispatch({ type: 'ADD_AGGREGATION' })}
-          data-test-subj="pplBuilderAddAggregation"
-        >
-          {i18n.translate('explore.pplBuilder.addMetric', { defaultMessage: 'Add metric' })}
-        </EuiButtonEmpty>
+        <AddMetricMenu
+          onAdd={(fn) => dispatch({ type: 'ADD_AGGREGATION', agg: { fn } })}
+          dataTestSubj="pplBuilderAddAggregation"
+        />
 
         {hasAggregation && (
           <>

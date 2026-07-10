@@ -6,72 +6,36 @@
 import React, { useMemo, useState } from 'react';
 import { i18n } from '@osd/i18n';
 import { EuiButtonEmpty, EuiContextMenu, EuiPopover, EuiText } from '@elastic/eui';
-import { AggFn, ScalarCall } from './types';
-import { AGG_FUNCTIONS, SCALAR_FN_CATEGORIES } from './operations';
+import { ScalarCall } from './types';
+import { SCALAR_FN_CATEGORIES } from './operations';
 
 interface FunctionMenuProps {
-  /**
-   * Set the row's aggregation (the outermost function). Optional: omit to hide
-   * the "Aggregation" category.
-   */
-  onSetAggregation?: (fn: AggFn) => void;
   /** Called with a fresh ScalarCall when the user picks a scalar function. */
   onAddFunction: (fn: ScalarCall) => void;
   dataTestSubj?: string;
 }
 
 /**
- * "Function" affordance for an aggregation row: one categorized menu that is the
- * single place to add anything to a metric — the aggregation (outermost, one per
- * metric) and any scalar functions wrapping the field (Math / String / Date &
- * time). Mirrors the metric explorer's OpsMenu so both builders read the same.
- * Picking an aggregation replaces the row's aggregation; picking a scalar
- * function wraps the field in it.
+ * "Function" affordance for an aggregation row: a category-grouped menu of
+ * scalar functions (Math / String / Date & time) that wrap the row's field,
+ * mirroring the metric explorer's OpsMenu. The aggregation itself is chosen when
+ * the metric is created (the "Add metric" menu) and edited via the row's "Show"
+ * dropdown, so it is intentionally NOT offered here.
  */
-export const FunctionMenu: React.FC<FunctionMenuProps> = ({
-  onSetAggregation,
-  onAddFunction,
-  dataTestSubj,
-}) => {
+export const FunctionMenu: React.FC<FunctionMenuProps> = ({ onAddFunction, dataTestSubj }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const panels = useMemo(() => {
-    // Category list: aggregation first (when settable) then the scalar groups.
-    // Scalar-category panel ids start at 2 to leave id 1 for the aggregation
-    // panel (kept stable whether or not the aggregation category is shown).
-    const aggregationCategory = i18n.translate('explore.pplBuilder.functionCategory.aggregation', {
-      defaultMessage: 'Aggregation',
-    });
-    const rootItems = [
-      ...(onSetAggregation ? [{ name: aggregationCategory, panel: 1 }] : []),
-      ...SCALAR_FN_CATEGORIES.map((cat, i) => ({ name: cat.name, panel: i + 2 })),
-    ];
-
-    return [
+  const panels = useMemo(
+    () => [
       {
         id: 0,
         title: i18n.translate('explore.pplBuilder.addFunctionTitle', {
           defaultMessage: 'Add function',
         }),
-        items: rootItems,
+        items: SCALAR_FN_CATEGORIES.map((cat, i) => ({ name: cat.name, panel: i + 1 })),
       },
-      ...(onSetAggregation
-        ? [
-            {
-              id: 1,
-              title: aggregationCategory,
-              items: AGG_FUNCTIONS.map((agg) => ({
-                name: <strong>{agg.label}</strong>,
-                onClick: () => {
-                  onSetAggregation(agg.id);
-                  setIsOpen(false);
-                },
-              })),
-            },
-          ]
-        : []),
       ...SCALAR_FN_CATEGORIES.map((cat, i) => ({
-        id: i + 2,
+        id: i + 1,
         title: cat.name,
         items: cat.items.map((item) => ({
           name: (
@@ -88,8 +52,9 @@ export const FunctionMenu: React.FC<FunctionMenuProps> = ({
           },
         })),
       })),
-    ];
-  }, [onSetAggregation, onAddFunction]);
+    ],
+    [onAddFunction]
+  );
 
   return (
     <EuiPopover

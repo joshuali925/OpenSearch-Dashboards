@@ -7,13 +7,7 @@ import './ppl_builder.scss';
 
 import React, { useCallback, useMemo, useReducer, useRef, useState, useEffect } from 'react';
 import { i18n } from '@osd/i18n';
-import {
-  EuiButtonEmpty,
-  EuiCode,
-  EuiComboBox,
-  EuiFieldText,
-  EuiButtonIcon,
-} from '@elastic/eui';
+import { EuiButtonEmpty, EuiCode, EuiComboBox, EuiFieldText, EuiButtonIcon } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
@@ -25,7 +19,6 @@ import { useFieldData } from './use_field_data';
 import { useDatasetContext } from '../../../context';
 
 interface PPLBuilderProps {
-  sourcePrefix: string;
   initialState?: PPLBuilderState;
   onQueryChange: (query: string, state: PPLBuilderState) => void;
 }
@@ -33,11 +26,7 @@ interface PPLBuilderProps {
 // Target bar count for the auto time-bucket, matching the traces chart's density.
 const CHART_BAR_TARGET = 15;
 
-export const PPLBuilder: React.FC<PPLBuilderProps> = ({
-  sourcePrefix,
-  initialState,
-  onQueryChange,
-}) => {
+export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryChange }) => {
   const { services } = useOpenSearchDashboards<ExploreServices>();
   const { dataset } = useDatasetContext();
   const [state, dispatch] = useReducer(builderReducer, initialState || emptyState());
@@ -79,14 +68,10 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     }
   }, [services, dataset]);
 
-  // Fall back to the dataset title so the built query always names an index,
-  // even when `sourcePrefix` arrives without a `source =` clause.
-  const datasetTitle = (dataset as any)?.title as string | undefined;
-  const query = useMemo(() => buildPPL(state, sourcePrefix, datasetTitle), [
-    state,
-    sourcePrefix,
-    datasetTitle,
-  ]);
+  // The builder emits a source-less query (just the search expression + stats).
+  // The `source = <index>` clause is the dataset's concern — hidden from the UI
+  // and prepended by the execution layer when the query runs.
+  const query = useMemo(() => buildPPL(state), [state]);
 
   const onQueryChangeRef = useRef(onQueryChange);
   onQueryChangeRef.current = onQueryChange;

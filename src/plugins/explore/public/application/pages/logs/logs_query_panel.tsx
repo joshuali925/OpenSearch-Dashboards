@@ -64,21 +64,12 @@ export const LogsQueryPanel: React.FC = () => {
 
   const { queryString } = services.data.query;
 
-  // Source prefix (e.g. `source = logs`) is owned by the dataset selector; the
-  // builder only appends the trailing pipes. Prefer the parsed prefix from the
-  // current query, falling back to the dataset's initial query.
+  // The builder works with source-less queries: the `source = <index>` clause is
+  // owned by the dataset selector, hidden from the builder UI, and re-added by
+  // the execution layer (`addPPLSourceClause`) at run time. parsePPL splits the
+  // clause off into `sourcePrefix` (discarded here) and keeps the rest as the
+  // builder's search expression.
   const initialParse = useMemo(() => parsePPL(reduxQuery), []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const sourcePrefix = useMemo(() => {
-    if (initialParse.sourcePrefix) return initialParse.sourcePrefix;
-    const dataset = queryString.getQuery().dataset;
-    if (dataset) {
-      const initial = queryString.getInitialQueryByDataset(dataset);
-      const parsedInitial = parsePPL(String(initial.query || ''));
-      return parsedInitial.sourcePrefix || String(initial.query || '');
-    }
-    return '';
-  }, [initialParse.sourcePrefix, queryString]);
 
   // A query loaded from a saved object opens in code (plan decision 6). It can
   // still be switched to Builder when it is representable (issue #4).
@@ -272,7 +263,6 @@ export const LogsQueryPanel: React.FC = () => {
             {showBuilder ? (
               <PPLBuilder
                 key={builderKey}
-                sourcePrefix={sourcePrefix}
                 initialState={builderState}
                 onQueryChange={onBuilderChange}
               />

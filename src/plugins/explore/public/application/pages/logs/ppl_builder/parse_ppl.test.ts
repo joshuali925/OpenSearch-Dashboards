@@ -119,7 +119,9 @@ describe('parsePPL / buildPPL round-trip', () => {
   ];
 
   it.each(cases.map((c, i) => [i, c]))('round-trips case %i', (_i, state) => {
-    const ppl = buildPPL(state as PPLBuilderState, 'source = logs');
+    // buildPPL emits a source-less query; prepend a source clause (as the
+    // execution layer does) before reparsing so parsePPL sees a full query.
+    const ppl = `source = logs ${buildPPL(state as PPLBuilderState)}`.trim();
     const reparsed = parsePPL(ppl);
     expect(reparsed.canBuild).toBe(true);
     expect(stripIds(reparsed.state)).toEqual(stripIds(state as PPLBuilderState));

@@ -116,7 +116,17 @@
   min-width: 240px;
 }
 
-.plqSearchSuggest {
-  max-height: 320px;
-  overflow-y: auto;
+// The search box hosts a single-line Monaco editor; give it a form-control
+// look so it reads as an input within the builder row.
+.plqSearchBoxEditor {
+  width: 100%;
+  border: $euiBorderThin;
+  border-radius: $euiBorderRadius;
+  padding: $euiSizeXS 0;
+  background: $euiFormBackgroundColor;
+
+  .monaco-editor,
+  .monaco-editor .overflow-guard {
+    border-radius: $euiBorderRadius;
+  }
 }

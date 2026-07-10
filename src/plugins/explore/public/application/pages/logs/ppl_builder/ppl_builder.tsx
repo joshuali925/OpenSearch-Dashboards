@@ -20,7 +20,6 @@ import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
 import { builderReducer, buildPPL } from './build_ppl';
 import { PPLBuilderState, emptyState } from './types';
-import { filtersToSearchText, searchTextToFilters } from './search_syntax';
 import { SearchBox } from './search_box';
 import { AggregationRow } from './aggregation_row';
 import { useFieldData } from './use_field_data';
@@ -44,23 +43,19 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
   const { dataset } = useDatasetContext();
   const [state, dispatch] = useReducer(builderReducer, initialState || emptyState());
   const {
-    fields,
+    fieldNames,
     fieldOptions,
     numericAndAggregatableOptions,
     timeFieldName,
-    valueOptions,
-    valueLoading,
-    loadValues,
+    getValues,
   } = useFieldData();
 
-  // The search box owns its text (a view over state.filters). Seeded once from
-  // the initial filters; the parent remounts (via key) to re-seed on external
-  // changes, mirroring how MetricsQueryPanel re-inits rows.
-  const [searchText, setSearchText] = useState(() =>
-    filtersToSearchText((initialState || emptyState()).filters)
+  // The search box owns its text (the search-expression, source of truth for the
+  // row). Seeded once from the initial state; the parent remounts (via key) to
+  // re-seed on external changes, mirroring how MetricsQueryPanel re-inits rows.
+  const [searchText, setSearchText] = useState(
+    () => (initialState || emptyState()).searchExpression
   );
-  // Field whose value suggestions are currently being requested by the box.
-  const [activeValueField, setActiveValueField] = useState('');
 
   // Derive an adaptive span interval from the current time range, reusing the
   // same createHistogramConfigs path the logs histogram uses.
@@ -93,27 +88,12 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     onQueryChangeRef.current(query, state);
   }, [query, state]);
 
-  const fieldNames = useMemo(() => fields.map((f) => f.name), [fields]);
-
   const onSearchChange = useCallback(
     (text: string) => {
       setSearchText(text);
-      dispatch({ type: 'SET_FILTERS', filters: searchTextToFilters(text) });
+      dispatch({ type: 'SET_SEARCH_EXPRESSION', searchExpression: text });
     },
     [dispatch]
-  );
-
-  const onRequestValues = useCallback(
-    (field: string, queryText: string) => {
-      setActiveValueField(field);
-      loadValues(field, queryText);
-    },
-    [loadValues]
-  );
-
-  const valueSuggestions = useMemo(
-    () => (valueOptions[activeValueField] || []).map((o) => String(o.label)),
-    [valueOptions, activeValueField]
   );
 
   const hasAggregation = state.aggregations.length > 0;
@@ -140,10 +120,8 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
           <SearchBox
             value={searchText}
             fieldNames={fieldNames}
-            valueSuggestions={valueSuggestions}
-            valueLoading={!!valueLoading[activeValueField]}
+            onRequestValues={getValues}
             onChange={onSearchChange}
-            onRequestValues={onRequestValues}
           />
         </div>
       </div>

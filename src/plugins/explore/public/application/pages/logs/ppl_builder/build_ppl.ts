@@ -3,24 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-  Aggregation,
-  FilterOp,
-  GroupBy,
-  PPLBuilderState,
-  SearchFilter,
-  TimeBucket,
-  emptyFilter,
-  emptyState,
-  nextAggId,
-} from './types';
+import { Aggregation, GroupBy, PPLBuilderState, TimeBucket, emptyState, nextAggId } from './types';
 
 export type BuilderAction =
-  | { type: 'SET_FILTER'; index: number; filter: Partial<SearchFilter> }
-  | { type: 'SET_FILTERS'; filters: SearchFilter[] }
-  | { type: 'ADD_FILTER' }
-  | { type: 'ADD_FILTER_WITH_VALUE'; filter: Omit<SearchFilter, 'id'> }
-  | { type: 'REMOVE_FILTER'; index: number }
+  | { type: 'SET_SEARCH_EXPRESSION'; searchExpression: string }
   | { type: 'ADD_AGGREGATION'; agg?: Partial<Aggregation> }
   | { type: 'SET_AGGREGATION'; index: number; agg: Partial<Aggregation> }
   | { type: 'REMOVE_AGGREGATION'; index: number }
@@ -32,22 +18,8 @@ export type BuilderAction =
 
 export function builderReducer(state: PPLBuilderState, action: BuilderAction): PPLBuilderState {
   switch (action.type) {
-    case 'SET_FILTER': {
-      const filters = [...state.filters];
-      filters[action.index] = { ...filters[action.index], ...action.filter };
-      return { ...state, filters };
-    }
-    case 'SET_FILTERS':
-      return { ...state, filters: action.filters };
-    case 'ADD_FILTER':
-      return { ...state, filters: [...state.filters, emptyFilter()] };
-    case 'ADD_FILTER_WITH_VALUE':
-      return {
-        ...state,
-        filters: [...state.filters, { id: `sf-added-${state.filters.length}`, ...action.filter }],
-      };
-    case 'REMOVE_FILTER':
-      return { ...state, filters: state.filters.filter((_, i) => i !== action.index) };
+    case 'SET_SEARCH_EXPRESSION':
+      return { ...state, searchExpression: action.searchExpression };
     case 'ADD_AGGREGATION':
       return {
         ...state,
@@ -90,30 +62,6 @@ export function isNumericLiteral(value: string): boolean {
   return /^-?\d+(\.\d+)?$/.test(value.trim());
 }
 
-function compileFullText(value: string): string {
-  // Omitting the field list makes query_string search across all fields —
-  // this is the round-trip target for a bare "search for" term.
-  return `query_string('${escapePPLString(value)}')`;
-}
-
-function compileValue(op: FilterOp, value: string): string {
-  // `like` is always a quoted pattern; comparisons keep bare numbers unquoted.
-  if (op !== 'like' && isNumericLiteral(value)) {
-    return value.trim();
-  }
-  return `'${escapePPLString(value)}'`;
-}
-
-export function compileFilter(filter: SearchFilter): string | null {
-  if (filter.isFullText) {
-    return filter.value.trim() ? compileFullText(filter.value.trim()) : null;
-  }
-  if (!filter.field || !filter.op || !filter.value.trim()) {
-    return null;
-  }
-  return `${filter.field} ${filter.op} ${compileValue(filter.op, filter.value.trim())}`;
-}
-
 export function compileAggregation(agg: Aggregation): string | null {
   switch (agg.fn) {
     case 'count':
@@ -138,20 +86,18 @@ function compileGroupBy(groupBy: GroupBy): string {
 
 /**
  * Serialize builder state to a PPL query. `sourcePrefix` is the dataset-owned
- * leading command (e.g. `source = logs`); the builder only appends the trailing
- * pipes. Returns just the prefix when the builder is empty.
+ * leading command (e.g. `source = logs`). The search expression is appended to
+ * the source segment (the PPL `search` command syntax:
+ * `source=<index> <search-expression>`), and aggregations become a trailing
+ * `| stats … by …`. Returns just the prefix when the builder is empty.
  */
 export function buildPPL(state: PPLBuilderState, sourcePrefix: string): string {
   const prefix = sourcePrefix.trim();
-  const parts: string[] = prefix ? [prefix] : [];
+  const searchExpr = (state.searchExpression || '').trim();
 
-  const whereClause = state.filters
-    .map(compileFilter)
-    .filter((c): c is string => c !== null)
-    .join(' and ');
-  if (whereClause) {
-    parts.push(`where ${whereClause}`);
-  }
+  // The search expression lives on the same segment as source= (no pipe).
+  const sourceSegment = [prefix, searchExpr].filter(Boolean).join(' ');
+  const parts: string[] = sourceSegment ? [sourceSegment] : [];
 
   if (state.aggregations.length > 0) {
     const aggStr = state.aggregations

@@ -6,13 +6,9 @@
 export * from './types';
 export { builderReducer, buildPPL, escapePPLString, isNumericLiteral } from './build_ppl';
 export type { BuilderAction } from './build_ppl';
-export {
-  filtersToSearchText,
-  searchTextToFilters,
-  filterToToken,
-  tokenizeRaw,
-  activeTokenAt,
-} from './search_syntax';
+export { analyzeSearchExpression } from './search_completion';
+export type { SearchAnalysis } from './search_completion';
 export { parsePPL } from './parse_ppl';
 export type { PPLParseResult } from './parse_ppl';
 export { PPLBuilder } from './ppl_builder';
+export { SearchBox, PPL_SEARCH_LANGUAGE_ID } from './search_box';

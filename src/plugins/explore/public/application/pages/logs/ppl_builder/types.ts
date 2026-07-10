@@ -8,27 +8,14 @@
  *
  * The PPL query string is the single source of truth; this state is *derived*
  * from it on render (see `parsePPL`) and *serialized* back to it on edit (see
- * `buildPPL`). Nothing here is persisted separately in Redux — mirrors the
- * metrics PromQL builder's `BuilderState`.
+ * `buildPPL`). Nothing here is persisted separately in Redux.
+ *
+ * The "Search for" row holds a raw PPL **search-expression** string (the syntax
+ * accepted by the `search` command after `source=<index>`: full-text terms,
+ * `field <op> value`, `IN (...)`, `AND`/`OR`/`NOT`, parentheses, wildcards, and
+ * `earliest=`/`latest=` time modifiers). It is stored verbatim so any valid
+ * search expression round-trips; structured pills are not used.
  */
-
-/** Comparison operators the builder can represent in a `where` clause. */
-export type FilterOp = '=' | '!=' | '>' | '<' | '>=' | '<=' | 'like';
-
-export const FILTER_OPS: FilterOp[] = ['=', '!=', '>', '<', '>=', '<=', 'like'];
-
-/**
- * One search-row pill. Either a structured `field <op> value` matcher, or a
- * bare full-text term (`isFullText: true`, compiled to `query_string('term')`).
- */
-export interface SearchFilter {
-  // Stable id generated at creation so React keys survive reorder/removal.
-  id: string;
-  field?: string;
-  op?: FilterOp;
-  value: string;
-  isFullText: boolean;
-}
 
 /** Aggregation functions expressible in a PPL `stats` clause. */
 export type AggFn = 'count' | 'sum' | 'avg' | 'min' | 'max' | 'percentile';
@@ -54,27 +41,17 @@ export interface GroupBy {
 }
 
 export interface PPLBuilderState {
-  filters: SearchFilter[];
+  // Raw PPL search-expression text for the "Search for" row (may be empty).
+  searchExpression: string;
   aggregations: Aggregation[];
   groupBy: GroupBy;
 }
 
-let filterIdCounter = 0;
-export const nextFilterId = (): string => `sf-${++filterIdCounter}`;
-
 let aggIdCounter = 0;
 export const nextAggId = (): string => `ag-${++aggIdCounter}`;
 
-export const emptyFilter = (): SearchFilter => ({
-  id: nextFilterId(),
-  field: '',
-  op: '=',
-  value: '',
-  isFullText: false,
-});
-
 export const emptyState = (): PPLBuilderState => ({
-  filters: [],
+  searchExpression: '',
   aggregations: [],
   groupBy: { fields: [] },
 });

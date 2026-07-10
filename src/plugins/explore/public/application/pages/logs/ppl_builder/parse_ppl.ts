@@ -10,8 +10,6 @@ import { AggFn, Aggregation, PPLBuilderState, emptyState, nextAggId } from './ty
 export interface PPLParseResult {
   canBuild: boolean;
   state: PPLBuilderState;
-  /** The dataset-owned leading text (e.g. `source = logs`), stripped of the trailing pipe. */
-  sourcePrefix: string;
 }
 
 const AGG_FN_NAMES = new Set<string>(['avg', 'sum', 'min', 'max']);
@@ -83,10 +81,10 @@ function parseStatsByClause(byCtx: any, state: PPLBuilderState): boolean {
  * only a single trailing `stats` command is modeled beyond it.
  */
 export function parsePPL(query: string): PPLParseResult {
-  const fallback: PPLParseResult = { canBuild: false, state: emptyState(), sourcePrefix: query };
+  const fallback: PPLParseResult = { canBuild: false, state: emptyState() };
   const trimmed = (query || '').trim();
   if (!trimmed) {
-    return { canBuild: true, state: emptyState(), sourcePrefix: '' };
+    return { canBuild: true, state: emptyState() };
   }
 
   try {
@@ -123,8 +121,9 @@ export function parsePPL(query: string): PPLParseResult {
     // `source=logs` field comparison), NOT as a fromClause — so the source
     // clause and the real search terms both appear as top-level
     // searchExpression nodes. The dataset-owned source clause is the first node
-    // whose field is `source`/`index`; everything after it is the user's search
-    // expression, sliced verbatim from the original query so it round-trips.
+    // whose field is `source`/`index`; it is dropped (the builder is source-less
+    // — see `buildPPL`), and everything after it is the user's search expression,
+    // sliced verbatim from the original query so it round-trips.
     const searchExprs = searchCmd.searchExpression ? searchCmd.searchExpression() : [];
     const exprList = Array.isArray(searchExprs) ? searchExprs : searchExprs ? [searchExprs] : [];
 
@@ -134,11 +133,8 @@ export function parsePPL(query: string): PPLParseResult {
       return typeof s === 'number' && typeof t === 'number' ? [s, t] : null;
     };
 
-    let sourcePrefix = '';
     let searchStartIdx = 0;
     if (exprList.length > 0 && /^(source|index)\s*=/i.test(exprList[0].getText())) {
-      const r = exprRange(exprList[0]);
-      if (r) sourcePrefix = query.slice(r[0], r[1] + 1).trim();
       searchStartIdx = 1;
     }
 
@@ -192,7 +188,7 @@ export function parsePPL(query: string): PPLParseResult {
       }
     }
 
-    return { canBuild: true, state, sourcePrefix };
+    return { canBuild: true, state };
   } catch {
     return fallback;
   }

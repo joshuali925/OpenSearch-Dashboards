@@ -8,15 +8,23 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { PPLBuilder } from './ppl_builder';
 import { PPLBuilderState, emptyState } from './types';
 
+// Mock the shared react kibana module: CodeEditor (used by SearchBox) is
+// rendered as a simple textbox so we can drive onChange, and
+// useOpenSearchDashboards returns the minimal services the builder reads.
 jest.mock('../../../../../../opensearch_dashboards_react/public', () => ({
+  CodeEditor: ({ value, onChange }: any) => (
+    <input
+      data-test-subj="pplBuilderSearchBoxInput"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  ),
   useOpenSearchDashboards: jest.fn(() => ({
     services: {
       uiSettings: { get: jest.fn() },
       data: {
         query: {
-          queryString: {
-            getQuery: jest.fn(() => ({ dataset: undefined })),
-          },
+          queryString: { getQuery: jest.fn(() => ({ dataset: undefined })) },
           timefilter: { timefilter: { getTime: jest.fn(() => ({ from: 'now-15m', to: 'now' })) } },
         },
         search: { aggs: { createAggConfigs: jest.fn() } },
@@ -24,6 +32,8 @@ jest.mock('../../../../../../opensearch_dashboards_react/public', () => ({
     },
   })),
 }));
+
+// @osd/monaco is globally mocked; SearchBox only needs monaco.languages.register.
 
 // createHistogramConfigs pulls in the whole data plugin; stub it so the auto
 // span interval derivation resolves without that import chain.
@@ -33,16 +43,21 @@ jest.mock('../../../../components/chart/utils', () => ({
   })),
 }));
 
-// The field-data hook talks to services/autocomplete; stub it with static options.
+// The dataset context supplies the resolved DataView; the builder reads
+// dataset.timeFieldName for span derivation.
+jest.mock('../../../context', () => ({
+  useDatasetContext: () => ({ dataset: { timeFieldName: '@timestamp' } }),
+}));
+
+// The field-data hook talks to services/autocomplete; stub it with static data.
 jest.mock('./use_field_data', () => ({
   useFieldData: () => ({
     fields: [{ name: 'service' }, { name: 'bytes', type: 'number' }],
+    fieldNames: ['service', 'bytes'],
     fieldOptions: [{ label: 'service' }, { label: 'bytes' }],
     numericAndAggregatableOptions: [{ label: 'bytes' }],
     timeFieldName: '@timestamp',
-    valueOptions: {},
-    valueLoading: {},
-    loadValues: jest.fn(),
+    getValues: jest.fn(async () => []),
   }),
 }));
 
@@ -72,25 +87,25 @@ describe('PPLBuilder', () => {
     expect(onQueryChange).toHaveBeenCalledWith('source = logs', expect.anything());
   });
 
-  it('seeds the search box from existing filters and emits their where clause', () => {
+  it('seeds the search box from the existing search expression and emits it', () => {
     const { onQueryChange } = renderBuilder({
       ...emptyState(),
-      filters: [{ id: 'a', field: 'service', op: '=', value: 'web-store', isFullText: false }],
+      searchExpression: 'service="web-store"',
     });
     expect(onQueryChange).toHaveBeenCalledWith(
-      "source = logs | where service = 'web-store'",
+      'source = logs service="web-store"',
       expect.anything()
     );
-    expect(screen.getByTestId('pplBuilderSearchBox')).toHaveValue('service:web-store');
+    expect(screen.getByTestId('pplBuilderSearchBoxInput')).toHaveValue('service="web-store"');
   });
 
-  it('parses typed search text into a where clause', () => {
+  it('appends typed search text to the source segment', () => {
     const { onQueryChange } = renderBuilder();
-    fireEvent.change(screen.getByTestId('pplBuilderSearchBox'), {
-      target: { value: 'status:>=500 error' },
+    fireEvent.change(screen.getByTestId('pplBuilderSearchBoxInput'), {
+      target: { value: 'status>=500 AND error' },
     });
     expect(onQueryChange).toHaveBeenLastCalledWith(
-      "source = logs | where status >= 500 and query_string('error')",
+      'source = logs status>=500 AND error',
       expect.anything()
     );
   });

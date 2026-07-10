@@ -101,7 +101,7 @@ export const LogsQueryPanel: React.FC = () => {
     const parsed = parsePPL(reduxQuery);
     const isEmptyBuilder =
       parsed.canBuild &&
-      parsed.state.filters.length === 0 &&
+      parsed.state.searchExpression.trim() === '' &&
       parsed.state.aggregations.length === 0;
 
     if (isEmptyBuilder) {

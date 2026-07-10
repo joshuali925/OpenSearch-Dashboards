@@ -3,188 +3,179 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { i18n } from '@osd/i18n';
-import {
-  EuiFieldSearch,
-  EuiInputPopover,
-  EuiSelectable,
-  EuiSelectableOption,
-  EuiHighlight,
-} from '@elastic/eui';
-import { activeTokenAt } from './search_syntax';
+import { monaco } from '@osd/monaco';
+import { CodeEditor } from '../../../../../../opensearch_dashboards_react/public';
+import { analyzeSearchExpression } from './search_completion';
 
-interface SearchBoxProps {
-  /** Current search-box text (a view over the committed filters). */
-  value: string;
-  /** All dataset field names, for `field:` autocomplete. */
-  fieldNames: string[];
-  /** Value suggestions for the field currently being edited. */
-  valueSuggestions: string[];
-  valueLoading: boolean;
-  /** Commit the whole search text (parsed into filters upstream). */
-  onChange: (text: string) => void;
-  /** Ask for value suggestions for a field (lazy-loaded). */
-  onRequestValues: (field: string, queryText: string) => void;
+/** Dedicated Monaco language id for the restricted PPL search-expression box. */
+export const PPL_SEARCH_LANGUAGE_ID = 'pplSearchExpression';
+
+let languageRegistered = false;
+function ensureLanguageRegistered() {
+  if (languageRegistered) return;
+  languageRegistered = true;
+  monaco.languages.register({ id: PPL_SEARCH_LANGUAGE_ID });
 }
 
-type SuggestionKind = 'field' | 'value' | null;
+interface SearchBoxProps {
+  /** Current search-expression text (the source of truth for the row). */
+  value: string;
+  /** All dataset field names, for field-name autocomplete. */
+  fieldNames: string[];
+  /** Fetch value suggestions for a field (lazy). Resolves to display strings. */
+  onRequestValues: (field: string) => Promise<string[]>;
+  /** Commit the edited search-expression text. */
+  onChange: (text: string) => void;
+}
 
 /**
- * Datadog-style single-line search box with field/value autocomplete. The text
- * is the source of truth for the search row; suggestions replace only the token
- * under the caret. Mirrors the metrics builder's reliance on `data.autocomplete`
- * for value suggestions, but presented as one free-text bar instead of pills.
+ * Datadog-style single-line search box for the PPL `search` command's
+ * <search-expression>. Reuses the shared Monaco {@link CodeEditor} (the same
+ * widget as the code editor) and drives its native suggestion dropdown with a
+ * grammar-based analysis ({@link analyzeSearchExpression}) so fields, values,
+ * operators, and `AND`/`OR`/`NOT`/`IN` are suggested only where the search
+ * grammar permits them. The text is the row's source of truth (parsed into the
+ * PPL query upstream).
  */
 export const SearchBox: React.FC<SearchBoxProps> = ({
   value,
   fieldNames,
-  valueSuggestions,
-  valueLoading,
-  onChange,
   onRequestValues,
+  onChange,
 }) => {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [caret, setCaret] = useState(0);
+  const fieldNamesRef = useRef(fieldNames);
+  fieldNamesRef.current = fieldNames;
+  const onRequestValuesRef = useRef(onRequestValues);
+  onRequestValuesRef.current = onRequestValues;
 
-  const active = useMemo(() => activeTokenAt(value, caret), [value, caret]);
+  ensureLanguageRegistered();
 
-  const kind: SuggestionKind = useMemo(() => {
-    if (active.field !== undefined) return 'value';
-    if (active.fieldPartial !== undefined) return 'field';
-    return null;
-  }, [active]);
+  const provideCompletionItems = useCallback(
+    async (
+      model: monaco.editor.ITextModel,
+      position: monaco.Position
+    ): Promise<monaco.languages.CompletionList> => {
+      const text = model.getValue();
+      // Monaco columns are 1-based; our analyzer uses 0-based char offsets.
+      const cursor = position.column - 1;
+      const analysis = analyzeSearchExpression(text, cursor);
 
-  const options = useMemo<EuiSelectableOption[]>(() => {
-    if (kind === 'field') {
-      const partial = (active.fieldPartial || '').toLowerCase();
-      return fieldNames
-        .filter((f) => f.toLowerCase().includes(partial))
-        .slice(0, 50)
-        .map((f) => ({ label: f, key: `field:${f}` }));
-    }
-    if (kind === 'value') {
-      const partial = (active.valuePartial || '').toLowerCase();
-      return valueSuggestions
-        .filter((v) => v.toLowerCase().includes(partial))
-        .slice(0, 50)
-        .map((v) => ({ label: v, key: `value:${v}` }));
-    }
-    return [];
-  }, [kind, active, fieldNames, valueSuggestions]);
+      const range = new monaco.Range(
+        position.lineNumber,
+        analysis.replaceStart + 1,
+        position.lineNumber,
+        analysis.replaceEnd + 1
+      );
 
-  // Replace the active token's relevant segment with the picked suggestion,
-  // preserving the rest of the query and any leading `field:` / operator prefix.
-  const applySuggestion = useCallback(
-    (picked: string) => {
-      let replacement: string;
-      let insertEnd: number;
-      if (kind === 'field') {
-        replacement = `${picked}:`;
-        insertEnd = active.end;
-      } else {
-        // Keep everything up to and including the operator, replace the value.
-        const colonRel = active.raw.indexOf(':');
-        const head = active.raw.slice(0, colonRel + 1);
-        const rhs = active.raw.slice(colonRel + 1);
-        const opMatch = rhs.match(/^(>=|<=|!=|>|<|~)/);
-        const opPrefix = opMatch ? opMatch[1] : '';
-        const needsQuote = /[\s":]/.test(picked) || picked === '';
-        const valueText = needsQuote ? `"${picked.replace(/"/g, '\\"')}"` : picked;
-        replacement = `${head}${opPrefix}${valueText}`;
-        insertEnd = active.end;
-      }
-      const next = `${value.slice(0, active.start)}${replacement}${value.slice(insertEnd)}`;
-      onChange(next);
-      const newCaret = active.start + replacement.length;
-      setCaret(newCaret);
-      // Restore focus + caret after the popover-driven re-render.
-      requestAnimationFrame(() => {
-        const el = inputRef.current;
-        if (el) {
-          el.focus();
-          el.setSelectionRange(newCaret, newCaret);
+      const suggestions: monaco.languages.CompletionItem[] = [];
+
+      if (analysis.suggestFields) {
+        for (const name of fieldNamesRef.current) {
+          suggestions.push({
+            label: name,
+            kind: monaco.languages.CompletionItemKind.Field,
+            detail: i18n.translate('explore.pplBuilder.searchBox.fieldDetail', {
+              defaultMessage: 'Field',
+            }),
+            insertText: name,
+            range,
+            sortText: `1_${name}`,
+          });
         }
-      });
-      // A field pick should immediately offer values for that field.
-      if (kind === 'field') {
-        onRequestValues(picked, '');
-        setIsOpen(true);
-      } else {
-        setIsOpen(false);
       }
+
+      if (analysis.suggestValuesForField) {
+        try {
+          const values = await onRequestValuesRef.current(analysis.suggestValuesForField);
+          for (const v of values) {
+            // Quote values containing whitespace or special characters.
+            const needsQuote = /[\s"'()=<>!,]/.test(v) || v === '';
+            const insert = needsQuote ? `"${v.replace(/"/g, '\\"')}"` : v;
+            suggestions.push({
+              label: v,
+              kind: monaco.languages.CompletionItemKind.Value,
+              detail: i18n.translate('explore.pplBuilder.searchBox.valueDetail', {
+                defaultMessage: 'Value',
+              }),
+              insertText: insert,
+              range,
+              sortText: `0_${v}`,
+            });
+          }
+        } catch {
+          // Value suggestions are best-effort.
+        }
+      }
+
+      for (const kw of analysis.keywords) {
+        const isBoolean = kw === 'AND' || kw === 'OR' || kw === 'NOT' || kw === 'IN';
+        suggestions.push({
+          label: kw,
+          kind: isBoolean
+            ? monaco.languages.CompletionItemKind.Keyword
+            : monaco.languages.CompletionItemKind.Operator,
+          detail: isBoolean
+            ? i18n.translate('explore.pplBuilder.searchBox.keywordDetail', {
+                defaultMessage: 'Keyword',
+              })
+            : i18n.translate('explore.pplBuilder.searchBox.operatorDetail', {
+                defaultMessage: 'Operator',
+              }),
+          insertText: kw,
+          range,
+          sortText: `2_${kw}`,
+        });
+      }
+
+      return { suggestions };
     },
-    [kind, active, value, onChange, onRequestValues]
+    []
   );
 
-  const syncCaretAndSuggest = useCallback(() => {
-    const el = inputRef.current;
-    if (!el) return;
-    const pos = el.selectionStart ?? el.value.length;
-    setCaret(pos);
-    const tok = activeTokenAt(el.value, pos);
-    if (tok.field !== undefined) {
-      onRequestValues(tok.field, tok.valuePartial || '');
-      setIsOpen(true);
-    } else if (tok.fieldPartial !== undefined) {
-      setIsOpen(true);
-    } else {
-      setIsOpen(false);
-    }
-  }, [onRequestValues]);
-
-  const input = (
-    <EuiFieldSearch
-      inputRef={(el) => (inputRef.current = el)}
-      compressed
-      fullWidth
-      isClearable
-      value={value}
-      placeholder={i18n.translate('explore.pplBuilder.searchBoxPlaceholder', {
-        defaultMessage: 'Search: field:value or free text (e.g. status:>=500 error)',
-      })}
-      onChange={(e) => {
-        onChange(e.target.value);
-        // Defer caret read until the DOM value has updated.
-        requestAnimationFrame(syncCaretAndSuggest);
-      }}
-      onClick={syncCaretAndSuggest}
-      onKeyUp={(e) => {
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') syncCaretAndSuggest();
-      }}
-      onFocus={syncCaretAndSuggest}
-      data-test-subj="pplBuilderSearchBox"
-    />
+  const suggestionProvider = useMemo<monaco.languages.CompletionItemProvider>(
+    () => ({
+      // Re-trigger on the operators / space / quote that begin a new token.
+      triggerCharacters: [' ', '=', '!', '>', '<', '(', ',', '"', "'"],
+      provideCompletionItems,
+    }),
+    [provideCompletionItems]
   );
 
-  const showList = isOpen && kind !== null && (options.length > 0 || valueLoading);
+  const options = useMemo<monaco.editor.IEditorConstructionOptions>(
+    () => ({
+      lineNumbers: 'off',
+      folding: false,
+      glyphMargin: false,
+      lineDecorationsWidth: 0,
+      minimap: { enabled: false },
+      scrollBeyondLastLine: false,
+      wordWrap: 'off',
+      wrappingIndent: 'none',
+      overviewRulerLanes: 0,
+      hideCursorInOverviewRuler: true,
+      renderLineHighlight: 'none',
+      scrollbar: { vertical: 'hidden', horizontal: 'hidden', horizontalScrollbarSize: 0 },
+      fontSize: 12,
+      lineHeight: 18,
+      fixedOverflowWidgets: true,
+      suggest: { showWords: false },
+    }),
+    []
+  );
 
   return (
-    <EuiInputPopover
-      fullWidth
-      input={input}
-      isOpen={showList}
-      closePopover={() => setIsOpen(false)}
-      panelPaddingSize="none"
-      disableFocusTrap
-      data-test-subj="pplBuilderSearchBoxPopover"
-    >
-      <EuiSelectable
-        singleSelection
+    <div className="plqSearchBoxEditor" data-test-subj="pplBuilderSearchBox">
+      <CodeEditor
+        height={20}
+        languageId={PPL_SEARCH_LANGUAGE_ID}
+        value={value}
+        onChange={onChange}
         options={options}
-        isLoading={valueLoading && options.length === 0}
-        listProps={{ showIcons: false, bordered: false }}
-        onChange={(opts) => {
-          const chosen = opts.find((o) => o.checked === 'on');
-          if (chosen?.label) applySuggestion(chosen.label);
-        }}
-        renderOption={(option, searchText) => (
-          <EuiHighlight search={searchText}>{option.label}</EuiHighlight>
-        )}
-      >
-        {(list) => <div className="plqSearchSuggest">{list}</div>}
-      </EuiSelectable>
-    </EuiInputPopover>
+        suggestionProvider={suggestionProvider}
+        triggerSuggestOnFocus
+      />
+    </div>
   );
 };

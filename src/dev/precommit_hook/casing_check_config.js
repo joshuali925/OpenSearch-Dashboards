@@ -55,7 +55,10 @@ export const IGNORE_FILE_GLOBS = [
   '.ci/pipeline-library/**/*',
   'release-notes/*',
   '**/antlr/**/.generated/**/*',
-  'packages/osd-antlr-grammar/src/**/.generated/**/*',
+  // ANTLR grammar sources and generated parsers use PascalCase filenames
+  // (generated class names derive from the .g4 filename).
+  'packages/osd-antlr-grammar/**/.generated/**/*',
+  'packages/osd-antlr-grammar/**/grammar/*.g4',
 
   // filename must match language code which requires capital letters
   '**/translations/*.json',

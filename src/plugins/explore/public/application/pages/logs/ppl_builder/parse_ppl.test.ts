@@ -9,7 +9,7 @@ import { PPLBuilderState } from './types';
 
 // Normalize away builder-generated ids so round-trip comparisons are stable.
 const stripIds = (state: PPLBuilderState) => ({
-  filters: state.filters.map(({ id, ...rest }) => rest),
+  searchExpression: state.searchExpression,
   aggregations: state.aggregations.map(({ id, ...rest }) => rest),
   groupBy: state.groupBy,
 });
@@ -18,25 +18,34 @@ describe('parsePPL — canBuild gating', () => {
   it('treats an empty query as buildable/empty', () => {
     const result = parsePPL('');
     expect(result.canBuild).toBe(true);
-    expect(result.state.filters).toHaveLength(0);
+    expect(result.state.searchExpression).toBe('');
   });
 
-  it('parses a plain source with no pipes', () => {
+  it('parses a plain source with no search expression', () => {
     const result = parsePPL('source = logs');
     expect(result.canBuild).toBe(true);
     expect(result.sourcePrefix).toBe('source = logs');
+    expect(result.state.searchExpression).toBe('');
   });
 
-  it('parses a where clause with field:value and full-text', () => {
-    const result = parsePPL(
-      "source = logs | where service = 'web-store' and query_string('ERROR')"
-    );
+  it('captures a field-comparison search expression verbatim', () => {
+    const result = parsePPL('source = logs service="web-store"');
     expect(result.canBuild).toBe(true);
     expect(result.sourcePrefix).toBe('source = logs');
-    expect(stripIds(result.state).filters).toEqual([
-      { field: 'service', op: '=', value: 'web-store', isFullText: false },
-      { field: undefined, op: undefined, value: 'ERROR', isFullText: true },
-    ]);
+    expect(result.state.searchExpression).toBe('service="web-store"');
+  });
+
+  it('captures a boolean search expression verbatim', () => {
+    const result = parsePPL('source = logs status>=500 AND service="web-store"');
+    expect(result.canBuild).toBe(true);
+    expect(result.sourcePrefix).toBe('source = logs');
+    expect(result.state.searchExpression).toBe('status>=500 AND service="web-store"');
+  });
+
+  it('captures a full-text search term', () => {
+    const result = parsePPL('source = logs ERROR');
+    expect(result.canBuild).toBe(true);
+    expect(result.state.searchExpression).toBe('ERROR');
   });
 
   it('parses stats count by span', () => {
@@ -48,6 +57,13 @@ describe('parsePPL — canBuild gating', () => {
       interval: '1m',
       auto: false,
     });
+  });
+
+  it('parses a search expression combined with stats', () => {
+    const result = parsePPL('source = logs ERROR | stats count() by span(@timestamp, 1m)');
+    expect(result.canBuild).toBe(true);
+    expect(result.state.searchExpression).toBe('ERROR');
+    expect(stripIds(result.state).aggregations).toEqual([{ fn: 'count' }]);
   });
 
   it('parses avg with a group-by field', () => {
@@ -66,15 +82,13 @@ describe('parsePPL — canBuild gating', () => {
   });
 
   it.each([
-    ['OR logic', "source = logs | where a = '1' or b = '2'"],
-    ['NOT logic', "source = logs | where not a = '1'"],
-    ['IN', 'source = logs | where a in (1, 2)'],
     ['sort command', 'source = logs | sort field'],
     ['dedup command', 'source = logs | dedup field'],
     ['head command', 'source = logs | head 10'],
     ['eval command', 'source = logs | eval x = a + b'],
+    ['where command', "source = logs | where a = '1'"],
     ['aliased agg', 'source = logs | stats count() as total'],
-    ['where after stats', 'source = logs | stats count() | where count > 1'],
+    ['stats then more', 'source = logs | stats count() | head 1'],
   ])('sets canBuild=false for %s', (_label, query) => {
     expect(parsePPL(query).canBuild).toBe(false);
   });
@@ -83,25 +97,22 @@ describe('parsePPL — canBuild gating', () => {
 describe('parsePPL / buildPPL round-trip', () => {
   const cases: PPLBuilderState[] = [
     {
-      filters: [{ id: 'x', field: 'service', op: '=', value: 'web-store', isFullText: false }],
+      searchExpression: 'service="web-store"',
       aggregations: [],
       groupBy: { fields: [] },
     },
     {
-      filters: [
-        { id: 'x', field: 'level', op: '!=', value: 'DEBUG', isFullText: false },
-        { id: 'y', value: 'timeout', isFullText: true },
-      ],
+      searchExpression: 'level!="DEBUG" AND timeout',
       aggregations: [],
       groupBy: { fields: [] },
     },
     {
-      filters: [{ id: 'x', field: 'status', op: '>=', value: '500', isFullText: false }],
+      searchExpression: 'status>=500',
       aggregations: [{ id: 'a', fn: 'count' }],
       groupBy: { fields: [], span: { field: '@timestamp', interval: '1m', auto: false } },
     },
     {
-      filters: [],
+      searchExpression: '',
       aggregations: [{ id: 'a', fn: 'avg', field: 'bytes' }],
       groupBy: { fields: ['service'] },
     },
@@ -112,11 +123,5 @@ describe('parsePPL / buildPPL round-trip', () => {
     const reparsed = parsePPL(ppl);
     expect(reparsed.canBuild).toBe(true);
     expect(stripIds(reparsed.state)).toEqual(stripIds(state as PPLBuilderState));
-  });
-});
-
-describe('parsePPL — malformed input', () => {
-  it('returns canBuild=false on a syntax error', () => {
-    expect(parsePPL('source = logs | where |').canBuild).toBe(false);
   });
 });

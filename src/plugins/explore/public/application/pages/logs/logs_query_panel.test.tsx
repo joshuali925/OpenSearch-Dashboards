@@ -117,7 +117,7 @@ describe('LogsQueryPanel', () => {
   });
 
   it('opens a parseable query in builder mode', () => {
-    renderPanel("source = logs | where service = 'web-store'");
+    renderPanel('source = logs service="web-store"');
     expect(screen.getByTestId('ppl-builder-stub')).toBeInTheDocument();
   });
 
@@ -128,7 +128,7 @@ describe('LogsQueryPanel', () => {
   });
 
   it('opens a saved-loaded query in code mode even when parseable', () => {
-    renderPanel("source = logs | where service = 'web-store'", 'saved-id');
+    renderPanel('source = logs service="web-store"', 'saved-id');
     expect(screen.getByTestId('code-editor-stub')).toBeInTheDocument();
     expect(screen.queryByTestId('ppl-builder-stub')).not.toBeInTheDocument();
   });

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { EuiComboBoxOptionOption } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
@@ -16,8 +16,9 @@ interface FieldInfo {
 }
 
 /**
- * Provides the current dataset's field list (for the search/group comboboxes)
- * and lazy value suggestions for a field (for the search-box value autocomplete).
+ * Provides the current dataset's field list (for the search box and group-by
+ * combobox) and lazy value suggestions for a field (for the search-box value
+ * autocomplete).
  *
  * The resolved `DataView` comes from {@link useDatasetContext} (the same source
  * the histogram uses), NOT from `queryString.getQuery().dataset` — the latter is
@@ -30,15 +31,14 @@ export const useFieldData = () => {
   const { data } = services;
   const { dataset } = useDatasetContext();
 
-  const [valueOptions, setValueOptions] = useState<Record<string, EuiComboBoxOptionOption[]>>({});
-  const [valueLoading, setValueLoading] = useState<Record<string, boolean>>({});
-
   const fields = useMemo<FieldInfo[]>(() => {
     const all = (dataset as any)?.fields?.getAll?.() ?? [];
     return all
       .filter((f: any) => f?.name && !f.name.startsWith('_'))
       .map((f: any) => ({ name: f.name, type: f.type, aggregatable: f.aggregatable }));
   }, [dataset]);
+
+  const fieldNames = useMemo<string[]>(() => fields.map((f) => f.name), [fields]);
 
   const fieldOptions = useMemo<EuiComboBoxOptionOption[]>(
     () => fields.map((f) => ({ label: f.name })),
@@ -53,30 +53,30 @@ export const useFieldData = () => {
 
   const timeFieldName = useMemo(() => (dataset as any)?.timeFieldName || '@timestamp', [dataset]);
 
-  const loadValues = useCallback(
-    async (fieldName: string, queryText = '') => {
+  /**
+   * Fetch value suggestions for a field. Resolves to display strings (best
+   * effort — an unknown field or a failed request yields an empty list). Tries
+   * the `.keyword` sibling first since that is what carries aggregatable values.
+   */
+  const getValues = useCallback(
+    async (fieldName: string): Promise<string[]> => {
       const indexPattern = dataset as any;
-      const field = indexPattern?.fields?.getByName?.(fieldName);
-      if (!indexPattern || !field || !data.autocomplete?.getValueSuggestions) return;
-
-      setValueLoading((prev) => ({ ...prev, [fieldName]: true }));
+      if (!indexPattern || !data.autocomplete?.getValueSuggestions) return [];
+      const field =
+        indexPattern.fields?.getByName?.(`${fieldName}.keyword`) ||
+        indexPattern.fields?.getByName?.(fieldName);
+      if (!field) return [];
       try {
         const suggestions = await data.autocomplete.getValueSuggestions({
           indexPattern,
           field,
-          query: queryText,
+          query: '',
         });
-        setValueOptions((prev) => ({
-          ...prev,
-          [fieldName]: (suggestions || [])
-            .filter((s: unknown) => s !== null && s !== undefined)
-            .map((s: unknown) => ({ label: String(s) })),
-        }));
+        return (suggestions || [])
+          .filter((s: unknown) => s !== null && s !== undefined)
+          .map((s: unknown) => String(s));
       } catch {
-        // Value suggestions are best-effort; a failure just yields no options.
-        setValueOptions((prev) => ({ ...prev, [fieldName]: [] }));
-      } finally {
-        setValueLoading((prev) => ({ ...prev, [fieldName]: false }));
+        return [];
       }
     },
     [data, dataset]
@@ -84,11 +84,10 @@ export const useFieldData = () => {
 
   return {
     fields,
+    fieldNames,
     fieldOptions,
     numericAndAggregatableOptions,
     timeFieldName,
-    valueOptions,
-    valueLoading,
-    loadValues,
+    getValues,
   };
 };

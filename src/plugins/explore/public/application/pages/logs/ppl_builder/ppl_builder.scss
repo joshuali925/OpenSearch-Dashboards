@@ -74,6 +74,22 @@
   flex-shrink: 0;
 }
 
+// Scalar-function name inside a function pill (e.g. "round"). Reads as a
+// keyword token, matching how functions render in the code editor.
+.plqFnName {
+  padding: 0 $euiSizeS;
+  font-size: $euiFontSizeXS;
+  font-weight: $euiFontWeightMedium;
+  color: $euiColorPrimaryText;
+  white-space: nowrap;
+}
+
+// Description line under each function name in the Add-function menu.
+.plqFnMenuDescription {
+  max-width: 280px;
+  white-space: normal;
+}
+
 .plqOperatorSelect {
   width: 64px;
 }

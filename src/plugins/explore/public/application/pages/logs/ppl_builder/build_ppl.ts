@@ -3,13 +3,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Aggregation, GroupBy, PPLBuilderState, TimeBucket, emptyState, nextAggId } from './types';
+import {
+  Aggregation,
+  GroupBy,
+  PPLBuilderState,
+  ScalarCall,
+  TimeBucket,
+  emptyState,
+  nextAggId,
+} from './types';
 
 export type BuilderAction =
   | { type: 'SET_SEARCH_EXPRESSION'; searchExpression: string }
   | { type: 'ADD_AGGREGATION'; agg?: Partial<Aggregation> }
   | { type: 'SET_AGGREGATION'; index: number; agg: Partial<Aggregation> }
   | { type: 'REMOVE_AGGREGATION'; index: number }
+  | { type: 'ADD_FUNCTION'; index: number; fn: ScalarCall }
+  | {
+      type: 'SET_FUNCTION_PARAM';
+      index: number;
+      fnIndex: number;
+      paramIndex: number;
+      value: string;
+    }
+  | { type: 'REMOVE_FUNCTION'; index: number; fnIndex: number }
   | { type: 'SET_GROUPBY_FIELDS'; fields: string[] }
   | { type: 'SET_SPAN'; span: TimeBucket }
   | { type: 'REMOVE_SPAN' }
@@ -35,6 +52,37 @@ export function builderReducer(state: PPLBuilderState, action: BuilderAction): P
         ...state,
         aggregations: state.aggregations.filter((_, i) => i !== action.index),
       };
+    case 'ADD_FUNCTION': {
+      const aggregations = [...state.aggregations];
+      const agg = aggregations[action.index];
+      if (!agg) return state;
+      aggregations[action.index] = {
+        ...agg,
+        functions: [...(agg.functions ?? []), action.fn],
+      };
+      return { ...state, aggregations };
+    }
+    case 'SET_FUNCTION_PARAM': {
+      const aggregations = [...state.aggregations];
+      const agg = aggregations[action.index];
+      if (!agg?.functions?.[action.fnIndex]) return state;
+      const functions = [...agg.functions];
+      const params = [...functions[action.fnIndex].params];
+      params[action.paramIndex] = action.value;
+      functions[action.fnIndex] = { ...functions[action.fnIndex], params };
+      aggregations[action.index] = { ...agg, functions };
+      return { ...state, aggregations };
+    }
+    case 'REMOVE_FUNCTION': {
+      const aggregations = [...state.aggregations];
+      const agg = aggregations[action.index];
+      if (!agg?.functions) return state;
+      aggregations[action.index] = {
+        ...agg,
+        functions: agg.functions.filter((_, i) => i !== action.fnIndex),
+      };
+      return { ...state, aggregations };
+    }
     case 'SET_GROUPBY_FIELDS':
       return { ...state, groupBy: { ...state.groupBy, fields: action.fields } };
     case 'SET_SPAN':
@@ -52,17 +100,40 @@ export function builderReducer(state: PPLBuilderState, action: BuilderAction): P
   }
 }
 
+/**
+ * Wrap a field expression in its ordered scalar-function chain, innermost first.
+ * `functions: [round, abs]` on `latency` -> `abs(round(latency))`. Extra params
+ * (e.g. round's decimals) are appended after the wrapped expression. Blank
+ * trailing params are dropped so `round(latency)` (no decimals) stays clean.
+ */
+function applyFunctions(fieldExpr: string, functions?: ScalarCall[]): string {
+  let expr = fieldExpr;
+  for (const fn of functions ?? []) {
+    const extra = fn.params.map((p) => p.trim());
+    // Drop empty trailing params so optional args collapse cleanly.
+    while (extra.length > 0 && extra[extra.length - 1] === '') extra.pop();
+    expr = extra.length > 0 ? `${fn.id}(${expr}, ${extra.join(', ')})` : `${fn.id}(${expr})`;
+  }
+  return expr;
+}
+
 export function compileAggregation(agg: Aggregation): string | null {
+  if (agg.fn === 'count') {
+    // Datadog "Count of all logs" — count all rows, no field argument.
+    return 'count()';
+  }
+  if (!agg.field) return null;
+  const arg = applyFunctions(agg.field, agg.functions);
   switch (agg.fn) {
-    case 'count':
-      // Datadog "Count of all logs" — count all rows, no field argument.
-      return 'count()';
     case 'percentile':
-      if (!agg.field) return null;
-      return `percentile(${agg.field}, ${agg.percentile ?? 95})`;
+      return `percentile(${arg}, ${agg.percentile ?? 95})`;
+    case 'distinct_count':
+      // `dc` is the terse alias; emit the explicit name for readability.
+      return `distinct_count(${arg})`;
     default:
-      if (!agg.field) return null;
-      return `${agg.fn}(${agg.field})`;
+      // avg/sum/min/max/median/stddev_*/var_*/earliest/latest/first/last all
+      // take a single expression argument.
+      return `${agg.fn}(${arg})`;
   }
 }
 

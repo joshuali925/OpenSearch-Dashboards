@@ -18,7 +18,37 @@
  */
 
 /** Aggregation functions expressible in a PPL `stats` clause. */
-export type AggFn = 'count' | 'sum' | 'avg' | 'min' | 'max' | 'percentile';
+export type AggFn =
+  | 'count'
+  | 'sum'
+  | 'avg'
+  | 'min'
+  | 'max'
+  | 'percentile'
+  | 'median'
+  | 'distinct_count'
+  | 'stddev_samp'
+  | 'stddev_pop'
+  | 'var_samp'
+  | 'var_pop'
+  | 'earliest'
+  | 'latest'
+  | 'first'
+  | 'last';
+
+/**
+ * One scalar (row-level) function wrapping an aggregation's field expression.
+ * The wrapped expression is always the function's FIRST argument; `params` are
+ * any *additional* positional arguments (e.g. the decimals arg of
+ * `round(field, 2)`), stored as raw strings. A chain wraps the field
+ * innermost-first: `functions: [round, abs]` on field `latency` compiles to
+ * `abs(round(latency))`.
+ */
+export interface ScalarCall {
+  id: string; // catalog id, e.g. 'round' — also the emitted PPL function name
+  name: string; // display name
+  params: string[]; // extra positional args beyond the wrapped expression
+}
 
 export interface Aggregation {
   id: string;
@@ -27,6 +57,8 @@ export interface Aggregation {
   // additionally uses `percentile` (e.g. 95 -> percentile(field, 95)).
   field?: string;
   percentile?: number;
+  // Ordered chain of scalar functions wrapping `field`, innermost first.
+  functions?: ScalarCall[];
 }
 
 export interface TimeBucket {

@@ -11,10 +11,12 @@ import {
   EuiButtonIcon,
   EuiSuperSelect,
   EuiFieldNumber,
+  EuiToolTip,
 } from '@elastic/eui';
 import { BuilderAction } from './build_ppl';
-import { Aggregation, AggFn } from './types';
-import { AGG_FN_MAP, AGG_FUNCTIONS } from './operations';
+import { Aggregation, AggFn, ScalarCall } from './types';
+import { AGG_FN_MAP, AGG_FUNCTIONS, SCALAR_FN_MAP } from './operations';
+import { ScalarFnMenu } from './scalar_fn_menu';
 
 interface AggregationRowProps {
   agg: Aggregation;
@@ -24,9 +26,72 @@ interface AggregationRowProps {
 }
 
 /**
+ * One scalar-function pill wrapping the aggregation's field: e.g. `round`, with
+ * inline inputs for any extra args (round's decimals). The wrapped field is the
+ * function's first argument and is shown by the field combobox to the right, so
+ * the pill reads "round( … )" from left, matching the compiled nesting order
+ * (outermost function is rendered rightmost / last in the chain array).
+ */
+const FunctionPill: React.FC<{
+  fn: ScalarCall;
+  aggIdx: number;
+  fnIdx: number;
+  dispatch: React.Dispatch<BuilderAction>;
+}> = ({ fn, aggIdx, fnIdx, dispatch }) => {
+  const def = SCALAR_FN_MAP[fn.id];
+  return (
+    <div className="plqGroup" data-test-subj={`pplBuilderFn-${aggIdx}-${fnIdx}`}>
+      <span className="plqGroup__label">
+        {i18n.translate('explore.pplBuilder.functionLabel', { defaultMessage: 'fn' })}
+      </span>
+      <span className="plqFnName">{fn.name}</span>
+      {fn.params.map((p, pi) => (
+        <React.Fragment key={pi}>
+          <div className="plqSep" />
+          <input
+            value={p}
+            placeholder={def?.paramNames?.[pi] || ''}
+            onChange={(e) =>
+              dispatch({
+                type: 'SET_FUNCTION_PARAM',
+                index: aggIdx,
+                fnIndex: fnIdx,
+                paramIndex: pi,
+                value: e.target.value,
+              })
+            }
+            className="plqParamInput"
+            style={{ width: 56 }}
+            aria-label={def?.paramNames?.[pi] || fn.name}
+            data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
+          />
+        </React.Fragment>
+      ))}
+      <div className="plqSep" />
+      {def?.description ? (
+        <EuiToolTip content={def.description}>
+          <EuiButtonIcon iconType="iInCircle" color="text" size="s" aria-label={fn.name} />
+        </EuiToolTip>
+      ) : null}
+      <EuiButtonIcon
+        iconType="cross"
+        color="text"
+        size="s"
+        aria-label={i18n.translate('explore.pplBuilder.removeFunction', {
+          defaultMessage: 'Remove function',
+        })}
+        onClick={() => dispatch({ type: 'REMOVE_FUNCTION', index: aggIdx, fnIndex: fnIdx })}
+        data-test-subj={`pplBuilderRemoveFn-${aggIdx}-${fnIdx}`}
+      />
+    </div>
+  );
+};
+
+/**
  * One aggregation row: "Show <fn> of <field>" — the datadog "Show Count of all
  * logs" control. Count needs no field; other fns aggregate over a field, and
- * percentile adds a numeric percentile input.
+ * percentile adds a numeric percentile input. When the row has a field, an
+ * "Add function" menu wraps it in scalar functions (e.g. avg(round(latency))).
  */
 export const AggregationRow: React.FC<AggregationRowProps> = ({
   agg,
@@ -53,6 +118,12 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
       {def?.needsField && (
         <>
           <div className="plqSep" />
+          {/* Scalar-function chain wrapping the field. The chain array is
+              innermost-first (matching compile order); render it in that order
+              so the field sits to the right of its functions. */}
+          {(agg.functions ?? []).map((fn, fnIdx) => (
+            <FunctionPill key={fnIdx} fn={fn} aggIdx={idx} fnIdx={fnIdx} dispatch={dispatch} />
+          ))}
           <EuiComboBox
             compressed
             singleSelection={{ asPlainText: true }}
@@ -75,6 +146,11 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
             }}
             style={{ minWidth: 120 }}
             data-test-subj={`pplBuilderAggField-${idx}`}
+          />
+          <div className="plqSep" />
+          <ScalarFnMenu
+            onAdd={(fn) => dispatch({ type: 'ADD_FUNCTION', index: idx, fn })}
+            dataTestSubj={`pplBuilderAddFn-${idx}`}
           />
         </>
       )}

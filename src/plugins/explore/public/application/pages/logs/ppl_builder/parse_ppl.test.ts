@@ -86,8 +86,18 @@ describe('parsePPL — canBuild gating', () => {
     ['where command', "source = logs | where a = '1'"],
     ['aliased agg', 'source = logs | stats count() as total'],
     ['stats then more', 'source = logs | stats count() | head 1'],
+    // A scalar function the builder doesn't model (multi-field concat) can't be
+    // represented as a single-field wrap, so it falls back to code mode.
+    ['unmodeled scalar fn', 'source = logs | stats avg(concat(a, b))'],
+    ['arithmetic field expr', 'source = logs | stats avg(latency / 1000)'],
   ])('sets canBuild=false for %s', (_label, query) => {
     expect(parsePPL(query).canBuild).toBe(false);
+  });
+
+  it('parses the dc alias into distinct_count', () => {
+    const result = parsePPL('source = logs | stats dc(user.id)');
+    expect(result.canBuild).toBe(true);
+    expect(result.state.aggregations[0]).toMatchObject({ fn: 'distinct_count', field: 'user.id' });
   });
 });
 
@@ -112,6 +122,59 @@ describe('parsePPL / buildPPL round-trip', () => {
       searchExpression: '',
       aggregations: [{ id: 'a', fn: 'avg', field: 'bytes' }],
       groupBy: { fields: ['service'] },
+    },
+    // Expanded aggregation functions.
+    {
+      searchExpression: '',
+      aggregations: [
+        { id: 'a', fn: 'distinct_count', field: 'user.id' },
+        { id: 'b', fn: 'median', field: 'latency' },
+        { id: 'c', fn: 'stddev_samp', field: 'bytes' },
+      ],
+      groupBy: { fields: ['service'] },
+    },
+    // Scalar function wrapping a field.
+    {
+      searchExpression: '',
+      aggregations: [
+        {
+          id: 'a',
+          fn: 'avg',
+          field: 'latency',
+          functions: [{ id: 'abs', name: 'abs', params: [] }],
+        },
+      ],
+      groupBy: { fields: [] },
+    },
+    // Scalar chain with an extra param.
+    {
+      searchExpression: '',
+      aggregations: [
+        {
+          id: 'a',
+          fn: 'max',
+          field: 'latency',
+          functions: [
+            { id: 'round', name: 'round', params: ['1'] },
+            { id: 'abs', name: 'abs', params: [] },
+          ],
+        },
+      ],
+      groupBy: { fields: ['service'] },
+    },
+    // Scalar function on a percentile field argument.
+    {
+      searchExpression: '',
+      aggregations: [
+        {
+          id: 'a',
+          fn: 'percentile',
+          field: 'latency',
+          percentile: 90,
+          functions: [{ id: 'round', name: 'round', params: [] }],
+        },
+      ],
+      groupBy: { fields: [] },
     },
   ];
 

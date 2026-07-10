@@ -123,6 +123,92 @@ function findGoverningField(tokenStream: CommonTokenStream, cursorIndex: number)
   return null;
 }
 
+export interface FilterRange {
+  /** Char offset (0-based) where the `field <op> [value]` filter begins. */
+  start: number;
+  /** Char offset (0-based, exclusive) where the filter ends. */
+  end: number;
+}
+
+/**
+ * Tokenize the search expression and return the char ranges of each filter — a
+ * `field <op> [value]` comparison or a `field IN (...)` list. The value is
+ * optional so a box appears as soon as the field and its operator exist (e.g.
+ * `agent=`), before the value is typed. Used to draw a box around each filter so
+ * the composed query reads as a set of discrete conditions. Best-effort: returns
+ * `[]` on any lexing error.
+ */
+export function findFilterRanges(query: string): FilterRange[] {
+  const ranges: FilterRange[] = [];
+  try {
+    const inputStream = CharStream.fromString(query);
+    const lexer = new PPLSearchLexer(inputStream);
+    const tokenStream = new CommonTokenStream(lexer);
+    tokenStream.fill();
+
+    const tokens: Token[] = [];
+    for (let i = 0; i < tokenStream.size; i++) {
+      const t = tokenStream.get(i);
+      if (t.type === Token.EOF) break;
+      tokens.push(t);
+    }
+
+    const tokenEnd = (t: Token) => t.column + (t.text?.length || 0);
+    const nextNonWs = (from: number) => {
+      let j = from;
+      while (j < tokens.length && tokens[j].type === WS) j++;
+      return j;
+    };
+
+    for (let i = 0; i < tokens.length; i++) {
+      const field = tokens[i];
+      if (field.type !== PPLSearchParser.TERM && field.type !== PPLSearchParser.BACKTICK) continue;
+
+      const opIdx = nextNonWs(i + 1);
+      if (opIdx >= tokens.length) continue;
+      const op = tokens[opIdx];
+
+      if (COMPARISON_OPS.has(op.type)) {
+        const valIdx = nextNonWs(opIdx + 1);
+        if (valIdx < tokens.length && VALUE_LIKE.has(tokens[valIdx].type)) {
+          // field <op> value
+          ranges.push({ start: field.column, end: tokenEnd(tokens[valIdx]) });
+          i = valIdx;
+        } else {
+          // field <op> (value not yet typed) — box the field and operator.
+          ranges.push({ start: field.column, end: tokenEnd(op) });
+          i = opIdx;
+        }
+      } else if (op.type === PPLSearchParser.IN) {
+        const parenIdx = nextNonWs(opIdx + 1);
+        if (parenIdx < tokens.length && tokens[parenIdx].type === PPLSearchParser.LPAREN) {
+          let depth = 0;
+          let end = -1;
+          let last = parenIdx;
+          for (let m = parenIdx; m < tokens.length; m++) {
+            if (tokens[m].type === PPLSearchParser.LPAREN) depth++;
+            else if (tokens[m].type === PPLSearchParser.RPAREN) {
+              depth--;
+              if (depth === 0) {
+                end = tokenEnd(tokens[m]);
+                last = m;
+                break;
+              }
+            }
+          }
+          if (end > 0) {
+            ranges.push({ start: field.column, end });
+            i = last;
+          }
+        }
+      }
+    }
+  } catch {
+    // Best-effort decoration only.
+  }
+  return ranges;
+}
+
 /**
  * Analyze the search expression at a caret (0-based char offset) and report what
  * to suggest. Returns a "suggest fields" default on empty/whitespace input.

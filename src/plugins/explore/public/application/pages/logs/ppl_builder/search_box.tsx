@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { i18n } from '@osd/i18n';
 import { monaco } from '@osd/monaco';
 import { CodeEditor } from '../../../../../../opensearch_dashboards_react/public';
-import { analyzeSearchExpression } from './search_completion';
+import { analyzeSearchExpression, findFilterRanges } from './search_completion';
 
 /** Dedicated Monaco language id for the restricted PPL search-expression box. */
 export const PPL_SEARCH_LANGUAGE_ID = 'pplSearchExpression';
@@ -57,6 +57,83 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   const onRequestValuesRef = useRef(onRequestValues);
   onRequestValuesRef.current = onRequestValues;
 
+  // Monaco editor instance + the decoration ids currently applied, so each
+  // committed `field=value` filter can be boxed (see updateFilterBoxes).
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const decorationIdsRef = useRef<string[]>([]);
+  // Pending deferred suggestion-trigger (cursor moves; see handleEditorDidMount).
+  const suggestTimerRef = useRef<number | undefined>(undefined);
+
+  // Draw / refresh a colored box around every complete filter in the expression,
+  // so the user reads the query as a set of discrete `field=value` conditions.
+  const updateFilterBoxes = useCallback((editor: monaco.editor.IStandaloneCodeEditor) => {
+    const model = editor.getModel();
+    if (!model) return;
+    const text = model.getValue();
+    const decorations: monaco.editor.IModelDeltaDecoration[] = findFilterRanges(text).map(
+      ({ start, end }) => ({
+        range: new monaco.Range(1, start + 1, 1, end + 1),
+        options: {
+          inlineClassName: 'plqSearchBoxEditor__filter',
+          stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        },
+      })
+    );
+    decorationIdsRef.current = editor.deltaDecorations(decorationIdsRef.current, decorations);
+  }, []);
+
+  // Programmatically open the native suggestion widget. Monaco treats this as a
+  // no-op refresh when the widget is already showing, so it is safe to call on
+  // every relevant event.
+  const triggerSuggest = useCallback((editor: monaco.editor.IStandaloneCodeEditor) => {
+    editor.trigger('pplSearchBox', 'editor.action.triggerSuggest', {});
+  }, []);
+
+  const handleEditorDidMount = useCallback(
+    (editor: monaco.editor.IStandaloneCodeEditor) => {
+      editorRef.current = editor;
+      updateFilterBoxes(editor);
+
+      // Keep suggestions available at all times: re-open the widget after any
+      // content change (typing, delete/backspace) and after the caret moves by
+      // an explicit user action (click, arrow keys). This shows the widget even
+      // when there is nothing to complete (it renders "No suggestions.").
+      editor.onDidChangeModelContent(() => {
+        updateFilterBoxes(editor);
+        triggerSuggest(editor);
+      });
+      editor.onDidChangeCursorPosition((e) => {
+        const userMove =
+          e.reason === monaco.editor.CursorChangeReason.Explicit ||
+          e.source === 'mouse' ||
+          e.source === 'keyboard';
+        if (!userMove) return;
+        // Defer past Monaco's own mousedown handling — a click otherwise opens
+        // then immediately cancels the widget. A 0ms timer re-opens it after.
+        window.clearTimeout(suggestTimerRef.current);
+        suggestTimerRef.current = window.setTimeout(() => triggerSuggest(editor), 0);
+      });
+    },
+    [updateFilterBoxes, triggerSuggest]
+  );
+
+  // Clear any pending deferred trigger on unmount.
+  useEffect(() => () => window.clearTimeout(suggestTimerRef.current), []);
+
+  // Re-box whenever the committed value changes (edits, autocomplete, mode toggles).
+  useEffect(() => {
+    if (editorRef.current) updateFilterBoxes(editorRef.current);
+  }, [value, updateFilterBoxes]);
+
+  // Also re-box synchronously on each keystroke so boxes track live typing.
+  const handleChange = useCallback(
+    (text: string) => {
+      onChange(text);
+      if (editorRef.current) updateFilterBoxes(editorRef.current);
+    },
+    [onChange, updateFilterBoxes]
+  );
+
   ensureLanguageRegistered();
 
   const provideCompletionItems = useCallback(
@@ -86,9 +163,9 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
             detail: i18n.translate('explore.pplBuilder.searchBox.fieldDetail', {
               defaultMessage: 'Field',
             }),
-            // Accepting a field auto-completes ` = ` and re-triggers the
-            // suggestion widget so the value dropdown for that field opens.
-            insertText: `${name} = `,
+            // Accepting a field auto-completes `=` (no surrounding spaces) and
+            // re-triggers the suggestion widget so the value dropdown opens.
+            insertText: `${name}=`,
             range,
             sortText: `2_${name}`,
             command: RETRIGGER_COMMAND,
@@ -109,9 +186,12 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
               detail: i18n.translate('explore.pplBuilder.searchBox.valueDetail', {
                 defaultMessage: 'Value',
               }),
-              insertText: insert,
+              // Accepting a value appends a trailing space and re-triggers the
+              // widget so the next suggestion (AND/OR/NOT) opens automatically.
+              insertText: `${insert} `,
               range,
               sortText: `0_${v}`,
+              command: RETRIGGER_COMMAND,
             });
           }
         } catch {
@@ -181,9 +261,10 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
         height={20}
         languageId={PPL_SEARCH_LANGUAGE_ID}
         value={value}
-        onChange={onChange}
+        onChange={handleChange}
         options={options}
         suggestionProvider={suggestionProvider}
+        editorDidMount={handleEditorDidMount}
         triggerSuggestOnFocus
       />
     </div>

@@ -45,9 +45,18 @@ export const useFieldData = () => {
     [fields]
   );
 
+  // Any field usable as a `stats` argument (min/max/distinct_count/earliest/…).
   const numericAndAggregatableOptions = useMemo<EuiComboBoxOptionOption[]>(
     () =>
       fields.filter((f) => f.type === 'number' || f.aggregatable).map((f) => ({ label: f.name })),
+    [fields]
+  );
+
+  // Numeric-only fields, for aggregations that require a number (avg/sum/…).
+  // A text field such as `referer` is aggregatable (via its keyword sibling) but
+  // averaging it is meaningless, so it is excluded here.
+  const numericOptions = useMemo<EuiComboBoxOptionOption[]>(
+    () => fields.filter((f) => f.type === 'number').map((f) => ({ label: f.name })),
     [fields]
   );
 
@@ -87,6 +96,7 @@ export const useFieldData = () => {
     fieldNames,
     fieldOptions,
     numericAndAggregatableOptions,
+    numericOptions,
     timeFieldName,
     getValues,
   };

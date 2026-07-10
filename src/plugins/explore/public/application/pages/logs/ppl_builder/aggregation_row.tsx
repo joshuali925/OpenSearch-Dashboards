@@ -16,12 +16,15 @@ import {
 import { BuilderAction } from './build_ppl';
 import { Aggregation, AggFn, ScalarCall } from './types';
 import { AGG_FN_MAP, AGG_FUNCTIONS, SCALAR_FN_MAP } from './operations';
-import { ScalarFnMenu } from './scalar_fn_menu';
+import { FunctionMenu } from './function_menu';
 
 interface AggregationRowProps {
   agg: Aggregation;
   idx: number;
-  fieldOptions: EuiComboBoxOptionOption[];
+  /** Numeric-only field options, for aggregations that require a number. */
+  numericFieldOptions: EuiComboBoxOptionOption[];
+  /** Any aggregatable field, for aggregations that accept non-numeric fields. */
+  anyFieldOptions: EuiComboBoxOptionOption[];
   dispatch: React.Dispatch<BuilderAction>;
 }
 
@@ -96,10 +99,14 @@ const FunctionPill: React.FC<{
 export const AggregationRow: React.FC<AggregationRowProps> = ({
   agg,
   idx,
-  fieldOptions,
+  numericFieldOptions,
+  anyFieldOptions,
   dispatch,
 }) => {
   const def = AGG_FN_MAP[agg.fn];
+  // Numeric aggregations (avg/sum/…) only offer numeric fields; the rest
+  // (min/max/distinct_count/earliest/…) accept any aggregatable field.
+  const fieldOptions = def?.numericOnly ? numericFieldOptions : anyFieldOptions;
   return (
     <div className="plqGroup" data-test-subj={`pplBuilderAgg-${idx}`}>
       <span className="plqGroup__label">
@@ -148,8 +155,11 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
             data-test-subj={`pplBuilderAggField-${idx}`}
           />
           <div className="plqSep" />
-          <ScalarFnMenu
-            onAdd={(fn) => dispatch({ type: 'ADD_FUNCTION', index: idx, fn })}
+          <FunctionMenu
+            onSetAggregation={(fn) =>
+              dispatch({ type: 'SET_AGGREGATION', index: idx, agg: { fn } })
+            }
+            onAddFunction={(fn) => dispatch({ type: 'ADD_FUNCTION', index: idx, fn })}
             dataTestSubj={`pplBuilderAddFn-${idx}`}
           />
         </>

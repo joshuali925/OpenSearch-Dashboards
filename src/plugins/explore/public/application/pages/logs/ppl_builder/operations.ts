@@ -11,6 +11,13 @@ export interface AggDef {
   label: string;
   /** Whether the aggregation operates on a field (count does not). */
   needsField: boolean;
+  /**
+   * Whether the aggregation only makes sense over a numeric field (avg, sum,
+   * variance, …). When true the field picker is restricted to numeric fields;
+   * when false any aggregatable field is offered (min/max, distinct_count,
+   * earliest/latest, …). Undefined implies "any" (e.g. count needs no field).
+   */
+  numericOnly?: boolean;
 }
 
 /**
@@ -29,11 +36,13 @@ export const AGG_FUNCTIONS: AggDef[] = [
     id: 'sum',
     label: i18n.translate('explore.pplBuilder.agg.sum', { defaultMessage: 'Sum' }),
     needsField: true,
+    numericOnly: true,
   },
   {
     id: 'avg',
     label: i18n.translate('explore.pplBuilder.agg.avg', { defaultMessage: 'Average' }),
     needsField: true,
+    numericOnly: true,
   },
   {
     id: 'min',
@@ -51,11 +60,13 @@ export const AGG_FUNCTIONS: AggDef[] = [
       defaultMessage: 'Percentile',
     }),
     needsField: true,
+    numericOnly: true,
   },
   {
     id: 'median',
     label: i18n.translate('explore.pplBuilder.agg.median', { defaultMessage: 'Median' }),
     needsField: true,
+    numericOnly: true,
   },
   {
     id: 'distinct_count',
@@ -70,6 +81,7 @@ export const AGG_FUNCTIONS: AggDef[] = [
       defaultMessage: 'Std dev (sample)',
     }),
     needsField: true,
+    numericOnly: true,
   },
   {
     id: 'stddev_pop',
@@ -77,6 +89,7 @@ export const AGG_FUNCTIONS: AggDef[] = [
       defaultMessage: 'Std dev (population)',
     }),
     needsField: true,
+    numericOnly: true,
   },
   {
     id: 'var_samp',
@@ -84,6 +97,7 @@ export const AGG_FUNCTIONS: AggDef[] = [
       defaultMessage: 'Variance (sample)',
     }),
     needsField: true,
+    numericOnly: true,
   },
   {
     id: 'var_pop',
@@ -91,6 +105,7 @@ export const AGG_FUNCTIONS: AggDef[] = [
       defaultMessage: 'Variance (population)',
     }),
     needsField: true,
+    numericOnly: true,
   },
   {
     id: 'earliest',

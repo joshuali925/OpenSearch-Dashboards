@@ -159,12 +159,22 @@ export const LogsQueryPanel: React.FC = () => {
     [canSwitchToBuilder, parsedReduxQuery]
   );
 
-  const modeToggleTooltip = !canSwitchToBuilder
-    ? i18n.translate('explore.logsQueryPanel.cannotSwitchToBuilder', {
-        defaultMessage:
-          'This query cannot be represented in Builder mode. Simplify it or use Code mode.',
-      })
-    : undefined;
+  // The toggle back to Builder is disabled for two distinct reasons: the query
+  // isn't representable in Builder, or Builder was locked after editing in Code
+  // (one-way for the session). Explain whichever applies.
+  let modeToggleTooltip: string | undefined;
+  if (!canSwitchToBuilder) {
+    modeToggleTooltip =
+      builderLocked && parsedReduxQuery.canBuild
+        ? i18n.translate('explore.logsQueryPanel.builderLocked', {
+            defaultMessage:
+              'Builder mode is unavailable after editing the query in Code. Start a new search to use Builder.',
+          })
+        : i18n.translate('explore.logsQueryPanel.cannotSwitchToBuilder', {
+            defaultMessage:
+              'This query cannot be represented in Builder mode. Simplify it or use Code mode.',
+          });
+  }
 
   const showBuilder = mode === 'builder' && !isPromptMode;
 

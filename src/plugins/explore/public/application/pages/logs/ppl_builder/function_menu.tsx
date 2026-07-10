@@ -71,6 +71,7 @@ export const FunctionMenu: React.FC<FunctionMenuProps> = ({ onAddFunction, dataT
       isOpen={isOpen}
       closePopover={() => setIsOpen(false)}
       panelPaddingSize="none"
+      panelClassName="plqMenuPanel"
       anchorPosition="downLeft"
     >
       <EuiContextMenu initialPanelId={0} panels={panels} size="s" />

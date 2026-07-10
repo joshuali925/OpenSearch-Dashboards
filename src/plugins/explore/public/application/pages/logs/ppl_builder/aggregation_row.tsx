@@ -44,16 +44,16 @@ const FunctionPill: React.FC<{
 }> = ({ fn, aggIdx, fnIdx, dispatch }) => {
   const def = SCALAR_FN_MAP[fn.id];
   return (
-    <div className="plqFnChip" data-test-subj={`pplBuilderFn-${aggIdx}-${fnIdx}`}>
+    <div className="plqFn" data-test-subj={`pplBuilderFn-${aggIdx}-${fnIdx}`}>
       <EuiToolTip content={def?.description || fn.name}>
-        <span className="plqFnChip__name">{fn.name}</span>
+        <span className="plqFn__name">{fn.name}</span>
       </EuiToolTip>
       {fn.params.map((p, pi) => {
         const placeholder = def?.paramNames?.[pi] || '';
         const displayText = p || placeholder;
         return (
           <React.Fragment key={pi}>
-            <div className="plqFnChip__sep" />
+            <div className="plqSep" />
             <input
               value={p}
               placeholder={placeholder}
@@ -66,7 +66,7 @@ const FunctionPill: React.FC<{
                   value: e.target.value,
                 })
               }
-              className="plqFnChip__param"
+              className="plqParamInput"
               style={{ width: inputWidth(displayText, 16, 44, 120) }}
               aria-label={placeholder || fn.name}
               data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
@@ -75,7 +75,7 @@ const FunctionPill: React.FC<{
         );
       })}
       <EuiButtonIcon
-        className="plqFnChip__remove"
+        className="plqFn__remove"
         iconType="cross"
         color="text"
         size="s"
@@ -128,7 +128,10 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
               innermost-first (matching compile order); render it in that order
               so the field sits to the right of its functions. */}
           {(agg.functions ?? []).map((fn, fnIdx) => (
-            <FunctionPill key={fnIdx} fn={fn} aggIdx={idx} fnIdx={fnIdx} dispatch={dispatch} />
+            <React.Fragment key={fnIdx}>
+              <FunctionPill fn={fn} aggIdx={idx} fnIdx={fnIdx} dispatch={dispatch} />
+              <div className="plqSep" />
+            </React.Fragment>
           ))}
           <EuiComboBox
             compressed

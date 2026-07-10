@@ -204,63 +204,31 @@
   flex-shrink: 0;
 }
 
-// A scalar function applied to the aggregation field (e.g. `round(…, 2)`),
-// rendered as a filled inline chip rather than a nested outlined box — so it
-// reads as a token attached to the field, not a box-inside-a-box. Sits inside
-// the aggregation's .plqGroup, to the left of the field combobox.
-.plqFnChip {
+// A scalar function applied to the aggregation field (e.g. `round(…, 2)`).
+// Rendered as FLAT inline segments — no fill, no border, no rounded corners —
+// so it reads as part of the aggregation row inside the single outlined
+// .plqGroup box, separated from the neighbouring segments (the "Show" select
+// and the field combobox) by the same .plqSep dividers used elsewhere. A filled
+// or rounded chip here would read as a box-inside-a-box.
+.plqFn {
   display: inline-flex;
   align-items: center;
   height: $euiFormControlCompressedHeight;
-  padding: 0 2px 0 $euiSizeS;
-  border-radius: $euiSizeM;
-  background: $euiColorLightestShade;
   white-space: nowrap;
 
   // Function name reads as a keyword token, matching the code editor / preview.
   &__name {
+    padding: 0 $euiSizeS;
     font-size: $euiFontSizeXS;
     font-weight: $euiFontWeightMedium;
     color: $euiColorPrimaryText;
     cursor: default;
   }
 
-  // Thin vertical divider between the fn name and its extra arg, matching the
-  // .plqSep dividers used elsewhere in the builder — so the arg reads as another
-  // segment of the same chip rather than a detached box floating inside it.
-  &__sep {
-    width: 1px;
-    align-self: stretch;
-    margin: 0 $euiSizeXS;
-    background: transparentize($euiColorDarkShade, 0.7);
-    flex-shrink: 0;
-  }
-
-  // Extra args (e.g. round's decimals). Flat and transparent so it blends into
-  // the chip fill — no inner fill, border, or rounded corners (which would read
-  // as a box-inside-a-box). Width is set inline to fit the placeholder/value so
-  // labels like "Decimals" render without truncation.
-  &__param {
-    height: $euiFormControlCompressedHeight - 4;
-    font-size: $euiFontSizeXS;
-    color: $euiColorPrimaryText;
-    border: none;
-    border-radius: 0;
-    background: transparent;
-    padding: 0;
-    outline: none;
-
-    &::placeholder {
-      color: $euiColorMediumShade;
-    }
-  }
-
-  // Keep the remove button snug within the chip's compact height.
+  // Keep the remove button snug within the compact row height.
   &__remove.euiButtonIcon {
     width: $euiSize;
     height: $euiSize;
-    margin-left: $euiSizeXS;
-    border-radius: $euiSizeM;
   }
 }
 

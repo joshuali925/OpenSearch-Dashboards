@@ -209,39 +209,45 @@
 }
 
 // A scalar function applied to the aggregation field (e.g. `round(…, 2)`),
-// wrapped in an EuiBadge so it reads as one discrete, self-contained token. The
-// badge's own close (✕) button removes just that function — visually distinct
-// from the metric-level ✕ outside the badges. Sits inside the single outlined
-// .plqGroup box next to the field combobox and any sibling function badges.
-.plqFnBadge.euiBadge {
+// rendered as a custom token: a light-filled, softly-rounded, borderless pill
+// that reads as one discrete unit (name + inline params + its own ✕). Its ✕
+// removes just that function — visually distinct from the bare metric-level ✕ at
+// the row edge. Slightly shorter than the compressed row controls so it sits as
+// an inset chip within the single outlined .plqGroup box.
+.plqFn {
+  display: inline-flex;
+  align-items: center;
   align-self: center;
+  height: $euiSizeL;
   margin: 0 $euiSizeXS;
+  padding-left: $euiSizeXS;
+  white-space: nowrap;
 
-  // Let the badge grow to fit its inline param input rather than truncating.
-  .euiBadge__content {
-    max-width: none;
-  }
-
-  // The name + param input sit inline within the badge text slot.
-  &__inner {
-    display: inline-flex;
-    align-items: center;
-  }
+  // Very light fill + soft corners, no border — the surrounding .plqGroup
+  // outline is the only hard edge in the row.
+  background: $euiColorLightestShade;
+  border-radius: $euiBorderRadiusSmall;
 
   // Function name reads as a keyword token, matching the code editor / preview.
   &__name {
+    padding: 0 $euiSizeXS;
     font-size: $euiFontSizeXS;
     font-weight: $euiFontWeightMedium;
+    color: $euiColorPrimaryText;
     cursor: default;
   }
 
-  // The param input is transparent so it blends into the badge fill (the base
-  // .plqParamInput already clears the form-control border/shadow); tighten its
-  // height and padding to sit snugly beside the function name.
+  // Param input blends into the token fill (base .plqParamInput already clears
+  // the form-control border/shadow); match the token's reduced height.
   &__param {
-    height: auto;
-    margin-left: $euiSizeXS;
-    padding: 0;
+    height: $euiSizeL;
+    padding: 0 $euiSizeXS;
+  }
+
+  // Inline remove (✕), sized to the token height so it reads as part of the pill.
+  &__remove.euiButtonIcon {
+    width: $euiSizeL;
+    height: $euiSizeL;
   }
 }
 

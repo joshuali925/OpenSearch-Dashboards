@@ -80,7 +80,14 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     }
   }, [services, dataset]);
 
-  const query = useMemo(() => buildPPL(state, sourcePrefix), [state, sourcePrefix]);
+  // Fall back to the dataset title so the built query always names an index,
+  // even when `sourcePrefix` arrives without a `source =` clause.
+  const datasetTitle = (dataset as any)?.title as string | undefined;
+  const query = useMemo(() => buildPPL(state, sourcePrefix, datasetTitle), [
+    state,
+    sourcePrefix,
+    datasetTitle,
+  ]);
 
   const onQueryChangeRef = useRef(onQueryChange);
   onQueryChangeRef.current = onQueryChange;

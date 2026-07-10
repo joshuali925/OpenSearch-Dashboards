@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { buildPPL, builderReducer } from './build_ppl';
+import { buildPPL, builderReducer, ensureSourcePrefix } from './build_ppl';
 import { PPLBuilderState, emptyState } from './types';
 
 const SOURCE = 'source = logs';
@@ -84,6 +84,36 @@ describe('buildPPL', () => {
       aggregations: [{ id: 'a', fn: 'percentile', field: 'latency', percentile: 95 }],
     };
     expect(buildPPL(state, SOURCE)).toBe('source = logs | stats percentile(latency, 95)');
+  });
+
+  it('synthesizes a source clause from the index when the prefix has none', () => {
+    const state: PPLBuilderState = { ...emptyState(), searchExpression: 'ERROR' };
+    expect(buildPPL(state, '', 'logs')).toBe('source = logs ERROR');
+  });
+
+  it('keeps an existing source prefix over the index fallback', () => {
+    const state: PPLBuilderState = { ...emptyState(), searchExpression: 'ERROR' };
+    expect(buildPPL(state, 'source = other', 'logs')).toBe('source = other ERROR');
+  });
+
+  it('emits an empty query when neither prefix nor index is available', () => {
+    expect(buildPPL(emptyState(), '')).toBe('');
+  });
+});
+
+describe('ensureSourcePrefix', () => {
+  it('returns the prefix unchanged when it already has a source clause', () => {
+    expect(ensureSourcePrefix('source = logs', 'other')).toBe('source = logs');
+    expect(ensureSourcePrefix('index = logs', 'other')).toBe('index = logs');
+  });
+
+  it('synthesizes source = <index> when the prefix has no source clause', () => {
+    expect(ensureSourcePrefix('', 'logs')).toBe('source = logs');
+  });
+
+  it('returns the (empty) prefix when no index is available', () => {
+    expect(ensureSourcePrefix('', '')).toBe('');
+    expect(ensureSourcePrefix('', undefined)).toBe('');
   });
 });
 

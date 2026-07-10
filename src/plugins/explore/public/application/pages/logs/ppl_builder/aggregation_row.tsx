@@ -74,6 +74,19 @@ const FunctionPill: React.FC<{
           />
         );
       })}
+      {/* Per-function remove, snug against the function (no divider) so the
+          whole `round 32 ✕` reads as one removable unit. */}
+      <EuiButtonIcon
+        className="plqFn__remove"
+        iconType="cross"
+        color="text"
+        size="s"
+        aria-label={i18n.translate('explore.pplBuilder.removeFunction', {
+          defaultMessage: 'Remove function',
+        })}
+        onClick={() => dispatch({ type: 'REMOVE_FUNCTION', index: aggIdx, fnIndex: fnIdx })}
+        data-test-subj={`pplBuilderRemoveFn-${aggIdx}-${fnIdx}`}
+      />
     </div>
   );
 };

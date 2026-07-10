@@ -34,6 +34,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
     fieldNames,
     fieldOptions,
     numericAndAggregatableOptions,
+    numericOptions,
     timeFieldName,
     getValues,
   } = useFieldData();
@@ -127,7 +128,8 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
             key={agg.id}
             agg={agg}
             idx={idx}
-            fieldOptions={numericAndAggregatableOptions}
+            numericFieldOptions={numericOptions}
+            anyFieldOptions={numericAndAggregatableOptions}
             dispatch={dispatch}
           />
         ))}

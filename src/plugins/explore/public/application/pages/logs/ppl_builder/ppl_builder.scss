@@ -129,4 +129,14 @@
   .monaco-editor .overflow-guard {
     border-radius: $euiBorderRadius;
   }
+
+  // Colored highlight drawn behind each `field=value` filter so the user reads
+  // the expression as a set of discrete conditions (applied as a Monaco inline
+  // decoration; see SearchBox.updateFilterBoxes). Uses a background fill only —
+  // no border or padding — so it stays continuous across Monaco's per-token
+  // span fragments and does not offset the (glyph-positioned) text cursor.
+  &__filter {
+    background: transparentize($euiColorPrimary, 0.85);
+    border-radius: $euiBorderRadiusSmall;
+  }
 }

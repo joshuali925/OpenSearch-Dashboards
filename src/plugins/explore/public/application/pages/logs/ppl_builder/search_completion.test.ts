@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { analyzeSearchExpression } from './search_completion';
+import { analyzeSearchExpression, findFilterRanges } from './search_completion';
 
 describe('analyzeSearchExpression', () => {
   it('suggests fields on empty input', () => {
@@ -56,5 +56,50 @@ describe('analyzeSearchExpression', () => {
   it('handles a backtick-quoted field name', () => {
     const a = analyzeSearchExpression('`resource.service`=', 19);
     expect(a.suggestValuesForField).toBe('`resource.service`');
+  });
+});
+
+describe('findFilterRanges', () => {
+  it('returns no ranges for empty / bare-term input', () => {
+    expect(findFilterRanges('')).toEqual([]);
+    expect(findFilterRanges('error')).toEqual([]);
+  });
+
+  it('boxes a single field=value comparison', () => {
+    const q = 'status=500';
+    expect(findFilterRanges(q)).toEqual([{ start: 0, end: q.length }]);
+  });
+
+  it('boxes comparisons regardless of spacing around the operator', () => {
+    const q = 'status = 500';
+    expect(findFilterRanges(q)).toEqual([{ start: 0, end: q.length }]);
+  });
+
+  it('boxes each filter in a boolean expression', () => {
+    const q = 'status=500 AND service="web"';
+    const ranges = findFilterRanges(q);
+    expect(ranges).toHaveLength(2);
+    expect(q.slice(ranges[0].start, ranges[0].end)).toBe('status=500');
+    expect(q.slice(ranges[1].start, ranges[1].end)).toBe('service="web"');
+  });
+
+  it('boxes field and operator before the value is typed', () => {
+    const q = 'agent=';
+    expect(findFilterRanges(q)).toEqual([{ start: 0, end: q.length }]);
+  });
+
+  it('boxes the field=operator prefix even when followed by another filter', () => {
+    const q = 'agent= AND status=500';
+    const ranges = findFilterRanges(q);
+    expect(ranges).toHaveLength(2);
+    expect(q.slice(ranges[0].start, ranges[0].end)).toBe('agent=');
+    expect(q.slice(ranges[1].start, ranges[1].end)).toBe('status=500');
+  });
+
+  it('boxes a field IN (...) list as one filter', () => {
+    const q = "severityText IN ('ERROR', 'WARN')";
+    const ranges = findFilterRanges(q);
+    expect(ranges).toHaveLength(1);
+    expect(q.slice(ranges[0].start, ranges[0].end)).toBe(q);
   });
 });

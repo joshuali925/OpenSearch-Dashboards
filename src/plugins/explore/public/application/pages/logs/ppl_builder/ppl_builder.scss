@@ -82,6 +82,11 @@
   height: $euiFormControlCompressedHeight;
   font-size: $euiFontSizeXS;
   border: none;
+
+  // EUI draws the form-control outline as a box-shadow, not a border, so it
+  // survives `border: none` and shows as a straight-edged rectangle inside the
+  // rounded group. Clear it — the .plqGroup border is the only outline.
+  box-shadow: none !important;
   background: transparent;
   padding: 0 $euiSizeS;
   outline: none;

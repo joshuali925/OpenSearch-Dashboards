@@ -245,7 +245,12 @@ export const LogsQueryPanel: React.FC = () => {
 
   return (
     <EuiPanel paddingSize="s" borderRadius="none" className="exploreQueryPanel">
-      <EuiFlexGroup gutterSize="none" alignItems="center" responsive={false}>
+      <EuiFlexGroup
+        className="exploreQueryPanel__widgetsRow"
+        gutterSize="none"
+        alignItems="center"
+        responsive={false}
+      >
         <EuiFlexItem>
           <QueryPanelWidgets />
         </EuiFlexItem>
@@ -257,7 +262,12 @@ export const LogsQueryPanel: React.FC = () => {
           <QueryPanelGeneratedQuery />
         </div>
       ) : (
-        <EuiFlexGroup gutterSize="s" alignItems="flexStart" responsive={false}>
+        <EuiFlexGroup
+          className="exploreQueryPanel__contentRow"
+          gutterSize="s"
+          alignItems="flexStart"
+          responsive={false}
+        >
           <EuiFlexItem>
             {showBuilder ? (
               <PPLBuilder

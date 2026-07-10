@@ -17,6 +17,7 @@ import { SearchBox } from './search_box';
 import { AggregationRow } from './aggregation_row';
 import { AddMetricMenu } from './add_metric_menu';
 import { useFieldData } from './use_field_data';
+import { withConnector } from './tree_connector';
 import { useDatasetContext } from '../../../context';
 
 interface PPLBuilderProps {
@@ -119,114 +120,132 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
         </div>
       </div>
 
-      {/* Group / aggregate row */}
-      <div className="plqRow">
-        <span className="plqRow__label">
-          {i18n.translate('explore.pplBuilder.groupInto', { defaultMessage: 'Group into' })}
-        </span>
-        {state.aggregations.map((agg, idx) => (
-          <AggregationRow
-            key={agg.id}
-            agg={agg}
-            idx={idx}
-            numericFieldOptions={numericOptions}
-            anyFieldOptions={numericAndAggregatableOptions}
-            dispatch={dispatch}
-          />
-        ))}
-        <AddMetricMenu
-          onAdd={(fn) => dispatch({ type: 'ADD_AGGREGATION', agg: { fn } })}
-          dataTestSubj="pplBuilderAddAggregation"
-        />
-
-        {hasAggregation && (
-          <>
-            {/* Group-by fields — outlined group matching the metric pills, with
-                the "by" label floating on the top border. */}
-            <div className="plqGroup" data-test-subj="pplBuilderGroupBy">
-              <span className="plqGroup__label">
-                {i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
-              </span>
-              <EuiComboBox
-                compressed
-                style={{ minWidth: 200 }}
-                placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
-                  defaultMessage: 'Everything',
-                })}
-                options={fieldOptions}
-                selectedOptions={state.groupBy.fields.map((f) => ({ label: f }))}
-                onChange={(selected) =>
-                  dispatch({
-                    type: 'SET_GROUPBY_FIELDS',
-                    fields: selected.map((s) => s.label),
-                  })
-                }
-                onCreateOption={(val) => {
-                  const v = val.trim();
-                  if (v) {
-                    dispatch({
-                      type: 'SET_GROUPBY_FIELDS',
-                      fields: [...state.groupBy.fields, v],
-                    });
-                  }
-                }}
-                data-test-subj="pplBuilderGroupByFields"
+      {/* Group / aggregate row — branched beneath "Search for" as an indented
+          child so the two rows read as a query tree (mirrors the metric
+          explorer's tree connectors between stacked operations). */}
+      {withConnector(
+        0,
+        <div className="plqRow plqRow--branch plqGroupBranch">
+          <span className="plqRow__label">
+            {i18n.translate('explore.pplBuilder.groupInto', { defaultMessage: 'Group into' })}
+          </span>
+          {/* Tree connector tying the "Group into" label to its child rows so
+              the group reads as one unit rather than an isolated pill. */}
+          <div className="plqGroupBranch__connector" />
+          <div className="plqGroupBranch__kids">
+            {/* Metric aggregations + the add-metric affordance. */}
+            <div className="plqGroupChildRow">
+              {state.aggregations.map((agg, idx) => (
+                <AggregationRow
+                  key={agg.id}
+                  agg={agg}
+                  idx={idx}
+                  numericFieldOptions={numericOptions}
+                  anyFieldOptions={numericAndAggregatableOptions}
+                  dispatch={dispatch}
+                />
+              ))}
+              <AddMetricMenu
+                onAdd={(fn) => dispatch({ type: 'ADD_AGGREGATION', agg: { fn } })}
+                dataTestSubj="pplBuilderAddAggregation"
               />
             </div>
 
-            {/* Time bucket (span) chip */}
-            {state.groupBy.span ? (
-              <div className="plqGroup" data-test-subj="pplBuilderSpanChip">
-                <span className="plqGroup__label">
-                  {i18n.translate('explore.pplBuilder.span', { defaultMessage: 'Time bucket' })}
-                </span>
-                <EuiFieldText
-                  compressed
-                  controlOnly
-                  value={state.groupBy.span.interval}
-                  onChange={(e) =>
-                    dispatch({
-                      type: 'SET_SPAN',
-                      span: {
-                        field: state.groupBy.span!.field,
-                        interval: e.target.value,
-                        auto: false,
-                      },
-                    })
-                  }
-                  className="plqParamInput"
-                  style={{ width: 64 }}
-                  aria-label={i18n.translate('explore.pplBuilder.spanInterval', {
-                    defaultMessage: 'Time bucket interval',
-                  })}
-                  data-test-subj="pplBuilderSpanInterval"
-                />
-                <div className="plqSep" />
-                <EuiButtonIcon
-                  iconType="cross"
-                  color="text"
-                  size="s"
-                  aria-label={i18n.translate('explore.pplBuilder.removeSpan', {
-                    defaultMessage: 'Remove time bucket',
-                  })}
-                  onClick={toggleSpan}
-                />
+            {/* Group-by + time-bucket, stacked as a second child row under the
+                same connector so the whole aggregation reads as one group. */}
+            {hasAggregation && (
+              <div className="plqGroupChildRow">
+                {/* Group-by fields — outlined group matching the metric pills, with
+                    the "by" label floating on the top border. */}
+                <div className="plqGroup" data-test-subj="pplBuilderGroupBy">
+                  <span className="plqGroup__label">
+                    {i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
+                  </span>
+                  <EuiComboBox
+                    compressed
+                    style={{ minWidth: 200 }}
+                    placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
+                      defaultMessage: 'Everything',
+                    })}
+                    options={fieldOptions}
+                    selectedOptions={state.groupBy.fields.map((f) => ({ label: f }))}
+                    onChange={(selected) =>
+                      dispatch({
+                        type: 'SET_GROUPBY_FIELDS',
+                        fields: selected.map((s) => s.label),
+                      })
+                    }
+                    onCreateOption={(val) => {
+                      const v = val.trim();
+                      if (v) {
+                        dispatch({
+                          type: 'SET_GROUPBY_FIELDS',
+                          fields: [...state.groupBy.fields, v],
+                        });
+                      }
+                    }}
+                    data-test-subj="pplBuilderGroupByFields"
+                  />
+                </div>
+
+                {/* Time bucket (span) chip */}
+                {state.groupBy.span ? (
+                  <div className="plqGroup" data-test-subj="pplBuilderSpanChip">
+                    <span className="plqGroup__label">
+                      {i18n.translate('explore.pplBuilder.span', {
+                        defaultMessage: 'Time bucket',
+                      })}
+                    </span>
+                    <EuiFieldText
+                      compressed
+                      controlOnly
+                      value={state.groupBy.span.interval}
+                      onChange={(e) =>
+                        dispatch({
+                          type: 'SET_SPAN',
+                          span: {
+                            field: state.groupBy.span!.field,
+                            interval: e.target.value,
+                            auto: false,
+                          },
+                        })
+                      }
+                      className="plqParamInput"
+                      style={{ width: 64 }}
+                      aria-label={i18n.translate('explore.pplBuilder.spanInterval', {
+                        defaultMessage: 'Time bucket interval',
+                      })}
+                      data-test-subj="pplBuilderSpanInterval"
+                    />
+                    <div className="plqSep" />
+                    <EuiButtonIcon
+                      iconType="cross"
+                      color="text"
+                      size="s"
+                      aria-label={i18n.translate('explore.pplBuilder.removeSpan', {
+                        defaultMessage: 'Remove time bucket',
+                      })}
+                      onClick={toggleSpan}
+                    />
+                  </div>
+                ) : (
+                  <EuiButtonEmpty
+                    size="xs"
+                    iconType="clock"
+                    onClick={toggleSpan}
+                    data-test-subj="pplBuilderAddSpan"
+                  >
+                    {i18n.translate('explore.pplBuilder.addSpan', {
+                      defaultMessage: 'Add time bucket',
+                    })}
+                  </EuiButtonEmpty>
+                )}
               </div>
-            ) : (
-              <EuiButtonEmpty
-                size="xs"
-                iconType="clock"
-                onClick={toggleSpan}
-                data-test-subj="pplBuilderAddSpan"
-              >
-                {i18n.translate('explore.pplBuilder.addSpan', {
-                  defaultMessage: 'Add time bucket',
-                })}
-              </EuiButtonEmpty>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </div>,
+        true
+      )}
 
       {/* Live PPL preview */}
       <div className="plqQueryPreviewStrip" data-test-subj="pplBuilderQueryPreview">

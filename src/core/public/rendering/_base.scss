@@ -32,3 +32,14 @@
     flex-shrink: 0;
   }
 }
+
+// Agentation's dev toolbar injects an unscoped global rule:
+//   svg[fill=none] :not([fill]) { fill: none !important }
+// This hides OUI icons whose <svg fill="none"> children inherit
+// currentColor. Re-assert currentColor only on OUI icon SVGs — scoping
+// to `.euiIcon` instead of all `svg[fill="none"]` avoids over-filling
+// stroke-based icon libraries (lucide, heroicons, etc.) that also use
+// `<svg fill="none">` but rely on `fill: none` for their child paths.
+svg.euiIcon[fill="none"] :not([fill]) {
+  fill: currentColor !important;
+}

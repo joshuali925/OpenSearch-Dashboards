@@ -89,6 +89,17 @@ const run = async () => {
     ])
   );
 
+  // navigator.clipboard.writeText is only available in secure contexts
+  // (https or localhost). On plain http the call throws and agentation
+  // swallows the error, so the toolbar shows "copied!" but nothing is
+  // copied. Add a textarea + execCommand('copy') fallback.
+  const agentationClipboardPatch = {
+    from: `await navigator.clipboard.writeText(output);`,
+    to: `if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(output); } else { const ta = document.createElement('textarea'); ta.value = output; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } finally { document.body.removeChild(ta); } }`,
+  };
+  promises.push(patchFile('node_modules/agentation/dist/index.mjs', agentationClipboardPatch));
+  promises.push(patchFile('node_modules/agentation/dist/index.js', agentationClipboardPatch));
+
   promises.push(
     patchFile('node_modules/kbn-handlebars/target/types/packages/kbn-handlebars/src/utils.js', {
       // kbn-handlebars calls new Function() at startup to probe for unsafe-eval support,

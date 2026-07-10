@@ -429,6 +429,7 @@
     "@types/vinyl-fs": "^2.4.11",
     "@typescript-eslint/eslint-plugin": "^8.63.0",
     "@typescript-eslint/parser": "^8.63.0",
+    "agentation": "*",
     "antlr4ng-cli": "^2.0.0",
     "archiver": "^5.3.0",
     "axe-core": "^4.0.2",

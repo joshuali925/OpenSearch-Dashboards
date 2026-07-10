@@ -220,6 +220,10 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
 
       for (const kw of analysis.keywords) {
         const isBoolean = kw === 'AND' || kw === 'OR' || kw === 'NOT' || kw === 'IN';
+        // Boolean operators AND/OR/NOT are followed by another expression, so
+        // append a trailing space so the user can keep typing without adding
+        // one manually. IN is followed by `(...)`, so it is left as-is.
+        const appendsSpace = kw === 'AND' || kw === 'OR' || kw === 'NOT';
         suggestions.push({
           label: kw,
           kind: isBoolean
@@ -232,7 +236,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
             : i18n.translate('explore.pplBuilder.searchBox.operatorDetail', {
                 defaultMessage: 'Operator',
               }),
-          insertText: kw,
+          insertText: appendsSpace ? `${kw} ` : kw,
           range,
           sortText: `1_${kw}`,
         });

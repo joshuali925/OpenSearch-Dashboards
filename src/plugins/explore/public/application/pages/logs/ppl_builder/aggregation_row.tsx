@@ -156,9 +156,6 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
           />
           <div className="plqSep" />
           <FunctionMenu
-            onSetAggregation={(fn) =>
-              dispatch({ type: 'SET_AGGREGATION', index: idx, agg: { fn } })
-            }
             onAddFunction={(fn) => dispatch({ type: 'ADD_FUNCTION', index: idx, fn })}
             dataTestSubj={`pplBuilderAddFn-${idx}`}
           />

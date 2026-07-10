@@ -6,7 +6,6 @@
 import React from 'react';
 import { i18n } from '@osd/i18n';
 import {
-  EuiBadge,
   EuiComboBox,
   EuiComboBoxOptionOption,
   EuiButtonIcon,
@@ -32,14 +31,14 @@ interface AggregationRowProps {
 
 /**
  * One scalar function applied to the aggregation's field: e.g. `round`, with
- * inline inputs for any extra args (round's decimals). Each function is wrapped
- * in an EuiBadge so it reads as one discrete, self-contained token; the badge's
- * own close (✕) button removes just that function. This visually distinguishes
- * removing a scalar function (the badge ✕, inside the pill) from removing the
- * whole metric (the row-level ✕ outside any badge). Functions render to the
- * RIGHT of the field, so the row reads left-to-right as application order
- * (`field → round → abs` = `abs(round(field))`), matching the innermost-first
- * compile order.
+ * inline inputs for any extra args (round's decimals). Rendered as a custom
+ * token (`.plqFn`) — a light-filled, softly-rounded, borderless pill — that
+ * reads as one discrete unit; its own inline ✕ removes just that function. This
+ * visually distinguishes removing a scalar function (the ✕ inside the filled
+ * token) from removing the whole metric (the bare row-level ✕ at the edge).
+ * Functions render to the RIGHT of the field, so the row reads left-to-right as
+ * application order (`field → round → abs` = `abs(round(field))`), matching the
+ * innermost-first compile order.
  */
 const FunctionPill: React.FC<{
   fn: ScalarCall;
@@ -48,49 +47,47 @@ const FunctionPill: React.FC<{
   dispatch: React.Dispatch<BuilderAction>;
 }> = ({ fn, aggIdx, fnIdx, dispatch }) => {
   const def = SCALAR_FN_MAP[fn.id];
-  const removeLabel = i18n.translate('explore.pplBuilder.removeFunction', {
-    defaultMessage: 'Remove function',
-  });
   return (
-    <EuiBadge
-      className="plqFnBadge"
-      color="hollow"
-      iconType="cross"
-      iconSide="right"
-      iconOnClick={() => dispatch({ type: 'REMOVE_FUNCTION', index: aggIdx, fnIndex: fnIdx })}
-      iconOnClickAriaLabel={removeLabel}
-      data-test-subj={`pplBuilderFn-${aggIdx}-${fnIdx}`}
-    >
-      <span className="plqFnBadge__inner">
-        <EuiToolTip content={def?.description || fn.name}>
-          <span className="plqFnBadge__name">{fn.name}</span>
-        </EuiToolTip>
-        {fn.params.map((p, pi) => {
-          const placeholder = def?.paramNames?.[pi] || '';
-          const displayText = p || placeholder;
-          return (
-            <input
-              key={pi}
-              value={p}
-              placeholder={placeholder}
-              onChange={(e) =>
-                dispatch({
-                  type: 'SET_FUNCTION_PARAM',
-                  index: aggIdx,
-                  fnIndex: fnIdx,
-                  paramIndex: pi,
-                  value: e.target.value,
-                })
-              }
-              className="plqParamInput plqFnBadge__param"
-              style={{ width: inputWidth(displayText, 16, 44, 120) }}
-              aria-label={placeholder || fn.name}
-              data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
-            />
-          );
+    <div className="plqFn" data-test-subj={`pplBuilderFn-${aggIdx}-${fnIdx}`}>
+      <EuiToolTip content={def?.description || fn.name}>
+        <span className="plqFn__name">{fn.name}</span>
+      </EuiToolTip>
+      {fn.params.map((p, pi) => {
+        const placeholder = def?.paramNames?.[pi] || '';
+        const displayText = p || placeholder;
+        return (
+          <input
+            key={pi}
+            value={p}
+            placeholder={placeholder}
+            onChange={(e) =>
+              dispatch({
+                type: 'SET_FUNCTION_PARAM',
+                index: aggIdx,
+                fnIndex: fnIdx,
+                paramIndex: pi,
+                value: e.target.value,
+              })
+            }
+            className="plqParamInput plqFn__param"
+            style={{ width: inputWidth(displayText, 16, 44, 120) }}
+            aria-label={placeholder || fn.name}
+            data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
+          />
+        );
+      })}
+      <EuiButtonIcon
+        className="plqFn__remove"
+        iconType="cross"
+        color="text"
+        size="s"
+        aria-label={i18n.translate('explore.pplBuilder.removeFunction', {
+          defaultMessage: 'Remove function',
         })}
-      </span>
-    </EuiBadge>
+        onClick={() => dispatch({ type: 'REMOVE_FUNCTION', index: aggIdx, fnIndex: fnIdx })}
+        data-test-subj={`pplBuilderRemoveFn-${aggIdx}-${fnIdx}`}
+      />
+    </div>
   );
 };
 

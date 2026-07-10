@@ -9,6 +9,11 @@ import { AggFn } from './types';
 export interface AggDef {
   id: AggFn;
   label: string;
+  /**
+   * Short explanation of the aggregation, shown under the label in the "Add
+   * metric" menu (plain string, matching the scalar-function descriptions).
+   */
+  description: string;
   /** Whether the aggregation operates on a field (count does not). */
   needsField: boolean;
   /**
@@ -30,28 +35,33 @@ export const AGG_FUNCTIONS: AggDef[] = [
   {
     id: 'count',
     label: i18n.translate('explore.pplBuilder.agg.count', { defaultMessage: 'Count' }),
+    description: 'Number of rows.',
     needsField: false,
   },
   {
     id: 'sum',
     label: i18n.translate('explore.pplBuilder.agg.sum', { defaultMessage: 'Sum' }),
+    description: 'Sum of the field values.',
     needsField: true,
     numericOnly: true,
   },
   {
     id: 'avg',
     label: i18n.translate('explore.pplBuilder.agg.avg', { defaultMessage: 'Average' }),
+    description: 'Arithmetic mean of the field values.',
     needsField: true,
     numericOnly: true,
   },
   {
     id: 'min',
     label: i18n.translate('explore.pplBuilder.agg.min', { defaultMessage: 'Min' }),
+    description: 'Smallest field value.',
     needsField: true,
   },
   {
     id: 'max',
     label: i18n.translate('explore.pplBuilder.agg.max', { defaultMessage: 'Max' }),
+    description: 'Largest field value.',
     needsField: true,
   },
   {
@@ -59,12 +69,14 @@ export const AGG_FUNCTIONS: AggDef[] = [
     label: i18n.translate('explore.pplBuilder.agg.percentile', {
       defaultMessage: 'Percentile',
     }),
+    description: 'Value below which the given percentage of values fall.',
     needsField: true,
     numericOnly: true,
   },
   {
     id: 'median',
     label: i18n.translate('explore.pplBuilder.agg.median', { defaultMessage: 'Median' }),
+    description: 'Middle value (50th percentile).',
     needsField: true,
     numericOnly: true,
   },
@@ -73,6 +85,7 @@ export const AGG_FUNCTIONS: AggDef[] = [
     label: i18n.translate('explore.pplBuilder.agg.distinctCount', {
       defaultMessage: 'Distinct count',
     }),
+    description: 'Number of unique field values.',
     needsField: true,
   },
   {
@@ -80,6 +93,7 @@ export const AGG_FUNCTIONS: AggDef[] = [
     label: i18n.translate('explore.pplBuilder.agg.stddevSamp', {
       defaultMessage: 'Std dev (sample)',
     }),
+    description: 'Sample standard deviation of the field values.',
     needsField: true,
     numericOnly: true,
   },
@@ -88,6 +102,7 @@ export const AGG_FUNCTIONS: AggDef[] = [
     label: i18n.translate('explore.pplBuilder.agg.stddevPop', {
       defaultMessage: 'Std dev (population)',
     }),
+    description: 'Population standard deviation of the field values.',
     needsField: true,
     numericOnly: true,
   },
@@ -96,6 +111,7 @@ export const AGG_FUNCTIONS: AggDef[] = [
     label: i18n.translate('explore.pplBuilder.agg.varSamp', {
       defaultMessage: 'Variance (sample)',
     }),
+    description: 'Sample variance of the field values.',
     needsField: true,
     numericOnly: true,
   },
@@ -104,27 +120,32 @@ export const AGG_FUNCTIONS: AggDef[] = [
     label: i18n.translate('explore.pplBuilder.agg.varPop', {
       defaultMessage: 'Variance (population)',
     }),
+    description: 'Population variance of the field values.',
     needsField: true,
     numericOnly: true,
   },
   {
     id: 'earliest',
     label: i18n.translate('explore.pplBuilder.agg.earliest', { defaultMessage: 'Earliest' }),
+    description: 'Field value from the earliest timestamp.',
     needsField: true,
   },
   {
     id: 'latest',
     label: i18n.translate('explore.pplBuilder.agg.latest', { defaultMessage: 'Latest' }),
+    description: 'Field value from the latest timestamp.',
     needsField: true,
   },
   {
     id: 'first',
     label: i18n.translate('explore.pplBuilder.agg.first', { defaultMessage: 'First' }),
+    description: 'Field value from the first row in the group.',
     needsField: true,
   },
   {
     id: 'last',
     label: i18n.translate('explore.pplBuilder.agg.last', { defaultMessage: 'Last' }),
+    description: 'Field value from the last row in the group.',
     needsField: true,
   },
 ];

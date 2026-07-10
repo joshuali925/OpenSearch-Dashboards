@@ -12,7 +12,6 @@ import {
   EuiCode,
   EuiComboBox,
   EuiFieldText,
-  EuiFlexItem,
   EuiButtonIcon,
 } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
@@ -158,12 +157,15 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
 
         {hasAggregation && (
           <>
-            <span className="plqRow__label">
-              {i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
-            </span>
-            <EuiFlexItem grow={false} style={{ minWidth: 200 }}>
+            {/* Group-by fields — outlined group matching the metric pills, with
+                the "by" label floating on the top border. */}
+            <div className="plqGroup" data-test-subj="pplBuilderGroupBy">
+              <span className="plqGroup__label">
+                {i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
+              </span>
               <EuiComboBox
                 compressed
+                style={{ minWidth: 200 }}
                 placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
                   defaultMessage: 'Everything',
                 })}
@@ -186,7 +188,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                 }}
                 data-test-subj="pplBuilderGroupByFields"
               />
-            </EuiFlexItem>
+            </div>
 
             {/* Time bucket (span) chip */}
             {state.groupBy.span ? (

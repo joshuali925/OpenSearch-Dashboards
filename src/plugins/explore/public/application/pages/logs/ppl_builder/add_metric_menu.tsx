@@ -5,7 +5,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonEmpty, EuiContextMenu, EuiPopover } from '@elastic/eui';
+import { EuiButtonEmpty, EuiContextMenu, EuiPopover, EuiText } from '@elastic/eui';
 import { AggFn } from './types';
 import { AGG_FUNCTIONS } from './operations';
 
@@ -34,7 +34,14 @@ export const AddMetricMenu: React.FC<AddMetricMenuProps> = ({ onAdd, dataTestSub
           defaultMessage: 'Select aggregation',
         }),
         items: AGG_FUNCTIONS.map((agg) => ({
-          name: agg.label,
+          name: (
+            <div>
+              <strong>{agg.label}</strong>
+              <EuiText size="xs" color="subdued" className="plqFnMenuDescription">
+                {agg.description}
+              </EuiText>
+            </div>
+          ),
           onClick: () => {
             onAdd(agg.id);
             setIsOpen(false);

@@ -54,39 +54,26 @@ const FunctionPill: React.FC<{
         const placeholder = def?.paramNames?.[pi] || '';
         const displayText = p || placeholder;
         return (
-          <React.Fragment key={pi}>
-            <div className="plqSep" />
-            <input
-              value={p}
-              placeholder={placeholder}
-              onChange={(e) =>
-                dispatch({
-                  type: 'SET_FUNCTION_PARAM',
-                  index: aggIdx,
-                  fnIndex: fnIdx,
-                  paramIndex: pi,
-                  value: e.target.value,
-                })
-              }
-              className="plqParamInput"
-              style={{ width: inputWidth(displayText, 16, 44, 120) }}
-              aria-label={placeholder || fn.name}
-              data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
-            />
-          </React.Fragment>
+          <input
+            key={pi}
+            value={p}
+            placeholder={placeholder}
+            onChange={(e) =>
+              dispatch({
+                type: 'SET_FUNCTION_PARAM',
+                index: aggIdx,
+                fnIndex: fnIdx,
+                paramIndex: pi,
+                value: e.target.value,
+              })
+            }
+            className="plqParamInput"
+            style={{ width: inputWidth(displayText, 16, 44, 120) }}
+            aria-label={placeholder || fn.name}
+            data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
+          />
         );
       })}
-      <EuiButtonIcon
-        className="plqFn__remove"
-        iconType="cross"
-        color="text"
-        size="s"
-        aria-label={i18n.translate('explore.pplBuilder.removeFunction', {
-          defaultMessage: 'Remove function',
-        })}
-        onClick={() => dispatch({ type: 'REMOVE_FUNCTION', index: aggIdx, fnIndex: fnIdx })}
-        data-test-subj={`pplBuilderRemoveFn-${aggIdx}-${fnIdx}`}
-      />
     </div>
   );
 };
@@ -185,7 +172,6 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
           />
         </>
       )}
-      <div className="plqSep" />
       <EuiButtonIcon
         iconType="cross"
         color="text"
@@ -195,11 +181,10 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
         })}
         onClick={() => dispatch({ type: 'REMOVE_AGGREGATION', index: idx })}
       />
-      {/* Add-function (Σ) menu, only for aggregations that take a field — pinned
-          to the trailing edge so the row reads `Show <fn> <field> <fns…> ✕ Σ`. */}
+      {/* Add-function (⋮) menu, only for aggregations that take a field — pinned
+          to the trailing edge so the row reads `Show <fn> <field> <fns…> ✕ ⋮`. */}
       {def?.needsField && (
         <>
-          <div className="plqSep" />
           <FunctionMenu
             onAddFunction={(fn) => dispatch({ type: 'ADD_FUNCTION', index: idx, fn })}
             dataTestSubj={`pplBuilderAddFn-${idx}`}

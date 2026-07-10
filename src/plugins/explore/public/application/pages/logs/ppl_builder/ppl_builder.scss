@@ -221,28 +221,14 @@
   white-space: nowrap;
 
   // Function name reads as a keyword token, matching the code editor / preview.
+  // No divider between the name and its param input — they read as one call
+  // (`round 32`), matching the compiled `round(field, 32)`.
   &__name {
-    padding: 0 $euiSizeS;
+    padding: 0 $euiSizeXS 0 $euiSizeS;
     font-size: $euiFontSizeXS;
     font-weight: $euiFontWeightMedium;
     color: $euiColorPrimaryText;
     cursor: default;
-  }
-
-  // Per-function remove (✕) stays hidden so the segment reads clean
-  // (`round │ 32`); it fades in on hover/focus of the function, keeping each
-  // function individually removable without cluttering the row.
-  &__remove.euiButtonIcon {
-    width: $euiSize;
-    height: $euiSize;
-    margin-left: -#{$euiSizeXS};
-    opacity: 0;
-    transition: opacity $euiAnimSpeedFast ease-in;
-  }
-
-  &:hover &__remove.euiButtonIcon,
-  &:focus-within &__remove.euiButtonIcon {
-    opacity: 1;
   }
 }
 

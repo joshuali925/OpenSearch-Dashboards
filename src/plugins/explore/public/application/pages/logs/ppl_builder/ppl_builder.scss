@@ -90,6 +90,13 @@
   white-space: normal;
 }
 
+// Cap the "Add metric" aggregation menu height so its 16 options scroll rather
+// than growing into a tall popover that overflows the viewport.
+.plqAggMenuPanel .euiContextMenuPanel {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
 .plqOperatorSelect {
   width: 64px;
 }

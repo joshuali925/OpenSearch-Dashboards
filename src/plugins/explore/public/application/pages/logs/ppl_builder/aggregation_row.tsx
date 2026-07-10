@@ -185,6 +185,7 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
           />
         </>
       )}
+      <div className="plqSep" />
       <EuiButtonIcon
         iconType="cross"
         color="text"
@@ -195,7 +196,7 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
         onClick={() => dispatch({ type: 'REMOVE_AGGREGATION', index: idx })}
       />
       {/* Add-function (⋮) menu, only for aggregations that take a field — pinned
-          to the trailing edge so the row reads `Show <fn> <field> <fns…> ✕ ⋮`. */}
+          to the trailing edge so the row reads `Show <fn> <field> <fns…> │ ✕ ⋮`. */}
       {def?.needsField && (
         <>
           <FunctionMenu

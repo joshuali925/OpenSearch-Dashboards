@@ -16,12 +16,13 @@ interface FunctionMenuProps {
 }
 
 /**
- * Add-function affordance for an aggregation row: a compact Σ icon button that
- * opens a category-grouped menu of scalar functions (Math / String / Date &
- * time) wrapping the row's field, mirroring the metric explorer's OpsMenu. It
- * sits at the row's trailing edge so the row reads `Show <fn> <field> <fns…> ✕ Σ`.
- * The aggregation itself is chosen when the metric is created (the "Add metric"
- * menu) and edited via the row's "Show" dropdown, so it is NOT offered here.
+ * Add-function affordance for an aggregation row: a compact overflow (⋮) icon
+ * button that opens a category-grouped menu of scalar functions (Math / String
+ * / Date & time) wrapping the row's field, mirroring the metric explorer's
+ * OpsMenu. It sits at the row's trailing edge so the row reads
+ * `Show <fn> <field> <fns…> ✕ ⋮`. The aggregation itself is chosen when the
+ * metric is created (the "Add metric" menu) and edited via the row's "Show"
+ * dropdown, so it is NOT offered here.
  */
 export const FunctionMenu: React.FC<FunctionMenuProps> = ({ onAddFunction, dataTestSubj }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -61,7 +62,7 @@ export const FunctionMenu: React.FC<FunctionMenuProps> = ({ onAddFunction, dataT
     <EuiPopover
       button={
         <EuiButtonIcon
-          iconType="functionAdd"
+          iconType="boxesVertical"
           color="text"
           size="s"
           onClick={() => setIsOpen(!isOpen)}

@@ -79,6 +79,85 @@ describe('buildPPL — source-less output', () => {
     };
     expect(buildPPL(state)).toBe('| stats percentile(latency, 95)');
   });
+
+  it('compiles the expanded aggregation functions', () => {
+    const state: PPLBuilderState = {
+      ...emptyState(),
+      aggregations: [
+        { id: 'a', fn: 'distinct_count', field: 'user.id' },
+        { id: 'b', fn: 'median', field: 'latency' },
+        { id: 'c', fn: 'stddev_samp', field: 'bytes' },
+        { id: 'd', fn: 'earliest', field: 'status' },
+      ],
+    };
+    expect(buildPPL(state)).toBe(
+      '| stats distinct_count(user.id), median(latency), stddev_samp(bytes), earliest(status)'
+    );
+  });
+
+  it('wraps the field in a single scalar function', () => {
+    const state: PPLBuilderState = {
+      ...emptyState(),
+      aggregations: [
+        {
+          id: 'a',
+          fn: 'avg',
+          field: 'latency',
+          functions: [{ id: 'abs', name: 'abs', params: [] }],
+        },
+      ],
+    };
+    expect(buildPPL(state)).toBe('| stats avg(abs(latency))');
+  });
+
+  it('nests a scalar chain innermost-first with extra params', () => {
+    const state: PPLBuilderState = {
+      ...emptyState(),
+      aggregations: [
+        {
+          id: 'a',
+          fn: 'avg',
+          field: 'latency',
+          functions: [
+            { id: 'round', name: 'round', params: ['1'] },
+            { id: 'abs', name: 'abs', params: [] },
+          ],
+        },
+      ],
+    };
+    expect(buildPPL(state)).toBe('| stats avg(abs(round(latency, 1)))');
+  });
+
+  it('drops blank trailing scalar params', () => {
+    const state: PPLBuilderState = {
+      ...emptyState(),
+      aggregations: [
+        {
+          id: 'a',
+          fn: 'max',
+          field: 'latency',
+          functions: [{ id: 'round', name: 'round', params: [''] }],
+        },
+      ],
+    };
+    expect(buildPPL(state)).toBe('| stats max(round(latency))');
+  });
+
+  it('applies a scalar function to a percentile field argument', () => {
+    const state: PPLBuilderState = {
+      ...emptyState(),
+      aggregations: [
+        {
+          id: 'a',
+          fn: 'percentile',
+          field: 'latency',
+          percentile: 90,
+          functions: [{ id: 'round', name: 'round', params: [] }],
+        },
+      ],
+    };
+    expect(buildPPL(state)).toBe('| stats percentile(round(latency), 90)');
+  });
 });
 
 describe('builderReducer', () => {
@@ -101,6 +180,40 @@ describe('builderReducer', () => {
     state = builderReducer(state, { type: 'REMOVE_AGGREGATION', index: 0 });
     expect(state.aggregations).toHaveLength(1);
     expect(state.aggregations[0].fn).toBe('avg');
+  });
+
+  it('adds, edits, and removes a scalar function on an aggregation', () => {
+    let state = builderReducer(emptyState(), {
+      type: 'ADD_AGGREGATION',
+      agg: { fn: 'avg', field: 'latency' },
+    });
+    state = builderReducer(state, {
+      type: 'ADD_FUNCTION',
+      index: 0,
+      fn: { id: 'round', name: 'round', params: [''] },
+    });
+    expect(state.aggregations[0].functions).toEqual([{ id: 'round', name: 'round', params: [''] }]);
+
+    state = builderReducer(state, {
+      type: 'SET_FUNCTION_PARAM',
+      index: 0,
+      fnIndex: 0,
+      paramIndex: 0,
+      value: '2',
+    });
+    expect(state.aggregations[0].functions?.[0].params).toEqual(['2']);
+
+    state = builderReducer(state, { type: 'REMOVE_FUNCTION', index: 0, fnIndex: 0 });
+    expect(state.aggregations[0].functions).toEqual([]);
+  });
+
+  it('ignores function actions targeting a missing aggregation', () => {
+    const state = builderReducer(emptyState(), {
+      type: 'ADD_FUNCTION',
+      index: 5,
+      fn: { id: 'abs', name: 'abs', params: [] },
+    });
+    expect(state.aggregations).toEqual([]);
   });
 
   it('sets and removes the span', () => {

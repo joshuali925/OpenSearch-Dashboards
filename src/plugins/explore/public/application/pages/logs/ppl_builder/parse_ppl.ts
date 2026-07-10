@@ -5,14 +5,34 @@
 
 import { CharStream, CommonTokenStream } from 'antlr4ng';
 import { SimplifiedOpenSearchPPLLexer, SimplifiedOpenSearchPPLParser } from '@osd/antlr-grammar';
-import { AggFn, Aggregation, PPLBuilderState, emptyState, nextAggId } from './types';
+import { AggFn, Aggregation, PPLBuilderState, ScalarCall, emptyState, nextAggId } from './types';
+import { SCALAR_FN_IDS, SCALAR_FN_MAP } from './operations';
 
 export interface PPLParseResult {
   canBuild: boolean;
   state: PPLBuilderState;
 }
 
-const AGG_FN_NAMES = new Set<string>(['avg', 'sum', 'min', 'max']);
+// Aggregations that take a single expression argument. Maps the PPL function
+// name (as written) to the modeled AggFn. `dc` is the terse alias for
+// distinct_count.
+const SINGLE_ARG_AGG: Record<string, AggFn> = {
+  avg: 'avg',
+  sum: 'sum',
+  min: 'min',
+  max: 'max',
+  median: 'median',
+  stddev_samp: 'stddev_samp',
+  stddev_pop: 'stddev_pop',
+  var_samp: 'var_samp',
+  var_pop: 'var_pop',
+  earliest: 'earliest',
+  latest: 'latest',
+  first: 'first',
+  last: 'last',
+  distinct_count: 'distinct_count',
+  dc: 'distinct_count',
+};
 
 /** Strip surrounding quotes/backticks and unescape a PPL string literal. */
 function unquote(text: string): string {
@@ -24,26 +44,86 @@ function unquote(text: string): string {
   return trimmed;
 }
 
+/**
+ * Split a comma-separated argument list on TOP-LEVEL commas only (commas inside
+ * nested parentheses belong to inner calls). Input is already whitespace-free.
+ */
+function splitTopLevelArgs(s: string): string[] {
+  const args: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === '(') depth++;
+    else if (c === ')') depth--;
+    else if (c === ',' && depth === 0) {
+      args.push(s.slice(start, i));
+      start = i + 1;
+    }
+  }
+  args.push(s.slice(start));
+  return args;
+}
+
+/**
+ * Parse a field expression that may be wrapped in a chain of known scalar
+ * functions, e.g. `abs(round(latency,1))` -> { field: 'latency', functions:
+ * [round(params=['1']), abs] }. Functions are returned innermost-first. Returns
+ * null when it hits a call whose name is not a recognized scalar function (the
+ * builder can't model it, so the caller bails to code mode).
+ */
+function parseFieldExpression(text: string): { field: string; functions: ScalarCall[] } | null {
+  const call = text.match(/^([a-zA-Z_][\w]*)\((.*)\)$/);
+  if (!call) {
+    // A bare token (field name). Reject anything that isn't a plain field
+    // reference: stray parens, or arithmetic/comparison operators (e.g.
+    // `latency/1000`) which the builder can't model as a single field.
+    if (!text || /[()+\-*/%<>=!&|^~]/.test(text)) return null;
+    return { field: unquote(text), functions: [] };
+  }
+  const fnId = call[1].toLowerCase();
+  if (!SCALAR_FN_IDS.has(fnId)) return null;
+  const args = splitTopLevelArgs(call[2]);
+  const inner = parseFieldExpression(args[0]);
+  if (!inner) return null;
+  const def = SCALAR_FN_MAP[fnId];
+  const extraParams = args.slice(1);
+  // Guard against more args than the catalog defines (an unmodeled variant).
+  if (extraParams.length > (def.params.length || 0)) return null;
+  const fn: ScalarCall = { id: fnId, name: def.name, params: extraParams };
+  // Outermost call wraps the inner chain -> append after inner's functions.
+  return { field: inner.field, functions: [...inner.functions, fn] };
+}
+
+/** Build an Aggregation from a wrapped-field expression, or null. */
+function buildFieldAgg(fn: AggFn, argText: string, percentile?: number): Aggregation | null {
+  const parsed = parseFieldExpression(argText);
+  if (!parsed) return null;
+  const agg: Aggregation = { id: nextAggId(), fn, field: parsed.field };
+  if (parsed.functions.length > 0) agg.functions = parsed.functions;
+  if (percentile !== undefined) agg.percentile = percentile;
+  return agg;
+}
+
 /** Parse a single statsFunction's text into an Aggregation, or null if unmodeled. */
 function parseAggFunctionText(text: string): Aggregation | null {
   const compact = text.replace(/\s+/g, '');
   if (/^(count|c)\(\)$/i.test(compact)) {
     return { id: nextAggId(), fn: 'count' };
   }
-  const call = compact.match(/^([a-zA-Z_]+)\((.*)\)$/);
+  const call = compact.match(/^([a-zA-Z_][\w]*)\((.*)\)$/);
   if (!call) return null;
   const fn = call[1].toLowerCase();
-  const args = call[2];
-  if (AGG_FN_NAMES.has(fn)) {
-    if (!args || args.includes(',')) return null;
-    return { id: nextAggId(), fn: fn as AggFn, field: unquote(args) };
+  const args = splitTopLevelArgs(call[2]);
+  if (fn in SINGLE_ARG_AGG) {
+    if (args.length !== 1 || !args[0]) return null;
+    return buildFieldAgg(SINGLE_ARG_AGG[fn], args[0]);
   }
   if (fn === 'percentile' || fn === 'percentile_approx') {
-    const parts = args.split(',');
-    if (parts.length !== 2) return null;
-    const pct = Number(parts[1]);
+    if (args.length !== 2) return null;
+    const pct = Number(args[1]);
     if (!Number.isFinite(pct)) return null;
-    return { id: nextAggId(), fn: 'percentile', field: unquote(parts[0]), percentile: pct };
+    return buildFieldAgg('percentile', args[0], pct);
   }
   return null;
 }

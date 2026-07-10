@@ -52,16 +52,6 @@ export function builderReducer(state: PPLBuilderState, action: BuilderAction): P
   }
 }
 
-/** PPL string literals use single quotes; escape embedded quotes and backslashes. */
-export function escapePPLString(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-}
-
-/** A bare number (int/float, optional sign) can be emitted unquoted in a comparison. */
-export function isNumericLiteral(value: string): boolean {
-  return /^-?\d+(\.\d+)?$/.test(value.trim());
-}
-
 export function compileAggregation(agg: Aggregation): string | null {
   switch (agg.fn) {
     case 'count':

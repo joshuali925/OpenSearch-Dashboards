@@ -4,7 +4,7 @@
  */
 
 export * from './types';
-export { builderReducer, buildPPL, escapePPLString, isNumericLiteral } from './build_ppl';
+export { builderReducer, buildPPL } from './build_ppl';
 export type { BuilderAction } from './build_ppl';
 export { analyzeSearchExpression } from './search_completion';
 export type { SearchAnalysis } from './search_completion';

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { buildPPL, builderReducer, escapePPLString, isNumericLiteral } from './build_ppl';
+import { buildPPL, builderReducer } from './build_ppl';
 import { PPLBuilderState, emptyState } from './types';
 
 const SOURCE = 'source = logs';
@@ -84,18 +84,6 @@ describe('buildPPL', () => {
       aggregations: [{ id: 'a', fn: 'percentile', field: 'latency', percentile: 95 }],
     };
     expect(buildPPL(state, SOURCE)).toBe('source = logs | stats percentile(latency, 95)');
-  });
-});
-
-describe('escapePPLString / isNumericLiteral', () => {
-  it('escapes backslashes and quotes', () => {
-    expect(escapePPLString("a\\b'c")).toBe("a\\\\b\\'c");
-  });
-  it('detects numeric literals', () => {
-    expect(isNumericLiteral('500')).toBe(true);
-    expect(isNumericLiteral('-3.14')).toBe(true);
-    expect(isNumericLiteral('5xx')).toBe(false);
-    expect(isNumericLiteral('')).toBe(false);
   });
 });
 

@@ -140,7 +140,8 @@ export const LogsQueryPanel: React.FC = () => {
     [setEditorText, dispatch, queryString]
   );
 
-  const canSwitchToBuilder = !builderLocked && parsePPL(reduxQuery).canBuild;
+  const parsedReduxQuery = useMemo(() => parsePPL(reduxQuery), [reduxQuery]);
+  const canSwitchToBuilder = !builderLocked && parsedReduxQuery.canBuild;
 
   const handleModeChange = useCallback(
     (id: string) => {
@@ -150,13 +151,12 @@ export const LogsQueryPanel: React.FC = () => {
         setBuilderLocked(true);
         setMode('code');
       } else if (canSwitchToBuilder) {
-        const parsed = parsePPL(reduxQuery);
-        setBuilderState(parsed.state);
+        setBuilderState(parsedReduxQuery.state);
         setBuilderKey((k) => k + 1);
         setMode('builder');
       }
     },
-    [canSwitchToBuilder, reduxQuery]
+    [canSwitchToBuilder, parsedReduxQuery]
   );
 
   const modeToggleTooltip = !canSwitchToBuilder
@@ -192,12 +192,7 @@ export const LogsQueryPanel: React.FC = () => {
         )}
       </EuiFlexGroup>
 
-      {isPromptMode ? (
-        <div className="exploreQueryPanel__editorsWrapper">
-          <QueryPanelEditor />
-          <QueryPanelGeneratedQuery />
-        </div>
-      ) : showBuilder ? (
+      {showBuilder ? (
         <PPLBuilder
           key={builderKey}
           sourcePrefix={sourcePrefix}

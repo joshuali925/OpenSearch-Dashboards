@@ -20,7 +20,6 @@ import { useHeaderVariants } from '../../utils/hooks/use_header_variants';
 import { NewExperienceBanner } from '../../../components/experience_banners/new_experience_banner';
 import { BottomContainer } from '../../../components/container/bottom_container';
 import { ResizableQueryContainer } from '../../../components/container/resizable_query_container';
-import { StaticQueryContainer } from '../../../components/container/static_query_container';
 import { TopNav } from '../../../components/top_nav/top_nav';
 import { useInitPage } from '../../../application/utils/hooks/use_page_initialization';
 import {
@@ -97,18 +96,12 @@ export const LogsPage: React.FC<Partial<Pick<AppMountParameters, 'setHeaderActio
             <TopNav setHeaderActionMenu={setHeaderActionMenu} savedExplore={savedExplore} />
             <NewExperienceBanner />
 
-            {queryBuilderEnabled ? (
-              // Builder-enabled logs: fixed-height query panel (no drag handle),
-              // matching the metrics query-builder layout.
-              <StaticQueryContainer queryPanel={<LogsQueryPanel />}>
-                <BottomContainer />
-              </StaticQueryContainer>
-            ) : (
-              <ResizableQueryContainer queryPanel={<QueryPanel />}>
-                {/* Main content area with resizable panels under QueryPanel */}
-                <BottomContainer />
-              </ResizableQueryContainer>
-            )}
+            <ResizableQueryContainer
+              queryPanel={queryBuilderEnabled ? <LogsQueryPanel /> : <QueryPanel />}
+            >
+              {/* Main content area with resizable panels under QueryPanel */}
+              <BottomContainer />
+            </ResizableQueryContainer>
           </EuiPageBody>
         </EuiPage>
       </div>

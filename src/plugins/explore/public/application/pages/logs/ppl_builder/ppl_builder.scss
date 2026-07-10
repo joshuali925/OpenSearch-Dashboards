@@ -223,25 +223,29 @@
   padding-left: $euiSizeXS;
   white-space: nowrap;
 
-  // Very light fill + soft corners, no border — the surrounding .plqGroup
-  // outline is the only hard edge in the row.
-  background: $euiColorLightestShade;
-  border-radius: $euiBorderRadiusSmall;
+  // Faint primary-tinted fill (matching the PPL query preview strip) + soft
+  // rounded corners, no border — the surrounding .plqGroup outline is the only
+  // hard edge in the row.
+  background: transparentize($euiColorPrimary, 0.96);
+  border-radius: $euiBorderRadius;
 
-  // Function name reads as a keyword token, matching the code editor / preview.
+  // Function name reads as plain text; the param value is the highlighted
+  // (primary-blue) part, mirroring how the value stands out in the token.
   &__name {
     padding: 0 $euiSizeXS;
     font-size: $euiFontSizeXS;
     font-weight: $euiFontWeightMedium;
-    color: $euiColorPrimaryText;
+    color: $euiTextColor;
     cursor: default;
   }
 
   // Param input blends into the token fill (base .plqParamInput already clears
-  // the form-control border/shadow); match the token's reduced height.
+  // the form-control border/shadow); match the token's reduced height. The value
+  // is primary-blue to stand out against the plain-text function name.
   &__param {
     height: $euiSizeL;
     padding: 0 $euiSizeXS;
+    color: $euiColorPrimaryText;
   }
 
   // Inline remove (✕), sized to the token height so it reads as part of the pill.

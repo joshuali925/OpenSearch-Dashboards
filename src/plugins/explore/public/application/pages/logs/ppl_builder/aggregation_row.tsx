@@ -6,6 +6,7 @@
 import React from 'react';
 import { i18n } from '@osd/i18n';
 import {
+  EuiBadge,
   EuiComboBox,
   EuiComboBoxOptionOption,
   EuiButtonIcon,
@@ -31,10 +32,12 @@ interface AggregationRowProps {
 
 /**
  * One scalar function applied to the aggregation's field: e.g. `round`, with
- * inline inputs for any extra args (round's decimals). Rendered as FLAT inline
- * segments (`.plqFn`) — no fill, border, or rounded corners — so it reads as
- * part of the aggregation row rather than a box-inside-a-box. Functions render
- * to the RIGHT of the field, so the row reads left-to-right as application order
+ * inline inputs for any extra args (round's decimals). Each function is wrapped
+ * in an EuiBadge so it reads as one discrete, self-contained token; the badge's
+ * own close (✕) button removes just that function. This visually distinguishes
+ * removing a scalar function (the badge ✕, inside the pill) from removing the
+ * whole metric (the row-level ✕ outside any badge). Functions render to the
+ * RIGHT of the field, so the row reads left-to-right as application order
  * (`field → round → abs` = `abs(round(field))`), matching the innermost-first
  * compile order.
  */
@@ -45,49 +48,49 @@ const FunctionPill: React.FC<{
   dispatch: React.Dispatch<BuilderAction>;
 }> = ({ fn, aggIdx, fnIdx, dispatch }) => {
   const def = SCALAR_FN_MAP[fn.id];
+  const removeLabel = i18n.translate('explore.pplBuilder.removeFunction', {
+    defaultMessage: 'Remove function',
+  });
   return (
-    <div className="plqFn" data-test-subj={`pplBuilderFn-${aggIdx}-${fnIdx}`}>
-      <EuiToolTip content={def?.description || fn.name}>
-        <span className="plqFn__name">{fn.name}</span>
-      </EuiToolTip>
-      {fn.params.map((p, pi) => {
-        const placeholder = def?.paramNames?.[pi] || '';
-        const displayText = p || placeholder;
-        return (
-          <input
-            key={pi}
-            value={p}
-            placeholder={placeholder}
-            onChange={(e) =>
-              dispatch({
-                type: 'SET_FUNCTION_PARAM',
-                index: aggIdx,
-                fnIndex: fnIdx,
-                paramIndex: pi,
-                value: e.target.value,
-              })
-            }
-            className="plqParamInput"
-            style={{ width: inputWidth(displayText, 16, 44, 120) }}
-            aria-label={placeholder || fn.name}
-            data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
-          />
-        );
-      })}
-      {/* Per-function remove, snug against the function (no divider) so the
-          whole `round 32 ✕` reads as one removable unit. */}
-      <EuiButtonIcon
-        className="plqFn__remove"
-        iconType="cross"
-        color="text"
-        size="s"
-        aria-label={i18n.translate('explore.pplBuilder.removeFunction', {
-          defaultMessage: 'Remove function',
+    <EuiBadge
+      className="plqFnBadge"
+      color="hollow"
+      iconType="cross"
+      iconSide="right"
+      iconOnClick={() => dispatch({ type: 'REMOVE_FUNCTION', index: aggIdx, fnIndex: fnIdx })}
+      iconOnClickAriaLabel={removeLabel}
+      data-test-subj={`pplBuilderFn-${aggIdx}-${fnIdx}`}
+    >
+      <span className="plqFnBadge__inner">
+        <EuiToolTip content={def?.description || fn.name}>
+          <span className="plqFnBadge__name">{fn.name}</span>
+        </EuiToolTip>
+        {fn.params.map((p, pi) => {
+          const placeholder = def?.paramNames?.[pi] || '';
+          const displayText = p || placeholder;
+          return (
+            <input
+              key={pi}
+              value={p}
+              placeholder={placeholder}
+              onChange={(e) =>
+                dispatch({
+                  type: 'SET_FUNCTION_PARAM',
+                  index: aggIdx,
+                  fnIndex: fnIdx,
+                  paramIndex: pi,
+                  value: e.target.value,
+                })
+              }
+              className="plqParamInput plqFnBadge__param"
+              style={{ width: inputWidth(displayText, 16, 44, 120) }}
+              aria-label={placeholder || fn.name}
+              data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
+            />
+          );
         })}
-        onClick={() => dispatch({ type: 'REMOVE_FUNCTION', index: aggIdx, fnIndex: fnIdx })}
-        data-test-subj={`pplBuilderRemoveFn-${aggIdx}-${fnIdx}`}
-      />
-    </div>
+      </span>
+    </EuiBadge>
   );
 };
 
@@ -151,12 +154,10 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
           />
           {/* Scalar functions wrapping the field, rendered to the RIGHT of it so
               the row reads left-to-right as application order. The chain array is
-              innermost-first, which matches that left-to-right reading. */}
+              innermost-first, which matches that left-to-right reading. Each is a
+              self-contained badge, so no dividers between them. */}
           {(agg.functions ?? []).map((fn, fnIdx) => (
-            <React.Fragment key={fnIdx}>
-              <div className="plqSep" />
-              <FunctionPill fn={fn} aggIdx={idx} fnIdx={fnIdx} dispatch={dispatch} />
-            </React.Fragment>
+            <FunctionPill key={fnIdx} fn={fn} aggIdx={idx} fnIdx={fnIdx} dispatch={dispatch} />
           ))}
         </>
       )}
@@ -185,7 +186,18 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
           />
         </>
       )}
+      {/* Add-function (⋮) menu comes first, then the metric-level remove (✕) at
+          the far-right edge. The ⋮ and the metric ✕ are visually separated from
+          the scalar-function badges (whose own close buttons remove just that
+          function), so the trailing ✕ unambiguously deletes the whole metric.
+          Row reads `Show <fn> <field> <fn-badges…> │ ⋮ ✕`. */}
       <div className="plqSep" />
+      {def?.needsField && (
+        <FunctionMenu
+          onAddFunction={(fn) => dispatch({ type: 'ADD_FUNCTION', index: idx, fn })}
+          dataTestSubj={`pplBuilderAddFn-${idx}`}
+        />
+      )}
       <EuiButtonIcon
         iconType="cross"
         color="text"
@@ -194,17 +206,8 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
           defaultMessage: 'Remove aggregation',
         })}
         onClick={() => dispatch({ type: 'REMOVE_AGGREGATION', index: idx })}
+        data-test-subj={`pplBuilderRemoveAgg-${idx}`}
       />
-      {/* Add-function (⋮) menu, only for aggregations that take a field — pinned
-          to the trailing edge so the row reads `Show <fn> <field> <fns…> │ ✕ ⋮`. */}
-      {def?.needsField && (
-        <>
-          <FunctionMenu
-            onAddFunction={(fn) => dispatch({ type: 'ADD_FUNCTION', index: idx, fn })}
-            dataTestSubj={`pplBuilderAddFn-${idx}`}
-          />
-        </>
-      )}
     </div>
   );
 };

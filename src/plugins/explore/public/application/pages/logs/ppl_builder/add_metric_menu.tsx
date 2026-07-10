@@ -67,7 +67,7 @@ export const AddMetricMenu: React.FC<AddMetricMenuProps> = ({ onAdd, dataTestSub
       isOpen={isOpen}
       closePopover={() => setIsOpen(false)}
       panelPaddingSize="none"
-      panelClassName="plqAggMenuPanel"
+      panelClassName="plqMenuPanel"
       anchorPosition="downLeft"
     >
       <EuiContextMenu initialPanelId={0} panels={panels} size="s" />

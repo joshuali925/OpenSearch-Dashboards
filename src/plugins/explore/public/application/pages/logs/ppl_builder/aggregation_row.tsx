@@ -30,11 +30,13 @@ interface AggregationRowProps {
 }
 
 /**
- * One scalar-function chip wrapping the aggregation's field: e.g. `round`, with
- * inline inputs for any extra args (round's decimals). Rendered as a filled
- * inline token (`.plqFnChip`) rather than a nested outlined box, so it reads as
- * a tag attached to the field — not a box-inside-a-box. The wrapped field is the
- * function's first argument and is shown by the field combobox to the right.
+ * One scalar function applied to the aggregation's field: e.g. `round`, with
+ * inline inputs for any extra args (round's decimals). Rendered as FLAT inline
+ * segments (`.plqFn`) — no fill, border, or rounded corners — so it reads as
+ * part of the aggregation row rather than a box-inside-a-box. Functions render
+ * to the RIGHT of the field, so the row reads left-to-right as application order
+ * (`field → round → abs` = `abs(round(field))`), matching the innermost-first
+ * compile order.
  */
 const FunctionPill: React.FC<{
   fn: ScalarCall;
@@ -124,15 +126,6 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
       {def?.needsField && (
         <>
           <div className="plqSep" />
-          {/* Scalar-function chain wrapping the field. The chain array is
-              innermost-first (matching compile order); render it in that order
-              so the field sits to the right of its functions. */}
-          {(agg.functions ?? []).map((fn, fnIdx) => (
-            <React.Fragment key={fnIdx}>
-              <FunctionPill fn={fn} aggIdx={idx} fnIdx={fnIdx} dispatch={dispatch} />
-              <div className="plqSep" />
-            </React.Fragment>
-          ))}
           <EuiComboBox
             compressed
             singleSelection={{ asPlainText: true }}
@@ -156,11 +149,15 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
             style={{ minWidth: comboBoxWidth(agg.field || 'of field') }}
             data-test-subj={`pplBuilderAggField-${idx}`}
           />
-          <div className="plqSep" />
-          <FunctionMenu
-            onAddFunction={(fn) => dispatch({ type: 'ADD_FUNCTION', index: idx, fn })}
-            dataTestSubj={`pplBuilderAddFn-${idx}`}
-          />
+          {/* Scalar functions wrapping the field, rendered to the RIGHT of it so
+              the row reads left-to-right as application order. The chain array is
+              innermost-first, which matches that left-to-right reading. */}
+          {(agg.functions ?? []).map((fn, fnIdx) => (
+            <React.Fragment key={fnIdx}>
+              <div className="plqSep" />
+              <FunctionPill fn={fn} aggIdx={idx} fnIdx={fnIdx} dispatch={dispatch} />
+            </React.Fragment>
+          ))}
         </>
       )}
       {agg.fn === 'percentile' && (
@@ -198,6 +195,17 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
         })}
         onClick={() => dispatch({ type: 'REMOVE_AGGREGATION', index: idx })}
       />
+      {/* Add-function (Σ) menu, only for aggregations that take a field — pinned
+          to the trailing edge so the row reads `Show <fn> <field> <fns…> ✕ Σ`. */}
+      {def?.needsField && (
+        <>
+          <div className="plqSep" />
+          <FunctionMenu
+            onAddFunction={(fn) => dispatch({ type: 'ADD_FUNCTION', index: idx, fn })}
+            dataTestSubj={`pplBuilderAddFn-${idx}`}
+          />
+        </>
+      )}
     </div>
   );
 };

@@ -5,7 +5,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonEmpty, EuiContextMenu, EuiPopover, EuiText } from '@elastic/eui';
+import { EuiButtonIcon, EuiContextMenu, EuiPopover, EuiText } from '@elastic/eui';
 import { ScalarCall } from './types';
 import { SCALAR_FN_CATEGORIES } from './operations';
 
@@ -16,11 +16,12 @@ interface FunctionMenuProps {
 }
 
 /**
- * "Function" affordance for an aggregation row: a category-grouped menu of
- * scalar functions (Math / String / Date & time) that wrap the row's field,
- * mirroring the metric explorer's OpsMenu. The aggregation itself is chosen when
- * the metric is created (the "Add metric" menu) and edited via the row's "Show"
- * dropdown, so it is intentionally NOT offered here.
+ * Add-function affordance for an aggregation row: a compact Σ icon button that
+ * opens a category-grouped menu of scalar functions (Math / String / Date &
+ * time) wrapping the row's field, mirroring the metric explorer's OpsMenu. It
+ * sits at the row's trailing edge so the row reads `Show <fn> <field> <fns…> ✕ Σ`.
+ * The aggregation itself is chosen when the metric is created (the "Add metric"
+ * menu) and edited via the row's "Show" dropdown, so it is NOT offered here.
  */
 export const FunctionMenu: React.FC<FunctionMenuProps> = ({ onAddFunction, dataTestSubj }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -59,14 +60,16 @@ export const FunctionMenu: React.FC<FunctionMenuProps> = ({ onAddFunction, dataT
   return (
     <EuiPopover
       button={
-        <EuiButtonEmpty
-          size="xs"
+        <EuiButtonIcon
           iconType="functionAdd"
+          color="text"
+          size="s"
           onClick={() => setIsOpen(!isOpen)}
+          aria-label={i18n.translate('explore.pplBuilder.addFunction', {
+            defaultMessage: 'Add function',
+          })}
           data-test-subj={dataTestSubj}
-        >
-          {i18n.translate('explore.pplBuilder.addFunction', { defaultMessage: 'Function' })}
-        </EuiButtonEmpty>
+        />
       }
       isOpen={isOpen}
       closePopover={() => setIsOpen(false)}

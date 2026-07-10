@@ -132,4 +132,17 @@ describe('LogsQueryPanel', () => {
     expect(screen.getByTestId('code-editor-stub')).toBeInTheDocument();
     expect(screen.queryByTestId('ppl-builder-stub')).not.toBeInTheDocument();
   });
+
+  it('locks Builder after switching a parseable query to Code (one-way in-session)', () => {
+    renderPanel('source = logs service="web-store"');
+    expect(screen.getByTestId('ppl-builder-stub')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('code'));
+    expect(screen.getByTestId('code-editor-stub')).toBeInTheDocument();
+
+    // Even though the query is parseable, Builder stays locked for the session.
+    fireEvent.click(screen.getByTestId('builder'));
+    expect(screen.getByTestId('code-editor-stub')).toBeInTheDocument();
+    expect(screen.queryByTestId('ppl-builder-stub')).not.toBeInTheDocument();
+  });
 });

@@ -178,12 +178,15 @@
     background: transparent !important;
   }
 
-  // Size the inline icon buttons (remove, info) to the full compressed control
-  // height so their hover shade fills the group's content area (mirrors metrics
-  // .pqbPill__body). Without this the default `size="s"` button is smaller than
-  // the row and its highlight reads as a tiny disc.
+  // Size the inline icon buttons (remove, info, and the Σ add-function popover
+  // trigger) to the full compressed control height so their hover shade fills
+  // the group's content area (mirrors metrics .pqbPill__body). Without this the
+  // default `size="s"` button is smaller than the row and its highlight reads as
+  // a tiny disc. The Σ button is wrapped in an EuiPopover, so match it through
+  // that wrapper too.
   > .euiButtonIcon.euiButtonIcon,
-  > .euiToolTipAnchor > .euiButtonIcon.euiButtonIcon {
+  > .euiToolTipAnchor > .euiButtonIcon.euiButtonIcon,
+  > .euiPopover > .euiButtonIcon.euiButtonIcon {
     min-width: $euiFormControlCompressedHeight;
     width: $euiFormControlCompressedHeight;
     height: $euiFormControlCompressedHeight;
@@ -192,7 +195,8 @@
 
   // Clip the last button's hover shade to match the group's rounded right edge.
   > .euiButtonIcon:last-child,
-  > .euiToolTipAnchor:last-child .euiButtonIcon {
+  > .euiToolTipAnchor:last-child .euiButtonIcon,
+  > .euiPopover:last-child > .euiButtonIcon {
     border-radius: 0 calc(#{$euiSizeM} - 2px) calc(#{$euiSizeM} - 2px) 0;
   }
 }
@@ -225,10 +229,20 @@
     cursor: default;
   }
 
-  // Keep the remove button snug within the compact row height.
+  // Per-function remove (✕) stays hidden so the segment reads clean
+  // (`round │ 32`); it fades in on hover/focus of the function, keeping each
+  // function individually removable without cluttering the row.
   &__remove.euiButtonIcon {
     width: $euiSize;
     height: $euiSize;
+    margin-left: -#{$euiSizeXS};
+    opacity: 0;
+    transition: opacity $euiAnimSpeedFast ease-in;
+  }
+
+  &:hover &__remove.euiButtonIcon,
+  &:focus-within &__remove.euiButtonIcon {
+    opacity: 1;
   }
 }
 

@@ -91,7 +91,6 @@ function findCursorTokenIndex(tokenStream: CommonTokenStream, cursorColumn: numb
 function findGoverningField(tokenStream: CommonTokenStream, cursorIndex: number): string | null {
   let i = cursorIndex - 1;
   // Skip back over the value list we might be inside (values, commas, quotes, WS).
-  let sawComparison = false;
   while (i >= 0) {
     const t = tokenStream.get(i);
     if (t.type === WS) {
@@ -99,7 +98,6 @@ function findGoverningField(tokenStream: CommonTokenStream, cursorIndex: number)
       continue;
     }
     if (COMPARISON_OPS.has(t.type) || t.type === PPLSearchParser.IN) {
-      sawComparison = true;
       i--;
       // Next non-WS token going back should be the field.
       while (i >= 0 && tokenStream.get(i).type === WS) i--;
@@ -122,7 +120,7 @@ function findGoverningField(tokenStream: CommonTokenStream, cursorIndex: number)
     }
     break;
   }
-  return sawComparison ? null : null;
+  return null;
 }
 
 /**

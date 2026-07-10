@@ -230,6 +230,14 @@
     color: $euiColorPrimaryText;
     cursor: default;
   }
+
+  // Per-function remove (✕), snug against the param with no divider so the whole
+  // `round 32 ✕` reads as one removable unit.
+  &__remove.euiButtonIcon {
+    width: $euiSize;
+    height: $euiSize;
+    margin-left: -#{$euiSizeXS};
+  }
 }
 
 // Description line under each function name in the Add-function menu.

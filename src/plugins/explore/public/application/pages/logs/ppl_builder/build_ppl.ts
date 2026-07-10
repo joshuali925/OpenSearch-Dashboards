@@ -66,6 +66,23 @@ export function compileAggregation(agg: Aggregation): string | null {
   }
 }
 
+/** Matches a leading `source =` / `index =` clause (the dataset-owned prefix). */
+const SOURCE_CLAUSE_RE = /^\s*(source|index)\s*=/i;
+
+/**
+ * Guarantee the generated PPL names an index. The dataset selector normally
+ * supplies `source = <index>` as the prefix, but when that clause is missing
+ * (e.g. a query with no source segment) we fall back to the dataset title so the
+ * built query — shown in the builder preview and seeded into Code mode on toggle
+ * — always starts with `source = <index>`.
+ */
+export function ensureSourcePrefix(sourcePrefix: string, index?: string): string {
+  const prefix = (sourcePrefix || '').trim();
+  if (SOURCE_CLAUSE_RE.test(prefix)) return prefix;
+  const table = (index || '').trim();
+  return table ? `source = ${table}` : prefix;
+}
+
 function compileGroupBy(groupBy: GroupBy): string {
   const parts: string[] = [...groupBy.fields.filter(Boolean)];
   if (groupBy.span) {
@@ -80,9 +97,13 @@ function compileGroupBy(groupBy: GroupBy): string {
  * the source segment (the PPL `search` command syntax:
  * `source=<index> <search-expression>`), and aggregations become a trailing
  * `| stats … by …`. Returns just the prefix when the builder is empty.
+ *
+ * `index` is the dataset title, used to synthesize `source = <index>` when the
+ * prefix is missing one so the query always names an index (see
+ * {@link ensureSourcePrefix}).
  */
-export function buildPPL(state: PPLBuilderState, sourcePrefix: string): string {
-  const prefix = sourcePrefix.trim();
+export function buildPPL(state: PPLBuilderState, sourcePrefix: string, index?: string): string {
+  const prefix = ensureSourcePrefix(sourcePrefix, index);
   const searchExpr = (state.searchExpression || '').trim();
 
   // The search expression lives on the same segment as source= (no pipe).

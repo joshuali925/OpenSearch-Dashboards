@@ -62,6 +62,8 @@ jest.mock('../../../components/query_panel/actions/ppl_execute_query_action', ()
 }));
 jest.mock('../../../application/hooks', () => ({
   useSetEditorTextWithQuery: () => jest.fn(),
+  useEditorRef: () => ({ current: null }),
+  useEditorText: () => () => '',
 }));
 jest.mock(
   '../../../application/hooks/editor_hooks/use_set_editor_text/use_set_editor_text',
@@ -133,16 +135,23 @@ describe('LogsQueryPanel', () => {
     expect(screen.queryByTestId('ppl-builder-stub')).not.toBeInTheDocument();
   });
 
-  it('locks Builder after switching a parseable query to Code (one-way in-session)', () => {
+  it('can switch back to Builder from Code for a representable query', () => {
     renderPanel('source = logs service="web-store"');
     expect(screen.getByTestId('ppl-builder-stub')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('code'));
     expect(screen.getByTestId('code-editor-stub')).toBeInTheDocument();
 
-    // Even though the query is parseable, Builder stays locked for the session.
+    // The query is still representable, so Builder mode remains reachable.
     fireEvent.click(screen.getByTestId('builder'));
+    expect(screen.getByTestId('ppl-builder-stub')).toBeInTheDocument();
+    expect(screen.queryByTestId('code-editor-stub')).not.toBeInTheDocument();
+  });
+
+  it('disables the Builder toggle for an unrepresentable query in Code mode', () => {
+    renderPanel('source = logs | sort field');
     expect(screen.getByTestId('code-editor-stub')).toBeInTheDocument();
-    expect(screen.queryByTestId('ppl-builder-stub')).not.toBeInTheDocument();
+    // The Builder button is rendered but disabled.
+    expect(screen.getByTestId('builder')).toBeDisabled();
   });
 });

@@ -19,6 +19,13 @@ function ensureLanguageRegistered() {
   monaco.languages.register({ id: PPL_SEARCH_LANGUAGE_ID });
 }
 
+// Re-opens the suggestion widget immediately after an item is accepted, so that
+// picking a field flows straight into value suggestions.
+const RETRIGGER_COMMAND: monaco.languages.CompletionItem['command'] = {
+  id: 'editor.action.triggerSuggest',
+  title: 'Suggest',
+};
+
 interface SearchBoxProps {
   /** Current search-expression text (the source of truth for the row). */
   value: string;
@@ -79,9 +86,12 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
             detail: i18n.translate('explore.pplBuilder.searchBox.fieldDetail', {
               defaultMessage: 'Field',
             }),
-            insertText: name,
+            // Accepting a field auto-completes ` = ` and re-triggers the
+            // suggestion widget so the value dropdown for that field opens.
+            insertText: `${name} = `,
             range,
             sortText: `2_${name}`,
+            command: RETRIGGER_COMMAND,
           });
         }
       }

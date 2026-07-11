@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonIcon, EuiContextMenu, EuiPopover, EuiText } from '@elastic/eui';
 import { ScalarCall } from './types';
 import { SCALAR_FN_CATEGORIES } from './operations';
+import { CategoryFunctionMenu } from '../../../components/query_builder';
 
 interface FunctionMenuProps {
   /** Called with a fresh ScalarCall when the user picks a scalar function. */
@@ -24,61 +24,22 @@ interface FunctionMenuProps {
  * metric is created (the "Add metric" menu) and edited via the row's "Show"
  * dropdown, so it is NOT offered here.
  */
-export const FunctionMenu: React.FC<FunctionMenuProps> = ({ onAddFunction, dataTestSubj }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const panels = useMemo(
-    () => [
-      {
-        id: 0,
-        title: i18n.translate('explore.pplBuilder.addFunctionTitle', {
-          defaultMessage: 'Add function',
-        }),
-        items: SCALAR_FN_CATEGORIES.map((cat, i) => ({ name: cat.name, panel: i + 1 })),
-      },
-      ...SCALAR_FN_CATEGORIES.map((cat, i) => ({
-        id: i + 1,
-        title: cat.name,
-        items: cat.items.map((item) => ({
-          name: (
-            <div>
-              <strong>{item.name}</strong>
-              <EuiText size="xs" color="subdued" className="plqFnMenuDescription">
-                {item.description}
-              </EuiText>
-            </div>
-          ),
-          onClick: () => {
-            onAddFunction({ id: item.id, name: item.name, params: [...item.params] });
-            setIsOpen(false);
-          },
-        })),
-      })),
-    ],
-    [onAddFunction]
-  );
-
-  return (
-    <EuiPopover
-      button={
-        <EuiButtonIcon
-          iconType="boxesVertical"
-          color="text"
-          size="s"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label={i18n.translate('explore.pplBuilder.addFunction', {
-            defaultMessage: 'Add function',
-          })}
-          data-test-subj={dataTestSubj}
-        />
-      }
-      isOpen={isOpen}
-      closePopover={() => setIsOpen(false)}
-      panelPaddingSize="none"
-      panelClassName="plqMenuPanel"
-      anchorPosition="downLeft"
-    >
-      <EuiContextMenu initialPanelId={0} panels={panels} size="s" />
-    </EuiPopover>
-  );
-};
+export const FunctionMenu: React.FC<FunctionMenuProps> = ({ onAddFunction, dataTestSubj }) => (
+  <CategoryFunctionMenu
+    categories={SCALAR_FN_CATEGORIES}
+    onSelect={(item) => onAddFunction({ id: item.id, name: item.name, params: [...item.params] })}
+    trigger={{
+      kind: 'icon',
+      iconType: 'boxesVertical',
+      color: 'text',
+      ariaLabel: i18n.translate('explore.pplBuilder.addFunction', {
+        defaultMessage: 'Add function',
+      }),
+    }}
+    rootTitle={i18n.translate('explore.pplBuilder.addFunctionTitle', {
+      defaultMessage: 'Add function',
+    })}
+    panelClassName="cfmMenuPanel"
+    dataTestSubj={dataTestSubj}
+  />
+);

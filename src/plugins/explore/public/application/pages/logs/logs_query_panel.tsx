@@ -70,8 +70,8 @@ export const LogsQueryPanel: React.FC = () => {
   // clause and keeps the rest as the builder's search expression.
   const initialParse = useMemo(() => parsePPL(reduxQuery), []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // A query loaded from a saved object opens in code (plan decision 6). It can
-  // still be switched to Builder when it is representable (issue #4).
+  // A query loaded from a saved object opens in code. It can still be switched
+  // to Builder afterward when it is representable.
   const loadedFromSaved = !!savedSearch;
   const [mode, setMode] = useState<LogsBuilderMode>(() =>
     !loadedFromSaved && initialParse.canBuild ? 'builder' : 'code'
@@ -83,7 +83,7 @@ export const LogsQueryPanel: React.FC = () => {
   const [builderKey, setBuilderKey] = useState(0);
 
   // Live code-editor text, tracked so the Builder toggle can enable/disable
-  // itself as the user types in Code mode (issue #4).
+  // itself as the user types in Code mode.
   const [liveCodeText, setLiveCodeText] = useState(reduxQuery);
 
   // The builder's most recent built query. Used to seed the code editor when
@@ -198,7 +198,8 @@ export const LogsQueryPanel: React.FC = () => {
         setMode('code');
         return;
       }
-      // Code -> Builder: parse the LIVE editor text (issue #4).
+      // Code -> Builder: parse the LIVE editor text, not the last-run query, so
+      // in-progress edits carry into the builder.
       const text = getEditorText() || liveCodeText;
       const parsed = parsePPL(text);
       if (!parsed.canBuild) return;
@@ -210,23 +211,33 @@ export const LogsQueryPanel: React.FC = () => {
     [mode, getEditorText, liveCodeText]
   );
 
-  const modeToggleTooltip =
-    mode === 'code' && !canSwitchToBuilder
-      ? i18n.translate('explore.logsQueryPanel.cannotSwitchToBuilder', {
-          defaultMessage:
-            'This query cannot be represented in Builder mode. Simplify it or use Code mode.',
-        })
-      : undefined;
+  // The Builder toggle is disabled when the current code text can't round-trip
+  // into the builder (so the user can't switch to a mode that would lose it).
+  const builderDisabled = mode === 'code' && !canSwitchToBuilder;
+
+  const modeToggleTooltip = builderDisabled
+    ? i18n.translate('explore.logsQueryPanel.cannotSwitchToBuilder', {
+        defaultMessage:
+          'This query cannot be represented in Builder mode. Simplify it or use Code mode.',
+      })
+    : undefined;
 
   const modeButtonOptions = useMemo(
     () =>
       logsModeButtons.map((btn) =>
-        btn.id === 'builder' ? { ...btn, isDisabled: mode === 'code' && !canSwitchToBuilder } : btn
+        btn.id === 'builder' ? { ...btn, isDisabled: builderDisabled } : btn
       ),
-    [mode, canSwitchToBuilder]
+    [builderDisabled]
   );
 
   const showBuilder = mode === 'builder' && !isPromptMode;
+
+  const editors = (
+    <div className="exploreQueryPanel__editorsWrapper">
+      <QueryPanelEditor />
+      <QueryPanelGeneratedQuery />
+    </div>
+  );
 
   const modeToggle = !isPromptMode ? (
     <EuiToolTip content={modeToggleTooltip} position="top">
@@ -257,10 +268,7 @@ export const LogsQueryPanel: React.FC = () => {
       </EuiFlexGroup>
 
       {isPromptMode ? (
-        <div className="exploreQueryPanel__editorsWrapper">
-          <QueryPanelEditor />
-          <QueryPanelGeneratedQuery />
-        </div>
+        editors
       ) : (
         <EuiFlexGroup
           className="exploreQueryPanel__contentRow"
@@ -276,10 +284,7 @@ export const LogsQueryPanel: React.FC = () => {
                 onQueryChange={onBuilderChange}
               />
             ) : (
-              <div className="exploreQueryPanel__editorsWrapper">
-                <QueryPanelEditor />
-                <QueryPanelGeneratedQuery />
-              </div>
+              editors
             )}
           </EuiFlexItem>
           <EuiFlexItem grow={false}>{modeToggle}</EuiFlexItem>

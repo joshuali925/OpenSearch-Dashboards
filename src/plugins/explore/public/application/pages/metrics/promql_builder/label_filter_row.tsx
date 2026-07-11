@@ -15,7 +15,7 @@ import {
 import { LabelFilter } from './promql_parser';
 import { BuilderAction } from './build_promql';
 import { OPERATORS } from './operation_categories';
-import { comboBoxWidth } from './measure_text';
+import { comboBoxWidth } from '../../../components/query_builder';
 
 interface LabelFilterRowProps {
   filter: LabelFilter;

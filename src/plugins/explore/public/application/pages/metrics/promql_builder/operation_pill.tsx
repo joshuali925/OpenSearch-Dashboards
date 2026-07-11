@@ -11,7 +11,7 @@ import { BuilderAction } from './build_promql';
 import { OperationDef, GROUPABLE_AGGREGATION_IDS } from './operation_categories';
 import { OP_DEF_MAP, getCategoryLabel } from './operation_lookup';
 import { useAggregationGrouping } from './aggregation_grouping';
-import { comboBoxWidth, inputWidth } from './measure_text';
+import { comboBoxWidth, inputWidth } from '../../../components/query_builder';
 
 interface OperationPillProps {
   op: Operation;

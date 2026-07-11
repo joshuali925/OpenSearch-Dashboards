@@ -6,31 +6,22 @@
 import { CharStream, CommonTokenStream } from 'antlr4ng';
 import { SimplifiedOpenSearchPPLLexer, SimplifiedOpenSearchPPLParser } from '@osd/antlr-grammar';
 import { AggFn, Aggregation, PPLBuilderState, ScalarCall, emptyState, nextAggId } from './types';
-import { SCALAR_FN_IDS, SCALAR_FN_MAP } from './operations';
+import { AGG_FUNCTIONS, SCALAR_FN_IDS, SCALAR_FN_MAP } from './operations';
 
 export interface PPLParseResult {
   canBuild: boolean;
   state: PPLBuilderState;
 }
 
-// Aggregations that take a single expression argument. Maps the PPL function
-// name (as written) to the modeled AggFn. `dc` is the terse alias for
-// distinct_count.
+// Aggregations that take a single expression argument. Derived from the catalog
+// (every field aggregation except `percentile`, which takes a second arg) so it
+// can't drift as aggregations are added, plus `dc` — the terse PPL alias for
+// distinct_count that isn't a catalog id.
 const SINGLE_ARG_AGG: Record<string, AggFn> = {
-  avg: 'avg',
-  sum: 'sum',
-  min: 'min',
-  max: 'max',
-  median: 'median',
-  stddev_samp: 'stddev_samp',
-  stddev_pop: 'stddev_pop',
-  var_samp: 'var_samp',
-  var_pop: 'var_pop',
-  earliest: 'earliest',
-  latest: 'latest',
-  first: 'first',
-  last: 'last',
-  distinct_count: 'distinct_count',
+  ...AGG_FUNCTIONS.reduce((acc, def) => {
+    if (def.needsField && def.id !== 'percentile') acc[def.id] = def.id;
+    return acc;
+  }, {} as Record<string, AggFn>),
   dc: 'distinct_count',
 };
 

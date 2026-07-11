@@ -17,8 +17,13 @@ import { SearchBox } from './search_box';
 import { AggregationRow } from './aggregation_row';
 import { AddMetricMenu } from './add_metric_menu';
 import { useFieldData } from './use_field_data';
-import { withConnector } from './tree_connector';
+import { withConnector } from '../../../components/query_builder';
 import { useDatasetContext } from '../../../context';
+
+// How far the group branch's vertical line reaches up past its top edge: the
+// row's own top margin plus the parent search box's bottom padding ($euiSizeXS,
+// 4px), so the line starts at the bottom of the search box rather than into it.
+const GROUP_BRANCH_TOP_REACH = 16;
 
 interface PPLBuilderProps {
   initialState?: PPLBuilderState;
@@ -31,7 +36,11 @@ const CHART_BAR_TARGET = 15;
 export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryChange }) => {
   const { services } = useOpenSearchDashboards<ExploreServices>();
   const { dataset } = useDatasetContext();
-  const [state, dispatch] = useReducer(builderReducer, initialState || emptyState());
+  const [state, dispatch] = useReducer(
+    builderReducer,
+    initialState ?? null,
+    (seed) => seed ?? emptyState()
+  );
   const {
     fieldNames,
     fieldOptions,
@@ -42,11 +51,10 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
   } = useFieldData();
 
   // The search box owns its text (the search-expression, source of truth for the
-  // row). Seeded once from the initial state; the parent remounts (via key) to
-  // re-seed on external changes, mirroring how MetricsQueryPanel re-inits rows.
-  const [searchText, setSearchText] = useState(
-    () => (initialState || emptyState()).searchExpression
-  );
+  // row). Seeded once from the reducer's initial state; the parent remounts (via
+  // key) to re-seed on external changes, mirroring how MetricsQueryPanel re-inits
+  // rows.
+  const [searchText, setSearchText] = useState(() => state.searchExpression);
 
   // Derive an adaptive span interval from the current time range, reusing the
   // same createHistogramConfigs path the logs histogram uses.
@@ -244,7 +252,9 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
             )}
           </div>
         </div>,
-        true
+        true,
+        undefined,
+        GROUP_BRANCH_TOP_REACH
       )}
 
       {/* Live PPL preview */}

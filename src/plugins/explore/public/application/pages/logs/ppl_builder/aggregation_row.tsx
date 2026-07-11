@@ -17,7 +17,7 @@ import { BuilderAction } from './build_ppl';
 import { Aggregation, AggFn, ScalarCall } from './types';
 import { AGG_FN_MAP, AGG_FUNCTIONS, SCALAR_FN_MAP } from './operations';
 import { FunctionMenu } from './function_menu';
-import { comboBoxWidth, inputWidth } from '../../metrics/promql_builder/measure_text';
+import { comboBoxWidth, inputWidth } from '../../../components/query_builder';
 
 interface AggregationRowProps {
   agg: Aggregation;

@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonEmpty, EuiContextMenu, EuiPopover, EuiText } from '@elastic/eui';
 import { AggFn } from './types';
 import { AGG_FUNCTIONS } from './operations';
+import { CategoryFunctionMenu } from '../../../components/query_builder';
 
 interface AddMetricMenuProps {
   /** Called with the chosen aggregation when the user adds a metric. */
@@ -24,53 +24,33 @@ interface AddMetricMenuProps {
  * competing entry points for the same choice.
  */
 export const AddMetricMenu: React.FC<AddMetricMenuProps> = ({ onAdd, dataTestSubj }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const panels = useMemo(
-    () => [
-      {
-        id: 0,
-        title: i18n.translate('explore.pplBuilder.addMetricTitle', {
-          defaultMessage: 'Select aggregation',
-        }),
-        items: AGG_FUNCTIONS.map((agg) => ({
-          name: (
-            <div>
-              <strong>{agg.label}</strong>
-              <EuiText size="xs" color="subdued" className="plqFnMenuDescription">
-                {agg.description}
-              </EuiText>
-            </div>
-          ),
-          onClick: () => {
-            onAdd(agg.id);
-            setIsOpen(false);
-          },
-        })),
-      },
-    ],
+  // A flat list of aggregations (no categories): rendered as root items so the
+  // menu opens straight onto the choices rather than a single category to drill.
+  const rootItems = useMemo(
+    () =>
+      AGG_FUNCTIONS.map((agg) => ({
+        name: agg.label,
+        description: agg.description,
+        onClick: () => onAdd(agg.id),
+      })),
     [onAdd]
   );
 
   return (
-    <EuiPopover
-      button={
-        <EuiButtonEmpty
-          size="xs"
-          iconType="plusInCircle"
-          onClick={() => setIsOpen(!isOpen)}
-          data-test-subj={dataTestSubj}
-        >
-          {i18n.translate('explore.pplBuilder.addMetric', { defaultMessage: 'Add metric' })}
-        </EuiButtonEmpty>
-      }
-      isOpen={isOpen}
-      closePopover={() => setIsOpen(false)}
-      panelPaddingSize="none"
-      panelClassName="plqMenuPanel"
-      anchorPosition="downLeft"
-    >
-      <EuiContextMenu initialPanelId={0} panels={panels} size="s" />
-    </EuiPopover>
+    <CategoryFunctionMenu
+      categories={[]}
+      onSelect={() => {}}
+      extraRootItems={rootItems}
+      trigger={{
+        kind: 'empty',
+        iconType: 'plusInCircle',
+        label: i18n.translate('explore.pplBuilder.addMetric', { defaultMessage: 'Add metric' }),
+      }}
+      rootTitle={i18n.translate('explore.pplBuilder.addMetricTitle', {
+        defaultMessage: 'Select aggregation',
+      })}
+      panelClassName="cfmMenuPanel"
+      dataTestSubj={dataTestSubj}
+    />
   );
 };

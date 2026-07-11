@@ -255,20 +255,6 @@
   }
 }
 
-// Description line under each function name in the Add-function menu.
-.plqFnMenuDescription {
-  max-width: 280px;
-  white-space: normal;
-}
-
-// Cap the builder menu popovers ("Add metric" aggregations, "Function" scalar
-// functions) so their long option lists scroll rather than growing into a tall
-// popover that overflows the viewport.
-.plqMenuPanel .euiContextMenuPanel {
-  max-height: 320px;
-  overflow-y: auto;
-}
-
 .plqOperatorSelect {
   width: 64px;
 }

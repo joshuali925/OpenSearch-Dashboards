@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { analyzeSearchExpression, findFilterRanges, removeFilterRange } from './search_completion';
+import { analyzeSearchExpression, findFilterRanges } from './search_completion';
 
 describe('analyzeSearchExpression', () => {
   it('suggests fields on empty input', () => {
@@ -101,42 +101,5 @@ describe('findFilterRanges', () => {
     const ranges = findFilterRanges(q);
     expect(ranges).toHaveLength(1);
     expect(q.slice(ranges[0].start, ranges[0].end)).toBe(q);
-  });
-});
-
-describe('removeFilterRange', () => {
-  // Remove the filter at the given 0-based index using the ranges the box
-  // decorator would have computed, mirroring SearchBox.removeFilterAt.
-  const removeNth = (q: string, index: number) => removeFilterRange(q, findFilterRanges(q)[index]);
-
-  it('removes the only filter, leaving an empty expression', () => {
-    expect(removeNth('status=500', 0)).toBe('');
-  });
-
-  it('removes the first filter and collapses the seam', () => {
-    expect(removeNth('status=500 service="web"', 0)).toBe('service="web"');
-  });
-
-  it('removes the last filter and collapses the seam', () => {
-    expect(removeNth('status=500 service="web"', 1)).toBe('status=500');
-  });
-
-  it('removes a middle filter, single-spacing the neighbours', () => {
-    expect(removeNth('status=500 extension="gz" service="web"', 1)).toBe(
-      'status=500 service="web"'
-    );
-  });
-
-  it('preserves whitespace inside a surviving quoted value', () => {
-    const q = `status=500 \`machine.os\` = 'win 7'`;
-    expect(removeNth(q, 0)).toBe(`\`machine.os\` = 'win 7'`);
-  });
-
-  it('drops a dangling AND when the first of two keyword-joined filters is removed', () => {
-    expect(removeNth('status=500 AND service="web"', 0)).toBe('service="web"');
-  });
-
-  it('drops a dangling AND when the last of two keyword-joined filters is removed', () => {
-    expect(removeNth('status=500 AND service="web"', 1)).toBe('status=500');
   });
 });

@@ -48,13 +48,6 @@ jest.mock('./ppl_builder', () => ({
   PPLBuilder: () => <div data-test-subj="ppl-builder-stub">Builder</div>,
 }));
 
-// onEditorRunActionCreator's module transitively imports createHistogramConfigs
-// (which reads search.aggs at load time); the panel only needs the action's
-// identity for its dispatch, so stub the barrel to a no-op thunk creator.
-jest.mock('../../../application/utils/state_management/actions/query_editor', () => ({
-  onEditorRunActionCreator: jest.fn(() => () => {}),
-}));
-
 jest.mock('../../../components/query_panel/query_panel_widgets', () => ({
   QueryPanelWidgets: () => <div data-test-subj="query-panel-widgets">Widgets</div>,
 }));

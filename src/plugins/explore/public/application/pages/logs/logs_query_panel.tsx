@@ -30,6 +30,8 @@ import {
   selectSavedSearch,
 } from '../../../application/utils/state_management/selectors';
 import { setIsQueryEditorDirty } from '../../../application/utils/state_management/slices/query_editor/query_editor_slice';
+import { onEditorRunActionCreator } from '../../../application/utils/state_management/actions/query_editor';
+import { AppDispatch } from '../../../application/utils/state_management/store';
 import { PPLBuilder, PPLBuilderState, parsePPL } from './ppl_builder';
 import { LogsBuilderMode, logsModeButtons } from './logs_query_panel_mode';
 import '../../../components/query_panel/query_panel.scss';
@@ -48,7 +50,7 @@ import '../../../components/query_panel/query_panel.scss';
  */
 export const LogsQueryPanel: React.FC = () => {
   const { services } = useOpenSearchDashboards<ExploreServices>();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const queryIsLoading = useSelector(selectIsLoading);
   const promptToQueryIsLoading = useSelector(selectPromptToQueryIsLoading);
   const isLoading = queryIsLoading || promptToQueryIsLoading;
@@ -142,7 +144,7 @@ export const LogsQueryPanel: React.FC = () => {
   // reads it via queryString.getQuery().query — mirrors MetricsQueryPanel and
   // keeps the results cacheKey stable so results don't disappear while editing.
   const onBuilderChange = useCallback(
-    (query: string, state: PPLBuilderState) => {
+    (query: string, state: PPLBuilderState, options?: { run?: boolean }) => {
       setBuilderState(state);
       builderQueryRef.current = query;
       if (query === lastDispatchedRef.current) return;
@@ -150,9 +152,17 @@ export const LogsQueryPanel: React.FC = () => {
       setEditorText(query);
       const currentQuery = queryString.getQuery();
       queryString.setQuery({ ...currentQuery, query });
-      dispatch(setIsQueryEditorDirty(true));
+      if (options?.run) {
+        // A filter chip was removed via its ✕: apply immediately (symmetric with
+        // the sidebar Filter for/out buttons) so results refresh now. The run
+        // thunk prepends the source clause and pushes the query to Redux, which
+        // re-seeds the builder — no separate setIsQueryEditorDirty needed.
+        dispatch(onEditorRunActionCreator(services, query));
+      } else {
+        dispatch(setIsQueryEditorDirty(true));
+      }
     },
-    [setEditorText, dispatch, queryString]
+    [setEditorText, dispatch, queryString, services]
   );
 
   // Track the live code text (for the toggle) and seed the editor with the

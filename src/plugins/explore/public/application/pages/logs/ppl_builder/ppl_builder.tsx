@@ -27,7 +27,12 @@ const GROUP_BRANCH_TOP_REACH = 16;
 
 interface PPLBuilderProps {
   initialState?: PPLBuilderState;
-  onQueryChange: (query: string, state: PPLBuilderState) => void;
+  /**
+   * Emitted whenever the built query changes. `run` is true when the change
+   * should be applied immediately (e.g. a filter chip was removed via its ✕),
+   * versus merely staged as a draft (ordinary typing, awaiting Update).
+   */
+  onQueryChange: (query: string, state: PPLBuilderState, options?: { run?: boolean }) => void;
 }
 
 // Target bar count for the auto time-bucket, matching the traces chart's density.
@@ -91,8 +96,15 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
 
   const onQueryChangeRef = useRef(onQueryChange);
   onQueryChangeRef.current = onQueryChange;
+  // Set when the next query emission should run immediately rather than stage
+  // (a filter chip's ✕ was clicked). Consumed and cleared by the emit effect so
+  // the run rides the fresh query built from the post-removal state, not the
+  // stale state at click time.
+  const pendingRunRef = useRef(false);
   useEffect(() => {
-    onQueryChangeRef.current(query, state);
+    const run = pendingRunRef.current;
+    pendingRunRef.current = false;
+    onQueryChangeRef.current(query, state, { run });
   }, [query, state]);
 
   const onSearchChange = useCallback(
@@ -102,6 +114,11 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
     },
     [dispatch]
   );
+
+  // A filter chip's ✕ was clicked: flag the imminent query emission to run.
+  const onSearchRun = useCallback(() => {
+    pendingRunRef.current = true;
+  }, []);
 
   const hasAggregation = state.aggregations.length > 0;
 
@@ -129,6 +146,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
             fieldNames={fieldNames}
             onRequestValues={getValues}
             onChange={onSearchChange}
+            onRun={onSearchRun}
           />
         </div>
       </div>

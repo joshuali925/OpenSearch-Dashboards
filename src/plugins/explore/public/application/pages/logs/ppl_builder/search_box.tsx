@@ -55,6 +55,12 @@ interface SearchBoxProps {
   onRequestValues: (field: string) => Promise<string[]>;
   /** Commit the edited search-expression text. */
   onChange: (text: string) => void;
+  /**
+   * Run the query now. Called after a filter chip's ✕ is clicked so removing a
+   * filter applies immediately (symmetric with the sidebar "Filter for/out"
+   * buttons) rather than waiting for the user to press Update.
+   */
+  onRun?: () => void;
 }
 
 /**
@@ -71,6 +77,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   fieldNames,
   onRequestValues,
   onChange,
+  onRun,
 }) => {
   const fieldNamesRef = useRef(fieldNames);
   fieldNamesRef.current = fieldNames;
@@ -78,6 +85,8 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   onRequestValuesRef.current = onRequestValues;
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onRunRef = useRef(onRun);
+  onRunRef.current = onRun;
 
   // Monaco decorations collection holding the current filter boxes. The
   // collection auto-tracks the applied decorations, so no manual id bookkeeping
@@ -134,8 +143,9 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   }, []);
 
   // Remove the filter at `index` (its ✕ was clicked): splice its char range out
-  // of the text, commit, and refresh the boxes. Runs off the ranges captured by
-  // the last updateFilterBoxes pass so the index lines up with the ✕ glyphs.
+  // of the text, commit, refresh the boxes, and run so the removal applies
+  // immediately. Runs off the ranges captured by the last updateFilterBoxes pass
+  // so the index lines up with the ✕ glyphs.
   const removeFilterAt = useCallback(
     (editor: monaco.editor.IStandaloneCodeEditor, index: number) => {
       const model = editor.getModel();
@@ -143,6 +153,16 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
       const range = filterRangesRef.current[index];
       if (!range) return;
       const next = removeFilterRange(model.getValue(), range);
+      // Signal "run" BEFORE mutating the text: setValue fires Monaco's
+      // onDidChangeModelContent synchronously, and because that listener runs
+      // outside React's event batching it flushes the builder's emit effect
+      // immediately — so the run intent must already be set when the fresh query
+      // is emitted, or the change stages instead of running.
+      onRunRef.current?.();
+      // setValue triggers the wrapper's onChange (committing the text) and
+      // onDidChangeModelContent (re-boxing); call onChange explicitly too so the
+      // commit is deterministic regardless of the wrapper's change-guarding. The
+      // upstream draft/dispatch is idempotent for a repeated identical value.
       editor.setValue(next);
       onChangeRef.current(next);
       updateFilterBoxes(editor);

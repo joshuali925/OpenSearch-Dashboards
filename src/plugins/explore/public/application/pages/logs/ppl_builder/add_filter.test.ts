@@ -49,9 +49,9 @@ describe('addFilterToPPLSearchExpression', () => {
     expect(addFilterToPPLSearchExpression('', pred)).toBe("`service` = 'web'");
   });
 
-  it('ANDs onto an existing search expression', () => {
+  it('appends space-separated onto an existing search expression (implicit AND)', () => {
     expect(addFilterToPPLSearchExpression('source = logs status>=500', pred)).toBe(
-      "source = logs status>=500 AND `service` = 'web'"
+      "source = logs status>=500 `service` = 'web'"
     );
   });
 
@@ -76,7 +76,7 @@ describe('addFilterToPPLSearchExpression', () => {
 
   it('handles a source clause with spaces around =', () => {
     expect(addFilterToPPLSearchExpression('source=logs ERROR', pred)).toBe(
-      "source=logs ERROR AND `service` = 'web'"
+      "source=logs ERROR `service` = 'web'"
     );
   });
 
@@ -84,7 +84,7 @@ describe('addFilterToPPLSearchExpression', () => {
     const result = addFilterToPPLSearchExpression('source = logs status>=500', pred);
     const parsed = parsePPL(result);
     expect(parsed.canBuild).toBe(true);
-    expect(parsed.state.searchExpression).toBe("status>=500 AND `service` = 'web'");
+    expect(parsed.state.searchExpression).toBe("status>=500 `service` = 'web'");
   });
 
   it('round-trips a stats query with an added filter', () => {

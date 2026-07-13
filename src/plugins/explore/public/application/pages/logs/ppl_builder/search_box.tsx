@@ -7,12 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { i18n } from '@osd/i18n';
 import { monaco } from '@osd/monaco';
 import { CodeEditor } from '../../../../../../opensearch_dashboards_react/public';
-import {
-  analyzeSearchExpression,
-  findFilterRanges,
-  removeFilterRange,
-  FilterRange,
-} from './search_completion';
+import { analyzeSearchExpression, findFilterRanges } from './search_completion';
 
 /** Dedicated Monaco language id for the restricted PPL search-expression box. */
 export const PPL_SEARCH_LANGUAGE_ID = 'pplSearchExpression';
@@ -34,11 +29,6 @@ function ensureLanguageRegistered() {
 /** Monaco action that (re-)opens the native suggestion widget. */
 const TRIGGER_SUGGEST_ACTION = 'editor.action.triggerSuggest';
 
-// CSS class on the clickable "remove filter" (✕) injected after each filter box.
-// The filter's index is appended (`…--0`, `…--1`) so a mousedown can map the
-// clicked glyph back to the filter range to splice out.
-const REMOVE_ICON_CLASS = 'plqSearchBoxEditor__removeFilter';
-
 // Re-opens the suggestion widget immediately after an item is accepted, so that
 // picking a field flows straight into value suggestions.
 const RETRIGGER_COMMAND: monaco.languages.CompletionItem['command'] = {
@@ -55,12 +45,6 @@ interface SearchBoxProps {
   onRequestValues: (field: string) => Promise<string[]>;
   /** Commit the edited search-expression text. */
   onChange: (text: string) => void;
-  /**
-   * Run the query now. Called after a filter chip's ✕ is clicked so removing a
-   * filter applies immediately (symmetric with the sidebar "Filter for/out"
-   * buttons) rather than waiting for the user to press Update.
-   */
-  onRun?: () => void;
 }
 
 /**
@@ -77,24 +61,16 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   fieldNames,
   onRequestValues,
   onChange,
-  onRun,
 }) => {
   const fieldNamesRef = useRef(fieldNames);
   fieldNamesRef.current = fieldNames;
   const onRequestValuesRef = useRef(onRequestValues);
   onRequestValuesRef.current = onRequestValues;
-  const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
-  const onRunRef = useRef(onRun);
-  onRunRef.current = onRun;
 
   // Monaco decorations collection holding the current filter boxes. The
   // collection auto-tracks the applied decorations, so no manual id bookkeeping
   // is needed (see updateFilterBoxes).
   const decorationsRef = useRef<monaco.editor.IEditorDecorationsCollection | null>(null);
-  // The filter ranges from the last decoration pass, indexed to match the
-  // per-box remove (✕) glyphs so a click can map back to the range to splice.
-  const filterRangesRef = useRef<FilterRange[]>([]);
   // Pending deferred suggestion-trigger (cursor moves; see handleEditorDidMount).
   const suggestTimerRef = useRef<number | undefined>(undefined);
 
@@ -115,60 +91,22 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   }, []);
 
   // Draw / refresh a colored box around every complete filter in the expression,
-  // so the user reads the query as a set of discrete `field=value` conditions,
-  // and inject a clickable ✕ after each so the filter can be removed. The ✕ is
-  // injected text (view-only, not part of the document) whose class carries the
-  // filter index for the mousedown handler to map back to a range.
+  // so the user reads the query as a set of discrete `field=value` conditions.
   const updateFilterBoxes = useCallback((editor: monaco.editor.IStandaloneCodeEditor) => {
     const model = editor.getModel();
     if (!model) return;
-    const ranges = findFilterRanges(model.getValue());
-    filterRangesRef.current = ranges;
-    const decorations: monaco.editor.IModelDeltaDecoration[] = ranges.map(
-      ({ start, end }, index) => ({
-        range: new monaco.Range(1, start + 1, 1, end + 1),
-        options: {
-          inlineClassName: 'plqSearchBoxEditor__filter',
-          stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-          after: {
-            content: '✕',
-            inlineClassName: `${REMOVE_ICON_CLASS} ${REMOVE_ICON_CLASS}--${index}`,
-            cursorStops: monaco.editor.InjectedTextCursorStops.None,
-          },
-        },
-      })
-    );
+    const decorations: monaco.editor.IModelDeltaDecoration[] = findFilterRanges(
+      model.getValue()
+    ).map(({ start, end }) => ({
+      range: new monaco.Range(1, start + 1, 1, end + 1),
+      options: {
+        inlineClassName: 'plqSearchBoxEditor__filter',
+        stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+      },
+    }));
     if (!decorationsRef.current) decorationsRef.current = editor.createDecorationsCollection();
     decorationsRef.current.set(decorations);
   }, []);
-
-  // Remove the filter at `index` (its ✕ was clicked): splice its char range out
-  // of the text, commit, refresh the boxes, and run so the removal applies
-  // immediately. Runs off the ranges captured by the last updateFilterBoxes pass
-  // so the index lines up with the ✕ glyphs.
-  const removeFilterAt = useCallback(
-    (editor: monaco.editor.IStandaloneCodeEditor, index: number) => {
-      const model = editor.getModel();
-      if (!model) return;
-      const range = filterRangesRef.current[index];
-      if (!range) return;
-      const next = removeFilterRange(model.getValue(), range);
-      // Signal "run" BEFORE mutating the text: setValue fires Monaco's
-      // onDidChangeModelContent synchronously, and because that listener runs
-      // outside React's event batching it flushes the builder's emit effect
-      // immediately — so the run intent must already be set when the fresh query
-      // is emitted, or the change stages instead of running.
-      onRunRef.current?.();
-      // setValue triggers the wrapper's onChange (committing the text) and
-      // onDidChangeModelContent (re-boxing); call onChange explicitly too so the
-      // commit is deterministic regardless of the wrapper's change-guarding. The
-      // upstream draft/dispatch is idempotent for a repeated identical value.
-      editor.setValue(next);
-      onChangeRef.current(next);
-      updateFilterBoxes(editor);
-    },
-    [updateFilterBoxes]
-  );
 
   // Programmatically open the native suggestion widget. Monaco treats this as a
   // no-op refresh when the widget is already showing, so it is safe to call on
@@ -208,23 +146,8 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
         window.clearTimeout(suggestTimerRef.current);
         suggestTimerRef.current = window.setTimeout(() => triggerSuggest(editor), 0);
       });
-
-      // Clicking a filter's ✕ removes that filter. The glyph is injected text,
-      // so hit-test the DOM element's class (which carries the filter index)
-      // rather than a document position.
-      editor.onMouseDown((e) => {
-        const el = e.target.element;
-        const removeEl = el?.closest?.(`.${REMOVE_ICON_CLASS}`);
-        if (!removeEl) return;
-        const match = /--(\d+)(?:\s|$)/.exec(removeEl.className);
-        if (!match) return;
-        // Swallow the click so Monaco doesn't also move the caret / open suggest.
-        e.event.preventDefault();
-        e.event.stopPropagation();
-        removeFilterAt(editor, Number(match[1]));
-      });
     },
-    [updateFilterBoxes, removeFilterAt, triggerSuggest, syncHeight]
+    [updateFilterBoxes, triggerSuggest, syncHeight]
   );
 
   // Clear any pending deferred trigger on unmount.

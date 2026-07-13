@@ -65,11 +65,10 @@ const SOURCE_CLAUSE_RE = /^\s*(?:source|index)\s*=\s*(?:`[^`]*`|[^\s|]+)\s*/i;
  *
  * Preserves any leading `source=<index>` clause and any trailing `| stats …`
  * pipeline. When the search expression already has terms, the predicate is
- * appended space-separated (PPL implicitly ANDs adjacent search terms, so no
- * explicit `AND` keyword is added); otherwise it becomes the whole expression.
- * Idempotent: if the exact predicate already appears in the search expression it
- * is not added again, and its negation (`=` <-> `!=`) is replaced in place so
- * re-clicking flips rather than stacks.
+ * ANDed on; otherwise it becomes the whole expression. Idempotent: if the exact
+ * predicate already appears in the search expression it is not added again, and
+ * its negation (`=` <-> `!=`) is replaced in place so re-clicking flips rather
+ * than stacks.
  */
 export function addFilterToPPLSearchExpression(query: string, predicate: string): string {
   if (!predicate) return query;
@@ -94,7 +93,7 @@ export function addFilterToPPLSearchExpression(query: string, predicate: string)
     // Flip the existing opposite filter in place.
     nextSearch = searchPart.replace(negatedPredicate, predicate);
   } else {
-    nextSearch = `${searchPart} ${predicate}`;
+    nextSearch = `${searchPart} AND ${predicate}`;
   }
 
   // Reassemble: normalize the source clause to a single trailing space when

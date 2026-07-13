@@ -78,7 +78,7 @@ describe('PPLBuilder', () => {
 
   it('emits a source-less (empty) query on mount for an empty state', () => {
     const { onQueryChange } = renderBuilder();
-    expect(onQueryChange).toHaveBeenCalledWith('', expect.anything(), { run: false });
+    expect(onQueryChange).toHaveBeenCalledWith('', expect.anything());
   });
 
   it('seeds the search box from the existing search expression and emits it source-less', () => {
@@ -86,9 +86,7 @@ describe('PPLBuilder', () => {
       ...emptyState(),
       searchExpression: 'service="web-store"',
     });
-    expect(onQueryChange).toHaveBeenCalledWith('service="web-store"', expect.anything(), {
-      run: false,
-    });
+    expect(onQueryChange).toHaveBeenCalledWith('service="web-store"', expect.anything());
     expect(screen.getByTestId('pplBuilderSearchBoxInput')).toHaveValue('service="web-store"');
   });
 
@@ -97,9 +95,7 @@ describe('PPLBuilder', () => {
     fireEvent.change(screen.getByTestId('pplBuilderSearchBoxInput'), {
       target: { value: 'status>=500 AND error' },
     });
-    expect(onQueryChange).toHaveBeenLastCalledWith('status>=500 AND error', expect.anything(), {
-      run: false,
-    });
+    expect(onQueryChange).toHaveBeenLastCalledWith('status>=500 AND error', expect.anything());
   });
 
   it('emits a leading pipe for a stats-only query so source prepends cleanly', () => {
@@ -107,9 +103,7 @@ describe('PPLBuilder', () => {
     // "Add metric" opens an aggregation picker; choosing Count appends the row.
     fireEvent.click(screen.getByTestId('pplBuilderAddAggregation'));
     fireEvent.click(screen.getByText('Count'));
-    expect(onQueryChange).toHaveBeenLastCalledWith('| stats count()', expect.anything(), {
-      run: false,
-    });
+    expect(onQueryChange).toHaveBeenLastCalledWith('| stats count()', expect.anything());
   });
 
   it('renders a span chip and interval for an aggregated state', () => {

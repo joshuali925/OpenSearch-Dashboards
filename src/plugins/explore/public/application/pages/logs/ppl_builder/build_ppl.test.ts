@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { buildPPL, builderReducer } from './build_ppl';
+import { buildPPL, builderReducer, sortableColumns } from './build_ppl';
 import { PPLBuilderState, emptyState } from './types';
 
 describe('buildPPL — source-less output', () => {
@@ -87,11 +87,11 @@ describe('buildPPL — source-less output', () => {
         { id: 'a', fn: 'distinct_count', field: 'user.id' },
         { id: 'b', fn: 'median', field: 'latency' },
         { id: 'c', fn: 'stddev_samp', field: 'bytes' },
-        { id: 'd', fn: 'earliest', field: 'status' },
+        { id: 'd', fn: 'var_pop', field: 'bytes' },
       ],
     };
     expect(buildPPL(state)).toBe(
-      '| stats distinct_count(user.id), median(latency), stddev_samp(bytes), earliest(status)'
+      '| stats distinct_count(user.id), median(latency), stddev_samp(bytes), var_pop(bytes)'
     );
   });
 
@@ -157,6 +157,65 @@ describe('buildPPL — source-less output', () => {
       ],
     };
     expect(buildPPL(state)).toBe('| stats percentile(round(latency), 90)');
+  });
+
+  it('appends a descending sort on an aggregation column, back-quoted', () => {
+    const state: PPLBuilderState = {
+      ...emptyState(),
+      aggregations: [{ id: 'a', fn: 'count' }],
+      groupBy: { fields: ['service'] },
+      sort: { column: 'count()', desc: true },
+    };
+    expect(buildPPL(state)).toBe('| stats count() by service | sort -`count()`');
+  });
+
+  it('appends an ascending sort on a bare group-by field', () => {
+    const state: PPLBuilderState = {
+      ...emptyState(),
+      aggregations: [{ id: 'a', fn: 'count' }],
+      groupBy: { fields: ['service'] },
+      sort: { column: 'service', desc: false },
+    };
+    expect(buildPPL(state)).toBe('| stats count() by service | sort service');
+  });
+
+  it('drops a sort whose column is no longer produced by the query', () => {
+    const state: PPLBuilderState = {
+      ...emptyState(),
+      aggregations: [{ id: 'a', fn: 'count' }],
+      groupBy: { fields: ['service'] },
+      // `avg(bytes)` was removed; the dangling sort must not be emitted.
+      sort: { column: 'avg(bytes)', desc: true },
+    };
+    expect(buildPPL(state)).toBe('| stats count() by service');
+  });
+
+  it('ignores a sort when the query does not aggregate', () => {
+    const state: PPLBuilderState = {
+      ...emptyState(),
+      searchExpression: 'ERROR',
+      sort: { column: 'service', desc: true },
+    };
+    expect(buildPPL(state)).toBe('ERROR');
+  });
+});
+
+describe('sortableColumns', () => {
+  it('is empty when the query does not aggregate', () => {
+    expect(sortableColumns({ ...emptyState(), searchExpression: 'ERROR' })).toEqual([]);
+  });
+
+  it('lists metrics first, then group-by fields', () => {
+    const state: PPLBuilderState = {
+      ...emptyState(),
+      aggregations: [
+        { id: 'a', fn: 'count' },
+        { id: 'b', fn: 'avg', field: 'bytes' },
+      ],
+      groupBy: { fields: ['service'], span: { field: '@timestamp', interval: '1m', auto: true } },
+    };
+    // The time span is intentionally excluded from sortable columns.
+    expect(sortableColumns(state)).toEqual(['count()', 'avg(bytes)', 'service']);
   });
 });
 
@@ -224,5 +283,15 @@ describe('builderReducer', () => {
     expect(state.groupBy.span?.interval).toBe('1m');
     state = builderReducer(state, { type: 'REMOVE_SPAN' });
     expect(state.groupBy.span).toBeUndefined();
+  });
+
+  it('sets and removes the sort', () => {
+    let state = builderReducer(emptyState(), {
+      type: 'SET_SORT',
+      sort: { column: 'count()', desc: true },
+    });
+    expect(state.sort).toEqual({ column: 'count()', desc: true });
+    state = builderReducer(state, { type: 'REMOVE_SORT' });
+    expect(state.sort).toBeUndefined();
   });
 });

@@ -19,8 +19,8 @@ export interface AggDef {
   /**
    * Whether the aggregation only makes sense over a numeric field (avg, sum,
    * variance, …). When true the field picker is restricted to numeric fields;
-   * when false any aggregatable field is offered (min/max, distinct_count,
-   * earliest/latest, …). Undefined implies "any" (e.g. count needs no field).
+   * when false any aggregatable field is offered (min/max, distinct_count, …).
+   * Undefined implies "any" (e.g. count needs no field).
    */
   numericOnly?: boolean;
 }
@@ -123,30 +123,6 @@ export const AGG_FUNCTIONS: AggDef[] = [
     description: 'Population variance of the field values.',
     needsField: true,
     numericOnly: true,
-  },
-  {
-    id: 'earliest',
-    label: i18n.translate('explore.pplBuilder.agg.earliest', { defaultMessage: 'Earliest' }),
-    description: 'Field value from the earliest timestamp.',
-    needsField: true,
-  },
-  {
-    id: 'latest',
-    label: i18n.translate('explore.pplBuilder.agg.latest', { defaultMessage: 'Latest' }),
-    description: 'Field value from the latest timestamp.',
-    needsField: true,
-  },
-  {
-    id: 'first',
-    label: i18n.translate('explore.pplBuilder.agg.first', { defaultMessage: 'First' }),
-    description: 'Field value from the first row in the group.',
-    needsField: true,
-  },
-  {
-    id: 'last',
-    label: i18n.translate('explore.pplBuilder.agg.last', { defaultMessage: 'Last' }),
-    description: 'Field value from the last row in the group.',
-    needsField: true,
   },
 ];
 

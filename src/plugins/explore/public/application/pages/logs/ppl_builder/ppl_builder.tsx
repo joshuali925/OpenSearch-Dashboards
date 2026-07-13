@@ -11,10 +11,11 @@ import { EuiButtonEmpty, EuiComboBox, EuiFieldText, EuiButtonIcon } from '@elast
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
-import { builderReducer, buildPPL } from './build_ppl';
+import { builderReducer, buildPPL, sortableColumns } from './build_ppl';
 import { PPLBuilderState, emptyState } from './types';
 import { SearchBox } from './search_box';
 import { AggregationRow } from './aggregation_row';
+import { SortRow } from './sort_row';
 import { AddMetricMenu } from './add_metric_menu';
 import { useFieldData } from './use_field_data';
 import { withConnector } from '../../../components/query_builder';
@@ -104,6 +105,10 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
   );
 
   const hasAggregation = state.aggregations.length > 0;
+
+  // Columns the sort row can target: the metrics + group-by fields the query
+  // produces. Recomputed from state so it tracks metric/group-by edits.
+  const sortColumns = useMemo(() => sortableColumns(state), [state]);
 
   const toggleSpan = () => {
     if (state.groupBy.span) {
@@ -201,12 +206,12 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
                   />
                 </div>
 
-                {/* Time bucket (span) chip */}
+                {/* Time span chip */}
                 {state.groupBy.span ? (
                   <div className="plqGroup" data-test-subj="pplBuilderSpanChip">
                     <span className="plqGroup__label">
                       {i18n.translate('explore.pplBuilder.span', {
-                        defaultMessage: 'Time bucket',
+                        defaultMessage: 'Time span',
                       })}
                     </span>
                     <EuiFieldText
@@ -227,7 +232,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
                       className="plqParamInput"
                       style={{ width: 64 }}
                       aria-label={i18n.translate('explore.pplBuilder.spanInterval', {
-                        defaultMessage: 'Time bucket interval',
+                        defaultMessage: 'Time span interval',
                       })}
                       data-test-subj="pplBuilderSpanInterval"
                     />
@@ -237,7 +242,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
                       color="text"
                       size="s"
                       aria-label={i18n.translate('explore.pplBuilder.removeSpan', {
-                        defaultMessage: 'Remove time bucket',
+                        defaultMessage: 'Remove time span',
                       })}
                       onClick={toggleSpan}
                       data-test-subj="pplBuilderRemoveSpan"
@@ -251,10 +256,18 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
                     data-test-subj="pplBuilderAddSpan"
                   >
                     {i18n.translate('explore.pplBuilder.addSpan', {
-                      defaultMessage: 'Add time bucket',
+                      defaultMessage: 'Add time span',
                     })}
                   </EuiButtonEmpty>
                 )}
+              </div>
+            )}
+
+            {/* Sort row — a third child under the same connector, shown once the
+                query aggregates (there are output columns to sort). */}
+            {hasAggregation && (
+              <div className="plqGroupChildRow">
+                <SortRow sort={state.sort} columns={sortColumns} dispatch={dispatch} />
               </div>
             )}
           </div>

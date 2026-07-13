@@ -12,6 +12,7 @@ const stripIds = (state: PPLBuilderState) => ({
   searchExpression: state.searchExpression,
   aggregations: state.aggregations.map(({ id, ...rest }) => rest),
   groupBy: state.groupBy,
+  sort: state.sort,
 });
 
 describe('parsePPL — canBuild gating', () => {
@@ -79,7 +80,12 @@ describe('parsePPL — canBuild gating', () => {
   });
 
   it.each([
-    ['sort command', 'source = logs | sort field'],
+    // A bare `sort` with no preceding stats isn't the modeled shape (sort only
+    // applies to an aggregated result in the builder).
+    ['sort without stats', 'source = logs | sort field'],
+    ['sort with a result limit', 'source = logs | stats count() by a | sort 5 a'],
+    ['multi-column sort', 'source = logs | stats count() by a, b | sort a, b'],
+    ['two sort clauses', 'source = logs | stats count() by a | sort a | sort b'],
     ['dedup command', 'source = logs | dedup field'],
     ['head command', 'source = logs | head 10'],
     ['eval command', 'source = logs | eval x = a + b'],
@@ -98,6 +104,24 @@ describe('parsePPL — canBuild gating', () => {
     const result = parsePPL('source = logs | stats dc(user.id)');
     expect(result.canBuild).toBe(true);
     expect(result.state.aggregations[0]).toMatchObject({ fn: 'distinct_count', field: 'user.id' });
+  });
+
+  it('parses a trailing sort on a group-by field (ascending by default)', () => {
+    const result = parsePPL('source = logs | stats count() by service | sort service');
+    expect(result.canBuild).toBe(true);
+    expect(result.state.sort).toEqual({ column: 'service', desc: false });
+  });
+
+  it('parses a descending sort on a back-quoted aggregation column', () => {
+    const result = parsePPL('source = logs | stats count() by service | sort -`count()`');
+    expect(result.canBuild).toBe(true);
+    expect(result.state.sort).toEqual({ column: 'count()', desc: true });
+  });
+
+  it('parses a trailing `desc` keyword as descending', () => {
+    const result = parsePPL('source = logs | stats avg(bytes) by service | sort service desc');
+    expect(result.canBuild).toBe(true);
+    expect(result.state.sort).toEqual({ column: 'service', desc: true });
   });
 });
 
@@ -175,6 +199,20 @@ describe('parsePPL / buildPPL round-trip', () => {
         },
       ],
       groupBy: { fields: [] },
+    },
+    // Descending sort on an aggregation column (back-quoted on emit).
+    {
+      searchExpression: '',
+      aggregations: [{ id: 'a', fn: 'count' }],
+      groupBy: { fields: ['service'] },
+      sort: { column: 'count()', desc: true },
+    },
+    // Ascending sort on a group-by field.
+    {
+      searchExpression: 'ERROR',
+      aggregations: [{ id: 'a', fn: 'avg', field: 'bytes' }],
+      groupBy: { fields: ['service'] },
+      sort: { column: 'service', desc: false },
     },
   ];
 

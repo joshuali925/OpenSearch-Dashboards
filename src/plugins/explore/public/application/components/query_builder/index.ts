@@ -4,6 +4,6 @@
  */
 
 export { withConnector } from './tree_connector';
-export { comboBoxWidth, inputWidth } from './measure_text';
+export { comboBoxWidth, inputWidth, widestOptionWidth } from './measure_text';
 export { CategoryFunctionMenu } from './category_function_menu';
 export type { FunctionDef, FunctionCategory, RootMenuItem } from './category_function_menu';

@@ -115,4 +115,41 @@ describe('PPLBuilder', () => {
     expect(screen.getByTestId('pplBuilderSpanChip')).toBeInTheDocument();
     expect(screen.getByTestId('pplBuilderSpanInterval')).toHaveValue('5m');
   });
+
+  it('hides the sort control until the query aggregates', () => {
+    renderBuilder();
+    // No aggregation yet: nothing to sort.
+    expect(screen.queryByTestId('pplBuilderAddSort')).not.toBeInTheDocument();
+  });
+
+  it('offers an "Add sort" affordance once the query aggregates', () => {
+    renderBuilder({ ...emptyState(), aggregations: [{ id: 'a', fn: 'count' }] });
+    expect(screen.getByTestId('pplBuilderAddSort')).toBeInTheDocument();
+  });
+
+  it('adds a descending sort on the first column and emits the sort clause', () => {
+    const { onQueryChange } = renderBuilder({
+      ...emptyState(),
+      aggregations: [{ id: 'a', fn: 'count' }],
+      groupBy: { fields: ['service'] },
+    });
+    fireEvent.click(screen.getByTestId('pplBuilderAddSort'));
+    // Defaults to the first sortable column (the count() metric), descending.
+    expect(onQueryChange).toHaveBeenLastCalledWith(
+      '| stats count() by service | sort -`count()`',
+      expect.anything()
+    );
+  });
+
+  it('renders a sort chip and removes the sort', () => {
+    const { onQueryChange } = renderBuilder({
+      ...emptyState(),
+      aggregations: [{ id: 'a', fn: 'count' }],
+      groupBy: { fields: ['service'] },
+      sort: { column: 'service', desc: false },
+    });
+    expect(screen.getByTestId('pplBuilderSortChip')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('pplBuilderRemoveSort'));
+    expect(onQueryChange).toHaveBeenLastCalledWith('| stats count() by service', expect.anything());
+  });
 });

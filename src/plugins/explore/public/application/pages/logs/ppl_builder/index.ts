@@ -10,5 +10,6 @@ export { analyzeSearchExpression } from './search_completion';
 export type { SearchAnalysis } from './search_completion';
 export { parsePPL } from './parse_ppl';
 export type { PPLParseResult } from './parse_ppl';
+export { buildPPLPredicate, addFilterToPPLSearchExpression } from './add_filter';
 export { PPLBuilder } from './ppl_builder';
 export { SearchBox, PPL_SEARCH_LANGUAGE_ID } from './search_box';

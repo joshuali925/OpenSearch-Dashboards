@@ -7,7 +7,7 @@ import './ppl_builder.scss';
 
 import React, { useCallback, useMemo, useReducer, useRef, useState, useEffect } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonEmpty, EuiCode, EuiComboBox, EuiFieldText, EuiButtonIcon } from '@elastic/eui';
+import { EuiButtonEmpty, EuiComboBox, EuiFieldText, EuiButtonIcon } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
@@ -263,16 +263,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
         undefined,
         GROUP_BRANCH_TOP_REACH
       )}
-
-      {/* Live PPL preview */}
-      <div className="plqQueryPreviewStrip" data-test-subj="pplBuilderQueryPreview">
-        <EuiCode language="sql" transparentBackground className="plqQueryPreview">
-          {query ||
-            i18n.translate('explore.pplBuilder.previewPlaceholder', {
-              defaultMessage: 'Add a filter or metric to build a query.',
-            })}
-        </EuiCode>
-      </div>
     </div>
   );
 };

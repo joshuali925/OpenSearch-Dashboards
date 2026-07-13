@@ -15,10 +15,10 @@ import './resizable_query_container.scss';
 // Approximate pixel height needed for the query panel to show one line:
 // widgets bar (~32px) + editor line (~18px) + editor padding/border (~22px)
 const QUERY_PANEL_SINGLE_LINE_PX = 82;
-// Taller default for the logs visual builder, whose metric / group-by / time
-// bucket rows don't fit in a single editor line. The panel stays manually
-// resizable from here.
-const QUERY_PANEL_BUILDER_PX = 240;
+// Taller default for the logs visual builder, sized to show its default state
+// (widgets row + the "Search for" / "Group into" rows) without clipping. The
+// panel stays manually resizable from here.
+const QUERY_PANEL_BUILDER_PX = 170;
 const QUERY_PANEL_MIN_SIZE = '3%';
 const QUERY_PANEL_MIN_PCT = 3;
 const QUERY_PANEL_MAX_PCT = 72;

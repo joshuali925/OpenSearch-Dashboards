@@ -277,26 +277,6 @@
   }
 }
 
-.plqQueryPreviewStrip {
-  display: flex;
-  align-items: flex-start;
-  padding: $euiSizeXS $euiSizeS;
-  margin-top: $euiSizeS;
-  border-left: 2px solid $euiColorPrimary;
-  background: transparentize($euiColorPrimary, 0.96);
-  border-radius: 0 $euiBorderRadiusSmall $euiBorderRadiusSmall 0;
-}
-
-.plqQueryPreview {
-  font-size: $euiFontSizeXS;
-  background: transparent !important;
-  padding: 0 !important;
-  flex: 1;
-  min-width: 0;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
 .plqSearchBoxWrap {
   flex: 1;
   min-width: 240px;

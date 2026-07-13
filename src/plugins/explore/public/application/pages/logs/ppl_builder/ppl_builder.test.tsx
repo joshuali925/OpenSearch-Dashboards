@@ -69,12 +69,11 @@ const renderBuilder = (initialState: PPLBuilderState = emptyState()) => {
 };
 
 describe('PPLBuilder', () => {
-  it('renders the search box and group rows with a preview placeholder', () => {
+  it('renders the search box and group rows', () => {
     renderBuilder();
     expect(screen.getByText('Search for')).toBeInTheDocument();
     expect(screen.getByText('Group into')).toBeInTheDocument();
     expect(screen.getByTestId('pplBuilderSearchBox')).toBeInTheDocument();
-    expect(screen.getByTestId('pplBuilderQueryPreview')).toBeInTheDocument();
   });
 
   it('emits a source-less (empty) query on mount for an empty state', () => {

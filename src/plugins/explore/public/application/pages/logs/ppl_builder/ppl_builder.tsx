@@ -33,6 +33,11 @@ interface PPLBuilderProps {
 // Target bar count for the auto time-bucket, matching the traces chart's density.
 const CHART_BAR_TARGET = 15;
 
+// A PPL span interval is a positive number optionally followed by a time unit
+// (e.g. `30s`, `1m`, `2d`). Anything else produces an invalid `span(...)` that
+// only fails server-side, so flag it in the field.
+const SPAN_INTERVAL_RE = /^\d+(\.\d+)?\s*(ms|s|m|h|d|w|M|q|y|second|minute|hour|day|week|month|quarter|year)?s?$/i;
+
 export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryChange }) => {
   const { services } = useOpenSearchDashboards<ExploreServices>();
   const { dataset } = useDatasetContext();
@@ -207,6 +212,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
                     <EuiFieldText
                       compressed
                       controlOnly
+                      isInvalid={!SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())}
                       value={state.groupBy.span.interval}
                       onChange={(e) =>
                         dispatch({
@@ -234,6 +240,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
                         defaultMessage: 'Remove time bucket',
                       })}
                       onClick={toggleSpan}
+                      data-test-subj="pplBuilderRemoveSpan"
                     />
                   </div>
                 ) : (

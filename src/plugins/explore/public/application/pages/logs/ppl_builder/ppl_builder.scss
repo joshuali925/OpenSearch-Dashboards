@@ -325,4 +325,20 @@
     background: transparentize($euiColorPrimary, 0.85);
     border-radius: $euiBorderRadiusSmall;
   }
+
+  // Clickable ✕ injected after each filter box (Monaco injected text; see
+  // SearchBox.updateFilterBoxes). Shares the filter's tinted background so it
+  // reads as the trailing edge of the same chip, dimmed until hovered.
+  &__removeFilter {
+    padding: 0 $euiSizeXS;
+    background: transparentize($euiColorPrimary, 0.85);
+    border-top-right-radius: $euiBorderRadiusSmall;
+    border-bottom-right-radius: $euiBorderRadiusSmall;
+    color: $euiColorDarkShade;
+    cursor: pointer;
+
+    &:hover {
+      color: $euiColorDangerText;
+    }
+  }
 }

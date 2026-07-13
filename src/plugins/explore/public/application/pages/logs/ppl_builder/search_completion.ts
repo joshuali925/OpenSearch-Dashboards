@@ -211,6 +211,30 @@ export function findFilterRanges(query: string): FilterRange[] {
   return ranges;
 }
 
+/** A boolean connective sitting alone in the seam between two filters. */
+const TRAILING_BOOLEAN_RE = /\s+(?:AND|OR|NOT)\s*$/i;
+const LEADING_BOOLEAN_RE = /^\s*(?:AND|OR|NOT)\s+/i;
+
+/**
+ * Remove the filter occupying char range `[start, end)` from `query`, collapsing
+ * the whitespace seam left behind so the remaining filters stay single-spaced.
+ * Whitespace inside a surviving filter's value (e.g. `'win 7'`) is untouched —
+ * only the join between the removed slot and its neighbours is trimmed. A boolean
+ * connective (`AND`/`OR`/`NOT`) left dangling in that seam is dropped too, so the
+ * result stays a valid expression whether filters were space- or keyword-joined.
+ */
+export function removeFilterRange(query: string, range: FilterRange): string {
+  let before = query.slice(0, range.start).replace(/\s+$/, '');
+  let after = query.slice(range.end).replace(/^\s+/, '');
+  // Drop a connective that bordered the removed filter (`… AND <removed>` or
+  // `<removed> AND …`), preferring the trailing side so a leading keyword on the
+  // remainder doesn't survive.
+  if (TRAILING_BOOLEAN_RE.test(before)) before = before.replace(TRAILING_BOOLEAN_RE, '');
+  else if (LEADING_BOOLEAN_RE.test(after)) after = after.replace(LEADING_BOOLEAN_RE, '');
+  const merged = before && after ? `${before} ${after}` : `${before}${after}`;
+  return merged.trim();
+}
+
 /**
  * Analyze the search expression at a caret (0-based char offset) and report what
  * to suggest. Returns a "suggest fields" default on empty/whitespace input.

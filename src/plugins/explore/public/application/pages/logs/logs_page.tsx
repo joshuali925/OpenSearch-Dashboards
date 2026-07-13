@@ -98,6 +98,7 @@ export const LogsPage: React.FC<Partial<Pick<AppMountParameters, 'setHeaderActio
 
             <ResizableQueryContainer
               queryPanel={queryBuilderEnabled ? <LogsQueryPanel /> : <QueryPanel />}
+              tallDefault={queryBuilderEnabled}
             >
               {/* Main content area with resizable panels under QueryPanel */}
               <BottomContainer />

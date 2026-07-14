@@ -7,7 +7,7 @@ import './ppl_builder.scss';
 
 import React, { useCallback, useMemo, useReducer, useRef, useState, useEffect } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonEmpty, EuiComboBox, EuiFieldText, EuiButtonIcon } from '@elastic/eui';
+import { EuiComboBox, EuiFieldText, EuiButtonIcon, EuiToolTip } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
@@ -145,76 +145,86 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
         </div>
       </div>
 
-      {/* Group / aggregate row — branched beneath "Search for" as an indented
-          child so the two rows read as a query tree (mirrors the metric
-          explorer's tree connectors between stacked operations). */}
+      {/* Group / aggregate / sort — a single row branched beneath "Search for"
+          as an indented child so the query reads as a tree (mirrors the metric
+          explorer's tree connectors). The aggregation (metrics + group-by/time
+          span) and the trailing sort all sit on one horizontal line, wrapping
+          as needed: Group into — metrics — Add metric — by — Add time span —
+          Sort — Add sort. */}
       {withConnector(
         0,
-        <div className="plqRow plqRow--branch plqGroupBranch">
+        <div className="plqRow plqRow--branch">
           <span className="plqRow__label">
             {i18n.translate('explore.pplBuilder.groupInto', { defaultMessage: 'Group into' })}
           </span>
-          {/* Tree connector tying the "Group into" label to its child rows so
-              the group reads as one unit rather than an isolated pill. */}
-          <div className="plqGroupBranch__connector" />
-          <div className="plqGroupBranch__kids">
-            {/* Metric aggregations + the add-metric affordance. */}
-            <div className="plqGroupChildRow">
-              {state.aggregations.map((agg, idx) => (
-                <AggregationRow
-                  key={agg.id}
-                  agg={agg}
-                  idx={idx}
-                  numericFieldOptions={numericOptions}
-                  anyFieldOptions={numericAndAggregatableOptions}
-                  dispatch={dispatch}
-                />
-              ))}
-              <AddMetricMenu
-                onAdd={(fn) => dispatch({ type: 'ADD_AGGREGATION', agg: { fn } })}
-                dataTestSubj="pplBuilderAddAggregation"
-              />
-            </div>
+          {/* Dash only when a metric box follows; when there are none it would
+              sit to the left of the bare "add metric" icon, which reads poorly. */}
+          {state.aggregations.length > 0 && <div className="plqDash" />}
 
-            {/* Group-by + time-bucket, stacked as a second child row under the
-                same connector so the whole aggregation reads as one group. */}
-            {hasAggregation && (
-              <div className="plqGroupChildRow">
-                {/* Group-by fields — outlined group matching the metric pills, with
-                    the "by" label floating on the top border. */}
-                <div className="plqGroup" data-test-subj="pplBuilderGroupBy">
-                  <span className="plqGroup__label">
-                    {i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
-                  </span>
-                  <EuiComboBox
-                    compressed
-                    style={{ minWidth: 200 }}
-                    placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
-                      defaultMessage: 'Everything',
-                    })}
-                    options={fieldOptions}
-                    selectedOptions={state.groupBy.fields.map((f) => ({ label: f }))}
-                    onChange={(selected) =>
+          {/* Metric aggregations + the add-metric affordance, each joined to its
+              neighbour by a dash so the metrics read as one connected run. */}
+          {state.aggregations.map((agg, idx) => (
+            <React.Fragment key={agg.id}>
+              {idx > 0 && <div className="plqDash" />}
+              <AggregationRow
+                agg={agg}
+                idx={idx}
+                numericFieldOptions={numericOptions}
+                anyFieldOptions={numericAndAggregatableOptions}
+                dispatch={dispatch}
+              />
+            </React.Fragment>
+          ))}
+          <AddMetricMenu
+            onAdd={(fn) => dispatch({ type: 'ADD_AGGREGATION', agg: { fn } })}
+            dataTestSubj="pplBuilderAddAggregation"
+          />
+
+          {/* Group-by + time-bucket, shown only once the query aggregates. */}
+          {hasAggregation && (
+            <>
+              <div className="plqDash" />
+              {/* Group-by fields — outlined group matching the metric pills, with
+                  the "by" label floating on the top border. */}
+              <div className="plqGroup" data-test-subj="pplBuilderGroupBy">
+                <span className="plqGroup__label">
+                  {i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
+                </span>
+                <EuiComboBox
+                  compressed
+                  // Each selected field pill carries its own × to remove it, so
+                  // the box-wide clear button is redundant.
+                  isClearable={false}
+                  style={{ minWidth: 200 }}
+                  placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
+                    defaultMessage: 'Everything',
+                  })}
+                  options={fieldOptions}
+                  selectedOptions={state.groupBy.fields.map((f) => ({ label: f }))}
+                  onChange={(selected) =>
+                    dispatch({
+                      type: 'SET_GROUPBY_FIELDS',
+                      fields: selected.map((s) => s.label),
+                    })
+                  }
+                  onCreateOption={(val) => {
+                    const v = val.trim();
+                    if (v) {
                       dispatch({
                         type: 'SET_GROUPBY_FIELDS',
-                        fields: selected.map((s) => s.label),
-                      })
+                        fields: [...state.groupBy.fields, v],
+                      });
                     }
-                    onCreateOption={(val) => {
-                      const v = val.trim();
-                      if (v) {
-                        dispatch({
-                          type: 'SET_GROUPBY_FIELDS',
-                          fields: [...state.groupBy.fields, v],
-                        });
-                      }
-                    }}
-                    data-test-subj="pplBuilderGroupByFields"
-                  />
-                </div>
+                  }}
+                  data-test-subj="pplBuilderGroupByFields"
+                />
+              </div>
 
-                {/* Time span chip */}
-                {state.groupBy.span ? (
+              {/* Time span chip — dash only precedes the box form, not the bare
+                  "add" icon (a dash butting the left of an icon reads poorly). */}
+              {state.groupBy.span ? (
+                <>
+                  <div className="plqDash" />
                   <div className="plqGroup" data-test-subj="pplBuilderSpanChip">
                     <span className="plqGroup__label">
                       {i18n.translate('explore.pplBuilder.span', {
@@ -255,37 +265,41 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
                       data-test-subj="pplBuilderRemoveSpan"
                     />
                   </div>
-                ) : (
-                  <EuiButtonEmpty
-                    size="xs"
+                </>
+              ) : (
+                <EuiToolTip
+                  content={i18n.translate('explore.pplBuilder.addSpan', {
+                    defaultMessage: 'Add time span',
+                  })}
+                  position="top"
+                >
+                  <EuiButtonIcon
+                    className="plqIconBtn"
                     iconType="clock"
+                    color="primary"
+                    size="s"
                     onClick={toggleSpan}
-                    data-test-subj="pplBuilderAddSpan"
-                  >
-                    {i18n.translate('explore.pplBuilder.addSpan', {
+                    aria-label={i18n.translate('explore.pplBuilder.addSpan', {
                       defaultMessage: 'Add time span',
                     })}
-                  </EuiButtonEmpty>
-                )}
-              </div>
-            )}
-          </div>
-        </div>,
-        false,
-        undefined,
-        GROUP_BRANCH_TOP_REACH
-      )}
+                    data-test-subj="pplBuilderAddSpan"
+                  />
+                </EuiToolTip>
+              )}
+            </>
+          )}
 
-      {/* Sort — its own top-level pipe operation (`… | sort …`), a sibling of
-          the aggregation branched beneath "Search for". Shown independently of
-          whether the query aggregates: sort applies to an aggregated result or
-          to raw search rows. */}
-      {withConnector(
-        0,
-        <div className="plqRow plqRow--branch">
+          {/* Sort — a trailing `| sort` pipe operation. Shown independently of
+              whether the query aggregates: it applies to an aggregated result
+              or to raw search rows. Prefixed with its own "Sort" label so the
+              row reads … Add time span — Sort — Add sort. */}
+          <div className="plqDash" />
           <span className="plqRow__label">
             {i18n.translate('explore.pplBuilder.sort', { defaultMessage: 'Sort' })}
           </span>
+          {/* Dash only precedes the sort chip (box form), not the bare "add sort"
+              icon SortRow renders when unsorted. */}
+          {state.sort && <div className="plqDash" />}
           <SortRow sort={state.sort} columns={sortColumns} dispatch={dispatch} />
         </div>,
         true,

@@ -14,6 +14,7 @@ import {
   EuiPopover,
   EuiPopoverProps,
   EuiText,
+  EuiToolTip,
 } from '@elastic/eui';
 
 /**
@@ -52,7 +53,14 @@ interface CategoryFunctionMenuProps {
   /** Trigger button — an "empty" text button or a compact icon button. */
   trigger:
     | { kind: 'empty'; label: string; iconType: string }
-    | { kind: 'icon'; iconType: string; ariaLabel: string; color?: EuiButtonIconColor };
+    | {
+        kind: 'icon';
+        iconType: string;
+        ariaLabel: string;
+        color?: EuiButtonIconColor;
+        /** Extra class on the icon button (e.g. to box it within a builder row). */
+        className?: string;
+      };
   /** Optional title for the root panel. */
   rootTitle?: string;
   /** Optional plain items rendered above the categories in the root panel. */
@@ -136,14 +144,19 @@ export const CategoryFunctionMenu: React.FC<CategoryFunctionMenuProps> = ({
         {trigger.label}
       </EuiButtonEmpty>
     ) : (
-      <EuiButtonIcon
-        iconType={trigger.iconType}
-        color={trigger.color}
-        size="s"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label={trigger.ariaLabel}
-        data-test-subj={dataTestSubj}
-      />
+      // Icon trigger: the aria-label doubles as the hover tooltip so a compact
+      // icon-only affordance still explains what it does.
+      <EuiToolTip content={trigger.ariaLabel} position="top">
+        <EuiButtonIcon
+          className={trigger.className}
+          iconType={trigger.iconType}
+          color={trigger.color}
+          size="s"
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={trigger.ariaLabel}
+          data-test-subj={dataTestSubj}
+        />
+      </EuiToolTip>
     );
 
   return (

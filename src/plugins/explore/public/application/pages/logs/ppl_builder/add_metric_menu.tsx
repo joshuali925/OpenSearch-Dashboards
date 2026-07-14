@@ -42,9 +42,12 @@ export const AddMetricMenu: React.FC<AddMetricMenuProps> = ({ onAdd, dataTestSub
       onSelect={() => {}}
       extraRootItems={rootItems}
       trigger={{
-        kind: 'empty',
+        kind: 'icon',
         iconType: 'plusInCircle',
-        label: i18n.translate('explore.pplBuilder.addMetric', { defaultMessage: 'Add metric' }),
+        className: 'plqIconBtn',
+        ariaLabel: i18n.translate('explore.pplBuilder.addMetric', {
+          defaultMessage: 'Add metric',
+        }),
       }}
       rootTitle={i18n.translate('explore.pplBuilder.addMetricTitle', {
         defaultMessage: 'Select aggregation',

@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonEmpty, EuiButtonIcon, EuiComboBox, EuiSuperSelect } from '@elastic/eui';
+import { EuiButtonIcon, EuiComboBox, EuiSuperSelect, EuiToolTip } from '@elastic/eui';
 import { BuilderAction } from './build_ppl';
 import { Sort } from './types';
 
@@ -37,19 +37,25 @@ const ASC = 'asc';
  */
 export const SortRow: React.FC<SortRowProps> = ({ sort, columns, dispatch }) => {
   if (!sort) {
+    const addSortLabel = i18n.translate('explore.pplBuilder.addSort', {
+      defaultMessage: 'Add sort',
+    });
     return (
-      <EuiButtonEmpty
-        size="xs"
-        iconType="sortable"
-        // Default to the first candidate column, descending — the typical
-        // "top N" reading of a result.
-        onClick={() =>
-          dispatch({ type: 'SET_SORT', sort: { column: columns[0] ?? '', desc: true } })
-        }
-        data-test-subj="pplBuilderAddSort"
-      >
-        {i18n.translate('explore.pplBuilder.addSort', { defaultMessage: 'Add sort' })}
-      </EuiButtonEmpty>
+      <EuiToolTip content={addSortLabel} position="top">
+        <EuiButtonIcon
+          className="plqIconBtn"
+          iconType="sortable"
+          color="primary"
+          size="s"
+          // Default to the first candidate column, descending — the typical
+          // "top N" reading of a result.
+          onClick={() =>
+            dispatch({ type: 'SET_SORT', sort: { column: columns[0] ?? '', desc: true } })
+          }
+          aria-label={addSortLabel}
+          data-test-subj="pplBuilderAddSort"
+        />
+      </EuiToolTip>
     );
   }
 

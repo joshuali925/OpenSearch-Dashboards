@@ -6,7 +6,16 @@
 .plqBuilder {
   padding: $euiSizeS;
   background: transparentize($euiColorLightestShade, 0.75);
-  border-radius: $euiBorderRadiusSmall;
+  border-radius: 0;
+
+  // Square every edge in the builder: the row reads as one connected pipeline,
+  // so no rounded corners on any label chip, group box, chip, or EUI control
+  // (comboboxes/selects draw their own radius, hence the blanket override).
+  *,
+  *::before,
+  *::after {
+    border-radius: 0 !important;
+  }
 }
 
 .plqRow {
@@ -24,107 +33,17 @@
   padding: 0;
 }
 
-// "Group into" branch: the label connects — via a short connector line and a
-// vertical trunk — to its stacked child rows (metrics + the group-by/time
-// bucket), so the whole aggregation reads as one connected group rather than
-// an isolated pill sitting beside the metrics.
-.plqGroupBranch {
-  flex-wrap: nowrap;
-  align-items: stretch;
-
-  // No flex gaps between label / connector / kids: the connector line and each
-  // row's stub must meet edge-to-edge so they read as one continuous line
-  // rather than a row of detached dashes.
-  gap: 0;
-
-  .plqRow__label {
-    align-self: center;
-  }
-
-  // Horizontal line from the label to the trunk, at the block's vertical
-  // center. With two rows it meets the trunk at its midpoint (a "├"); with a
-  // single child row it is collinear with that row's stub, so label and row
-  // read as one straight horizontal bar.
-  &__connector {
-    position: relative;
-    align-self: stretch;
-    flex-shrink: 0;
-    width: $euiSizeS;
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: 0;
-      right: 0;
-      border-top: 2px solid $euiColorLightShade;
-    }
-  }
-
-  // Stacked child rows. The vertical trunk is drawn by the rows themselves (see
-  // .plqGroupChildRow) so it tracks their real centers instead of a fixed
-  // offset that can overshoot taller rows.
-  &__kids {
-    display: flex;
-    flex-direction: column;
-    gap: $euiSizeXS;
-    min-width: 0;
-    padding-left: $euiSizeM;
-  }
-}
-
-// One child row within the "Group into" group. Each row hangs a horizontal stub
-// off the trunk at its own vertical center.
-.plqGroupChildRow {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: $euiSizeXS;
-  min-height: $euiFormControlCompressedHeight;
-
-  // Horizontal arm from the trunk into the row.
-  &::before {
-    content: "";
-    position: absolute;
-    left: -#{$euiSizeM};
-    top: 50%;
-    width: $euiSizeM;
-    border-top: 2px solid $euiColorLightShade;
-  }
-
-  // Vertical trunk segments, drawn only when there are two or more rows — so a
-  // lone row renders as a single horizontal bar with no dangling vertical stub.
-  // Each segment anchors to its row's center (50%) and extends through the
-  // inter-row gap ($euiSizeXS) to meet the neighbour, so the trunk sits flush
-  // between the top and bottom arms and never overshoots past them regardless
-  // of row height. First row runs center→down, last row top→center, and any
-  // middle row spans full height.
-  &:not(:only-child)::after {
-    content: "";
-    position: absolute;
-    left: -#{$euiSizeM};
-    top: -#{$euiSizeXS};
-    bottom: -#{$euiSizeXS};
-    border-left: 2px solid $euiColorLightShade;
-  }
-
-  &:first-child:not(:only-child)::after {
-    top: 50%;
-  }
-
-  &:last-child:not(:only-child)::after {
-    bottom: 50%;
-  }
-}
-
 // Leading row labels ("Search for", "Group into") rendered as a filled tag
 // chip prepended to their control — matching the datadog builder, where the
 // label reads as an attached token rather than bare floating text.
 .plqRow__label {
   display: inline-flex;
   align-items: center;
-  height: $euiFormControlCompressedHeight;
+
+  // Slightly shorter than the 32px compressed control so the label chips sit
+  // closer to the code editor's single-line Monaco height, keeping the row
+  // compact when toggling Builder ↔ Code.
+  height: $euiSize + $euiSizeM;
   padding: 0 $euiSizeS;
   font-size: $euiFontSizeXS;
   font-weight: $euiFontWeightMedium;
@@ -146,7 +65,12 @@
   border-radius: $euiSizeM;
   padding: 0 2px;
   background: $euiColorEmptyShade;
-  margin-top: 2px;
+
+  // Align to the label chips / icon buttons (28px) so every element on the row
+  // shares one height and one vertical center. Inner controls are overridden to
+  // fit below. No top margin: the floating label is absolutely positioned, so a
+  // margin only pushed the box below the icon buttons' center.
+  height: $euiSize + $euiSizeM;
 
   &__label {
     position: absolute;
@@ -163,33 +87,58 @@
     white-space: nowrap;
   }
 
+  // Shrink the inner controls from the 32px compressed default to the group's
+  // own height ($euiSize + $euiSizeM) so nothing overflows the box and the
+  // whole row shares one height. `!important` on height: EUI's own compressed
+  // rules otherwise keep .euiComboBox__inputWrap at 32px, overflowing the box.
   .euiFormControlLayout,
   .euiFormControlLayout__childrenWrapper,
   .euiComboBox-isOpen .euiFormControlLayout,
-  .euiComboBox__inputWrap {
+  .euiComboBox__inputWrap,
+  .euiComboBox,
+  .euiFieldText,
+  .euiFieldNumber {
     box-shadow: none !important;
     border: none !important;
     background: transparent !important;
+    height: $euiSize + $euiSizeM !important;
+    min-height: $euiSize + $euiSizeM !important;
+  }
+
+  // Center the combobox pills within the shrunk input wrap. EUI's compressed
+  // wrap uses top-anchored flow with a top-only pill margin (5px 4px 0 0),
+  // which reads as uneven padding once the wrap is only 28px tall. Center the
+  // content and give each pill a symmetric vertical margin instead.
+  .euiComboBox__inputWrap {
+    align-items: center;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .euiComboBoxPill {
+    margin-top: 2px;
+    margin-bottom: 2px;
   }
 
   .euiSuperSelectControl {
     box-shadow: none !important;
     border: none !important;
     background: transparent !important;
+    height: $euiSize + $euiSizeM !important;
+    line-height: $euiSize + $euiSizeM;
   }
 
   // Size the inline icon buttons (remove, info, and the Σ add-function popover
-  // trigger) to the full compressed control height so their hover shade fills
-  // the group's content area (mirrors metrics .pqbPill__body). Without this the
-  // default `size="s"` button is smaller than the row and its highlight reads as
-  // a tiny disc. The Σ button is wrapped in an EuiPopover, so match it through
-  // that wrapper too.
+  // trigger) to the group height so their hover shade fills the group's content
+  // area (mirrors metrics .pqbPill__body). Without this the default `size="s"`
+  // button is smaller than the row and its highlight reads as a tiny disc. The
+  // Σ button is wrapped in an EuiPopover, so match it through that wrapper too.
   > .euiButtonIcon.euiButtonIcon,
   > .euiToolTipAnchor > .euiButtonIcon.euiButtonIcon,
   > .euiPopover > .euiButtonIcon.euiButtonIcon {
-    min-width: $euiFormControlCompressedHeight;
-    width: $euiFormControlCompressedHeight;
-    height: $euiFormControlCompressedHeight;
+    min-width: $euiSize + $euiSizeM;
+    width: $euiSize + $euiSizeM;
+    height: $euiSize + $euiSizeM;
     flex-shrink: 0;
   }
 
@@ -206,6 +155,32 @@
   align-self: stretch;
   background: $euiBorderColor;
   flex-shrink: 0;
+}
+
+// The "add" affordances (add metric, add time span, add sort) rendered as
+// bordered icon buttons so they read as boxed operations on the row — matching
+// the outlined .plqGroup pills they sit between — rather than bare glyphs. The
+// dash connectors butt against this border to tie the whole row together.
+.plqIconBtn.euiButtonIcon {
+  border: 1px solid $euiBorderColor;
+  height: $euiSize + $euiSizeM;
+  width: $euiSize + $euiSizeM;
+  background: $euiColorEmptyShade;
+}
+
+// Short horizontal dash tying adjacent segments together on the single builder
+// row (label chip → controls → next segment), so "Group into … by … Sort …"
+// reads as one connected pipeline rather than detached pills. Mirrors the tree
+// connector lines the branched layout used, flattened to a horizontal run.
+// Negative side margins cancel the row's flex gap ($euiSizeXS) on both ends so
+// the line meets each neighbour flush — connecting box→dash→box (or icon) edge
+// to edge with no gap.
+.plqDash {
+  align-self: center;
+  width: $euiSizeM;
+  flex-shrink: 0;
+  margin: 0 (-$euiSizeXS);
+  border-top: 2px solid $euiColorLightShade;
 }
 
 // A scalar function applied to the aggregation field (e.g. `round(…, 2)`),

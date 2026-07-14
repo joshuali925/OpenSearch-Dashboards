@@ -84,6 +84,14 @@ export const LogsQueryPanel: React.FC = () => {
   // toggling Builder -> Code WITHOUT pushing to Redux (which would re-key
   // results). Also updated from external query changes.
   const builderQueryRef = useRef(reduxQuery);
+  // Snapshot of the full builder state taken on a Builder -> Code toggle, keyed
+  // by the exact query text it compiled to. `buildPPL` is lossy — a metric with
+  // no field yet, a span's `auto` flag, or a stale sort don't survive a
+  // parse(build(state)) round-trip — so re-parsing on the way back would discard
+  // partial work. On Code -> Builder we restore this snapshot verbatim IFF the
+  // code text is unchanged from what it produced; if the user actually edited the
+  // code (so it would render differently), we fall back to parsing the new text.
+  const preservedBuilderRef = useRef<{ query: string; state: PPLBuilderState } | null>(null);
   // Text to push into the code editor once it mounts after a Builder -> Code
   // toggle (the shared editor otherwise mounts with the last-run Redux query).
   const pendingCodeSeedRef = useRef<string | null>(null);
@@ -187,14 +195,29 @@ export const LogsQueryPanel: React.FC = () => {
       const newMode = id as LogsBuilderMode;
       if (newMode === mode) return;
       if (newMode === 'code') {
-        // Carry the builder's current text into the code editor on mount.
+        // Carry the builder's current text into the code editor on mount, and
+        // snapshot the full builder state so partial work (fieldless metrics,
+        // `auto` spans, stale sorts) survives an unedited round-trip back — the
+        // parse(build(state)) path is lossy and would otherwise drop it.
         pendingCodeSeedRef.current = builderQueryRef.current;
+        preservedBuilderRef.current = { query: builderQueryRef.current, state: builderState };
         setMode('code');
         return;
       }
       // Code -> Builder: parse the LIVE editor text, not the last-run query, so
       // in-progress edits carry into the builder.
       const text = getEditorText() || liveCodeText;
+      // If the code is byte-for-byte what the builder last produced, the user
+      // didn't edit it — restore the preserved state verbatim rather than the
+      // reduced parse of it, so partial work isn't lost on a there-and-back trip.
+      const preserved = preservedBuilderRef.current;
+      if (preserved && preserved.query === text) {
+        builderQueryRef.current = text;
+        setBuilderState(preserved.state);
+        setBuilderKey((k) => k + 1);
+        setMode('builder');
+        return;
+      }
       const parsed = parsePPL(text);
       if (!parsed.canBuild) return;
       builderQueryRef.current = text;
@@ -202,7 +225,7 @@ export const LogsQueryPanel: React.FC = () => {
       setBuilderKey((k) => k + 1);
       setMode('builder');
     },
-    [mode, getEditorText, liveCodeText]
+    [mode, getEditorText, liveCodeText, builderState]
   );
 
   // The Builder toggle is disabled when the current code text can't round-trip

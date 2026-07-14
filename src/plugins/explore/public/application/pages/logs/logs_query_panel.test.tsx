@@ -46,12 +46,39 @@ jest.mock('./ppl_builder', () => ({
   ...jest.requireActual('./ppl_builder/parse_ppl'),
   ...jest.requireActual('./ppl_builder/types'),
   // The builder's `</>` toggle (search-row code switch) is driven by
-  // onSwitchToCode; expose it so the mode tests can switch to code.
-  PPLBuilder: ({ onSwitchToCode }: { onSwitchToCode?: () => void }) => (
+  // onSwitchToCode; expose it so the mode tests can switch to code. The stub also
+  // surfaces the `initialState` it was mounted with (so tests can assert what
+  // survives a Code round-trip) and lets a test push a builder edit whose state
+  // carries partial work that buildPPL can't serialize (a fieldless metric).
+  PPLBuilder: ({
+    initialState,
+    onSwitchToCode,
+    onQueryChange,
+  }: {
+    initialState?: any;
+    onSwitchToCode?: () => void;
+    onQueryChange?: (query: string, state: any) => void;
+  }) => (
     <div data-test-subj="ppl-builder-stub">
       Builder
+      <span data-test-subj="stub-initial-state">{JSON.stringify(initialState)}</span>
       <button type="button" data-test-subj="stub-switch-to-code" onClick={onSwitchToCode}>
         code
+      </button>
+      <button
+        type="button"
+        data-test-subj="stub-add-partial-metric"
+        onClick={() =>
+          // A metric with no field yet compiles to nothing, so buildPPL emits
+          // just the search expression — the partial work lives only in state.
+          onQueryChange?.('service="web-store"', {
+            searchExpression: 'service="web-store"',
+            aggregations: [{ id: 'ag-partial', fn: 'avg' }],
+            groupBy: { fields: [] },
+          })
+        }
+      >
+        add partial metric
       </button>
     </div>
   ),
@@ -69,15 +96,22 @@ jest.mock('../../../components/query_panel/query_panel_generated_query', () => (
 jest.mock('../../../components/query_panel/actions/ppl_execute_query_action', () => ({
   usePPLExecuteQueryAction: jest.fn(),
 }));
+// Shared editor-text state so the Code editor round-trip is realistic: whatever
+// the builder pushes via setEditorText is what getEditorText reads back on a
+// Code -> Builder toggle (in the real app the editor is seeded with the
+// source-less builder output). Reset per-test in beforeEach.
+const mockEditorText = { current: '' };
 jest.mock('../../../application/hooks', () => ({
   useSetEditorTextWithQuery: () => jest.fn(),
   useEditorRef: () => ({ current: null }),
-  useEditorText: () => () => '',
+  useEditorText: () => () => mockEditorText.current,
 }));
 jest.mock(
   '../../../application/hooks/editor_hooks/use_set_editor_text/use_set_editor_text',
   () => ({
-    useSetEditorText: () => jest.fn(),
+    useSetEditorText: () => (text: string) => {
+      mockEditorText.current = text;
+    },
   })
 );
 
@@ -118,6 +152,7 @@ describe('LogsQueryPanel', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     setupServices();
+    mockEditorText.current = '';
     mockGetQuery.mockReturnValue({ query: '', language: 'PPL', dataset: { id: '1' } as any });
   });
 
@@ -163,5 +198,39 @@ describe('LogsQueryPanel', () => {
     expect(screen.getByTestId('code-editor-stub')).toBeInTheDocument();
     // The `</>` toggle is rendered but disabled (query can't round-trip).
     expect(screen.getByTestId('pplBuilderModeToggle')).toBeDisabled();
+  });
+
+  it('preserves partial builder work across a Code round-trip when the code is unedited', () => {
+    renderPanel('service="web-store"');
+    expect(screen.getByTestId('ppl-builder-stub')).toBeInTheDocument();
+
+    // Build partial work that buildPPL can't serialize: a metric with no field.
+    // The emitted query is just the search expression; the fieldless metric lives
+    // only in the builder state.
+    fireEvent.click(screen.getByTestId('stub-add-partial-metric'));
+
+    // Toggle to Code and back WITHOUT editing the code.
+    fireEvent.click(screen.getByTestId('stub-switch-to-code'));
+    fireEvent.click(screen.getByTestId('pplBuilderModeToggle'));
+
+    // The builder remounts with the preserved state verbatim — the fieldless
+    // metric is still there (a re-parse of the code would have dropped it).
+    const initial = JSON.parse(screen.getByTestId('stub-initial-state').textContent || '{}');
+    expect(initial.aggregations).toEqual([{ id: 'ag-partial', fn: 'avg' }]);
+  });
+
+  it('re-parses (dropping partial work) when the code was edited before switching back', () => {
+    renderPanel('service="web-store"');
+    fireEvent.click(screen.getByTestId('stub-add-partial-metric'));
+    fireEvent.click(screen.getByTestId('stub-switch-to-code'));
+
+    // Simulate the user editing the code so it no longer matches the builder's
+    // last output. The preserved snapshot must NOT be restored — the edited code
+    // is now authoritative, so the fieldless metric is gone.
+    mockEditorText.current = 'service="web-store" | stats count()';
+    fireEvent.click(screen.getByTestId('pplBuilderModeToggle'));
+
+    const initial = JSON.parse(screen.getByTestId('stub-initial-state').textContent || '{}');
+    expect(initial.aggregations).toEqual([{ id: expect.any(String), fn: 'count' }]);
   });
 });

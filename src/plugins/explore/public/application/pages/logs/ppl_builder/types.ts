@@ -30,11 +30,7 @@ export type AggFn =
   | 'stddev_samp'
   | 'stddev_pop'
   | 'var_samp'
-  | 'var_pop'
-  | 'earliest'
-  | 'latest'
-  | 'first'
-  | 'last';
+  | 'var_pop';
 
 /**
  * One scalar (row-level) function wrapping an aggregation's field expression.
@@ -72,11 +68,25 @@ export interface GroupBy {
   span?: TimeBucket;
 }
 
+/**
+ * A single trailing `| sort` key. `column` is the sort target verbatim as it
+ * appears in the query's output columns — a bare group-by field (`service`) or
+ * an aggregation's compiled expression (`count()`, `avg(bytes)`). `desc` selects
+ * descending order (emitted as the `-` prefix). Only meaningful once the query
+ * aggregates: the sortable columns are the group-by fields plus the metrics.
+ */
+export interface Sort {
+  column: string;
+  desc: boolean;
+}
+
 export interface PPLBuilderState {
   // Raw PPL search-expression text for the "Search for" row (may be empty).
   searchExpression: string;
   aggregations: Aggregation[];
   groupBy: GroupBy;
+  // Optional trailing `| sort` on one output column; undefined when unsorted.
+  sort?: Sort;
 }
 
 let aggIdCounter = 0;

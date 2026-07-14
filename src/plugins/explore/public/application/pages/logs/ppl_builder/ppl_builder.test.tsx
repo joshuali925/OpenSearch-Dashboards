@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { PPLBuilder } from './ppl_builder';
 import { PPLBuilderState, emptyState } from './types';
 
@@ -52,8 +51,11 @@ jest.mock('../../../context', () => ({
 // The field-data hook talks to services/autocomplete; stub it with static data.
 jest.mock('./use_field_data', () => ({
   useFieldData: () => ({
-    fields: [{ name: 'service' }, { name: 'bytes', type: 'number' }],
-    fieldNames: ['service', 'bytes'],
+    fields: [{ name: 'service' }, { name: 'bytes', type: 'number' }, { name: 'service.keyword' }],
+    fieldNames: ['service', 'bytes', 'service.keyword'],
+    // `.keyword` sub-fields are excluded — the PPL engine rejects them as a
+    // sort target.
+    sortableFieldNames: ['service', 'bytes'],
     fieldOptions: [{ label: 'service' }, { label: 'bytes' }],
     numericAndAggregatableOptions: [{ label: 'bytes' }],
     numericOptions: [{ label: 'bytes' }],
@@ -114,5 +116,57 @@ describe('PPLBuilder', () => {
     });
     expect(screen.getByTestId('pplBuilderSpanChip')).toBeInTheDocument();
     expect(screen.getByTestId('pplBuilderSpanInterval')).toHaveValue('5m');
+  });
+
+  it('offers an "Add sort" affordance as its own operation, even without aggregation', () => {
+    renderBuilder();
+    // Sort is an independent pipe stage: available up front, not gated on stats.
+    expect(screen.getByTestId('pplBuilderAddSort')).toBeInTheDocument();
+  });
+
+  it('sorts raw rows by a dataset field when the query does not aggregate', () => {
+    const { onQueryChange } = renderBuilder();
+    fireEvent.click(screen.getByTestId('pplBuilderAddSort'));
+    // Defaults to the first sortable dataset field (service), descending.
+    expect(onQueryChange).toHaveBeenLastCalledWith('| sort -service', expect.anything());
+  });
+
+  it('omits `.keyword` sub-fields from the sort column suggestions', () => {
+    renderBuilder({ ...emptyState(), sort: { column: 'service', desc: true } });
+    // Open the sort column combobox to reveal its option list.
+    const input = within(screen.getByTestId('pplBuilderSortColumn')).getByTestId(
+      'comboBoxSearchInput'
+    );
+    fireEvent.click(input);
+    // The plain fields are offered; the unsortable `.keyword` sub-field is not.
+    expect(screen.getByRole('option', { name: 'service' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'bytes' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'service.keyword' })).not.toBeInTheDocument();
+  });
+
+  it('adds a descending sort on the first output column of an aggregated query', () => {
+    const { onQueryChange } = renderBuilder({
+      ...emptyState(),
+      aggregations: [{ id: 'a', fn: 'count' }],
+      groupBy: { fields: ['service'] },
+    });
+    fireEvent.click(screen.getByTestId('pplBuilderAddSort'));
+    // Defaults to the first sortable column (the count() metric), descending.
+    expect(onQueryChange).toHaveBeenLastCalledWith(
+      '| stats count() by service | sort -`count()`',
+      expect.anything()
+    );
+  });
+
+  it('renders a sort chip and removes the sort', () => {
+    const { onQueryChange } = renderBuilder({
+      ...emptyState(),
+      aggregations: [{ id: 'a', fn: 'count' }],
+      groupBy: { fields: ['service'] },
+      sort: { column: 'service', desc: false },
+    });
+    expect(screen.getByTestId('pplBuilderSortChip')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('pplBuilderRemoveSort'));
+    expect(onQueryChange).toHaveBeenLastCalledWith('| stats count() by service', expect.anything());
   });
 });

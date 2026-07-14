@@ -8,6 +8,7 @@ import {
   GroupBy,
   PPLBuilderState,
   ScalarCall,
+  Sort,
   TimeBucket,
   emptyState,
   nextAggId,
@@ -30,6 +31,8 @@ export type BuilderAction =
   | { type: 'SET_GROUPBY_FIELDS'; fields: string[] }
   | { type: 'SET_SPAN'; span: TimeBucket }
   | { type: 'REMOVE_SPAN' }
+  | { type: 'SET_SORT'; sort: Sort }
+  | { type: 'REMOVE_SORT' }
   | { type: 'INIT'; state: PPLBuilderState }
   | { type: 'RESET' };
 
@@ -91,6 +94,12 @@ export function builderReducer(state: PPLBuilderState, action: BuilderAction): P
       const { span: _span, ...rest } = state.groupBy;
       return { ...state, groupBy: rest };
     }
+    case 'SET_SORT':
+      return { ...state, sort: action.sort };
+    case 'REMOVE_SORT': {
+      const { sort: _sort, ...rest } = state;
+      return rest;
+    }
     case 'INIT':
       return action.state;
     case 'RESET':
@@ -131,8 +140,8 @@ export function compileAggregation(agg: Aggregation): string | null {
       // `dc` is the terse alias; emit the explicit name for readability.
       return `distinct_count(${arg})`;
     default:
-      // avg/sum/min/max/median/stddev_*/var_*/earliest/latest/first/last all
-      // take a single expression argument.
+      // avg/sum/min/max/median/stddev_*/var_* all take a single expression
+      // argument.
       return `${agg.fn}(${arg})`;
   }
 }
@@ -143,6 +152,54 @@ function compileGroupBy(groupBy: GroupBy): string {
     parts.push(`span(${groupBy.span.field}, ${groupBy.span.interval})`);
   }
   return parts.join(', ');
+}
+
+/**
+ * The output columns of an aggregated query, in display order — the columns a
+ * `sort` can target. Metrics come first (their compiled expression, e.g.
+ * `count()` / `avg(bytes)` — the exact header PPL emits), then the group-by
+ * fields; the time `span` is intentionally omitted (sorting by the time bucket
+ * is what the histogram's x-axis already does). Returns `[]` when the query
+ * doesn't aggregate, since there's nothing meaningful to sort.
+ */
+export function sortableColumns(state: PPLBuilderState): string[] {
+  if (state.aggregations.length === 0) return [];
+  const metrics = state.aggregations.map(compileAggregation).filter((c): c is string => c !== null);
+  return [...metrics, ...state.groupBy.fields.filter(Boolean)];
+}
+
+/**
+ * A sort column that is an aggregation expression (`count()`, `avg(bytes)`)
+ * isn't a bare identifier, so PPL's `sort` can only accept it back-quoted — the
+ * whole expression read as one column name (which is how it appears in the
+ * result header). A plain group-by field is a valid identifier and stays bare.
+ */
+function quoteSortColumn(column: string): string {
+  return /[()]/.test(column) ? `\`${column}\`` : column;
+}
+
+/** Compile the trailing `| sort` clause, or null when it targets no column. */
+function compileSort(sort: Sort | undefined): string | null {
+  const column = sort?.column?.trim();
+  if (!column) return null;
+  const prefix = sort!.desc ? '-' : '';
+  return `sort ${prefix}${quoteSortColumn(column)}`;
+}
+
+/**
+ * Compile the sort stage only when it targets a valid column. Sort is an
+ * independent pipe operation: it can follow a `stats` (sorting the aggregated
+ * output) or a bare search (sorting raw rows). When the query aggregates the
+ * sort may only reference a produced output column — a stale reference (its
+ * metric/field was removed) is dropped rather than emitting an invalid column.
+ * Without aggregation any field is a valid sort key.
+ */
+function compileValidSort(state: PPLBuilderState): string | null {
+  if (!state.sort?.column?.trim()) return null;
+  if (state.aggregations.length > 0 && !sortableColumns(state).includes(state.sort.column)) {
+    return null;
+  }
+  return compileSort(state.sort);
 }
 
 /**
@@ -174,6 +231,12 @@ export function buildPPL(state: PPLBuilderState): string {
       parts.push(statsClause);
     }
   }
+
+  // Sort is its own pipe operation appended after any stats stage — a sibling of
+  // the aggregation, not part of it. It applies to an aggregated result (sorting
+  // by an output column) or to raw search rows (sorting by any field).
+  const sortClause = compileValidSort(state);
+  if (sortClause) parts.push(sortClause);
 
   // A stats clause with no leading search expression must start with a pipe so
   // that the auto-prepended source clause produces valid PPL

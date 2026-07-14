@@ -33,3 +33,16 @@ export function inputWidth(
 ): number {
   return Math.min(Math.max(measureCanvas(text, font) + padding, min), max);
 }
+
+/**
+ * A minWidth that fits the widest of a set of option labels. EuiSuperSelect's
+ * dropdown panel copies the control's rendered width, so a control sized only to
+ * its selected value clips longer options (e.g. a short "Count" selection
+ * truncating "Percentile" in the list). Sizing to the widest label keeps every
+ * option readable. `pad` covers the control chrome (caret + padding); the result
+ * is clamped so a very long label can't blow out the row.
+ */
+export function widestOptionWidth(labels: string[], pad = 44, min = 110, max = 260): number {
+  const widest = labels.reduce((w, label) => Math.max(w, measureCanvas(label)), 0);
+  return Math.min(Math.max(widest + pad, min), max);
+}

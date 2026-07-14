@@ -17,7 +17,12 @@ import { BuilderAction } from './build_ppl';
 import { Aggregation, AggFn, ScalarCall } from './types';
 import { AGG_FN_MAP, AGG_FUNCTIONS, SCALAR_FN_MAP } from './operations';
 import { FunctionMenu } from './function_menu';
-import { comboBoxWidth, inputWidth } from '../../../components/query_builder';
+import { comboBoxWidth, inputWidth, widestOptionWidth } from '../../../components/query_builder';
+
+// Width for the "Show" aggregation select, sized to fit its widest option label
+// ("Std dev (population)"). EuiSuperSelect's dropdown copies the control width,
+// so a narrower control would clip the longer options in the open list.
+const AGG_SELECT_WIDTH = widestOptionWidth(AGG_FUNCTIONS.map((f) => f.label));
 
 interface AggregationRowProps {
   agg: Aggregation;
@@ -120,7 +125,7 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
         onChange={(value) =>
           dispatch({ type: 'SET_AGGREGATION', index: idx, agg: { fn: value as AggFn } })
         }
-        style={{ minWidth: 110 }}
+        style={{ minWidth: AGG_SELECT_WIDTH }}
         data-test-subj={`pplBuilderAggFn-${idx}`}
       />
       {def?.needsField && (

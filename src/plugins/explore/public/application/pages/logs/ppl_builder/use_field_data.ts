@@ -40,6 +40,15 @@ export const useFieldData = () => {
 
   const fieldNames = useMemo<string[]>(() => fields.map((f) => f.name), [fields]);
 
+  // Fields the PPL `sort` command accepts. Excludes `.keyword` sub-fields: they
+  // are keyword multi-fields (e.g. `machine.os.keyword` under the text field
+  // `machine.os`), which the engine rejects as a sort target with an "Invalid
+  // Query" AssertionError. The base field is the sortable form.
+  const sortableFieldNames = useMemo<string[]>(
+    () => fieldNames.filter((name) => !name.endsWith('.keyword')),
+    [fieldNames]
+  );
+
   const fieldOptions = useMemo<EuiComboBoxOptionOption[]>(
     () => fields.map((f) => ({ label: f.name })),
     [fields]
@@ -94,6 +103,7 @@ export const useFieldData = () => {
   return {
     fields,
     fieldNames,
+    sortableFieldNames,
     fieldOptions,
     numericAndAggregatableOptions,
     numericOptions,

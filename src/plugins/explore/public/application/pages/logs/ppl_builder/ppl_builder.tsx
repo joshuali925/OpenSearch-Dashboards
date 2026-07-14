@@ -11,10 +11,11 @@ import { EuiButtonEmpty, EuiComboBox, EuiFieldText, EuiButtonIcon } from '@elast
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
-import { builderReducer, buildPPL } from './build_ppl';
+import { builderReducer, buildPPL, sortableColumns } from './build_ppl';
 import { PPLBuilderState, emptyState } from './types';
 import { SearchBox } from './search_box';
 import { AggregationRow } from './aggregation_row';
+import { SortRow } from './sort_row';
 import { AddMetricMenu } from './add_metric_menu';
 import { useFieldData } from './use_field_data';
 import { withConnector } from '../../../components/query_builder';
@@ -48,6 +49,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
   );
   const {
     fieldNames,
+    sortableFieldNames,
     fieldOptions,
     numericAndAggregatableOptions,
     numericOptions,
@@ -104,6 +106,16 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
   );
 
   const hasAggregation = state.aggregations.length > 0;
+
+  // Candidate sort columns. When the query aggregates, sort targets an output
+  // column (metrics + group-by fields, via `sortableColumns`); otherwise sort
+  // applies to raw rows, so offer the dataset's sortable fields (excluding
+  // `.keyword` multi-fields, which the PPL engine rejects as a sort target).
+  // Recomputed from state so it tracks metric/group-by edits.
+  const sortColumns = useMemo(
+    () => (hasAggregation ? sortableColumns(state) : sortableFieldNames),
+    [hasAggregation, state, sortableFieldNames]
+  );
 
   const toggleSpan = () => {
     if (state.groupBy.span) {
@@ -201,12 +213,12 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
                   />
                 </div>
 
-                {/* Time bucket (span) chip */}
+                {/* Time span chip */}
                 {state.groupBy.span ? (
                   <div className="plqGroup" data-test-subj="pplBuilderSpanChip">
                     <span className="plqGroup__label">
                       {i18n.translate('explore.pplBuilder.span', {
-                        defaultMessage: 'Time bucket',
+                        defaultMessage: 'Time span',
                       })}
                     </span>
                     <EuiFieldText
@@ -227,7 +239,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
                       className="plqParamInput"
                       style={{ width: 64 }}
                       aria-label={i18n.translate('explore.pplBuilder.spanInterval', {
-                        defaultMessage: 'Time bucket interval',
+                        defaultMessage: 'Time span interval',
                       })}
                       data-test-subj="pplBuilderSpanInterval"
                     />
@@ -237,7 +249,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
                       color="text"
                       size="s"
                       aria-label={i18n.translate('explore.pplBuilder.removeSpan', {
-                        defaultMessage: 'Remove time bucket',
+                        defaultMessage: 'Remove time span',
                       })}
                       onClick={toggleSpan}
                       data-test-subj="pplBuilderRemoveSpan"
@@ -251,13 +263,30 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
                     data-test-subj="pplBuilderAddSpan"
                   >
                     {i18n.translate('explore.pplBuilder.addSpan', {
-                      defaultMessage: 'Add time bucket',
+                      defaultMessage: 'Add time span',
                     })}
                   </EuiButtonEmpty>
                 )}
               </div>
             )}
           </div>
+        </div>,
+        false,
+        undefined,
+        GROUP_BRANCH_TOP_REACH
+      )}
+
+      {/* Sort — its own top-level pipe operation (`… | sort …`), a sibling of
+          the aggregation branched beneath "Search for". Shown independently of
+          whether the query aggregates: sort applies to an aggregated result or
+          to raw search rows. */}
+      {withConnector(
+        0,
+        <div className="plqRow plqRow--branch">
+          <span className="plqRow__label">
+            {i18n.translate('explore.pplBuilder.sort', { defaultMessage: 'Sort' })}
+          </span>
+          <SortRow sort={state.sort} columns={sortColumns} dispatch={dispatch} />
         </div>,
         true,
         undefined,

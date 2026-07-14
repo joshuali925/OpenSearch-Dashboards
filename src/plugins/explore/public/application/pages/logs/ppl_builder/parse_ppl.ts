@@ -5,7 +5,15 @@
 
 import { CharStream, CommonTokenStream } from 'antlr4ng';
 import { SimplifiedOpenSearchPPLLexer, SimplifiedOpenSearchPPLParser } from '@osd/antlr-grammar';
-import { AggFn, Aggregation, PPLBuilderState, ScalarCall, emptyState, nextAggId } from './types';
+import {
+  AggFn,
+  Aggregation,
+  PPLBuilderState,
+  ScalarCall,
+  Sort,
+  emptyState,
+  nextAggId,
+} from './types';
 import { AGG_FUNCTIONS, SCALAR_FN_IDS, SCALAR_FN_MAP } from './operations';
 
 export interface PPLParseResult {
@@ -143,6 +151,44 @@ function parseStatsByClause(byCtx: any, state: PPLBuilderState): boolean {
 }
 
 /**
+ * Parse a `sort` command into a single Sort, or null when it uses a shape the
+ * builder can't model (a result limit, more than one column, or a type-cast
+ * sort field like `num(x)`). Direction comes from either the field's `-`/`+`
+ * prefix or a trailing `asc`/`desc`; `-` / `desc` mean descending. The column
+ * text is unquoted so a back-quoted aggregation column (`` `count()` ``)
+ * round-trips to its compiled expression (`count()`).
+ */
+function parseSortCommand(sortCtx: any): Sort | null {
+  // A result limit (`sort 10 by …`) isn't modeled by the builder.
+  if (sortCtx._count) return null;
+
+  const byCtx = sortCtx.sortbyClause && sortCtx.sortbyClause();
+  if (!byCtx) return null;
+  const rawFields = byCtx.sortField ? byCtx.sortField() : [];
+  const fields = Array.isArray(rawFields) ? rawFields : rawFields ? [rawFields] : [];
+  if (fields.length !== 1) return null; // only single-column sort is modeled
+
+  const field = fields[0];
+  const exprCtx = field.sortFieldExpression && field.sortFieldExpression();
+  if (!exprCtx) return null;
+  // Reject type-cast sort forms (auto/str/ip/num(...)) — only a plain field is
+  // modeled. Those wrap the field in a cast keyword + parentheses.
+  const fieldExprCtx = exprCtx.fieldExpression && exprCtx.fieldExpression();
+  if (!fieldExprCtx) return null;
+  if (exprCtx.getText() !== fieldExprCtx.getText()) return null;
+
+  const column = unquote(fieldExprCtx.getText());
+  if (!column) return null;
+
+  // Descending if the field carries a `-` prefix or the clause ends in desc/d.
+  const prefixDesc = typeof field.MINUS === 'function' && !!field.MINUS();
+  const suffixDesc =
+    (typeof sortCtx.DESC === 'function' && !!sortCtx.DESC()) ||
+    (typeof sortCtx.D === 'function' && !!sortCtx.D());
+  return { column, desc: prefixDesc || suffixDesc };
+}
+
+/**
  * Parse a PPL query into builder state. `canBuild` is false when the query uses
  * any command/expression the visual builder can't round-trip.
  *
@@ -195,7 +241,11 @@ export function parsePPL(query: string): PPLParseResult {
     // whose field is `source`/`index`; it is dropped (the builder is source-less
     // — see `buildPPL`), and everything after it is the user's search expression,
     // sliced verbatim from the original query so it round-trips.
-    const searchExprs = searchCmd.searchExpression ? searchCmd.searchExpression() : [];
+    // `searchExpression()` lives on the SearchFromContext subclass, not the base
+    // SearchCommandContext that `searchCommand()` is typed to return, so read it
+    // through `any` (matching this function's loose parser-node access style).
+    const searchFrom = searchCmd as any;
+    const searchExprs = searchFrom.searchExpression ? searchFrom.searchExpression() : [];
     const exprList = Array.isArray(searchExprs) ? searchExprs : searchExprs ? [searchExprs] : [];
 
     const exprRange = (e: any): [number, number] | null => {
@@ -225,15 +275,32 @@ export function parsePPL(query: string): PPLParseResult {
       }
     }
 
-    // Only a single trailing `stats` command is modeled beyond the source.
+    // Beyond the source, the builder models a single `stats` command and/or a
+    // single trailing `sort`. Sort is its own pipe operation: it may appear
+    // alone (sorting raw search rows) or after stats (sorting the aggregated
+    // output), but must come last — nothing the builder models follows a sort.
     const commands = queryStmt.commands ? queryStmt.commands() : [];
     const commandList = Array.isArray(commands) ? commands : commands ? [commands] : [];
     let seenStats = false;
+    let seenSort = false;
 
     for (const cmd of commandList) {
       const statsCtx = cmd.statsCommand && cmd.statsCommand();
-      if (!statsCtx) return fallback; // any non-stats trailing command is unmodeled
+      const sortCtx = cmd.sortCommand && cmd.sortCommand();
+
+      if (sortCtx) {
+        // Only one sort is modeled, and it must be the last stage.
+        if (seenSort) return fallback;
+        seenSort = true;
+        const sort = parseSortCommand(sortCtx);
+        if (!sort) return fallback;
+        state.sort = sort;
+        continue;
+      }
+
+      if (!statsCtx) return fallback; // any other trailing command is unmodeled
       if (seenStats) return fallback; // only one stats clause modeled
+      if (seenSort) return fallback; // stats after sort isn't the modeled shape
       seenStats = true;
 
       // Reject statsArgs (partitions/allnum/delim/...) and dedupSplit.

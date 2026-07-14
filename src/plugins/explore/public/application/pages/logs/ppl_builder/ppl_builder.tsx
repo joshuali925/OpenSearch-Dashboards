@@ -7,7 +7,7 @@ import './ppl_builder.scss';
 
 import React, { useCallback, useMemo, useReducer, useRef, useState, useEffect } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiComboBox, EuiFieldText, EuiButtonIcon, EuiToolTip } from '@elastic/eui';
+import { EuiButtonIcon, EuiComboBox, EuiFieldText, EuiToolTip } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
@@ -17,18 +17,15 @@ import { SearchBox } from './search_box';
 import { AggregationRow } from './aggregation_row';
 import { SortRow } from './sort_row';
 import { AddMetricMenu } from './add_metric_menu';
+import { ModeToggleButton } from './mode_toggle_button';
 import { useFieldData } from './use_field_data';
-import { withConnector } from '../../../components/query_builder';
 import { useDatasetContext } from '../../../context';
-
-// How far the group branch's vertical line reaches up past its top edge: the
-// row's own top margin plus the parent search box's bottom padding ($euiSizeXS,
-// 4px), so the line starts at the bottom of the search box rather than into it.
-const GROUP_BRANCH_TOP_REACH = 16;
 
 interface PPLBuilderProps {
   initialState?: PPLBuilderState;
   onQueryChange: (query: string, state: PPLBuilderState) => void;
+  /** Switch to code mode (the `</>` toggle in the search row). */
+  onSwitchToCode?: () => void;
 }
 
 // Target bar count for the auto time-bucket, matching the traces chart's density.
@@ -39,7 +36,11 @@ const CHART_BAR_TARGET = 15;
 // only fails server-side, so flag it in the field.
 const SPAN_INTERVAL_RE = /^\d+(\.\d+)?\s*(ms|s|m|h|d|w|M|q|y|second|minute|hour|day|week|month|quarter|year)?s?$/i;
 
-export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryChange }) => {
+export const PPLBuilder: React.FC<PPLBuilderProps> = ({
+  initialState,
+  onQueryChange,
+  onSwitchToCode,
+}) => {
   const { services } = useOpenSearchDashboards<ExploreServices>();
   const { dataset } = useDatasetContext();
   const [state, dispatch] = useReducer(
@@ -130,7 +131,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
 
   return (
     <div className="plqBuilder" data-test-subj="pplBuilder">
-      {/* Search / filter row */}
+      {/* Row 1 — search / filter, with the </> code toggle pinned at its end. */}
       <div className="plqRow">
         <span className="plqRow__label">
           {i18n.translate('explore.pplBuilder.searchFor', { defaultMessage: 'Search for' })}
@@ -143,169 +144,152 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({ initialState, onQueryCha
             onChange={onSearchChange}
           />
         </div>
+        {onSwitchToCode && <ModeToggleButton isCode={false} onToggle={onSwitchToCode} />}
       </div>
 
-      {/* Group / aggregate / sort — a single row branched beneath "Search for"
-          as an indented child so the query reads as a tree (mirrors the metric
-          explorer's tree connectors). The aggregation (metrics + group-by/time
-          span) and the trailing sort all sit on one horizontal line, wrapping
-          as needed: Group into — metrics — Add metric — by — Add time span —
-          Sort — Add sort. */}
-      {withConnector(
-        0,
-        <div className="plqRow plqRow--branch">
-          <span className="plqRow__label">
-            {i18n.translate('explore.pplBuilder.groupInto', { defaultMessage: 'Group into' })}
-          </span>
-          {/* Dash only when a metric box follows; when there are none it would
-              sit to the left of the bare "add metric" icon, which reads poorly. */}
-          {state.aggregations.length > 0 && <div className="plqDash" />}
+      {/* Row 2 — the whole aggregation on one wrapping line: Group into — metrics
+          — add-metric — by (with time span chip) — add time span — [spacer] —
+          Sort. Sort is pinned to the far right after a divider; the by-group and
+          time-span only appear once at least one metric exists. */}
+      <div className="plqRow plqRow--builder">
+        <span className="plqRow__label">
+          {i18n.translate('explore.pplBuilder.groupInto', { defaultMessage: 'Group into' })}
+        </span>
 
-          {/* Metric aggregations + the add-metric affordance, each joined to its
-              neighbour by a dash so the metrics read as one connected run. */}
-          {state.aggregations.map((agg, idx) => (
-            <React.Fragment key={agg.id}>
-              {idx > 0 && <div className="plqDash" />}
-              <AggregationRow
-                agg={agg}
-                idx={idx}
-                numericFieldOptions={numericOptions}
-                anyFieldOptions={numericAndAggregatableOptions}
-                dispatch={dispatch}
-              />
-            </React.Fragment>
-          ))}
-          <AddMetricMenu
-            onAdd={(fn) => dispatch({ type: 'ADD_AGGREGATION', agg: { fn } })}
-            dataTestSubj="pplBuilderAddAggregation"
+        {/* Metric aggregation groups. */}
+        {state.aggregations.map((agg, idx) => (
+          <AggregationRow
+            key={agg.id}
+            agg={agg}
+            idx={idx}
+            numericFieldOptions={numericOptions}
+            anyFieldOptions={numericAndAggregatableOptions}
+            dispatch={dispatch}
           />
+        ))}
 
-          {/* Group-by + time-bucket, shown only once the query aggregates. */}
-          {hasAggregation && (
-            <>
-              <div className="plqDash" />
-              {/* Group-by fields — outlined group matching the metric pills, with
-                  the "by" label floating on the top border. */}
-              <div className="plqGroup" data-test-subj="pplBuilderGroupBy">
-                <span className="plqGroup__label">
-                  {i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
+        {/* Add-metric: a labelled ghost button when the row is empty (labels
+            teach), collapsing to an icon-only dashed ＋ once a metric exists
+            (icons keep it dense). */}
+        <AddMetricMenu
+          hasMetrics={hasAggregation}
+          onAdd={(fn) => dispatch({ type: 'ADD_AGGREGATION', agg: { fn } })}
+          dataTestSubj="pplBuilderAddAggregation"
+        />
+
+        {/* Group-by + time-bucket, shown only once the query aggregates. */}
+        {hasAggregation && (
+          <>
+            {/* Group-by fields — outlined group matching the metric groups, with
+                the "by" label floating on the top border. The time span, when
+                present, renders as a chip inside this same box. */}
+            <div className="plqGroup" data-test-subj="pplBuilderGroupBy">
+              <span className="plqGroup__label">
+                {i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
+              </span>
+
+              {state.groupBy.span && (
+                <span className="plqChip" data-test-subj="pplBuilderSpanChip">
+                  <span className="plqChip__mono">span({state.groupBy.span.field},</span>
+                  <EuiFieldText
+                    compressed
+                    controlOnly
+                    isInvalid={!SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())}
+                    value={state.groupBy.span.interval}
+                    onChange={(e) =>
+                      dispatch({
+                        type: 'SET_SPAN',
+                        span: {
+                          field: state.groupBy.span!.field,
+                          interval: e.target.value,
+                          auto: false,
+                        },
+                      })
+                    }
+                    className="plqChip__mono plqSpanInterval"
+                    style={{ width: 48 }}
+                    aria-label={i18n.translate('explore.pplBuilder.spanInterval', {
+                      defaultMessage: 'Time span interval',
+                    })}
+                    data-test-subj="pplBuilderSpanInterval"
+                  />
+                  <span className="plqChip__mono">)</span>
+                  <EuiButtonIcon
+                    className="plqX"
+                    iconType="cross"
+                    color="text"
+                    size="s"
+                    aria-label={i18n.translate('explore.pplBuilder.removeSpan', {
+                      defaultMessage: 'Remove time span',
+                    })}
+                    onClick={toggleSpan}
+                    data-test-subj="pplBuilderRemoveSpan"
+                  />
                 </span>
-                <EuiComboBox
-                  compressed
-                  // Each selected field pill carries its own × to remove it, so
-                  // the box-wide clear button is redundant.
-                  isClearable={false}
-                  style={{ minWidth: 200 }}
-                  placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
-                    defaultMessage: 'Everything',
-                  })}
-                  options={fieldOptions}
-                  selectedOptions={state.groupBy.fields.map((f) => ({ label: f }))}
-                  onChange={(selected) =>
+              )}
+
+              <EuiComboBox
+                compressed
+                // Each selected field pill carries its own × to remove it, so
+                // the box-wide clear button is redundant.
+                isClearable={false}
+                style={{ minWidth: 160 }}
+                placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
+                  defaultMessage: 'Everything',
+                })}
+                options={fieldOptions}
+                selectedOptions={state.groupBy.fields.map((f) => ({ label: f }))}
+                onChange={(selected) =>
+                  dispatch({
+                    type: 'SET_GROUPBY_FIELDS',
+                    fields: selected.map((s) => s.label),
+                  })
+                }
+                onCreateOption={(val) => {
+                  const v = val.trim();
+                  if (v) {
                     dispatch({
                       type: 'SET_GROUPBY_FIELDS',
-                      fields: selected.map((s) => s.label),
-                    })
+                      fields: [...state.groupBy.fields, v],
+                    });
                   }
-                  onCreateOption={(val) => {
-                    const v = val.trim();
-                    if (v) {
-                      dispatch({
-                        type: 'SET_GROUPBY_FIELDS',
-                        fields: [...state.groupBy.fields, v],
-                      });
-                    }
-                  }}
-                  data-test-subj="pplBuilderGroupByFields"
-                />
-              </div>
+                }}
+                data-test-subj="pplBuilderGroupByFields"
+              />
+            </div>
 
-              {/* Time span chip — dash only precedes the box form, not the bare
-                  "add" icon (a dash butting the left of an icon reads poorly). */}
-              {state.groupBy.span ? (
-                <>
-                  <div className="plqDash" />
-                  <div className="plqGroup" data-test-subj="pplBuilderSpanChip">
-                    <span className="plqGroup__label">
-                      {i18n.translate('explore.pplBuilder.span', {
-                        defaultMessage: 'Time span',
-                      })}
-                    </span>
-                    <EuiFieldText
-                      compressed
-                      controlOnly
-                      isInvalid={!SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())}
-                      value={state.groupBy.span.interval}
-                      onChange={(e) =>
-                        dispatch({
-                          type: 'SET_SPAN',
-                          span: {
-                            field: state.groupBy.span!.field,
-                            interval: e.target.value,
-                            auto: false,
-                          },
-                        })
-                      }
-                      className="plqParamInput"
-                      style={{ width: 64 }}
-                      aria-label={i18n.translate('explore.pplBuilder.spanInterval', {
-                        defaultMessage: 'Time span interval',
-                      })}
-                      data-test-subj="pplBuilderSpanInterval"
-                    />
-                    <div className="plqSep" />
-                    <EuiButtonIcon
-                      iconType="cross"
-                      color="text"
-                      size="s"
-                      aria-label={i18n.translate('explore.pplBuilder.removeSpan', {
-                        defaultMessage: 'Remove time span',
-                      })}
-                      onClick={toggleSpan}
-                      data-test-subj="pplBuilderRemoveSpan"
-                    />
-                  </div>
-                </>
-              ) : (
-                <EuiToolTip
-                  content={i18n.translate('explore.pplBuilder.addSpan', {
+            {/* Add time span — a dashed clock icon; hidden once a span exists
+                (only one span is supported, and its chip's ✕ brings it back). */}
+            {!state.groupBy.span && (
+              <EuiToolTip
+                content={i18n.translate('explore.pplBuilder.addSpan', {
+                  defaultMessage: 'Add time span',
+                })}
+                position="top"
+              >
+                <EuiButtonIcon
+                  className="plqIconBtn plqIconBtn--ghost"
+                  iconType="clock"
+                  color="text"
+                  size="s"
+                  onClick={toggleSpan}
+                  aria-label={i18n.translate('explore.pplBuilder.addSpan', {
                     defaultMessage: 'Add time span',
                   })}
-                  position="top"
-                >
-                  <EuiButtonIcon
-                    className="plqIconBtn"
-                    iconType="clock"
-                    color="primary"
-                    size="s"
-                    onClick={toggleSpan}
-                    aria-label={i18n.translate('explore.pplBuilder.addSpan', {
-                      defaultMessage: 'Add time span',
-                    })}
-                    data-test-subj="pplBuilderAddSpan"
-                  />
-                </EuiToolTip>
-              )}
-            </>
-          )}
+                  data-test-subj="pplBuilderAddSpan"
+                />
+              </EuiToolTip>
+            )}
+          </>
+        )}
 
-          {/* Sort — a trailing `| sort` pipe operation. Shown independently of
-              whether the query aggregates: it applies to an aggregated result
-              or to raw search rows. Prefixed with its own "Sort" label so the
-              row reads … Add time span — Sort — Add sort. */}
-          <div className="plqDash" />
-          <span className="plqRow__label">
-            {i18n.translate('explore.pplBuilder.sort', { defaultMessage: 'Sort' })}
-          </span>
-          {/* Dash only precedes the sort chip (box form), not the bare "add sort"
-              icon SortRow renders when unsorted. */}
-          {state.sort && <div className="plqDash" />}
-          <SortRow sort={state.sort} columns={sortColumns} dispatch={dispatch} />
-        </div>,
-        true,
-        undefined,
-        GROUP_BRANCH_TOP_REACH
-      )}
+        {/* Sort — its own trailing `| sort` pipe operation, pinned to the far
+            right after a divider. Shown independently of whether the query
+            aggregates. Collapses to a ghost "＋ Sort" when unsorted. */}
+        <span className="plqSpacer" />
+        <span className="plqDivider" />
+        <SortRow sort={state.sort} columns={sortColumns} dispatch={dispatch} />
+      </div>
     </div>
   );
 };

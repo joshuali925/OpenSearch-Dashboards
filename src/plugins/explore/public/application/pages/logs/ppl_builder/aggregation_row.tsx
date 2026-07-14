@@ -35,15 +35,12 @@ interface AggregationRowProps {
 }
 
 /**
- * One scalar function applied to the aggregation's field: e.g. `round`, with
- * inline inputs for any extra args (round's decimals). Rendered as a custom
- * token (`.plqFn`) — a light-filled, softly-rounded, borderless pill — that
- * reads as one discrete unit; its own inline ✕ removes just that function. This
- * visually distinguishes removing a scalar function (the ✕ inside the filled
- * token) from removing the whole metric (the bare row-level ✕ at the edge).
- * Functions render to the RIGHT of the field, so the row reads left-to-right as
- * application order (`field → round → abs` = `abs(round(field))`), matching the
- * innermost-first compile order.
+ * One scalar function applied to the aggregation's field (e.g. `round 2`),
+ * rendered as a blue chip: the function name in primary text, an editable inline
+ * param, and its own ✕ to unwrap. The chip's fill distinguishes it from the
+ * neutral group-by chip. Functions render to the RIGHT of the field, so the row
+ * reads left-to-right as application order (`field → round → abs` =
+ * `abs(round(field))`), matching the innermost-first compile order.
  */
 const FunctionPill: React.FC<{
   fn: ScalarCall;
@@ -53,7 +50,7 @@ const FunctionPill: React.FC<{
 }> = ({ fn, aggIdx, fnIdx, dispatch }) => {
   const def = SCALAR_FN_MAP[fn.id];
   return (
-    <div className="plqFn" data-test-subj={`pplBuilderFn-${aggIdx}-${fnIdx}`}>
+    <span className="plqFn" data-test-subj={`pplBuilderFn-${aggIdx}-${fnIdx}`}>
       <EuiToolTip content={def?.description || fn.name}>
         <span className="plqFn__name">{fn.name}</span>
       </EuiToolTip>
@@ -74,15 +71,15 @@ const FunctionPill: React.FC<{
                 value: e.target.value,
               })
             }
-            className="plqParamInput plqFn__param"
-            style={{ width: inputWidth(displayText, 16, 44, 120) }}
+            className="plqFn__param"
+            style={{ width: inputWidth(displayText, 16, 22, 120) }}
             aria-label={placeholder || fn.name}
             data-test-subj={`pplBuilderFnParam-${aggIdx}-${fnIdx}-${pi}`}
           />
         );
       })}
       <EuiButtonIcon
-        className="plqFn__remove"
+        className="plqX"
         iconType="cross"
         color="text"
         size="s"
@@ -92,15 +89,16 @@ const FunctionPill: React.FC<{
         onClick={() => dispatch({ type: 'REMOVE_FUNCTION', index: aggIdx, fnIndex: fnIdx })}
         data-test-subj={`pplBuilderRemoveFn-${aggIdx}-${fnIdx}`}
       />
-    </div>
+    </span>
   );
 };
 
 /**
- * One aggregation row: "Show <fn> of <field>" — the datadog "Show Count of all
- * logs" control. Count needs no field; other fns aggregate over a field, and
- * percentile adds a numeric percentile input. When the row has a field, an
- * "Add function" menu wraps it in scalar functions (e.g. avg(round(latency))).
+ * One aggregation "Show" group: `Show <fn> of <field>` — the datadog "Show Count
+ * of all logs" control. Count needs no field; other fns aggregate over a field,
+ * and percentile adds a numeric percentile input. When the group has a field, a
+ * `ƒx` trigger wraps it in scalar functions (e.g. avg(round(latency))). The
+ * group reads `Show <fn> <field> <fn-chips…> ƒx ✕`.
  */
 export const AggregationRow: React.FC<AggregationRowProps> = ({
   agg,
@@ -130,7 +128,6 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
       />
       {def?.needsField && (
         <>
-          <div className="plqSep" />
           <EuiComboBox
             compressed
             singleSelection={{ asPlainText: true }}
@@ -156,44 +153,37 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
           />
           {/* Scalar functions wrapping the field, rendered to the RIGHT of it so
               the row reads left-to-right as application order. The chain array is
-              innermost-first, which matches that left-to-right reading. Each is a
-              self-contained badge, so no dividers between them. */}
+              innermost-first, which matches that left-to-right reading. */}
           {(agg.functions ?? []).map((fn, fnIdx) => (
             <FunctionPill key={fnIdx} fn={fn} aggIdx={idx} fnIdx={fnIdx} dispatch={dispatch} />
           ))}
         </>
       )}
       {agg.fn === 'percentile' && (
-        <>
-          <div className="plqSep" />
-          <EuiFieldNumber
-            compressed
-            controlOnly
-            value={agg.percentile ?? 95}
-            min={0}
-            max={100}
-            onChange={(e) =>
-              dispatch({
-                type: 'SET_AGGREGATION',
-                index: idx,
-                agg: { percentile: Number(e.target.value) },
-              })
-            }
-            className="plqParamInput"
-            style={{ width: 56 }}
-            aria-label={i18n.translate('explore.pplBuilder.percentileValue', {
-              defaultMessage: 'Percentile',
-            })}
-            data-test-subj={`pplBuilderAggPercentile-${idx}`}
-          />
-        </>
+        <EuiFieldNumber
+          compressed
+          controlOnly
+          value={agg.percentile ?? 95}
+          min={0}
+          max={100}
+          onChange={(e) =>
+            dispatch({
+              type: 'SET_AGGREGATION',
+              index: idx,
+              agg: { percentile: Number(e.target.value) },
+            })
+          }
+          className="plqSpanInterval"
+          style={{ width: 40 }}
+          aria-label={i18n.translate('explore.pplBuilder.percentileValue', {
+            defaultMessage: 'Percentile',
+          })}
+          data-test-subj={`pplBuilderAggPercentile-${idx}`}
+        />
       )}
-      {/* Add-function (⋮) menu comes first, then the metric-level remove (✕) at
-          the far-right edge. The ⋮ and the metric ✕ are visually separated from
-          the scalar-function badges (whose own close buttons remove just that
-          function), so the trailing ✕ unambiguously deletes the whole metric.
-          Row reads `Show <fn> <field> <fn-badges…> │ ⋮ ✕`. */}
-      <div className="plqSep" />
+      {/* ƒx wrap-in-function trigger, then the metric-level ✕ at the far edge.
+          The ƒx opens a searchable function menu; the ✕ deletes the whole metric
+          (distinct from each fn-chip's own ✕, which unwraps just that function). */}
       {def?.needsField && (
         <FunctionMenu
           onAddFunction={(fn) => dispatch({ type: 'ADD_FUNCTION', index: idx, fn })}
@@ -201,6 +191,7 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
         />
       )}
       <EuiButtonIcon
+        className="plqX"
         iconType="cross"
         color="text"
         size="s"

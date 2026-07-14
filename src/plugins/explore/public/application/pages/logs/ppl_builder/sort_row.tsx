@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonIcon, EuiComboBox, EuiSuperSelect, EuiToolTip } from '@elastic/eui';
+import { EuiButtonEmpty, EuiButtonIcon, EuiComboBox, EuiSuperSelect } from '@elastic/eui';
 import { BuilderAction } from './build_ppl';
 import { Sort } from './types';
 
@@ -37,25 +37,21 @@ const ASC = 'asc';
  */
 export const SortRow: React.FC<SortRowProps> = ({ sort, columns, dispatch }) => {
   if (!sort) {
-    const addSortLabel = i18n.translate('explore.pplBuilder.addSort', {
-      defaultMessage: 'Add sort',
-    });
+    // Ghost "＋ Sort" — a labelled dashed button pinned right, mirroring the
+    // empty-state "Add metric". Defaults to the first candidate column,
+    // descending (the typical "top N" reading of a result).
     return (
-      <EuiToolTip content={addSortLabel} position="top">
-        <EuiButtonIcon
-          className="plqIconBtn"
-          iconType="sortable"
-          color="primary"
-          size="s"
-          // Default to the first candidate column, descending — the typical
-          // "top N" reading of a result.
-          onClick={() =>
-            dispatch({ type: 'SET_SORT', sort: { column: columns[0] ?? '', desc: true } })
-          }
-          aria-label={addSortLabel}
-          data-test-subj="pplBuilderAddSort"
-        />
-      </EuiToolTip>
+      <EuiButtonEmpty
+        size="xs"
+        iconType="plus"
+        className="plqGhostAdd"
+        onClick={() =>
+          dispatch({ type: 'SET_SORT', sort: { column: columns[0] ?? '', desc: true } })
+        }
+        data-test-subj="pplBuilderAddSort"
+      >
+        {i18n.translate('explore.pplBuilder.sort', { defaultMessage: 'Sort' })}
+      </EuiButtonEmpty>
     );
   }
 
@@ -71,7 +67,7 @@ export const SortRow: React.FC<SortRowProps> = ({ sort, columns, dispatch }) => 
       <EuiComboBox
         compressed
         singleSelection={{ asPlainText: true }}
-        style={{ minWidth: 200 }}
+        style={{ minWidth: 160 }}
         placeholder={i18n.translate('explore.pplBuilder.sortColumnPlaceholder', {
           defaultMessage: 'column',
         })}
@@ -85,7 +81,6 @@ export const SortRow: React.FC<SortRowProps> = ({ sort, columns, dispatch }) => 
         isClearable={false}
         data-test-subj="pplBuilderSortColumn"
       />
-      <div className="plqSep" />
       <EuiSuperSelect
         compressed
         options={[
@@ -106,11 +101,11 @@ export const SortRow: React.FC<SortRowProps> = ({ sort, columns, dispatch }) => 
         onChange={(value) =>
           dispatch({ type: 'SET_SORT', sort: { ...sort, desc: value === DESC } })
         }
-        style={{ minWidth: 80 }}
+        style={{ minWidth: 64 }}
         data-test-subj="pplBuilderSortDirection"
       />
-      <div className="plqSep" />
       <EuiButtonIcon
+        className="plqX"
         iconType="cross"
         color="text"
         size="s"

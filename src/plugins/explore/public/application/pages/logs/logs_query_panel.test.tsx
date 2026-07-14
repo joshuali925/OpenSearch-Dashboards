@@ -45,7 +45,16 @@ jest.mock('../../../../../data/public', () => ({
 jest.mock('./ppl_builder', () => ({
   ...jest.requireActual('./ppl_builder/parse_ppl'),
   ...jest.requireActual('./ppl_builder/types'),
-  PPLBuilder: () => <div data-test-subj="ppl-builder-stub">Builder</div>,
+  // The builder's `</>` toggle (search-row code switch) is driven by
+  // onSwitchToCode; expose it so the mode tests can switch to code.
+  PPLBuilder: ({ onSwitchToCode }: { onSwitchToCode?: () => void }) => (
+    <div data-test-subj="ppl-builder-stub">
+      Builder
+      <button type="button" data-test-subj="stub-switch-to-code" onClick={onSwitchToCode}>
+        code
+      </button>
+    </div>
+  ),
 }));
 
 jest.mock('../../../components/query_panel/query_panel_widgets', () => ({
@@ -115,7 +124,6 @@ describe('LogsQueryPanel', () => {
   it('defaults a fresh query to builder mode', () => {
     renderPanel('');
     expect(screen.getByTestId('ppl-builder-stub')).toBeInTheDocument();
-    expect(screen.getByTestId('logsQueryPanelModeToggle')).toBeInTheDocument();
   });
 
   it('opens a parseable query in builder mode', () => {
@@ -139,11 +147,13 @@ describe('LogsQueryPanel', () => {
     renderPanel('source = logs service="web-store"');
     expect(screen.getByTestId('ppl-builder-stub')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId('code'));
+    // The builder's `</>` toggle switches to code.
+    fireEvent.click(screen.getByTestId('stub-switch-to-code'));
     expect(screen.getByTestId('code-editor-stub')).toBeInTheDocument();
 
-    // The query is still representable, so Builder mode remains reachable.
-    fireEvent.click(screen.getByTestId('builder'));
+    // In code mode the `</>` toggle (pinned top-right) switches back to builder;
+    // the query is still representable, so it is enabled.
+    fireEvent.click(screen.getByTestId('pplBuilderModeToggle'));
     expect(screen.getByTestId('ppl-builder-stub')).toBeInTheDocument();
     expect(screen.queryByTestId('code-editor-stub')).not.toBeInTheDocument();
   });
@@ -151,7 +161,7 @@ describe('LogsQueryPanel', () => {
   it('disables the Builder toggle for an unrepresentable query in Code mode', () => {
     renderPanel('source = logs | sort field');
     expect(screen.getByTestId('code-editor-stub')).toBeInTheDocument();
-    // The Builder button is rendered but disabled.
-    expect(screen.getByTestId('builder')).toBeDisabled();
+    // The `</>` toggle is rendered but disabled (query can't round-trip).
+    expect(screen.getByTestId('pplBuilderModeToggle')).toBeDisabled();
   });
 });

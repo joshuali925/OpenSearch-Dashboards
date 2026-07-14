@@ -6,14 +6,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { i18n } from '@osd/i18n';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-  EuiButtonGroup,
-  EuiFlexGroup,
-  EuiFlexItem,
-  EuiPanel,
-  EuiProgress,
-  EuiToolTip,
-} from '@elastic/eui';
+import { EuiFlexGroup, EuiFlexItem, EuiPanel, EuiProgress } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../types';
 import { QueryPanelWidgets } from '../../../components/query_panel/query_panel_widgets';
@@ -31,7 +24,8 @@ import {
 } from '../../../application/utils/state_management/selectors';
 import { setIsQueryEditorDirty } from '../../../application/utils/state_management/slices/query_editor/query_editor_slice';
 import { PPLBuilder, PPLBuilderState, parsePPL } from './ppl_builder';
-import { LogsBuilderMode, logsModeButtons } from './logs_query_panel_mode';
+import { ModeToggleButton } from './ppl_builder/mode_toggle_button';
+import { LogsBuilderMode } from './logs_query_panel_mode';
 import '../../../components/query_panel/query_panel.scss';
 
 /**
@@ -222,14 +216,6 @@ export const LogsQueryPanel: React.FC = () => {
       })
     : undefined;
 
-  const modeButtonOptions = useMemo(
-    () =>
-      logsModeButtons.map((btn) =>
-        btn.id === 'builder' ? { ...btn, isDisabled: builderDisabled } : btn
-      ),
-    [builderDisabled]
-  );
-
   const showBuilder = mode === 'builder' && !isPromptMode;
 
   const editors = (
@@ -239,20 +225,12 @@ export const LogsQueryPanel: React.FC = () => {
     </div>
   );
 
-  const modeToggle = !isPromptMode ? (
-    <EuiToolTip content={modeToggleTooltip} position="top">
-      <EuiButtonGroup
-        legend={i18n.translate('explore.logsQueryPanel.queryModeLabel', {
-          defaultMessage: 'Query builder mode',
-        })}
-        options={modeButtonOptions}
-        idSelected={mode}
-        onChange={handleModeChange}
-        buttonSize="compressed"
-        data-test-subj="logsQueryPanelModeToggle"
-      />
-    </EuiToolTip>
-  ) : null;
+  // The builder/code switch is a single `</>` icon (replacing the old two-button
+  // group). In builder mode it lives inside the builder's search row; in code
+  // mode it is pinned top-right of the editor. When a code query can't round-trip
+  // to the builder the toggle is disabled with an explanatory tooltip.
+  const switchToCode = useCallback(() => handleModeChange('code'), [handleModeChange]);
+  const switchToBuilder = useCallback(() => handleModeChange('builder'), [handleModeChange]);
 
   return (
     <EuiPanel paddingSize="s" borderRadius="none" className="exploreQueryPanel">
@@ -282,12 +260,22 @@ export const LogsQueryPanel: React.FC = () => {
                 key={builderKey}
                 initialState={builderState}
                 onQueryChange={onBuilderChange}
+                onSwitchToCode={switchToCode}
               />
             ) : (
               editors
             )}
           </EuiFlexItem>
-          <EuiFlexItem grow={false}>{modeToggle}</EuiFlexItem>
+          {!showBuilder && (
+            <EuiFlexItem grow={false}>
+              <ModeToggleButton
+                isCode
+                onToggle={switchToBuilder}
+                disabled={builderDisabled}
+                tooltip={modeToggleTooltip}
+              />
+            </EuiFlexItem>
+          )}
         </EuiFlexGroup>
       )}
 

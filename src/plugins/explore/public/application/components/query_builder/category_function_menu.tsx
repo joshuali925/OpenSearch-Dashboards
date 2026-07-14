@@ -52,7 +52,7 @@ interface CategoryFunctionMenuProps {
   onSelect: (item: FunctionDef) => void;
   /** Trigger button — an "empty" text button or a compact icon button. */
   trigger:
-    | { kind: 'empty'; label: string; iconType: string }
+    | { kind: 'empty'; label: string; iconType?: string; className?: string }
     | {
         kind: 'icon';
         iconType: string;
@@ -133,19 +133,23 @@ export const CategoryFunctionMenu: React.FC<CategoryFunctionMenuProps> = ({
     [categories, extraRootItems, rootTitle, onSelect]
   );
 
-  const button =
-    trigger.kind === 'empty' ? (
+  let button: React.ReactNode;
+  if (trigger.kind === 'empty') {
+    button = (
       <EuiButtonEmpty
         size="xs"
         iconType={trigger.iconType}
+        className={trigger.className}
         onClick={() => setIsOpen(!isOpen)}
         data-test-subj={dataTestSubj}
       >
         {trigger.label}
       </EuiButtonEmpty>
-    ) : (
-      // Icon trigger: the aria-label doubles as the hover tooltip so a compact
-      // icon-only affordance still explains what it does.
+    );
+  } else {
+    // Icon trigger: the aria-label doubles as the hover tooltip so a compact
+    // icon-only affordance still explains what it does.
+    button = (
       <EuiToolTip content={trigger.ariaLabel} position="top">
         <EuiButtonIcon
           className={trigger.className}
@@ -158,6 +162,7 @@ export const CategoryFunctionMenu: React.FC<CategoryFunctionMenuProps> = ({
         />
       </EuiToolTip>
     );
+  }
 
   return (
     <EuiPopover

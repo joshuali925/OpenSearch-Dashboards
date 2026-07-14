@@ -191,15 +191,26 @@ $plqControlHeight: 36px;
     align-items: center;
   }
 
+  // The single-select field value (e.g. `memory`) renders as a plain-text pill;
+  // EUI sizes it at 14px/22px with a top-only margin, so it reads larger and sits
+  // higher than the neighboring "Show"/"Sum" select. Match the select's metrics
+  // (12.5px, centered) so the field value aligns with the aggregation name.
+  .euiComboBoxPill--plainText {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 20px;
+  }
+
   // Restyle the selected-field pill (e.g. `clientip`) to match the blue scalar
-  // function chip: primary-soft fill, primary text, flat radius, no badge border.
-  // EUI's badge chrome (pill radius, gray fill, border) otherwise clashes with
-  // the flat chips it sits beside.
+  // function chip: primary-soft fill, primary text, flat radius, normal weight,
+  // no badge border. EUI's badge chrome (bold text, pill radius, gray fill,
+  // border) otherwise clashes with the flat `round` chip it sits beside.
   .euiComboBoxPill.euiBadge {
-    margin: 2px;
+    margin: 3px;
     padding: 0 4px 0 8px;
     border: none;
     border-radius: $plqRadius;
+    font-weight: 400;
     background-color: $plqPrimarySoft !important;
     color: $plqFnText;
 
@@ -222,6 +233,9 @@ $plqControlHeight: 36px;
 }
 
 // ---------- chips inside controls ----------
+// The time-span chip (`span(timestamp, 1m)`) is a grouping key like the group-by
+// field pills, so it shares their blue treatment (primary-soft fill, primary
+// text) to match the `round` scalar-function chip.
 .plqChip {
   display: inline-flex;
   align-items: center;
@@ -229,13 +243,15 @@ $plqControlHeight: 36px;
   padding: 2px 4px 2px 8px;
   font-size: 12px;
   line-height: 18px;
-  background: $plqChipBg;
+  background: $plqPrimarySoft;
+  color: $plqFnText;
   border-radius: $plqRadius;
 
   &__mono {
     // stylelint-disable-next-line @osd/stylelint/no_restricted_properties
     font-family: $euiCodeFontFamily;
     font-size: 11.5px;
+    color: $plqFnText;
   }
 }
 

@@ -59,6 +59,7 @@ jest.mock('./use_field_data', () => ({
     fieldOptions: [{ label: 'service' }, { label: 'bytes' }],
     numericAndAggregatableOptions: [{ label: 'bytes' }],
     numericOptions: [{ label: 'bytes' }],
+    dateFieldNames: ['@timestamp'],
     timeFieldName: '@timestamp',
     getValues: jest.fn(async () => []),
   }),

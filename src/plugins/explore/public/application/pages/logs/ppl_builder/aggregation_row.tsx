@@ -5,19 +5,14 @@
 
 import React from 'react';
 import { i18n } from '@osd/i18n';
-import {
-  EuiComboBox,
-  EuiComboBoxOptionOption,
-  EuiButtonIcon,
-  EuiFieldNumber,
-  EuiToolTip,
-} from '@elastic/eui';
+import { EuiComboBoxOptionOption, EuiButtonIcon, EuiFieldNumber, EuiToolTip } from '@elastic/eui';
 import { BuilderAction } from './build_ppl';
 import { Aggregation, ScalarCall } from './types';
 import { AGG_FN_MAP, SCALAR_FN_MAP } from './operations';
 import { FunctionMenu } from './function_menu';
 import { AggregationMenu } from './aggregation_menu';
-import { comboBoxWidth, inputWidth } from '../../../components/query_builder';
+import { FieldMenu } from './field_menu';
+import { inputWidth } from '../../../components/query_builder';
 
 interface AggregationRowProps {
   agg: Aggregation;
@@ -118,28 +113,19 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
       />
       {def?.needsField && (
         <>
-          <EuiComboBox
-            compressed
-            singleSelection={{ asPlainText: true }}
-            isClearable={false}
+          {/* Field picker: the same search-popover as the "Show" selector and the
+              group-by, rather than an inline combobox whose dropdown is clipped to
+              a narrow width. Shows the chosen field (or "of field") as plain text
+              with a caret. */}
+          <FieldMenu
+            options={fieldOptions.map((o) => String(o.label))}
+            value={agg.field || ''}
+            onChange={(field) => dispatch({ type: 'SET_AGGREGATION', index: idx, agg: { field } })}
+            triggerClassName="plqAggTrigger"
             placeholder={i18n.translate('explore.pplBuilder.ofField', {
               defaultMessage: 'of field',
             })}
-            options={fieldOptions}
-            selectedOptions={agg.field ? [{ label: agg.field }] : []}
-            onChange={(selected) =>
-              dispatch({
-                type: 'SET_AGGREGATION',
-                index: idx,
-                agg: { field: selected[0]?.label || '' },
-              })
-            }
-            onCreateOption={(val) => {
-              const v = val.trim();
-              if (v) dispatch({ type: 'SET_AGGREGATION', index: idx, agg: { field: v } });
-            }}
-            style={{ minWidth: comboBoxWidth(agg.field || 'of field') }}
-            data-test-subj={`pplBuilderAggField-${idx}`}
+            dataTestSubj={`pplBuilderAggField-${idx}`}
           />
           {/* Scalar functions wrapping the field, rendered to the RIGHT of it so
               the row reads left-to-right as application order. The chain array is

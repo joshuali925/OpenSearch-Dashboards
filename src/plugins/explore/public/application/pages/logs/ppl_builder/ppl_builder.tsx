@@ -7,7 +7,7 @@ import './ppl_builder.scss';
 
 import React, { useCallback, useMemo, useReducer, useRef, useState, useEffect } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonIcon, EuiComboBox, EuiToolTip } from '@elastic/eui';
+import { EuiButtonIcon, EuiToolTip } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
@@ -18,6 +18,7 @@ import { SearchBox } from './search_box';
 import { AggregationRow } from './aggregation_row';
 import { SortRow } from './sort_row';
 import { AddMetricMenu } from './add_metric_menu';
+import { FieldMenu } from './field_menu';
 import { ModeToggleButton } from './mode_toggle_button';
 import { useFieldData } from './use_field_data';
 import { useDatasetContext } from '../../../context';
@@ -52,10 +53,9 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
   const {
     fieldNames,
     sortableFieldNames,
-    fieldOptions,
     numericAndAggregatableOptions,
     numericOptions,
-    dateFieldOptions,
+    dateFieldNames,
     timeFieldName,
     getValues,
   } = useFieldData();
@@ -190,33 +190,70 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                 {i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
               </span>
 
-              <EuiComboBox
-                compressed
-                // Each selected field pill carries its own × to remove it, so
-                // the box-wide clear button is redundant.
-                isClearable={false}
-                style={{ minWidth: 160 }}
+              {/* Group-by field picker: a search-first popover (like the "Show"
+                  and ƒx menus) rather than an inline combobox whose dropdown is
+                  clipped to a narrow width. Selected fields render as removable
+                  blue pills; a trailing caret opens the readable multi-select
+                  list. */}
+              <FieldMenu
+                multi
+                options={fieldNames}
+                value={state.groupBy.fields}
+                onChange={(fields) => dispatch({ type: 'SET_GROUPBY_FIELDS', fields })}
                 placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
                   defaultMessage: 'Everything',
                 })}
-                options={fieldOptions}
-                selectedOptions={state.groupBy.fields.map((f) => ({ label: f }))}
-                onChange={(selected) =>
-                  dispatch({
-                    type: 'SET_GROUPBY_FIELDS',
-                    fields: selected.map((s) => s.label),
-                  })
-                }
-                onCreateOption={(val) => {
-                  const v = val.trim();
-                  if (v) {
-                    dispatch({
-                      type: 'SET_GROUPBY_FIELDS',
-                      fields: [...state.groupBy.fields, v],
-                    });
-                  }
-                }}
-                data-test-subj="pplBuilderGroupByFields"
+                dataTestSubj="pplBuilderGroupByFields"
+                renderTrigger={(onToggle) => (
+                  <span className="plqPills">
+                    {state.groupBy.fields.length === 0 ? (
+                      <button
+                        type="button"
+                        className="plqPills__placeholder"
+                        onClick={onToggle}
+                        data-test-subj="pplBuilderGroupByFields"
+                      >
+                        {i18n.translate('explore.pplBuilder.groupByEverything', {
+                          defaultMessage: 'Everything',
+                        })}
+                      </button>
+                    ) : (
+                      state.groupBy.fields.map((f) => (
+                        <span key={f} className="plqPill">
+                          <button type="button" className="plqPill__label" onClick={onToggle}>
+                            {f}
+                          </button>
+                          <EuiButtonIcon
+                            className="plqPill__remove"
+                            iconType="cross"
+                            color="text"
+                            size="s"
+                            aria-label={i18n.translate('explore.pplBuilder.removeGroupByField', {
+                              defaultMessage: 'Remove {field}',
+                              values: { field: f },
+                            })}
+                            onClick={() =>
+                              dispatch({
+                                type: 'SET_GROUPBY_FIELDS',
+                                fields: state.groupBy.fields.filter((x) => x !== f),
+                              })
+                            }
+                          />
+                        </span>
+                      ))
+                    )}
+                    <EuiButtonIcon
+                      className="plqPills__caret"
+                      iconType="arrowDown"
+                      color="text"
+                      size="s"
+                      aria-label={i18n.translate('explore.pplBuilder.editGroupByFields', {
+                        defaultMessage: 'Edit group-by fields',
+                      })}
+                      onClick={onToggle}
+                    />
+                  </span>
+                )}
               />
 
               {/* Time span, when present, renders as a chip to the RIGHT of the
@@ -225,52 +262,23 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
               {state.groupBy.span && (
                 <span className="plqChip" data-test-subj="pplBuilderSpanChip">
                   <span className="plqChip__mono">span(</span>
-                  <EuiComboBox
-                    compressed
-                    singleSelection={{ asPlainText: true }}
-                    isClearable={false}
-                    options={dateFieldOptions}
-                    selectedOptions={[{ label: state.groupBy.span.field }]}
-                    onChange={(selected) => {
-                      const field = selected[0]?.label;
-                      if (field) {
-                        dispatch({
-                          type: 'SET_SPAN',
-                          span: {
-                            field,
-                            interval: state.groupBy.span!.interval,
-                            auto: false,
-                          },
-                        });
-                      }
-                    }}
-                    onCreateOption={(val) => {
-                      const v = val.trim();
-                      if (v) {
-                        dispatch({
-                          type: 'SET_SPAN',
-                          span: { field: v, interval: state.groupBy.span!.interval, auto: false },
-                        });
-                      }
-                    }}
-                    className="plqChip__field"
-                    // Size the inline field picker tightly to its value so the
-                    // chip stays compact, rather than the wide default combobox
-                    // width. The mono value is ~7px/char; a small pad covers the
-                    // pill's own left/right inset.
-                    style={{
-                      width: inputWidth(
-                        state.groupBy.span.field,
-                        26,
-                        60,
-                        220,
-                        '11.5px "Source Code Pro", Consolas, Menlo, Courier, monospace'
-                      ),
-                    }}
-                    aria-label={i18n.translate('explore.pplBuilder.spanField', {
+                  {/* Time-span field picker: the same search-popover as the
+                      group-by, rendered as a plain monospace token inside the
+                      chip so `span( <field> , … )` reads as one flat expression. */}
+                  <FieldMenu
+                    options={dateFieldNames}
+                    value={state.groupBy.span.field}
+                    onChange={(field) =>
+                      dispatch({
+                        type: 'SET_SPAN',
+                        span: { field, interval: state.groupBy.span!.interval, auto: false },
+                      })
+                    }
+                    triggerClassName="plqChip__fieldToken"
+                    placeholder={i18n.translate('explore.pplBuilder.spanField', {
                       defaultMessage: 'Time span field',
                     })}
-                    data-test-subj="pplBuilderSpanField"
+                    dataTestSubj="pplBuilderSpanField"
                   />
                   <span className="plqChip__mono">,</span>
                   <input

@@ -35,9 +35,9 @@ $plqFnText: #00538c;
 $plqXHover: #dce2ea;
 /* stylelint-enable @osd/stylelint/no_restricted_values */
 $plqRadius: 2px; // flat, code-style radius inside the builder
-// Every control shares one compact height so the group boxes line up flush with
-// the "Search for"/"Group into" label chips rather than towering over them.
-$plqControlHeight: 28px;
+// Every control shares one height, matching the single-line Monaco search editor
+// so the whole builder reads as one aligned band of controls.
+$plqControlHeight: 36px;
 
 // ---------- gray query box ----------
 .plqBuilder {

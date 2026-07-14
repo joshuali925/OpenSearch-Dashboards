@@ -257,8 +257,20 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
     []
   );
 
+  // Monaco has no native placeholder, so overlay hint text when the box is
+  // empty (mirrors the code-mode query editor's placeholder treatment). It sits
+  // behind the editor and is non-interactive so clicks land on Monaco.
+  const placeholder = i18n.translate('explore.pplBuilder.searchBox.placeholder', {
+    defaultMessage: 'Search or filter your data — fields and values autosuggest as you type...',
+  });
+
   return (
     <div className="plqSearchBoxEditor" data-test-subj="pplBuilderSearchBox">
+      {value.length === 0 ? (
+        <div className="plqSearchBoxEditor__placeholder" aria-hidden="true">
+          {placeholder}
+        </div>
+      ) : null}
       <CodeEditor
         height={editorHeight}
         languageId={PPL_SEARCH_LANGUAGE_ID}

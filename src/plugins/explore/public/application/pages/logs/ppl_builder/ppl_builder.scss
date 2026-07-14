@@ -88,6 +88,7 @@ $plqControlHeight: 36px;
 // The search box hosts a single-line Monaco editor; give it a flat form-control
 // look matching the mock's `.search-input`.
 .plqSearchBoxEditor {
+  position: relative;
   width: 100%;
   border: 1px solid $plqBorder;
   border-radius: $plqRadius;
@@ -97,6 +98,23 @@ $plqControlHeight: 36px;
   &:hover,
   &:focus-within {
     border-color: $plqHoverBorder;
+  }
+
+  // Placeholder hint shown while the search box is empty. Positioned to align
+  // with Monaco's first character (matching the editor's font size / padding)
+  // and made non-interactive so clicks fall through to the editor.
+  &__placeholder {
+    position: absolute;
+    top: 7px;
+    left: 10px;
+    right: 10px;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 18px;
+    color: $euiColorDisabledText;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    pointer-events: none;
   }
 
   .monaco-editor,

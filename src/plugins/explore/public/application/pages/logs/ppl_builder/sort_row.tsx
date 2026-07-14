@@ -5,8 +5,9 @@
 
 import React from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonEmpty, EuiButtonIcon, EuiComboBox, EuiSuperSelect } from '@elastic/eui';
+import { EuiButtonEmpty, EuiButtonIcon, EuiSuperSelect } from '@elastic/eui';
 import { BuilderAction } from './build_ppl';
+import { FieldMenu } from './field_menu';
 import { Sort } from './types';
 
 interface SortRowProps {
@@ -55,8 +56,6 @@ export const SortRow: React.FC<SortRowProps> = ({ sort, columns, dispatch }) => 
     );
   }
 
-  const options = columns.map((c) => ({ label: c }));
-  const selectedOptions = sort.column ? [{ label: sort.column }] : [];
   const setColumn = (column: string) => dispatch({ type: 'SET_SORT', sort: { ...sort, column } });
 
   return (
@@ -64,22 +63,18 @@ export const SortRow: React.FC<SortRowProps> = ({ sort, columns, dispatch }) => 
       <span className="plqGroup__label">
         {i18n.translate('explore.pplBuilder.sortBy', { defaultMessage: 'Sort by' })}
       </span>
-      <EuiComboBox
-        compressed
-        singleSelection={{ asPlainText: true }}
-        style={{ minWidth: 160 }}
+      {/* Column picker: the same search-popover as the metric field, group-by,
+          and span pickers, rather than an inline combobox whose dropdown is
+          clipped to a narrow width. */}
+      <FieldMenu
+        options={columns}
+        value={sort.column}
+        onChange={setColumn}
+        triggerClassName="plqAggTrigger"
         placeholder={i18n.translate('explore.pplBuilder.sortColumnPlaceholder', {
           defaultMessage: 'column',
         })}
-        options={options}
-        selectedOptions={selectedOptions}
-        onChange={(selected) => setColumn(selected[0]?.label ?? '')}
-        onCreateOption={(value) => {
-          const v = value.trim();
-          if (v) setColumn(v);
-        }}
-        isClearable={false}
-        data-test-subj="pplBuilderSortColumn"
+        dataTestSubj="pplBuilderSortColumn"
       />
       <EuiSuperSelect
         compressed

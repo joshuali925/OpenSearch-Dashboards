@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { PPLBuilder } from './ppl_builder';
 import { PPLBuilderState, emptyState } from './types';
 
@@ -134,15 +134,12 @@ describe('PPLBuilder', () => {
 
   it('omits `.keyword` sub-fields from the sort column suggestions', () => {
     renderBuilder({ ...emptyState(), sort: { column: 'service', desc: true } });
-    // Open the sort column combobox to reveal its option list.
-    const input = within(screen.getByTestId('pplBuilderSortColumn')).getByTestId(
-      'comboBoxSearchInput'
-    );
-    fireEvent.click(input);
+    // Open the sort column field popover to reveal its option list.
+    fireEvent.click(screen.getByTestId('pplBuilderSortColumn'));
     // The plain fields are offered; the unsortable `.keyword` sub-field is not.
-    expect(screen.getByRole('option', { name: 'service' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'bytes' })).toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: 'service.keyword' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('pplBuilderFieldOption-service')).toBeInTheDocument();
+    expect(screen.getByTestId('pplBuilderFieldOption-bytes')).toBeInTheDocument();
+    expect(screen.queryByTestId('pplBuilderFieldOption-service.keyword')).not.toBeInTheDocument();
   });
 
   it('adds a descending sort on the first output column of an aggregated query', () => {

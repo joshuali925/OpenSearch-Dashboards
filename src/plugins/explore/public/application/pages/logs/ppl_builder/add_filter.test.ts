@@ -8,19 +8,19 @@ import { parsePPL } from './parse_ppl';
 
 describe('buildPPLPredicate', () => {
   it('builds an equality predicate for a positive filter', () => {
-    expect(buildPPLPredicate('service', 'web-store', '+')).toBe("`service` = 'web-store'");
+    expect(buildPPLPredicate('service', 'web-store', '+')).toBe("`service`='web-store'");
   });
 
   it('builds a not-equal predicate for a negative filter', () => {
-    expect(buildPPLPredicate('service', 'web-store', '-')).toBe("`service` != 'web-store'");
+    expect(buildPPLPredicate('service', 'web-store', '-')).toBe("`service`!='web-store'");
   });
 
   it('escapes single quotes in values', () => {
-    expect(buildPPLPredicate('msg', "it's fine", '+')).toBe("`msg` = 'it''s fine'");
+    expect(buildPPLPredicate('msg', "it's fine", '+')).toBe("`msg`='it''s fine'");
   });
 
   it('strips a trailing .keyword sub-field', () => {
-    expect(buildPPLPredicate('service.keyword', 'web', '+')).toBe("`service` = 'web'");
+    expect(buildPPLPredicate('service.keyword', 'web', '+')).toBe("`service`='web'");
   });
 
   it('uses ISNOTNULL for a positive null-value (exists) filter', () => {
@@ -41,24 +41,24 @@ describe('addFilterToPPLSearchExpression', () => {
 
   it('sets the predicate as the whole search expression on a source-only query', () => {
     expect(addFilterToPPLSearchExpression('source = logs', pred)).toBe(
-      "source = logs `service` = 'web'"
+      "source = logs `service`='web'"
     );
   });
 
   it('sets the predicate as the whole expression on a source-less query', () => {
-    expect(addFilterToPPLSearchExpression('', pred)).toBe("`service` = 'web'");
+    expect(addFilterToPPLSearchExpression('', pred)).toBe("`service`='web'");
   });
 
-  it('ANDs onto an existing search expression', () => {
+  it('space-appends onto an existing search expression', () => {
     expect(addFilterToPPLSearchExpression('source = logs status>=500', pred)).toBe(
-      "source = logs status>=500 AND `service` = 'web'"
+      "source = logs status>=500 `service`='web'"
     );
   });
 
   it('preserves a trailing stats pipeline', () => {
     expect(
       addFilterToPPLSearchExpression('source = logs | stats count() by span(timestamp, 1m)', pred)
-    ).toBe("source = logs `service` = 'web' | stats count() by span(timestamp, 1m)");
+    ).toBe("source = logs `service`='web' | stats count() by span(timestamp, 1m)");
   });
 
   it('is idempotent when the exact predicate already exists', () => {
@@ -69,14 +69,12 @@ describe('addFilterToPPLSearchExpression', () => {
   it('flips an existing opposite filter in place instead of stacking', () => {
     const negated = buildPPLPredicate('service', 'web', '-');
     const withNegated = addFilterToPPLSearchExpression('source = logs', negated);
-    expect(addFilterToPPLSearchExpression(withNegated, pred)).toBe(
-      "source = logs `service` = 'web'"
-    );
+    expect(addFilterToPPLSearchExpression(withNegated, pred)).toBe("source = logs `service`='web'");
   });
 
   it('handles a source clause with spaces around =', () => {
     expect(addFilterToPPLSearchExpression('source=logs ERROR', pred)).toBe(
-      "source=logs ERROR AND `service` = 'web'"
+      "source=logs ERROR `service`='web'"
     );
   });
 
@@ -84,14 +82,14 @@ describe('addFilterToPPLSearchExpression', () => {
     const result = addFilterToPPLSearchExpression('source = logs status>=500', pred);
     const parsed = parsePPL(result);
     expect(parsed.canBuild).toBe(true);
-    expect(parsed.state.searchExpression).toBe("status>=500 AND `service` = 'web'");
+    expect(parsed.state.searchExpression).toBe("status>=500 `service`='web'");
   });
 
   it('round-trips a stats query with an added filter', () => {
     const result = addFilterToPPLSearchExpression('source = logs | stats count() by service', pred);
     const parsed = parsePPL(result);
     expect(parsed.canBuild).toBe(true);
-    expect(parsed.state.searchExpression).toBe("`service` = 'web'");
+    expect(parsed.state.searchExpression).toBe("`service`='web'");
     expect(parsed.state.aggregations).toHaveLength(1);
   });
 });

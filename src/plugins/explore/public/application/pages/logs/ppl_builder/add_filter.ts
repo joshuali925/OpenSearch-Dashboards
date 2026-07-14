@@ -26,8 +26,8 @@ function quote(value: string): string {
  *
  * Mirrors the phrase/exists handling of the shared `FilterUtils.toPredicate` but
  * emits a search-expression-friendly comparison the builder can box as a chip:
- *   - `'+'` with a value    -> `` `field` = 'value' ``
- *   - `'-'` with a value    -> `` `field` != 'value' ``
+ *   - `'+'` with a value    -> `` `field`='value' ``
+ *   - `'-'` with a value    -> `` `field`!='value' ``
  *   - `'+'` with null value -> `ISNOTNULL(\`field\`)`
  *   - `'-'` with null value -> `ISNULL(\`field\`)`
  *
@@ -47,7 +47,7 @@ export function buildPPLPredicate(
   }
 
   const op = negate ? '!=' : '=';
-  return `\`${cleanField}\` ${op} ${quote(value)}`;
+  return `\`${cleanField}\`${op}${quote(value)}`;
 }
 
 /** Split a PPL query at its first top-level `|` into `[head, tail]`. */
@@ -65,10 +65,11 @@ const SOURCE_CLAUSE_RE = /^\s*(?:source|index)\s*=\s*(?:`[^`]*`|[^\s|]+)\s*/i;
  *
  * Preserves any leading `source=<index>` clause and any trailing `| stats …`
  * pipeline. When the search expression already has terms, the predicate is
- * ANDed on; otherwise it becomes the whole expression. Idempotent: if the exact
- * predicate already appears in the search expression it is not added again, and
- * its negation (`=` <-> `!=`) is replaced in place so re-clicking flips rather
- * than stacks.
+ * space-appended (PPL treats adjacent search terms as an implicit AND);
+ * otherwise it becomes the whole expression. Idempotent: if the exact predicate
+ * already appears in the search expression it is not added again, and its
+ * negation (`=` <-> `!=`) is replaced in place so re-clicking flips rather than
+ * stacks.
  */
 export function addFilterToPPLSearchExpression(query: string, predicate: string): string {
   if (!predicate) return query;
@@ -93,7 +94,7 @@ export function addFilterToPPLSearchExpression(query: string, predicate: string)
     // Flip the existing opposite filter in place.
     nextSearch = searchPart.replace(negatedPredicate, predicate);
   } else {
-    nextSearch = `${searchPart} AND ${predicate}`;
+    nextSearch = `${searchPart} ${predicate}`;
   }
 
   // Reassemble: normalize the source clause to a single trailing space when
@@ -106,8 +107,8 @@ export function addFilterToPPLSearchExpression(query: string, predicate: string)
 
 /** Return the `=`/`!=` negation of a comparison predicate, or '' if not one. */
 function negatePredicate(predicate: string): string {
-  if (predicate.includes(' != ')) return predicate.replace(' != ', ' = ');
-  if (predicate.includes(' = ')) return predicate.replace(' = ', ' != ');
+  if (predicate.includes('!=')) return predicate.replace('!=', '=');
+  if (predicate.includes('=')) return predicate.replace('=', '!=');
   if (predicate.startsWith('ISNOTNULL(')) return predicate.replace('ISNOTNULL(', 'ISNULL(');
   if (predicate.startsWith('ISNULL(')) return predicate.replace('ISNULL(', 'ISNOTNULL(');
   return '';

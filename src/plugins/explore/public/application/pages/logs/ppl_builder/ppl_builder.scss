@@ -190,12 +190,22 @@ $plqControlHeight: 36px;
   .euiComboBox__inputWrap,
   .euiComboBox,
   .euiFieldText,
-  .euiFieldNumber {
+  .euiFieldNumber,
+  .euiSuperSelectControl {
     box-shadow: none !important;
     border: none !important;
     background: transparent !important;
     min-height: 20px !important;
     height: auto !important;
+  }
+
+  // The sort-direction SuperSelect (Desc / Asc) reads as bare text like the
+  // adjacent controls — no separate inner box.
+  .euiSuperSelectControl {
+    padding-left: 0;
+    line-height: 20px;
+    font-size: 12.5px;
+    color: $plqInk;
   }
 
   // The aggregation ("Show") selector trigger: a bare text + caret button that

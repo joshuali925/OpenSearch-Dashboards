@@ -21,7 +21,9 @@ $plqInk: $euiTextColor; // #343741
 $plqSub: $euiColorDarkShade; // #69707D
 $plqBorder: $euiBorderColor; // #D3DAE6
 $plqPrimary: $euiColorPrimary; // #006BB4
-$plqBoxBg: $euiColorLightestShade; // #F5F7FA
+// The box sits a hair off pure white — lighter than OUI's lightest shade so it
+// reads as a faint tint rather than a solid gray panel.
+$plqBoxBg: mix($euiColorEmptyShade, $euiColorLightestShade, 55%);
 $plqCtlBg: $euiColorEmptyShade; // #FFF
 $plqHoverBorder: $euiColorMediumShade; // #98A2B3
 /* stylelint-disable @osd/stylelint/no_restricted_values */
@@ -33,7 +35,9 @@ $plqFnText: #00538c;
 $plqXHover: #dce2ea;
 /* stylelint-enable @osd/stylelint/no_restricted_values */
 $plqRadius: 2px; // flat, code-style radius inside the builder
-$plqControlHeight: 32px;
+// Every control shares one compact height so the group boxes line up flush with
+// the "Search for"/"Group into" label chips rather than towering over them.
+$plqControlHeight: 28px;
 
 // ---------- gray query box ----------
 .plqBuilder {
@@ -64,7 +68,8 @@ $plqControlHeight: 32px;
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  padding: 6px 12px;
+  height: $plqControlHeight;
+  padding: 0 12px;
   font-size: 12px;
   font-weight: 500;
   color: $plqInk;
@@ -132,8 +137,8 @@ $plqControlHeight: 32px;
   background: $plqCtlBg;
   border: 1px solid $plqBorder;
   border-radius: $plqRadius;
-  padding: 5px 8px;
-  min-height: $plqControlHeight;
+  padding: 0 8px;
+  height: $plqControlHeight;
 
   &__label {
     position: absolute;
@@ -186,9 +191,26 @@ $plqControlHeight: 32px;
     align-items: center;
   }
 
-  .euiComboBoxPill {
-    margin-top: 2px;
-    margin-bottom: 2px;
+  // Restyle the selected-field pill (e.g. `clientip`) to match the blue scalar
+  // function chip: primary-soft fill, primary text, flat radius, no badge border.
+  // EUI's badge chrome (pill radius, gray fill, border) otherwise clashes with
+  // the flat chips it sits beside.
+  .euiComboBoxPill.euiBadge {
+    margin: 2px;
+    padding: 0 4px 0 8px;
+    border: none;
+    border-radius: $plqRadius;
+    background-color: $plqPrimarySoft !important;
+    color: $plqFnText;
+
+    .euiBadge__text,
+    .euiBadge__content {
+      color: $plqFnText;
+    }
+
+    .euiBadge__iconButton {
+      color: $plqFnText;
+    }
   }
 
   // The inline icon buttons (✕, ƒx, add-field) inside a group sit flush to the

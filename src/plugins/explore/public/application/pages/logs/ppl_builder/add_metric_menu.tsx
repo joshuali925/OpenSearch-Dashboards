@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonEmpty, EuiButtonIcon, EuiToolTip } from '@elastic/eui';
 import { AggFn } from './types';
+import { AGG_FUNCTIONS } from './operations';
+import { CategoryFunctionMenu } from '../../../components/query_builder';
 
 interface AddMetricMenuProps {
-  /** Called to append a new metric (defaults to Count; edited via "Show"). */
+  /** Called with the chosen aggregation when the user adds a metric. */
   onAdd: (fn: AggFn) => void;
   /**
    * Whether any metric already exists. When false the affordance shows its text
@@ -21,9 +22,10 @@ interface AddMetricMenuProps {
 }
 
 /**
- * "Add metric" affordance: appends a new `Count` metric directly (no picker). The
- * aggregation is then chosen/edited via the row's "Show" dropdown, and scalar
- * functions via its `ƒx` menu — a single entry point per choice. Renders as a
+ * "Add metric" affordance: opens a popover of aggregations and appends a new
+ * metric using the chosen one. This is the single place a metric is *created*
+ * (and its aggregation picked); the aggregation stays editable afterward via the
+ * row's "Show" dropdown, and scalar functions via its `ƒx` menu. Renders as a
  * labelled dashed button when the row is empty (labels teach) and collapses to an
  * icon-only dashed ＋ once a metric exists (icons keep the populated row dense).
  */
@@ -36,31 +38,39 @@ export const AddMetricMenu: React.FC<AddMetricMenuProps> = ({
     defaultMessage: 'Add metric',
   });
 
-  if (hasMetrics) {
-    return (
-      <EuiToolTip content={addMetricLabel} position="top">
-        <EuiButtonIcon
-          className="plqIconBtn plqIconBtn--ghost"
-          iconType="plus"
-          color="text"
-          size="s"
-          onClick={() => onAdd('count')}
-          aria-label={addMetricLabel}
-          data-test-subj={dataTestSubj}
-        />
-      </EuiToolTip>
-    );
-  }
+  // A flat list of aggregations (no categories): rendered as root items so the
+  // menu opens straight onto the choices rather than a single category to drill.
+  const rootItems = useMemo(
+    () =>
+      AGG_FUNCTIONS.map((agg) => ({
+        name: agg.label,
+        description: agg.description,
+        onClick: () => onAdd(agg.id),
+      })),
+    [onAdd]
+  );
 
   return (
-    <EuiButtonEmpty
-      size="xs"
-      iconType="plus"
-      className="plqGhostAdd"
-      onClick={() => onAdd('count')}
-      data-test-subj={dataTestSubj}
-    >
-      {addMetricLabel}
-    </EuiButtonEmpty>
+    <CategoryFunctionMenu
+      categories={[]}
+      onSelect={() => {}}
+      extraRootItems={rootItems}
+      trigger={
+        hasMetrics
+          ? {
+              kind: 'icon',
+              iconType: 'plus',
+              className: 'plqIconBtn plqIconBtn--ghost',
+              color: 'text',
+              ariaLabel: addMetricLabel,
+            }
+          : { kind: 'empty', label: addMetricLabel, iconType: 'plus', className: 'plqGhostAdd' }
+      }
+      rootTitle={i18n.translate('explore.pplBuilder.addMetricTitle', {
+        defaultMessage: 'Select aggregation',
+      })}
+      panelClassName="cfmMenuPanel"
+      dataTestSubj={dataTestSubj}
+    />
   );
 };

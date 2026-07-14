@@ -188,6 +188,38 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                 {i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
               </span>
 
+              <EuiComboBox
+                compressed
+                // Each selected field pill carries its own × to remove it, so
+                // the box-wide clear button is redundant.
+                isClearable={false}
+                style={{ minWidth: 160 }}
+                placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
+                  defaultMessage: 'Everything',
+                })}
+                options={fieldOptions}
+                selectedOptions={state.groupBy.fields.map((f) => ({ label: f }))}
+                onChange={(selected) =>
+                  dispatch({
+                    type: 'SET_GROUPBY_FIELDS',
+                    fields: selected.map((s) => s.label),
+                  })
+                }
+                onCreateOption={(val) => {
+                  const v = val.trim();
+                  if (v) {
+                    dispatch({
+                      type: 'SET_GROUPBY_FIELDS',
+                      fields: [...state.groupBy.fields, v],
+                    });
+                  }
+                }}
+                data-test-subj="pplBuilderGroupByFields"
+              />
+
+              {/* Time span, when present, renders as a chip to the RIGHT of the
+                  group-by fields — it's another grouping key appended after the
+                  plain fields, matching `by span(...), clientip` reading order. */}
               {state.groupBy.span && (
                 <span className="plqChip" data-test-subj="pplBuilderSpanChip">
                   <span className="plqChip__mono">span({state.groupBy.span.field},</span>
@@ -227,35 +259,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                   />
                 </span>
               )}
-
-              <EuiComboBox
-                compressed
-                // Each selected field pill carries its own × to remove it, so
-                // the box-wide clear button is redundant.
-                isClearable={false}
-                style={{ minWidth: 160 }}
-                placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
-                  defaultMessage: 'Everything',
-                })}
-                options={fieldOptions}
-                selectedOptions={state.groupBy.fields.map((f) => ({ label: f }))}
-                onChange={(selected) =>
-                  dispatch({
-                    type: 'SET_GROUPBY_FIELDS',
-                    fields: selected.map((s) => s.label),
-                  })
-                }
-                onCreateOption={(val) => {
-                  const v = val.trim();
-                  if (v) {
-                    dispatch({
-                      type: 'SET_GROUPBY_FIELDS',
-                      fields: [...state.groupBy.fields, v],
-                    });
-                  }
-                }}
-                data-test-subj="pplBuilderGroupByFields"
-              />
             </div>
 
             {/* Add time span — a dashed clock icon; hidden once a span exists

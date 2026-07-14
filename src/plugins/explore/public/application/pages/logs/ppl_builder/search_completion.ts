@@ -230,8 +230,12 @@ export function analyzeSearchExpression(query: string, cursorColumn: number): Se
 
     const cursorIndex = findCursorTokenIndex(tokenStream, cursorColumn);
 
-    // Compute the replacement range from the token under the caret (if it's a
-    // word-like token the caret is inside/touching), else an empty range.
+    // Compute the replacement range from the token under the caret. We only
+    // replace a word-like token when the caret is strictly inside it or at its
+    // end — i.e. the user is editing the text they just typed. When the caret is
+    // at the exact START of a token (e.g. just after a space, before an existing
+    // `field=value` term), accepting a suggestion should INSERT at the caret, not
+    // clobber the following word, so the range stays empty.
     let replaceStart = cursorColumn;
     let replaceEnd = cursorColumn;
     let partial = '';
@@ -246,7 +250,7 @@ export function analyzeSearchExpression(query: string, cursorColumn: number): Se
     ) {
       const start = here.column;
       const end = tokenEnd(here);
-      if (cursorColumn >= start && cursorColumn <= end) {
+      if (cursorColumn > start && cursorColumn <= end) {
         replaceStart = start;
         replaceEnd = end;
         partial = here.text?.slice(0, cursorColumn - start) || '';

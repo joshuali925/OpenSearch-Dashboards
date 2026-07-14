@@ -33,8 +33,14 @@ export const useFieldData = () => {
 
   const fields = useMemo<FieldInfo[]>(() => {
     const all = (dataset as any)?.fields?.getAll?.() ?? [];
-    return all
-      .filter((f: any) => f?.name && !f.name.startsWith('_'))
+    const named = all.filter((f: any) => f?.name && !f.name.startsWith('_'));
+    // Drop redundant `.keyword` multi-fields: when a text field `foo` exposes a
+    // `foo.keyword` sibling, surfacing both in completions and field selectors
+    // just doubles the list with an entry the base field already stands in for.
+    // Only the base `foo` is kept; a `.keyword` field with no base sibling stays.
+    const names = new Set<string>(named.map((f: any) => f.name));
+    return named
+      .filter((f: any) => !(f.name.endsWith('.keyword') && names.has(f.name.slice(0, -8))))
       .map((f: any) => ({ name: f.name, type: f.type, aggregatable: f.aggregatable }));
   }, [dataset]);
 

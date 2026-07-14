@@ -109,8 +109,19 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
       // content change (typing, delete/backspace) and after the caret moves by
       // an explicit user action (click, arrow keys). This shows the widget even
       // when there is nothing to complete (it renders "No suggestions.").
+      //
+      // Both are deferred with a 0ms timer so the re-open runs AFTER Monaco
+      // finishes its own handling of the same event. Monaco otherwise cancels
+      // the suggest session as part of processing the change (a click cancels on
+      // mousedown; a deletion that empties the box cancels it too) — so a
+      // synchronous trigger would open the widget only for Monaco to immediately
+      // close it. This is why deleting `bytes=` back to empty left no widget.
+      const scheduleSuggest = () => {
+        window.clearTimeout(suggestTimerRef.current);
+        suggestTimerRef.current = window.setTimeout(() => triggerSuggest(editor), 0);
+      };
       editor.onDidChangeModelContent(() => {
-        triggerSuggest(editor);
+        scheduleSuggest();
       });
       editor.onDidChangeCursorPosition((e) => {
         const userMove =
@@ -118,10 +129,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
           e.source === 'mouse' ||
           e.source === 'keyboard';
         if (!userMove) return;
-        // Defer past Monaco's own mousedown handling — a click otherwise opens
-        // then immediately cancels the widget. A 0ms timer re-opens it after.
-        window.clearTimeout(suggestTimerRef.current);
-        suggestTimerRef.current = window.setTimeout(() => triggerSuggest(editor), 0);
+        scheduleSuggest();
       });
     },
     [triggerSuggest, syncHeight]

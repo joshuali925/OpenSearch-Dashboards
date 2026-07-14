@@ -105,6 +105,13 @@ $plqControlHeight: 36px;
   // and made non-interactive so clicks fall through to the editor.
   &__placeholder {
     position: absolute;
+
+    // The placeholder is rendered before the Monaco editor in DOM order, so it
+    // shares the box's stacking context but paints first — Monaco's own layers
+    // (`.view-line` etc.) would otherwise cover it and the hint would never be
+    // visible once Monaco mounts. A z-index lifts it back above the (empty)
+    // editor surface.
+    z-index: 1;
     top: 7px;
     left: 10px;
     right: 10px;

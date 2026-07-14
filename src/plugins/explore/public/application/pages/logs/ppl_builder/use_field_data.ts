@@ -71,6 +71,13 @@ export const useFieldData = () => {
 
   const timeFieldName = useMemo(() => (dataset as any)?.timeFieldName || '@timestamp', [dataset]);
 
+  // Date fields, for the time-span `span(<field>, …)` field picker. The span
+  // field must be a date, so restrict the combobox to date-typed fields.
+  const dateFieldOptions = useMemo<EuiComboBoxOptionOption[]>(
+    () => fields.filter((f) => f.type === 'date').map((f) => ({ label: f.name })),
+    [fields]
+  );
+
   /**
    * Fetch value suggestions for a field. Resolves to display strings (best
    * effort — an unknown field or a failed request yields an empty list). Tries
@@ -107,6 +114,7 @@ export const useFieldData = () => {
     fieldOptions,
     numericAndAggregatableOptions,
     numericOptions,
+    dateFieldOptions,
     timeFieldName,
     getValues,
   };

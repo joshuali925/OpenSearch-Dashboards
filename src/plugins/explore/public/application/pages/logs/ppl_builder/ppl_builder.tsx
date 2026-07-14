@@ -7,10 +7,11 @@ import './ppl_builder.scss';
 
 import React, { useCallback, useMemo, useReducer, useRef, useState, useEffect } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiButtonIcon, EuiComboBox, EuiFieldText, EuiToolTip } from '@elastic/eui';
+import { EuiButtonIcon, EuiComboBox, EuiToolTip } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
+import { inputWidth } from '../../../components/query_builder';
 import { builderReducer, buildPPL, sortableColumns } from './build_ppl';
 import { PPLBuilderState, emptyState } from './types';
 import { SearchBox } from './search_box';
@@ -54,6 +55,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     fieldOptions,
     numericAndAggregatableOptions,
     numericOptions,
+    dateFieldOptions,
     timeFieldName,
     getValues,
   } = useFieldData();
@@ -222,11 +224,56 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                   plain fields, matching `by span(...), clientip` reading order. */}
               {state.groupBy.span && (
                 <span className="plqChip" data-test-subj="pplBuilderSpanChip">
-                  <span className="plqChip__mono">span({state.groupBy.span.field},</span>
-                  <EuiFieldText
+                  <span className="plqChip__mono">span(</span>
+                  <EuiComboBox
                     compressed
-                    controlOnly
-                    isInvalid={!SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())}
+                    singleSelection={{ asPlainText: true }}
+                    isClearable={false}
+                    options={dateFieldOptions}
+                    selectedOptions={[{ label: state.groupBy.span.field }]}
+                    onChange={(selected) => {
+                      const field = selected[0]?.label;
+                      if (field) {
+                        dispatch({
+                          type: 'SET_SPAN',
+                          span: {
+                            field,
+                            interval: state.groupBy.span!.interval,
+                            auto: false,
+                          },
+                        });
+                      }
+                    }}
+                    onCreateOption={(val) => {
+                      const v = val.trim();
+                      if (v) {
+                        dispatch({
+                          type: 'SET_SPAN',
+                          span: { field: v, interval: state.groupBy.span!.interval, auto: false },
+                        });
+                      }
+                    }}
+                    className="plqChip__field"
+                    // Size the inline field picker tightly to its value so the
+                    // chip stays compact, rather than the wide default combobox
+                    // width. The mono value is ~7px/char; a small pad covers the
+                    // pill's own left/right inset.
+                    style={{
+                      width: inputWidth(
+                        state.groupBy.span.field,
+                        26,
+                        60,
+                        220,
+                        '11.5px "Source Code Pro", Consolas, Menlo, Courier, monospace'
+                      ),
+                    }}
+                    aria-label={i18n.translate('explore.pplBuilder.spanField', {
+                      defaultMessage: 'Time span field',
+                    })}
+                    data-test-subj="pplBuilderSpanField"
+                  />
+                  <span className="plqChip__mono">,</span>
+                  <input
                     value={state.groupBy.span.interval}
                     onChange={(e) =>
                       dispatch({
@@ -238,8 +285,12 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                         },
                       })
                     }
-                    className="plqChip__mono plqSpanInterval"
-                    style={{ width: 48 }}
+                    className={`plqChip__param plqChip__mono${
+                      SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())
+                        ? ''
+                        : ' plqChip__param--invalid'
+                    }`}
+                    style={{ width: inputWidth(state.groupBy.span.interval || '1m', 12, 20, 80) }}
                     aria-label={i18n.translate('explore.pplBuilder.spanInterval', {
                       defaultMessage: 'Time span interval',
                     })}

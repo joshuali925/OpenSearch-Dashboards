@@ -165,8 +165,7 @@ $plqControlHeight: 36px;
   .euiComboBox__inputWrap,
   .euiComboBox,
   .euiFieldText,
-  .euiFieldNumber,
-  .euiSuperSelectControl {
+  .euiFieldNumber {
     box-shadow: none !important;
     border: none !important;
     background: transparent !important;
@@ -174,11 +173,32 @@ $plqControlHeight: 36px;
     height: auto !important;
   }
 
-  .euiSuperSelectControl {
-    padding-left: 0;
+  // The aggregation ("Show") selector trigger: a bare text + caret button that
+  // opens the search-first aggregation popover (mirroring the `ƒx` menu). It
+  // reads as plain text inside the floating-label box, matching the metric field
+  // pill beside it, with no control chrome of its own.
+  .plqAggTrigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: transparent;
     line-height: 20px;
     font-size: 12.5px;
     color: $plqInk;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &__caret {
+      color: $plqSub;
+    }
+
+    &:hover &__label,
+    &:focus &__label {
+      color: $plqPrimary;
+    }
   }
 
   // Center combobox pills within the shrunk wrap. Keep right padding so the
@@ -214,12 +234,18 @@ $plqControlHeight: 36px;
     padding: 0 4px 0 8px;
     border: none;
     border-radius: $plqRadius;
+    // stylelint-disable-next-line @osd/stylelint/no_restricted_properties
+    font-family: $euiCodeFontFamily;
+    font-size: 11.5px;
     font-weight: 400;
     background-color: $plqPrimarySoft !important;
     color: $plqFnText;
 
     .euiBadge__text,
     .euiBadge__content {
+      // stylelint-disable-next-line @osd/stylelint/no_restricted_properties
+      font-family: $euiCodeFontFamily;
+      font-size: 11.5px;
       color: $plqFnText;
     }
 
@@ -257,6 +283,79 @@ $plqControlHeight: 36px;
     font-size: 11.5px;
     color: $plqFnText;
   }
+
+  // The inline field picker (`span(<field>, …)`): an EuiComboBox stripped of its
+  // control chrome so it blends into the chip fill and reads as the plain field
+  // token, matching the surrounding monospace text.
+  &__field.euiComboBox {
+    // The picker element is itself the .euiComboBox, so pin its height here (a
+    // descendant rule wouldn't match self). The `.euiComboBox` qualifier lifts
+    // specificity above the group's `.plqGroup .euiComboBox { min-height: 20px }`
+    // reset so the chip stays as compact as the scalar-function chip beside it.
+    height: 18px !important;
+    min-height: 18px !important;
+
+    .euiFormControlLayout,
+    .euiFormControlLayout__childrenWrapper {
+      min-height: 18px !important;
+      height: 18px !important;
+    }
+
+    .euiComboBox__input {
+      height: 18px !important;
+    }
+
+    .euiComboBox__inputWrap {
+      box-shadow: none !important;
+      border: none !important;
+      background: transparent !important;
+      min-height: 18px !important;
+      height: 18px !important;
+      padding: 0 !important;
+    }
+
+    .euiComboBoxPill--plainText {
+      margin: 0;
+      // stylelint-disable-next-line @osd/stylelint/no_restricted_properties
+      font-family: $euiCodeFontFamily;
+      font-size: 11.5px;
+      line-height: 18px;
+      height: 18px;
+      color: $plqFnText;
+    }
+
+    // Hide the clear/caret icons; the picker opens on click and the chip has its
+    // own ✕, so the built-in combobox chrome is redundant noise.
+    .euiFormControlLayoutIcons {
+      display: none;
+    }
+
+    .euiComboBox__input input {
+      // stylelint-disable-next-line @osd/stylelint/no_restricted_properties
+      font-family: $euiCodeFontFamily;
+      font-size: 11.5px;
+      color: $plqFnText;
+    }
+  }
+
+  // The inline interval input matches the `round` chip's param exactly (see
+  // .plqFn__param): a borderless, transparent field that blends into the chip
+  // fill so the whole `span(timestamp, 1m)` reads as one flat token, keeping the
+  // chip the same compact height as the scalar-function chip beside it.
+  &__param {
+    height: 18px;
+    padding: 0 2px;
+    border: none;
+    box-shadow: none !important;
+    background: transparent;
+    outline: none;
+    color: $plqFnText;
+    text-align: left;
+
+    &--invalid {
+      color: $euiColorDanger;
+    }
+  }
 }
 
 // A scalar function applied to the aggregation field (e.g. `round 2`): a blue
@@ -274,7 +373,9 @@ $plqControlHeight: 36px;
   border-radius: $plqRadius;
 
   &__name {
-    font-size: 12px;
+    // stylelint-disable-next-line @osd/stylelint/no_restricted_properties
+    font-family: $euiCodeFontFamily;
+    font-size: 11.5px;
     color: $plqFnText;
     cursor: default;
   }

@@ -184,11 +184,15 @@ $plqControlHeight: 36px;
     color: $plqInk;
   }
 
-  // Center combobox pills within the shrunk wrap and give them a symmetric
-  // vertical margin (EUI's default is top-anchored with a top-only margin).
+  // Center combobox pills within the shrunk wrap. Keep right padding so the
+  // absolute-positioned dropdown caret has room — zeroing all padding makes the
+  // last pill's ✕ overlap the caret. `flex-wrap: nowrap` keeps every pill on the
+  // control's baseline (EUI wraps by default, which drops later pills a row and
+  // leaves them looking lower than the first).
   .euiComboBox__inputWrap {
-    padding: 0 !important;
+    padding: 0 22px 0 0 !important;
     align-items: center;
+    flex-wrap: nowrap;
   }
 
   // The single-select field value (e.g. `memory`) renders as a plain-text pill;
@@ -204,9 +208,12 @@ $plqControlHeight: 36px;
   // Restyle the selected-field pill (e.g. `clientip`) to match the blue scalar
   // function chip: primary-soft fill, primary text, flat radius, normal weight,
   // no badge border. EUI's badge chrome (bold text, pill radius, gray fill,
-  // border) otherwise clashes with the flat `round` chip it sits beside.
+  // border) otherwise clashes with the flat `round` chip it sits beside. The
+  // symmetric margin is `!important` because EUI gives non-first pills a
+  // top-only margin (5px 0 0) via a sibling selector, dropping them below the
+  // first pill.
   .euiComboBoxPill.euiBadge {
-    margin: 3px;
+    margin: 3px !important;
     padding: 0 4px 0 8px;
     border: none;
     border-radius: $plqRadius;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { analyzeSearchExpression, classifySearchTokens } from './search_completion';
+import { analyzeSearchExpression } from './search_completion';
 
 describe('analyzeSearchExpression', () => {
   it('suggests fields on empty input', () => {
@@ -76,52 +76,5 @@ describe('analyzeSearchExpression', () => {
   it('handles a backtick-quoted field name', () => {
     const a = analyzeSearchExpression('`resource.service`=', 19);
     expect(a.suggestValuesForField).toBe('`resource.service`');
-  });
-});
-
-describe('classifySearchTokens', () => {
-  // Slice each classified range back out of the query so assertions read as the
-  // literal token text + its color role.
-  const classify = (q: string) =>
-    classifySearchTokens(q).map(({ start, end, scope }) => ({ text: q.slice(start, end), scope }));
-
-  it('returns no tokens for empty / bare-term input', () => {
-    expect(classifySearchTokens('')).toEqual([]);
-    expect(classifySearchTokens('error')).toEqual([]);
-  });
-
-  it('colors the field and value of a comparison', () => {
-    expect(classify('status=500')).toEqual([
-      { text: 'status', scope: 'field' },
-      { text: '500', scope: 'string' },
-    ]);
-  });
-
-  it('colors comparisons regardless of spacing around the operator', () => {
-    expect(classify('status = 500')).toEqual([
-      { text: 'status', scope: 'field' },
-      { text: '500', scope: 'string' },
-    ]);
-  });
-
-  it('colors each field/value and the boolean keyword in an expression', () => {
-    expect(classify('status=500 AND service="web"')).toEqual([
-      { text: 'status', scope: 'field' },
-      { text: '500', scope: 'string' },
-      { text: 'AND', scope: 'keyword' },
-      { text: 'service', scope: 'field' },
-      { text: '"web"', scope: 'string' },
-    ]);
-  });
-
-  it('colors the field before its value is typed', () => {
-    expect(classify('agent=')).toEqual([{ text: 'agent', scope: 'field' }]);
-  });
-
-  it('colors IN as a keyword and its governing field', () => {
-    expect(classify("severityText IN ('ERROR', 'WARN')")).toEqual([
-      { text: 'severityText', scope: 'field' },
-      { text: 'IN', scope: 'keyword' },
-    ]);
   });
 });

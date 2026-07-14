@@ -126,23 +126,28 @@ function findGoverningField(tokenStream: CommonTokenStream, cursorIndex: number)
   return null;
 }
 
-export interface FilterRange {
-  /** Char offset (0-based) where the `field <op> [value]` filter begins. */
+/** A syntactic role we color in the search box, mapped to a CSS class. */
+export type SearchTokenScope = 'field' | 'string' | 'keyword';
+
+export interface SearchTokenRange {
+  /** Char offset (0-based) where the colored token begins. */
   start: number;
-  /** Char offset (0-based, exclusive) where the filter ends. */
+  /** Char offset (0-based, exclusive) where the colored token ends. */
   end: number;
+  /** The syntactic role, driving the token color. */
+  scope: SearchTokenScope;
 }
 
 /**
- * Tokenize the search expression and return the char ranges of each filter — a
- * `field <op> [value]` comparison or a `field IN (...)` list. The value is
- * optional so a box appears as soon as the field and its operator exist (e.g.
- * `agent=`), before the value is typed. Used to draw a box around each filter so
- * the composed query reads as a set of discrete conditions. Best-effort: returns
- * `[]` on any lexing error.
+ * Tokenize the search expression and classify each token by syntactic role so the
+ * box can syntax-highlight it (fields in primary, values as strings, boolean
+ * keywords), rather than drawing a background box around whole filters. A
+ * `field` is a bare term/backtick that governs a comparison or `IN`; the RHS
+ * value(s) are `string`; `AND`/`OR`/`NOT`/`IN` are `keyword`. Best-effort:
+ * returns `[]` on any lexing error.
  */
-export function findFilterRanges(query: string): FilterRange[] {
-  const ranges: FilterRange[] = [];
+export function classifySearchTokens(query: string): SearchTokenRange[] {
+  const ranges: SearchTokenRange[] = [];
   try {
     const inputStream = CharStream.fromString(query);
     const lexer = new PPLSearchLexer(inputStream);
@@ -161,47 +166,38 @@ export function findFilterRanges(query: string): FilterRange[] {
       while (j < tokens.length && tokens[j].type === WS) j++;
       return j;
     };
+    const push = (t: Token, scope: SearchTokenScope) =>
+      ranges.push({ start: t.column, end: tokenEnd(t), scope });
 
     for (let i = 0; i < tokens.length; i++) {
-      const field = tokens[i];
-      if (field.type !== PPLSearchParser.TERM && field.type !== PPLSearchParser.BACKTICK) continue;
+      const t = tokens[i];
 
-      const opIdx = nextNonWs(i + 1);
-      if (opIdx >= tokens.length) continue;
-      const op = tokens[opIdx];
+      // Boolean operators / IN read as keywords wherever they stand.
+      if (KEYWORD_TOKENS[t.type]) {
+        push(t, 'keyword');
+        continue;
+      }
 
-      if (COMPARISON_OPS.has(op.type)) {
-        const valIdx = nextNonWs(opIdx + 1);
-        if (valIdx < tokens.length && VALUE_LIKE.has(tokens[valIdx].type)) {
-          // field <op> value
-          ranges.push({ start: field.column, end: tokenEnd(tokens[valIdx]) });
-          i = valIdx;
-        } else {
-          // field <op> (value not yet typed) — box the field and operator.
-          ranges.push({ start: field.column, end: tokenEnd(op) });
-          i = opIdx;
+      // A term/backtick immediately governing a comparison or IN is a field; a
+      // comparison's right-hand value colors as a string (the IN list's values
+      // are colored as the keyword loop advances past IN on later iterations).
+      if (t.type === PPLSearchParser.TERM || t.type === PPLSearchParser.BACKTICK) {
+        const opIdx = nextNonWs(i + 1);
+        const op = opIdx < tokens.length ? tokens[opIdx] : undefined;
+        if (op && COMPARISON_OPS.has(op.type)) {
+          push(t, 'field');
+          const valIdx = nextNonWs(opIdx + 1);
+          if (valIdx < tokens.length && VALUE_LIKE.has(tokens[valIdx].type)) {
+            push(tokens[valIdx], 'string');
+            i = valIdx;
+          } else {
+            i = opIdx;
+          }
+          continue;
         }
-      } else if (op.type === PPLSearchParser.IN) {
-        const parenIdx = nextNonWs(opIdx + 1);
-        if (parenIdx < tokens.length && tokens[parenIdx].type === PPLSearchParser.LPAREN) {
-          let depth = 0;
-          let end = -1;
-          let last = parenIdx;
-          for (let m = parenIdx; m < tokens.length; m++) {
-            if (tokens[m].type === PPLSearchParser.LPAREN) depth++;
-            else if (tokens[m].type === PPLSearchParser.RPAREN) {
-              depth--;
-              if (depth === 0) {
-                end = tokenEnd(tokens[m]);
-                last = m;
-                break;
-              }
-            }
-          }
-          if (end > 0) {
-            ranges.push({ start: field.column, end });
-            i = last;
-          }
+        if (op && op.type === PPLSearchParser.IN) {
+          push(t, 'field');
+          continue;
         }
       }
     }

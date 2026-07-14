@@ -119,12 +119,22 @@ $plqControlHeight: 36px;
     outline: none;
   }
 
-  // Colored highlight drawn behind each `field=value` filter (Monaco inline
-  // decoration; see SearchBox.updateFilterBoxes). Background fill only so it
-  // stays continuous across token fragments and doesn't offset the cursor.
-  &__filter {
-    background: transparentize($plqPrimary, 0.85);
-    border-radius: $plqRadius;
+  // Syntax highlighting for the search expression (Monaco inline decorations;
+  // see SearchBox.updateSyntaxHighlight). Color only — no background — so the
+  // query reads through token color like the code editor, matching the mock's
+  // `.tok-field` / `.tok-str`. Field names and boolean keywords take the primary
+  // blue; string values take the mock's purple. `!important` beats Monaco's own
+  // per-token color rule (`.monaco-editor .mtkN`), which is more specific than a
+  // single decoration class and would otherwise keep every token the default ink.
+  &__tok--field,
+  &__tok--keyword {
+    color: $plqPrimary !important;
+    font-weight: 600;
+  }
+
+  &__tok--string {
+    // stylelint-disable-next-line @osd/stylelint/no_restricted_values
+    color: #8737a8 !important;
   }
 }
 

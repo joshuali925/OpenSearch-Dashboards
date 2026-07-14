@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { i18n } from '@osd/i18n';
 import { monaco } from '@osd/monaco';
 import { CodeEditor } from '../../../../../../opensearch_dashboards_react/public';
-import { analyzeSearchExpression, findFilterRanges } from './search_completion';
+import { analyzeSearchExpression, classifySearchTokens } from './search_completion';
 
 /** Dedicated Monaco language id for the restricted PPL search-expression box. */
 export const PPL_SEARCH_LANGUAGE_ID = 'pplSearchExpression';
@@ -67,9 +67,9 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   const onRequestValuesRef = useRef(onRequestValues);
   onRequestValuesRef.current = onRequestValues;
 
-  // Monaco decorations collection holding the current filter boxes. The
-  // collection auto-tracks the applied decorations, so no manual id bookkeeping
-  // is needed (see updateFilterBoxes).
+  // Monaco decorations collection holding the current syntax-highlight token
+  // spans. The collection auto-tracks the applied decorations, so no manual id
+  // bookkeeping is needed (see updateSyntaxHighlight).
   const decorationsRef = useRef<monaco.editor.IEditorDecorationsCollection | null>(null);
   // Pending deferred suggestion-trigger (cursor moves; see handleEditorDidMount).
   const suggestTimerRef = useRef<number | undefined>(undefined);
@@ -90,17 +90,20 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
     });
   }, []);
 
-  // Draw / refresh a colored box around every complete filter in the expression,
-  // so the user reads the query as a set of discrete `field=value` conditions.
-  const updateFilterBoxes = useCallback((editor: monaco.editor.IStandaloneCodeEditor) => {
+  // Syntax-highlight the expression: color each field / value / keyword token via
+  // an inline class, so the query reads through token color (like the code editor)
+  // rather than background boxes around whole `field=value` filters. The
+  // restricted `pplSearchExpression` language has no Monarch tokenizer, so we
+  // classify with the search lexer and paint the tokens ourselves.
+  const updateSyntaxHighlight = useCallback((editor: monaco.editor.IStandaloneCodeEditor) => {
     const model = editor.getModel();
     if (!model) return;
-    const decorations: monaco.editor.IModelDeltaDecoration[] = findFilterRanges(
+    const decorations: monaco.editor.IModelDeltaDecoration[] = classifySearchTokens(
       model.getValue()
-    ).map(({ start, end }) => ({
+    ).map(({ start, end, scope }) => ({
       range: new monaco.Range(1, start + 1, 1, end + 1),
       options: {
-        inlineClassName: 'plqSearchBoxEditor__filter',
+        inlineClassName: `plqSearchBoxEditor__tok--${scope}`,
         stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
       },
     }));
@@ -117,7 +120,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
 
   const handleEditorDidMount = useCallback(
     (editor: monaco.editor.IStandaloneCodeEditor) => {
-      updateFilterBoxes(editor);
+      updateSyntaxHighlight(editor);
       syncHeight(editor);
 
       // Grow / shrink the box to fit its content as the user types or wraps
@@ -130,9 +133,9 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
       // when there is nothing to complete (it renders "No suggestions.").
       // onDidChangeModelContent fires for both typing and programmatic value
       // changes (mode toggle / external edit), so it is the single source of
-      // truth for re-boxing.
+      // truth for re-highlighting.
       editor.onDidChangeModelContent(() => {
-        updateFilterBoxes(editor);
+        updateSyntaxHighlight(editor);
         triggerSuggest(editor);
       });
       editor.onDidChangeCursorPosition((e) => {
@@ -147,7 +150,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
         suggestTimerRef.current = window.setTimeout(() => triggerSuggest(editor), 0);
       });
     },
-    [updateFilterBoxes, triggerSuggest, syncHeight]
+    [updateSyntaxHighlight, triggerSuggest, syncHeight]
   );
 
   // Clear any pending deferred trigger on unmount.

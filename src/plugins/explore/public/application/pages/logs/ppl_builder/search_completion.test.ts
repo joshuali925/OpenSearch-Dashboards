@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { analyzeSearchExpression, findFilterRanges } from './search_completion';
+import { analyzeSearchExpression, classifySearchTokens } from './search_completion';
 
 describe('analyzeSearchExpression', () => {
   it('suggests fields on empty input', () => {
@@ -59,47 +59,49 @@ describe('analyzeSearchExpression', () => {
   });
 });
 
-describe('findFilterRanges', () => {
-  it('returns no ranges for empty / bare-term input', () => {
-    expect(findFilterRanges('')).toEqual([]);
-    expect(findFilterRanges('error')).toEqual([]);
+describe('classifySearchTokens', () => {
+  // Slice each classified range back out of the query so assertions read as the
+  // literal token text + its color role.
+  const classify = (q: string) =>
+    classifySearchTokens(q).map(({ start, end, scope }) => ({ text: q.slice(start, end), scope }));
+
+  it('returns no tokens for empty / bare-term input', () => {
+    expect(classifySearchTokens('')).toEqual([]);
+    expect(classifySearchTokens('error')).toEqual([]);
   });
 
-  it('boxes a single field=value comparison', () => {
-    const q = 'status=500';
-    expect(findFilterRanges(q)).toEqual([{ start: 0, end: q.length }]);
+  it('colors the field and value of a comparison', () => {
+    expect(classify('status=500')).toEqual([
+      { text: 'status', scope: 'field' },
+      { text: '500', scope: 'string' },
+    ]);
   });
 
-  it('boxes comparisons regardless of spacing around the operator', () => {
-    const q = 'status = 500';
-    expect(findFilterRanges(q)).toEqual([{ start: 0, end: q.length }]);
+  it('colors comparisons regardless of spacing around the operator', () => {
+    expect(classify('status = 500')).toEqual([
+      { text: 'status', scope: 'field' },
+      { text: '500', scope: 'string' },
+    ]);
   });
 
-  it('boxes each filter in a boolean expression', () => {
-    const q = 'status=500 AND service="web"';
-    const ranges = findFilterRanges(q);
-    expect(ranges).toHaveLength(2);
-    expect(q.slice(ranges[0].start, ranges[0].end)).toBe('status=500');
-    expect(q.slice(ranges[1].start, ranges[1].end)).toBe('service="web"');
+  it('colors each field/value and the boolean keyword in an expression', () => {
+    expect(classify('status=500 AND service="web"')).toEqual([
+      { text: 'status', scope: 'field' },
+      { text: '500', scope: 'string' },
+      { text: 'AND', scope: 'keyword' },
+      { text: 'service', scope: 'field' },
+      { text: '"web"', scope: 'string' },
+    ]);
   });
 
-  it('boxes field and operator before the value is typed', () => {
-    const q = 'agent=';
-    expect(findFilterRanges(q)).toEqual([{ start: 0, end: q.length }]);
+  it('colors the field before its value is typed', () => {
+    expect(classify('agent=')).toEqual([{ text: 'agent', scope: 'field' }]);
   });
 
-  it('boxes the field=operator prefix even when followed by another filter', () => {
-    const q = 'agent= AND status=500';
-    const ranges = findFilterRanges(q);
-    expect(ranges).toHaveLength(2);
-    expect(q.slice(ranges[0].start, ranges[0].end)).toBe('agent=');
-    expect(q.slice(ranges[1].start, ranges[1].end)).toBe('status=500');
-  });
-
-  it('boxes a field IN (...) list as one filter', () => {
-    const q = "severityText IN ('ERROR', 'WARN')";
-    const ranges = findFilterRanges(q);
-    expect(ranges).toHaveLength(1);
-    expect(q.slice(ranges[0].start, ranges[0].end)).toBe(q);
+  it('colors IN as a keyword and its governing field', () => {
+    expect(classify("severityText IN ('ERROR', 'WARN')")).toEqual([
+      { text: 'severityText', scope: 'field' },
+      { text: 'IN', scope: 'keyword' },
+    ]);
   });
 });

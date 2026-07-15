@@ -9,7 +9,53 @@ import { FilterUtils } from './filter_utils';
 /** Detects a leading `source=<x>` / `index=<x>` clause in the head segment. */
 const SOURCE_CLAUSE_RE = /^\s*(?:source|index)\s*=\s*(?:`[^`]*`|[^\s|]+)\s*/i;
 
+/**
+ * A field-name segment that the PPL lexer accepts bare (no back-ticks). The
+ * lexer is case-insensitive and its identifier token is
+ * `ID_LITERAL: ([@*A-Z_])+?[*A-Z_\-0-9]*` — a letter/`_`/`@` start followed by
+ * letters, digits, `_` or `-`. `*` is excluded here (it is the wildcard token),
+ * so a field literally containing one still gets quoted.
+ */
+const SAFE_BARE_SEGMENT = /^[A-Za-z_@][A-Za-z0-9_-]*$/;
+
+/**
+ * The only keyword literals the parser does NOT allow as bare identifiers
+ * (everything else is reachable through `keywordsCanBeId`). Compared
+ * case-insensitively. A field named any of these must be back-ticked.
+ */
+const RESERVED_FIELD_NAMES = new Set(['fieldlist', 'perc', 'timeformat']);
+
 export class PPLFilterUtils extends FilterUtils {
+  /**
+   * Whether every dot-separated segment of `field` lexes as a bare PPL
+   * identifier — so `geo.dest` stays bare but `geo.dest field` or a leading
+   * digit gets quoted. Reserved keyword names are never bare.
+   */
+  private static isBareIdentifier(field: string): boolean {
+    return field
+      .split('.')
+      .every(
+        (segment) =>
+          SAFE_BARE_SEGMENT.test(segment) && !RESERVED_FIELD_NAMES.has(segment.toLowerCase())
+      );
+  }
+
+  /**
+   * PPL back-ticks a field name only when it isn't a bare identifier. This
+   * keeps the common case compact (`status`, `geo.dest`) while still quoting
+   * names with spaces/special chars or reserved words. Any back-tick already
+   * in the name is doubled per the lexer's `` `` `` escape.
+   */
+  protected static formatFieldName(field: string): string {
+    if (PPLFilterUtils.isBareIdentifier(field)) return field;
+    return `\`${field.replaceAll('`', '``')}\``;
+  }
+
+  /** PPL compacts comparisons to `field=value` (no spaces around the operator). */
+  protected static comparison(field: string, operator: string, value: unknown): string {
+    return `${PPLFilterUtils.formatFieldName(field)}${operator}${value}`;
+  }
+
   /**
    * Inserts a WHERE command into a PPL query string after the first command.
    *
@@ -116,7 +162,7 @@ export class PPLFilterUtils extends FilterUtils {
     if (isExistsFilter(filter)) {
       const field = getFilterField(filter);
       if (!field) return query;
-      const predicate = filter.meta.negate ? `ISNULL(\`${field}\`)` : `ISNOTNULL(\`${field}\`)`;
+      const predicate = PPLFilterUtils.existsPredicate(field, Boolean(filter.meta.negate));
       return PPLFilterUtils.addWhereCommand(query, predicate);
     }
 

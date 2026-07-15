@@ -40,6 +40,12 @@ describe('parsePPL — canBuild gating', () => {
     expect(result.state.searchExpression).toBe('status>=500 AND service="web-store"');
   });
 
+  it('round-trips the compact `field=value` form emitted by the add-filter path', () => {
+    const result = parsePPL("source = logs service='web'");
+    expect(result.canBuild).toBe(true);
+    expect(result.state.searchExpression).toBe("service='web'");
+  });
+
   it('captures a full-text search term', () => {
     const result = parsePPL('source = logs ERROR');
     expect(result.canBuild).toBe(true);

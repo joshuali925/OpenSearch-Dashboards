@@ -18,7 +18,7 @@ const QUERY_PANEL_SINGLE_LINE_PX = 82;
 // Taller default for the logs visual builder, sized to show its default state
 // (widgets row + the "Search for" / "Group into" rows) without clipping. The
 // panel stays manually resizable from here.
-const QUERY_PANEL_BUILDER_PX = 158;
+const QUERY_PANEL_BUILDER_PX = 150;
 const QUERY_PANEL_MIN_SIZE = '3%';
 const QUERY_PANEL_MIN_PCT = 3;
 const QUERY_PANEL_MAX_PCT = 72;

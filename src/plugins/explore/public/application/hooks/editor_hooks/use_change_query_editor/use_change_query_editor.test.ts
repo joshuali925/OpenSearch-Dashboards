@@ -132,11 +132,18 @@ describe('useChangeQueryEditor', () => {
     expect(mockDispatch).not.toHaveBeenCalled();
   });
 
-  it('should merge a positive PPL filter into the search expression, commit, and run it', () => {
-    const { result } = renderHook(() => useChangeQueryEditor());
+  it('serializes via the language config, commits to the draft, and runs the query', () => {
+    mockLanguageConfig.addFiltersToQuery = jest
+      .fn()
+      .mockReturnValue("source = logs `service`='web'");
 
+    const { result } = renderHook(() => useChangeQueryEditor());
     result.current.onAddFilter('service', 'web', '+');
 
+    // Delegated serialization to the (PPL) language config.
+    expect(mockLanguageConfig.addFiltersToQuery).toHaveBeenCalledWith('source = logs', [
+      { meta: { key: 'field', value: 'value' } },
+    ]);
     // Committed to the QueryStringManager draft.
     expect(mockSetQuery).toHaveBeenCalledWith({
       query: "source = logs `service`='web'",
@@ -153,39 +160,18 @@ describe('useChangeQueryEditor', () => {
     expect(mockFocusOnEditor).toHaveBeenCalled();
   });
 
-  it('should build a negated PPL filter for the "-" operation', () => {
-    const { result } = renderHook(() => useChangeQueryEditor());
-
-    result.current.onAddFilter('service', 'web', '-');
-
-    expect(mockSetQuery).toHaveBeenCalledWith({
-      query: "source = logs `service`!='web'",
-      language: 'PPL',
-    });
-  });
-
-  it('should fall back to the language default query string when the draft is empty', () => {
+  it('falls back to the language default query string when the draft is empty', () => {
     mockGetQuery.mockReturnValue({ query: '', language: 'PPL' });
+    mockLanguageConfig.addFiltersToQuery = jest.fn().mockReturnValue('serialized');
 
     const { result } = renderHook(() => useChangeQueryEditor());
     result.current.onAddFilter('service', 'web', '+');
 
     expect(mockLanguageConfig.getQueryString).toHaveBeenCalled();
-    expect(mockSetQuery).toHaveBeenCalledWith({
-      query: "source = logs `service`='web'",
-      language: 'PPL',
-    });
-  });
-
-  it('routes an exists filter to a WHERE command (not builder-representable)', () => {
-    const { result } = renderHook(() => useChangeQueryEditor());
-
-    result.current.onAddFilter('_exists_', 'service', '+');
-
-    expect(mockSetQuery).toHaveBeenCalledWith({
-      query: 'source = logs | WHERE ISNOTNULL(`service`)',
-      language: 'PPL',
-    });
+    // The language default seeds the base text passed to the serializer.
+    expect(mockLanguageConfig.addFiltersToQuery).toHaveBeenCalledWith('source = logs', [
+      { meta: { key: 'field', value: 'value' } },
+    ]);
   });
 
   it('should use addFiltersToPrompt and stage (not run) in Prompt mode', () => {
@@ -251,9 +237,13 @@ describe('useChangeQueryEditor', () => {
     const { result } = renderHook(() => useChangeQueryEditor());
     result.current.onAddFilter(mockField, 'web', '+');
 
-    expect(mockSetQuery).toHaveBeenCalledWith({
-      query: "source = logs `service`='web'",
-      language: 'PPL',
-    });
+    // The field object is forwarded to generateFilters untouched.
+    expect(opensearchFilters.generateFilters).toHaveBeenCalledWith(
+      mockFilterManager,
+      mockField,
+      'web',
+      '+',
+      'test-index-pattern-id'
+    );
   });
 });

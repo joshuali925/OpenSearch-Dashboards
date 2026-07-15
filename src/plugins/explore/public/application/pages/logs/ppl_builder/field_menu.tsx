@@ -32,12 +32,13 @@ interface FieldMenuBaseProps {
   /** Class applied to the default trigger's wrapper (styles the token). */
   triggerClassName?: string;
   /**
-   * Custom trigger content for the group-by control: the consumer's removable
-   * pills (and an "Everything" placeholder that opens the popover via the passed
-   * handler). The menu renders these as the trigger's `leading` content inside a
-   * `plqPills` row and appends its own caret as the popover anchor, so the panel
-   * hangs from the dropdown icon rather than centering under the wide pills box.
-   * When omitted, a plain label + caret button is shown (the sort-column token).
+   * Custom trigger content for the group-by control's non-empty state: the
+   * consumer's removable pills (each with its own ✕). The menu renders these as
+   * the trigger's `leading` content inside a `plqPills` row and appends its own
+   * caret as the popover anchor, so the panel hangs from the dropdown icon rather
+   * than centering under the wide pills box. When omitted, the shared single
+   * label + caret button is shown as one click target (the sort-column token and
+   * the empty "Everything ⌄" group-by state), with the popover anchored under it.
    */
   renderTrigger?: (onToggle: () => void) => React.ReactNode;
   /** aria-label for the caret button rendered as the popover anchor. */
@@ -169,26 +170,16 @@ export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
           };
         }
         return {
-          wrapperClassName: triggerClassName,
-          leading: (
-            <button
-              type="button"
-              className="plqFieldTrigger__labelBtn"
-              onClick={toggle}
-              aria-label={placeholder}
-              data-test-subj={dataTestSubj}
-            >
-              <span className="plqFieldTrigger__label">{selectedLabel || placeholder}</span>
-            </button>
-          ),
           anchor: (
             <button
               type="button"
-              className={`${triggerClassName ?? ''} plqFieldTrigger__caretBtn`}
+              className={triggerClassName}
               onClick={toggle}
               aria-label={caretAriaLabel ?? placeholder}
+              data-test-subj={dataTestSubj}
             >
-              <EuiIcon type="arrowDown" size="s" className="plqFieldTrigger__caret" />
+              <span className="plqAggTrigger__label">{selectedLabel || placeholder}</span>
+              <EuiIcon type="arrowDown" size="s" className="plqAggTrigger__caret" />
             </button>
           ),
         };

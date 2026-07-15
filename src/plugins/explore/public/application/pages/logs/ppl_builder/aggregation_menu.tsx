@@ -58,25 +58,15 @@ export const AggregationMenu: React.FC<AggregationMenuProps> = ({
       })}
       searchDataTestSubj={dataTestSubj ? `${dataTestSubj}-search` : undefined}
       trigger={(toggle) => ({
-        wrapperClassName: 'plqAggTrigger',
-        leading: (
+        anchor: (
           <button
             type="button"
-            className="plqFieldTrigger__labelBtn"
+            className="plqAggTrigger"
             onClick={toggle}
             aria-label={ariaLabel}
             data-test-subj={dataTestSubj}
           >
             <span className="plqAggTrigger__label">{selected?.label}</span>
-          </button>
-        ),
-        anchor: (
-          <button
-            type="button"
-            className="plqFieldTrigger__caretBtn"
-            onClick={toggle}
-            aria-label={ariaLabel}
-          >
             <EuiIcon type="arrowDown" size="s" className="plqAggTrigger__caret" />
           </button>
         ),

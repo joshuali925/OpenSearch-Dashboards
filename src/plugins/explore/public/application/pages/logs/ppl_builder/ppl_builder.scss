@@ -226,40 +226,16 @@ $plqControlHeight: 36px;
       color: $plqSub;
     }
 
-    &:hover &__label,
-    &:focus &__label {
+    // Whole trigger is one button; only the caret tints on hover/focus so the
+    // value text stays neutral.
+    &:hover &__caret,
+    &:focus &__caret {
       color: $plqPrimary;
     }
-  }
 
-  // The label text and the caret are separate toggle buttons inside the trigger
-  // (so the popover can anchor on just the caret). Both are borderless and flat,
-  // inheriting the trigger's font/color so they still read as one "text ⌄" token.
-  .plqFieldTrigger__labelBtn,
-  .plqFieldTrigger__caretBtn {
-    display: inline-flex;
-    align-items: center;
-    padding: 0;
-    border: none;
-    background: transparent;
-    line-height: inherit;
-    font-size: inherit;
-    color: inherit;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .plqFieldTrigger__caretBtn:hover,
-  .plqFieldTrigger__caretBtn:focus {
-    outline: none;
-
-    .plqFieldTrigger__caret {
-      color: $plqPrimary;
+    &:focus {
+      outline: none;
     }
-  }
-
-  .plqFieldTrigger__labelBtn:focus {
-    outline: none;
   }
 
   // Center combobox pills within the shrunk wrap. Keep right padding so the
@@ -296,22 +272,6 @@ $plqControlHeight: 36px;
   align-items: center;
   flex-wrap: wrap;
   gap: 4px;
-
-  &__placeholder {
-    border: none;
-    background: transparent;
-    padding: 0 2px;
-    font-size: 12.5px;
-    line-height: 20px;
-    color: $plqSub;
-    cursor: pointer;
-
-    &:hover,
-    &:focus {
-      color: $plqPrimary;
-      outline: none;
-    }
-  }
 
   // The caret shares the unified small-icon sizing; it opens the picker.
   &__caret.euiButtonIcon {

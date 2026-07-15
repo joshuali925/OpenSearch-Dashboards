@@ -196,95 +196,100 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                       }
                 }
                 dataTestSubj="pplBuilderGroupByFields"
+                placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
+                  defaultMessage: 'Everything',
+                })}
+                triggerClassName="plqAggTrigger"
                 caretAriaLabel={i18n.translate('explore.pplBuilder.editGroupByFields', {
                   defaultMessage: 'Edit group-by fields',
                 })}
-                renderTrigger={(onToggle) => (
-                  <>
-                    {state.groupBy.fields.length === 0 && !state.groupBy.span ? (
-                      <button
-                        type="button"
-                        className="plqPills__placeholder"
-                        onClick={onToggle}
-                        data-test-subj="pplBuilderGroupByFields"
-                      >
-                        {i18n.translate('explore.pplBuilder.groupByEverything', {
-                          defaultMessage: 'Everything',
-                        })}
-                      </button>
-                    ) : (
-                      state.groupBy.fields.map((f) => (
-                        <span key={f} className="plqPill">
-                          <span className="plqPill__label">{f}</span>
-                          <EuiButtonIcon
-                            className="plqPill__remove"
-                            iconType="cross"
-                            color="text"
-                            size="s"
-                            aria-label={i18n.translate('explore.pplBuilder.removeGroupByField', {
-                              defaultMessage: 'Remove {field}',
-                              values: { field: f },
-                            })}
-                            onClick={() =>
-                              dispatch({
-                                type: 'SET_GROUPBY_FIELDS',
-                                fields: state.groupBy.fields.filter((x) => x !== f),
-                              })
-                            }
-                          />
-                        </span>
-                      ))
-                    )}
+                // With a selection, render removable pills (each needs its own ✕,
+                // so this is a genuine multi-element trigger with a caret anchor).
+                // With nothing selected, omit this so the shared single-button
+                // trigger ("Everything ⌄") is used — one click target, popover
+                // anchored under the token, matching the metric field picker.
+                renderTrigger={
+                  state.groupBy.fields.length === 0 && !state.groupBy.span
+                    ? undefined
+                    : () => (
+                        <>
+                          {state.groupBy.fields.map((f) => (
+                            <span key={f} className="plqPill">
+                              <span className="plqPill__label">{f}</span>
+                              <EuiButtonIcon
+                                className="plqPill__remove"
+                                iconType="cross"
+                                color="text"
+                                size="s"
+                                aria-label={i18n.translate(
+                                  'explore.pplBuilder.removeGroupByField',
+                                  {
+                                    defaultMessage: 'Remove {field}',
+                                    values: { field: f },
+                                  }
+                                )}
+                                onClick={() =>
+                                  dispatch({
+                                    type: 'SET_GROUPBY_FIELDS',
+                                    fields: state.groupBy.fields.filter((x) => x !== f),
+                                  })
+                                }
+                              />
+                            </span>
+                          ))}
 
-                    {state.groupBy.span && (
-                      <EuiToolTip
-                        content={i18n.translate('explore.pplBuilder.spanTooltip', {
-                          defaultMessage:
-                            'span({field}, {interval}) — uses the dataset’s time field',
-                          values: {
-                            field: state.groupBy.span.field,
-                            interval: state.groupBy.span.interval,
-                          },
-                        })}
-                        position="top"
-                      >
-                        <span className="plqChip" data-test-subj="pplBuilderSpanChip">
-                          <span className="plqChip__nat">
-                            {i18n.translate('explore.pplBuilder.every', {
-                              defaultMessage: 'every',
-                            })}
-                          </span>
-                          <SpanIntervalMenu
-                            interval={state.groupBy.span.interval}
-                            isInvalid={!SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())}
-                            onChange={(interval) =>
-                              dispatch({
-                                type: 'SET_SPAN',
-                                span: {
-                                  field: state.groupBy.span!.field,
-                                  interval,
-                                  auto: false,
+                          {state.groupBy.span && (
+                            <EuiToolTip
+                              content={i18n.translate('explore.pplBuilder.spanTooltip', {
+                                defaultMessage:
+                                  'span({field}, {interval}) — uses the dataset’s time field',
+                                values: {
+                                  field: state.groupBy.span.field,
+                                  interval: state.groupBy.span.interval,
                                 },
-                              })
-                            }
-                            dataTestSubj="pplBuilderSpanInterval"
-                          />
-                          <EuiButtonIcon
-                            className="plqX"
-                            iconType="cross"
-                            color="text"
-                            size="s"
-                            aria-label={i18n.translate('explore.pplBuilder.removeSpan', {
-                              defaultMessage: 'Remove time grouping',
-                            })}
-                            onClick={() => dispatch({ type: 'REMOVE_SPAN' })}
-                            data-test-subj="pplBuilderRemoveSpan"
-                          />
-                        </span>
-                      </EuiToolTip>
-                    )}
-                  </>
-                )}
+                              })}
+                              position="top"
+                            >
+                              <span className="plqChip" data-test-subj="pplBuilderSpanChip">
+                                <span className="plqChip__nat">
+                                  {i18n.translate('explore.pplBuilder.every', {
+                                    defaultMessage: 'every',
+                                  })}
+                                </span>
+                                <SpanIntervalMenu
+                                  interval={state.groupBy.span.interval}
+                                  isInvalid={
+                                    !SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())
+                                  }
+                                  onChange={(interval) =>
+                                    dispatch({
+                                      type: 'SET_SPAN',
+                                      span: {
+                                        field: state.groupBy.span!.field,
+                                        interval,
+                                        auto: false,
+                                      },
+                                    })
+                                  }
+                                  dataTestSubj="pplBuilderSpanInterval"
+                                />
+                                <EuiButtonIcon
+                                  className="plqX"
+                                  iconType="cross"
+                                  color="text"
+                                  size="s"
+                                  aria-label={i18n.translate('explore.pplBuilder.removeSpan', {
+                                    defaultMessage: 'Remove time grouping',
+                                  })}
+                                  onClick={() => dispatch({ type: 'REMOVE_SPAN' })}
+                                  data-test-subj="pplBuilderRemoveSpan"
+                                />
+                              </span>
+                            </EuiToolTip>
+                          )}
+                        </>
+                      )
+                }
               />
             </div>
           </>

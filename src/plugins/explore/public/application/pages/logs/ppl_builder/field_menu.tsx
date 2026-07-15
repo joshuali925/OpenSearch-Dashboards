@@ -3,16 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo } from 'react';
 import { i18n } from '@osd/i18n';
-import {
-  EuiButtonIcon,
-  EuiFieldSearch,
-  EuiIcon,
-  EuiPopover,
-  EuiPopoverTitle,
-  EuiToolTip,
-} from '@elastic/eui';
+import { EuiButtonIcon, EuiIcon } from '@elastic/eui';
+import { SearchPopoverMenu, SearchMenuOption } from './search_popover_menu';
 
 /**
  * The "over time" entry pinned to the top of the popover — plain-language time
@@ -35,17 +29,17 @@ interface FieldMenuBaseProps {
   options: string[];
   /** Placeholder shown in the trigger when nothing is selected. */
   placeholder?: string;
-  /** Class applied to the default trigger button (styles the token in its chip). */
+  /** Class applied to the default trigger's wrapper (styles the token). */
   triggerClassName?: string;
   /**
-   * Custom trigger renderer for the group-by control. It receives the popover's
-   * caret node (already wired to toggle open/close) and a click handler, and
-   * returns its own removable pills followed by that caret. The caret — not the
-   * whole pills row — is the popover's anchor, so the panel hangs from the
-   * dropdown icon rather than centering under a wide pills box. When omitted, a
-   * plain label + caret button is shown (used by the sort-column token).
+   * Custom trigger content for the group-by control: the consumer's removable
+   * pills (and an "Everything" placeholder that opens the popover via the passed
+   * handler). The menu renders these as the trigger's `leading` content inside a
+   * `plqPills` row and appends its own caret as the popover anchor, so the panel
+   * hangs from the dropdown icon rather than centering under the wide pills box.
+   * When omitted, a plain label + caret button is shown (the sort-column token).
    */
-  renderTrigger?: (caret: React.ReactNode, onToggle: () => void) => React.ReactElement;
+  renderTrigger?: (onToggle: () => void) => React.ReactNode;
   /** aria-label for the caret button rendered as the popover anchor. */
   caretAriaLabel?: string;
   /** Optional plain-language time-grouping entry pinned to the top of the list. */
@@ -72,14 +66,12 @@ interface MultiFieldMenuProps extends FieldMenuBaseProps {
 type FieldMenuProps = SingleFieldMenuProps | MultiFieldMenuProps;
 
 /**
- * A field picker rendered as a search-first popover — the same interaction as the
- * `ƒx` "wrap in function" and "Show" aggregation menus ({@link FunctionMenu},
- * {@link AggregationMenu}) rather than an inline combobox whose dropdown is
+ * A field picker rendered as a search-first popover (the shared
+ * {@link SearchPopoverMenu}) rather than an inline combobox whose dropdown is
  * clipped to a narrow control width. The trigger shows the current selection as
  * plain text; opening it reveals a filterable, readable list. In `multi` mode
  * each row toggles (a check marks selected fields and the popover stays open); in
- * single mode picking a field applies it and closes. Typing filters the list,
- * Enter applies/toggles the first match, Esc closes. Fields not already in the
+ * single mode picking a field applies it and closes. Fields not already in the
  * list can be added by typing a new value and pressing Enter.
  */
 export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
@@ -92,21 +84,13 @@ export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
     overTime,
     dataTestSubj,
   } = props;
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const firstMatchRef = useRef<string | null>(null);
 
   const selectedSet = useMemo(
     () => new Set(props.multi ? props.value : props.value ? [props.value] : []),
     [props.multi, props.value]
   );
 
-  const close = () => {
-    setIsOpen(false);
-    setSearch('');
-  };
-
-  const toggle = (field: string) => {
+  const choose = (field: string) => {
     if (props.multi) {
       const next = selectedSet.has(field)
         ? props.value.filter((f) => f !== field)
@@ -114,174 +98,109 @@ export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
       props.onChange(next);
     } else {
       props.onChange(field);
-      close();
     }
   };
 
-  // Filter options by the query, recording the first surviving item for the Enter
-  // shortcut. When the query matches nothing exactly, offer it as a new value.
-  const { filtered, allowCreate, overTimeMatches } = useMemo(() => {
-    firstMatchRef.current = null;
-    const q = search.trim().toLowerCase();
-    const items = options.filter((o) => o.toLowerCase().includes(q));
-    firstMatchRef.current = items[0] ?? null;
-    const exact = options.some((o) => o.toLowerCase() === q);
-    // The "over time" entry is a fixed label; match it the way its text reads.
-    const otMatch = !!overTime && `over time ${overTime.hint}`.toLowerCase().includes(q);
-    return { filtered: items, allowCreate: q.length > 0 && !exact, overTimeMatches: otMatch };
-  }, [search, options, overTime]);
-
-  const applyFirst = () => {
-    const q = search.trim();
-    // "Over time" leads the list, so Enter picks it first when it still matches.
-    if (overTime && overTimeMatches) overTime.onSelect();
-    else if (firstMatchRef.current) toggle(firstMatchRef.current);
-    else if (q) toggle(q);
-  };
+  // "Over time" (when present) leads the list under its own header, then the
+  // fields. Grouping is expressed by ordering + each row's `group` (only labelled
+  // when the over-time entry exists, so a plain field list stays ungrouped).
+  const menuOptions = useMemo<SearchMenuOption[]>(() => {
+    const rows: SearchMenuOption[] = [];
+    if (overTime) {
+      rows.push({
+        key: '__overTime',
+        // Matched the way its text reads, so typing "over"/"time"/"1h" keeps it.
+        filterText: `over time ${overTime.hint}`,
+        group: i18n.translate('explore.pplBuilder.overTimeGroup', { defaultMessage: 'Over time' }),
+        leadingIcon: 'clock',
+        label: i18n.translate('explore.pplBuilder.overTime', { defaultMessage: 'over time' }),
+        hint: overTime.hint,
+        tooltip: overTime.tooltip,
+        onSelect: overTime.onSelect,
+        dataTestSubj: 'pplBuilderGroupByOverTime',
+      });
+    }
+    const fieldsGroup = overTime
+      ? i18n.translate('explore.pplBuilder.fieldsGroup', { defaultMessage: 'Fields' })
+      : undefined;
+    for (const field of options) {
+      rows.push({
+        key: field,
+        label: field,
+        group: fieldsGroup,
+        selected: selectedSet.has(field),
+        onSelect: () => choose(field),
+        dataTestSubj: `pplBuilderFieldOption-${field}`,
+      });
+    }
+    return rows;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options, overTime, selectedSet]);
 
   const selectedLabel = props.multi ? props.value.join(', ') : props.value;
 
-  const toggleOpen = () => setIsOpen((o) => !o);
-
-  // The popover's anchor is always just the dropdown caret, so the panel's beak
-  // lines up under the caret rather than the middle of a wider trigger. In
-  // `renderTrigger` mode it's a standalone caret placed after the consumer's
-  // pills; otherwise the label is a sibling toggle button beside the caret.
-  const anchor = renderTrigger ? (
-    <EuiButtonIcon
-      className="plqPills__caret"
-      iconType="arrowDown"
-      color="text"
-      size="s"
-      aria-label={caretAriaLabel}
-      onClick={toggleOpen}
-    />
-  ) : (
-    <button
-      type="button"
-      className={`${triggerClassName ?? ''} plqFieldTrigger__caretBtn`}
-      onClick={toggleOpen}
-      aria-label={caretAriaLabel ?? placeholder}
-    >
-      <EuiIcon type="arrowDown" size="s" className="plqFieldTrigger__caret" />
-    </button>
-  );
-
-  const popover = (
-    <EuiPopover
-      button={anchor}
-      isOpen={isOpen}
-      closePopover={close}
-      panelPaddingSize="none"
-      anchorPosition="downRight"
-      panelClassName="plqFnPopover"
-    >
-      <EuiPopoverTitle paddingSize="s">
-        <EuiFieldSearch
-          compressed
-          autoFocus
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') applyFirst();
-            if (e.key === 'Escape') close();
-          }}
-          placeholder={i18n.translate('explore.pplBuilder.searchFields', {
-            defaultMessage: 'Search fields…',
-          })}
-          data-test-subj={dataTestSubj ? `${dataTestSubj}-search` : undefined}
-        />
-      </EuiPopoverTitle>
-      <div className="plqFnPopover__list">
-        {/* Time grouping leads the list in plain language — it's a top-3 logs
-            operation and must work with zero PPL knowledge. The real span(...)
-            syntax lives in the row's tooltip, not the label. */}
-        {overTime && overTimeMatches && (
-          <>
-            <div className="plqFnPopover__group">
-              {i18n.translate('explore.pplBuilder.overTimeGroup', {
-                defaultMessage: 'Over time',
-              })}
-            </div>
-            <EuiToolTip content={overTime.tooltip} position="right">
-              <button
-                type="button"
-                className="plqFnPopover__item plqFieldOption"
-                onClick={overTime.onSelect}
-                data-test-subj="pplBuilderGroupByOverTime"
-              >
-                <EuiIcon type="clock" size="s" className="plqFieldOption__check" />
-                {i18n.translate('explore.pplBuilder.overTime', { defaultMessage: 'over time' })}
-                <span className="plqFieldOption__hint">{overTime.hint}</span>
-              </button>
-            </EuiToolTip>
-          </>
-        )}
-        {filtered.length === 0 && !allowCreate && !(overTime && overTimeMatches) ? (
-          <div className="plqFnPopover__empty">
-            {i18n.translate('explore.pplBuilder.noMatchingField', {
-              defaultMessage: 'No matching field',
-            })}
-          </div>
-        ) : (
-          <>
-            {filtered.length > 0 && overTime && (
-              <div className="plqFnPopover__group">
-                {i18n.translate('explore.pplBuilder.fieldsGroup', { defaultMessage: 'Fields' })}
-              </div>
-            )}
-            {filtered.map((field) => (
-              <button
-                key={field}
-                type="button"
-                className="plqFnPopover__item plqFieldOption"
-                onClick={() => toggle(field)}
-                data-test-subj={`pplBuilderFieldOption-${field}`}
-              >
-                <EuiIcon
-                  type="check"
-                  size="s"
-                  className={`plqFieldOption__check${
-                    selectedSet.has(field) ? '' : ' plqFieldOption__check--hidden'
-                  }`}
-                />
-                {field}
-              </button>
-            ))}
-            {allowCreate && (
-              <button
-                type="button"
-                className="plqFnPopover__item plqFieldOption"
-                onClick={() => toggle(search.trim())}
-                data-test-subj="pplBuilderFieldOptionCreate"
-              >
-                <EuiIcon type="plus" size="s" className="plqFieldOption__check" />
-                {search.trim()}
-              </button>
-            )}
-          </>
-        )}
-      </div>
-    </EuiPopover>
-  );
-
-  // In renderTrigger mode the consumer lays out its own pills and places the
-  // caret-anchored popover at the end. Otherwise render the selection label as a
-  // sibling toggle button beside the caret-anchored popover, so the trigger still
-  // reads "machine.ram ⌄" but the popover's beak lines up under the caret.
-  if (renderTrigger) return renderTrigger(popover, toggleOpen);
   return (
-    <span className={triggerClassName}>
-      <button
-        type="button"
-        className="plqFieldTrigger__labelBtn"
-        onClick={toggleOpen}
-        aria-label={placeholder}
-        data-test-subj={dataTestSubj}
-      >
-        <span className="plqFieldTrigger__label">{selectedLabel || placeholder}</span>
-      </button>
-      {popover}
-    </span>
+    <SearchPopoverMenu
+      options={menuOptions}
+      checkable
+      keepOpenOnSelect={props.multi}
+      allowCreate={{
+        onCreate: choose,
+        dataTestSubj: 'pplBuilderFieldOptionCreate',
+      }}
+      searchPlaceholder={i18n.translate('explore.pplBuilder.searchFields', {
+        defaultMessage: 'Search fields…',
+      })}
+      emptyMessage={i18n.translate('explore.pplBuilder.noMatchingField', {
+        defaultMessage: 'No matching field',
+      })}
+      searchDataTestSubj={dataTestSubj ? `${dataTestSubj}-search` : undefined}
+      trigger={(toggle) => {
+        // Group-by mode: the consumer's pills are the trigger's leading content;
+        // the popover anchors on a standalone caret appended after them.
+        if (renderTrigger) {
+          return {
+            wrapperClassName: 'plqPills',
+            leading: renderTrigger(toggle),
+            anchor: (
+              <EuiButtonIcon
+                className="plqPills__caret"
+                iconType="arrowDown"
+                color="text"
+                size="s"
+                aria-label={caretAriaLabel}
+                onClick={toggle}
+              />
+            ),
+          };
+        }
+        // Default: label text (a toggle) beside the caret-anchored popover, so the
+        // trigger reads "machine.ram ⌄" but the beak lines up under the caret.
+        return {
+          wrapperClassName: triggerClassName,
+          leading: (
+            <button
+              type="button"
+              className="plqFieldTrigger__labelBtn"
+              onClick={toggle}
+              aria-label={placeholder}
+              data-test-subj={dataTestSubj}
+            >
+              <span className="plqFieldTrigger__label">{selectedLabel || placeholder}</span>
+            </button>
+          ),
+          anchor: (
+            <button
+              type="button"
+              className={`${triggerClassName ?? ''} plqFieldTrigger__caretBtn`}
+              onClick={toggle}
+              aria-label={caretAriaLabel ?? placeholder}
+            >
+              <EuiIcon type="arrowDown" size="s" className="plqFieldTrigger__caret" />
+            </button>
+          ),
+        };
+      }}
+    />
   );
 };

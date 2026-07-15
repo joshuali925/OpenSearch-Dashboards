@@ -227,8 +227,8 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                 caretAriaLabel={i18n.translate('explore.pplBuilder.editGroupByFields', {
                   defaultMessage: 'Edit group-by fields',
                 })}
-                renderTrigger={(caret, onToggle) => (
-                  <span className="plqPills">
+                renderTrigger={(onToggle) => (
+                  <>
                     {/* "Everything" is the semantic default — shown only when the
                         box is truly empty (no fields AND no time grouping). Once
                         an "every" chip exists the box has content, so the caret
@@ -325,13 +325,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                         </span>
                       </EuiToolTip>
                     )}
-
-                    {/* Add / edit grouping — the trailing caret IS the popover
-                        anchor, so the panel hangs from the dropdown icon rather
-                        than centering under the wide pills box. Kept last so it
-                        sits to the right of the "every" chip. */}
-                    {caret}
-                  </span>
+                  </>
                 )}
               />
             </div>

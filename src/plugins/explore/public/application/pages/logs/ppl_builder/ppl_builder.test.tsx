@@ -120,7 +120,23 @@ describe('PPLBuilder', () => {
     expect(chip).toBeInTheDocument();
     // The chip reads as plain language, not `span(...)`.
     expect(chip).toHaveTextContent('every');
-    expect(screen.getByTestId('pplBuilderSpanInterval')).toHaveValue('5m');
+    // The interval is a popover trigger button showing the current value.
+    expect(screen.getByTestId('pplBuilderSpanInterval')).toHaveTextContent('5m');
+  });
+
+  it('changes the span interval from the interval popover presets', () => {
+    const { onQueryChange } = renderBuilder({
+      ...emptyState(),
+      aggregations: [{ id: 'a', fn: 'count' }],
+      groupBy: { fields: [], span: { field: '@timestamp', interval: '5m', auto: false } },
+    });
+    // Open the interval popover and pick a common preset.
+    fireEvent.click(screen.getByTestId('pplBuilderSpanInterval'));
+    fireEvent.click(screen.getByTestId('pplBuilderSpanIntervalOption-1h'));
+    expect(onQueryChange).toHaveBeenLastCalledWith(
+      '| stats count() by span(@timestamp, 1h)',
+      expect.anything()
+    );
   });
 
   it('adds time grouping from the "over time" entry in the group-by popover', () => {

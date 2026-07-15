@@ -78,7 +78,9 @@ export const FunctionMenu: React.FC<FunctionMenuProps> = ({ onAddFunction, dataT
       isOpen={isOpen}
       closePopover={close}
       panelPaddingSize="none"
-      anchorPosition="downLeft"
+      // Anchor under the ƒx trigger's right edge, matching the other builder
+      // popovers so the panel hangs from the caret rather than the left edge.
+      anchorPosition="downRight"
       panelClassName="plqFnPopover"
     >
       <EuiPopoverTitle paddingSize="s">

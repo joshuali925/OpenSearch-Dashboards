@@ -57,28 +57,30 @@ export const AggregationMenu: React.FC<AggregationMenuProps> = ({
     return items;
   }, [search]);
 
-  const trigger = (
-    <button
-      type="button"
-      className="plqAggTrigger"
-      onClick={() => setIsOpen((o) => !o)}
-      aria-label={i18n.translate('explore.pplBuilder.aggregation', {
-        defaultMessage: 'Aggregation',
-      })}
-      data-test-subj={dataTestSubj}
-    >
-      <span className="plqAggTrigger__label">{selected?.label}</span>
-      <EuiIcon type="arrowDown" size="s" className="plqAggTrigger__caret" />
-    </button>
-  );
+  const toggleOpen = () => setIsOpen((o) => !o);
+  const ariaLabel = i18n.translate('explore.pplBuilder.aggregation', {
+    defaultMessage: 'Aggregation',
+  });
 
-  return (
+  // Only the caret anchors the popover, so its beak lines up under the dropdown
+  // icon rather than the middle of the "Percentile ⌄" trigger. The label is a
+  // sibling toggle button, matching the field pickers.
+  const caret = (
     <EuiPopover
-      button={trigger}
+      button={
+        <button
+          type="button"
+          className="plqAggTrigger__caretBtn plqFieldTrigger__caretBtn"
+          onClick={toggleOpen}
+          aria-label={ariaLabel}
+        >
+          <EuiIcon type="arrowDown" size="s" className="plqAggTrigger__caret" />
+        </button>
+      }
       isOpen={isOpen}
       closePopover={close}
       panelPaddingSize="none"
-      anchorPosition="downLeft"
+      anchorPosition="downRight"
       panelClassName="plqFnPopover"
     >
       <EuiPopoverTitle paddingSize="s">
@@ -119,5 +121,21 @@ export const AggregationMenu: React.FC<AggregationMenuProps> = ({
         )}
       </div>
     </EuiPopover>
+  );
+
+  // Label text (a toggle) beside the caret-anchored popover, so the trigger reads
+  // "Percentile ⌄" but the popover beak lines up under the caret.
+  return (
+    <span className="plqAggTrigger" data-test-subj={dataTestSubj}>
+      <button
+        type="button"
+        className="plqAggTrigger__labelBtn plqFieldTrigger__labelBtn"
+        onClick={toggleOpen}
+        aria-label={ariaLabel}
+      >
+        <span className="plqAggTrigger__label">{selected?.label}</span>
+      </button>
+      {caret}
+    </span>
   );
 };

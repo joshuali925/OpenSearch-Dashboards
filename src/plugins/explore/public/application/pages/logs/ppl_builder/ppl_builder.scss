@@ -236,6 +236,37 @@ $plqControlHeight: 36px;
     }
   }
 
+  // The label text and the caret are separate toggle buttons inside the trigger
+  // (so the popover can anchor on just the caret). Both are borderless and flat,
+  // inheriting the trigger's font/color so they still read as one "text ⌄" token.
+  .plqFieldTrigger__labelBtn,
+  .plqFieldTrigger__caretBtn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    line-height: inherit;
+    font-size: inherit;
+    color: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .plqFieldTrigger__caretBtn:hover,
+  .plqFieldTrigger__caretBtn:focus {
+    outline: none;
+
+    .plqFieldTrigger__caret {
+      color: $plqPrimary;
+    }
+  }
+
+  .plqFieldTrigger__labelBtn:hover .plqFieldTrigger__label,
+  .plqFieldTrigger__labelBtn:focus .plqFieldTrigger__label {
+    color: $plqPrimary;
+  }
+
   // Center combobox pills within the shrunk wrap. Keep right padding so the
   // absolute-positioned dropdown caret has room — zeroing all padding makes the
   // last pill's ✕ overlap the caret. `flex-wrap: nowrap` keeps every pill on the
@@ -312,16 +343,15 @@ $plqControlHeight: 36px;
   color: $plqFnText;
   border-radius: $plqRadius;
 
+  // Static field name — not interactive (only the ✕ and the caret act).
   &__label {
-    border: none;
-    background: transparent;
     padding: 0;
     // stylelint-disable-next-line @osd/stylelint/no_restricted_properties
     font-family: $euiCodeFontFamily;
     font-size: 11.5px;
     line-height: 18px;
     color: $plqFnText;
-    cursor: pointer;
+    user-select: none;
   }
 
   &__remove.euiButtonIcon {
@@ -341,9 +371,12 @@ $plqControlHeight: 36px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 4px 2px 8px;
-  font-size: 12px;
-  line-height: 18px;
+
+  // Match the group-by field pill (.plqPill) exactly — same 18px height, left
+  // padding, fill and radius — so the "every" chip sits at the same size and
+  // baseline as the `clientip` chip beside it rather than reading taller.
+  height: 18px;
+  padding: 0 2px 0 8px;
   background: $plqPrimarySoft;
   color: $plqFnText;
   border-radius: $plqRadius;
@@ -355,32 +388,43 @@ $plqControlHeight: 36px;
     color: $plqFnText;
   }
 
-  // The natural-language label ("every") reads as plain UI text, not code — so
-  // it uses the default UI font rather than the monospace of the interval token.
+  // The natural-language label ("every") reads as plain UI text, not code — but
+  // matches the field pill's 11.5px/18px so the chip aligns with `clientip`.
   &__nat {
-    font-size: 12px;
+    font-size: 11.5px;
     line-height: 18px;
     color: $plqFnText;
     cursor: default;
   }
 
-  // The inline interval input matches the `round` chip's param exactly (see
-  // .plqFn__param): a borderless, transparent field that blends into the chip
-  // fill so `every 1h` reads as one flat token, keeping the chip the same
-  // compact height as the scalar-function chip beside it.
+  // The inline interval trigger blends into the chip fill so `every 1h` reads as
+  // one flat token. It's a button (opening the interval popover) with the value
+  // text (monospace, matching the field pill) and a small caret, laid out inline
+  // within the pill's 18px height.
   &__param {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
     height: 18px;
-    padding: 0 2px;
+    padding: 0;
     border: none;
     box-shadow: none !important;
     background: transparent;
     outline: none;
+    line-height: 18px;
     color: $plqFnText;
     text-align: left;
+    cursor: pointer;
 
     &--invalid {
       color: $euiColorDanger;
     }
+  }
+
+  // The caret on the interval trigger reads as a muted affordance next to the
+  // monospace value, matching the field/aggregation triggers.
+  &__caret {
+    color: $plqFnText;
   }
 }
 

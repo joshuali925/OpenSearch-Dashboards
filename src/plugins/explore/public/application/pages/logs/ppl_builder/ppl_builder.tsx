@@ -11,7 +11,6 @@ import { EuiButtonIcon, EuiToolTip } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
-import { inputWidth } from '../../../components/query_builder';
 import { builderReducer, buildPPL, sortableColumns } from './build_ppl';
 import { PPLBuilderState, emptyState } from './types';
 import { SearchBox } from './search_box';
@@ -19,6 +18,7 @@ import { AggregationRow } from './aggregation_row';
 import { SortRow } from './sort_row';
 import { AddMetricMenu } from './add_metric_menu';
 import { FieldMenu } from './field_menu';
+import { SpanIntervalMenu } from './span_interval_menu';
 import { ModeToggleButton } from './mode_toggle_button';
 import { useFieldData } from './use_field_data';
 import { useDatasetContext } from '../../../context';
@@ -215,12 +215,19 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                           defaultMessage: 'every {interval}',
                           values: { interval: deriveAutoInterval() },
                         }),
-                        tooltip: `span(${timeFieldName}, ${deriveAutoInterval()})`,
+                        tooltip: i18n.translate('explore.pplBuilder.overTimeTooltip', {
+                          defaultMessage:
+                            'span({field}, {interval}) — uses the dataset’s time field',
+                          values: { field: timeFieldName, interval: deriveAutoInterval() },
+                        }),
                         onSelect: addSpan,
                       }
                 }
                 dataTestSubj="pplBuilderGroupByFields"
-                renderTrigger={(onToggle) => (
+                caretAriaLabel={i18n.translate('explore.pplBuilder.editGroupByFields', {
+                  defaultMessage: 'Edit group-by fields',
+                })}
+                renderTrigger={(caret, onToggle) => (
                   <span className="plqPills">
                     {/* "Everything" is the semantic default — shown only when the
                         box is truly empty (no fields AND no time grouping). Once
@@ -240,9 +247,10 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                     ) : (
                       state.groupBy.fields.map((f) => (
                         <span key={f} className="plqPill">
-                          <button type="button" className="plqPill__label" onClick={onToggle}>
-                            {f}
-                          </button>
+                          {/* The field name is static text — only its ✕ removes it
+                              and the trailing caret opens the picker. Clicking the
+                              label itself does nothing (matches the mock's chips). */}
+                          <span className="plqPill__label">{f}</span>
                           <EuiButtonIcon
                             className="plqPill__remove"
                             iconType="cross"
@@ -272,7 +280,14 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                         reads `<fields> every 1h  ˅`. */}
                     {state.groupBy.span && (
                       <EuiToolTip
-                        content={`span(${state.groupBy.span.field}, ${state.groupBy.span.interval})`}
+                        content={i18n.translate('explore.pplBuilder.spanChipTooltip', {
+                          defaultMessage:
+                            'span({field}, {interval}) — uses the dataset’s time field',
+                          values: {
+                            field: state.groupBy.span.field,
+                            interval: state.groupBy.span.interval,
+                          },
+                        })}
                         position="top"
                       >
                         <span className="plqChip" data-test-subj="pplBuilderSpanChip">
@@ -281,30 +296,20 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                               defaultMessage: 'every',
                             })}
                           </span>
-                          <input
-                            value={state.groupBy.span.interval}
-                            onChange={(e) =>
+                          <SpanIntervalMenu
+                            interval={state.groupBy.span.interval}
+                            isInvalid={!SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())}
+                            onChange={(interval) =>
                               dispatch({
                                 type: 'SET_SPAN',
                                 span: {
                                   field: state.groupBy.span!.field,
-                                  interval: e.target.value,
+                                  interval,
                                   auto: false,
                                 },
                               })
                             }
-                            className={`plqChip__param plqChip__mono${
-                              SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())
-                                ? ''
-                                : ' plqChip__param--invalid'
-                            }`}
-                            style={{
-                              width: inputWidth(state.groupBy.span.interval || '1m', 12, 20, 80),
-                            }}
-                            aria-label={i18n.translate('explore.pplBuilder.spanInterval', {
-                              defaultMessage: 'Time span interval',
-                            })}
-                            data-test-subj="pplBuilderSpanInterval"
+                            dataTestSubj="pplBuilderSpanInterval"
                           />
                           <EuiButtonIcon
                             className="plqX"
@@ -321,18 +326,11 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                       </EuiToolTip>
                     )}
 
-                    {/* Add / edit grouping — the trailing caret opens the picker.
-                        Kept last so it sits to the right of the "every" chip. */}
-                    <EuiButtonIcon
-                      className="plqPills__caret"
-                      iconType="arrowDown"
-                      color="text"
-                      size="s"
-                      aria-label={i18n.translate('explore.pplBuilder.editGroupByFields', {
-                        defaultMessage: 'Edit group-by fields',
-                      })}
-                      onClick={onToggle}
-                    />
+                    {/* Add / edit grouping — the trailing caret IS the popover
+                        anchor, so the panel hangs from the dropdown icon rather
+                        than centering under the wide pills box. Kept last so it
+                        sits to the right of the "every" chip. */}
+                    {caret}
                   </span>
                 )}
               />

@@ -69,6 +69,9 @@ export const AddMetricMenu: React.FC<AddMetricMenuProps> = ({
       rootTitle={i18n.translate('explore.pplBuilder.addMetricTitle', {
         defaultMessage: 'Select aggregation',
       })}
+      // Anchor under the trigger's right edge, matching the other builder
+      // popovers so the panel hangs from the caret/icon rather than the left.
+      anchorPosition="downRight"
       panelClassName="cfmMenuPanel"
       dataTestSubj={dataTestSubj}
     />

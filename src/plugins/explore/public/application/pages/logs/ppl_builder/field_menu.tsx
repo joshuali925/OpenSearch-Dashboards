@@ -5,7 +5,14 @@
 
 import React, { useMemo, useRef, useState } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiFieldSearch, EuiIcon, EuiPopover, EuiPopoverTitle, EuiToolTip } from '@elastic/eui';
+import {
+  EuiButtonIcon,
+  EuiFieldSearch,
+  EuiIcon,
+  EuiPopover,
+  EuiPopoverTitle,
+  EuiToolTip,
+} from '@elastic/eui';
 
 /**
  * The "over time" entry pinned to the top of the popover — plain-language time
@@ -31,12 +38,16 @@ interface FieldMenuBaseProps {
   /** Class applied to the default trigger button (styles the token in its chip). */
   triggerClassName?: string;
   /**
-   * Custom trigger renderer. Given a click handler that toggles the popover, it
-   * returns the trigger node — used by the group-by control to render its own
-   * removable pills plus a caret. When omitted, a plain label + caret button is
-   * shown (used by the sort-column token).
+   * Custom trigger renderer for the group-by control. It receives the popover's
+   * caret node (already wired to toggle open/close) and a click handler, and
+   * returns its own removable pills followed by that caret. The caret — not the
+   * whole pills row — is the popover's anchor, so the panel hangs from the
+   * dropdown icon rather than centering under a wide pills box. When omitted, a
+   * plain label + caret button is shown (used by the sort-column token).
    */
-  renderTrigger?: (onToggle: () => void) => React.ReactElement;
+  renderTrigger?: (caret: React.ReactNode, onToggle: () => void) => React.ReactElement;
+  /** aria-label for the caret button rendered as the popover anchor. */
+  caretAriaLabel?: string;
   /** Optional plain-language time-grouping entry pinned to the top of the list. */
   overTime?: OverTimeEntry;
   dataTestSubj?: string;
@@ -72,7 +83,15 @@ type FieldMenuProps = SingleFieldMenuProps | MultiFieldMenuProps;
  * list can be added by typing a new value and pressing Enter.
  */
 export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
-  const { options, placeholder, triggerClassName, renderTrigger, overTime, dataTestSubj } = props;
+  const {
+    options,
+    placeholder,
+    triggerClassName,
+    renderTrigger,
+    caretAriaLabel,
+    overTime,
+    dataTestSubj,
+  } = props;
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const firstMatchRef = useRef<string | null>(null);
@@ -122,28 +141,39 @@ export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
 
   const selectedLabel = props.multi ? props.value.join(', ') : props.value;
 
-  const trigger = renderTrigger ? (
-    renderTrigger(() => setIsOpen((o) => !o))
+  const toggleOpen = () => setIsOpen((o) => !o);
+
+  // The popover's anchor is always just the dropdown caret, so the panel's beak
+  // lines up under the caret rather than the middle of a wider trigger. In
+  // `renderTrigger` mode it's a standalone caret placed after the consumer's
+  // pills; otherwise the label is a sibling toggle button beside the caret.
+  const anchor = renderTrigger ? (
+    <EuiButtonIcon
+      className="plqPills__caret"
+      iconType="arrowDown"
+      color="text"
+      size="s"
+      aria-label={caretAriaLabel}
+      onClick={toggleOpen}
+    />
   ) : (
     <button
       type="button"
-      className={triggerClassName}
-      onClick={() => setIsOpen((o) => !o)}
-      aria-label={placeholder}
-      data-test-subj={dataTestSubj}
+      className={`${triggerClassName ?? ''} plqFieldTrigger__caretBtn`}
+      onClick={toggleOpen}
+      aria-label={caretAriaLabel ?? placeholder}
     >
-      <span className="plqFieldTrigger__label">{selectedLabel || placeholder}</span>
       <EuiIcon type="arrowDown" size="s" className="plqFieldTrigger__caret" />
     </button>
   );
 
-  return (
+  const popover = (
     <EuiPopover
-      button={trigger}
+      button={anchor}
       isOpen={isOpen}
       closePopover={close}
       panelPaddingSize="none"
-      anchorPosition="downLeft"
+      anchorPosition="downRight"
       panelClassName="plqFnPopover"
     >
       <EuiPopoverTitle paddingSize="s">
@@ -233,5 +263,25 @@ export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
         )}
       </div>
     </EuiPopover>
+  );
+
+  // In renderTrigger mode the consumer lays out its own pills and places the
+  // caret-anchored popover at the end. Otherwise render the selection label as a
+  // sibling toggle button beside the caret-anchored popover, so the trigger still
+  // reads "machine.ram ⌄" but the popover's beak lines up under the caret.
+  if (renderTrigger) return renderTrigger(popover, toggleOpen);
+  return (
+    <span className={triggerClassName}>
+      <button
+        type="button"
+        className="plqFieldTrigger__labelBtn"
+        onClick={toggleOpen}
+        aria-label={placeholder}
+        data-test-subj={dataTestSubj}
+      >
+        <span className="plqFieldTrigger__label">{selectedLabel || placeholder}</span>
+      </button>
+      {popover}
+    </span>
   );
 };

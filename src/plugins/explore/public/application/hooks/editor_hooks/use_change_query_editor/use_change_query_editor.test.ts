@@ -177,13 +177,13 @@ describe('useChangeQueryEditor', () => {
     });
   });
 
-  it('should build an exists filter for the _exists_ field convention', () => {
+  it('routes an exists filter to a WHERE command (not builder-representable)', () => {
     const { result } = renderHook(() => useChangeQueryEditor());
 
     result.current.onAddFilter('_exists_', 'service', '+');
 
     expect(mockSetQuery).toHaveBeenCalledWith({
-      query: 'source = logs ISNOTNULL(`service`)',
+      query: 'source = logs | WHERE ISNOTNULL(`service`)',
       language: 'PPL',
     });
   });

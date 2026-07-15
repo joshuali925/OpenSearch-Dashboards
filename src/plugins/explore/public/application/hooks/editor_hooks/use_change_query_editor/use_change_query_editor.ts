@@ -17,10 +17,7 @@ import { EditorMode } from '../../../utils/state_management/types';
 import { useSetEditorText } from '../use_set_editor_text';
 import { useEditorFocus } from '../use_editor_focus';
 import { onEditorRunActionCreator } from '../../../utils/state_management/actions/query_editor';
-import {
-  buildPPLPredicate,
-  addFilterToPPLSearchExpression,
-} from '../../../pages/logs/ppl_builder/add_filter';
+import { addFilterToPPLQuery } from '../../../pages/logs/ppl_builder/add_filter';
 
 export const useChangeQueryEditor = () => {
   const { services } = useOpenSearchDashboards<ExploreServices>();
@@ -42,63 +39,45 @@ export const useChangeQueryEditor = () => {
       const languageConfig = queryString.getLanguageService().getLanguage(query.language);
       if (!languageConfig) return;
 
-      // Base query text: the QueryStringManager draft is the working source of
-      // truth and, crucially, exists whether or not the Monaco editor is
-      // mounted. In the logs visual builder the editor is unmounted, so reading
-      // from the (null) editor ref would silently lose the filter — the bug this
-      // path fixes. Fall back to the language's default query string when empty.
-      const currentQuery = queryString.getQuery();
+      // Base query text: read from the QueryStringManager draft, not the Monaco
+      // editor ref. In the logs visual builder the editor is unmounted, so the
+      // ref would be empty and the filter would be silently dropped — the bug
+      // this fixes. Fall back to the language's default query string when empty.
       const baseText =
-        (typeof currentQuery.query === 'string' && currentQuery.query) ||
+        (typeof queryString.getQuery().query === 'string' && queryString.getQuery().query) ||
         languageConfig.getQueryString?.(query) ||
         '';
 
-      // Prompt (natural-language) mode still round-trips through the language's
-      // prompt-filter helper and the editor; it is only shown with the code
-      // editor mounted, so the existing staging behavior is preserved.
-      if (editorMode === EditorMode.Prompt) {
-        const newFilters = opensearchFilters.generateFilters(
+      const buildFilters = () =>
+        opensearchFilters.generateFilters(
           filterManager,
           field,
           values,
           operation,
           dataset.id ?? ''
         );
-        const promptText = languageConfig.addFiltersToPrompt?.(baseText, newFilters) || baseText;
-        setEditorText(promptText);
+
+      // Prompt (natural-language) mode is only shown with the editor mounted, so
+      // keep the existing staging behavior via the prompt-filter helper.
+      if (editorMode === EditorMode.Prompt) {
+        setEditorText(languageConfig.addFiltersToPrompt?.(baseText, buildFilters()) || baseText);
         focusOnEditor();
         return;
       }
 
-      let newText: string;
-      if (query.language === 'PPL') {
-        // Merge the filter into the leading search-expression segment (not a
-        // trailing `| WHERE`, which is not builder-representable) so the visual
-        // builder can render it as a chip and the query round-trips through
-        // parsePPL. `_exists_` is generateFilters' convention for an
-        // exists-filter where `values` carries the target field name.
-        const fieldName = typeof field === 'string' ? field : field.name;
-        const predicate =
-          fieldName === '_exists_'
-            ? buildPPLPredicate(values, null, operation)
-            : buildPPLPredicate(fieldName, values, operation);
-        newText = addFilterToPPLSearchExpression(baseText, predicate);
-      } else {
-        // Non-PPL languages keep the shared filter->query serialization.
-        const newFilters = opensearchFilters.generateFilters(
-          filterManager,
-          field,
-          values,
-          operation,
-          dataset.id ?? ''
-        );
-        newText = languageConfig.addFiltersToQuery?.(baseText, newFilters) || baseText;
-      }
+      // PPL uses its own serialization so value filters merge into the search
+      // expression the visual builder can round-trip (see add_filter.ts); other
+      // languages keep the shared filter->query serialization.
+      const newText =
+        query.language === 'PPL'
+          ? addFilterToPPLQuery(baseText, field, values, operation)
+          : languageConfig.addFiltersToQuery?.(baseText, buildFilters()) || baseText;
 
-      // Commit to the draft (keeps TopNav submit in sync) and mirror into the
-      // code editor when it is mounted (no-op otherwise), then run the query so
-      // results refresh and the builder re-seeds from the new Redux query.
-      queryString.setQuery({ ...currentQuery, query: newText });
+      // Commit to the QueryStringManager draft (keeps TopNav submit in sync even
+      // if the run below is short-circuited), mirror into the code editor when
+      // mounted (no-op otherwise), then run the query so results refresh and the
+      // builder re-seeds from the new Redux query.
+      queryString.setQuery({ ...queryString.getQuery(), query: newText });
       setEditorText(newText);
       dispatch(onEditorRunActionCreator(services, newText));
 

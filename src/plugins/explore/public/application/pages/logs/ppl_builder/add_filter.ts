@@ -11,10 +11,16 @@
  * and only the leading **search-expression** segment (before the first pipe) is
  * editable as free-text filters — a trailing `| WHERE …` command is NOT
  * builder-representable (`parsePPL` bails to code mode on any non-`stats`
- * command). So a filter action must merge its predicate into that search
- * expression, keeping the query round-trippable through `parsePPL`/`buildPPL`
- * and letting the visual builder re-render it as a filter chip.
+ * command). So a value filter merges its predicate into that search expression,
+ * keeping the query round-trippable through `parsePPL`/`buildPPL` and letting
+ * the visual builder re-render it as a filter chip.
+ *
+ * Exists filters are the exception: `ISNULL()`/`ISNOTNULL()` are function calls,
+ * which the search-expression grammar has no production for, so they fall back
+ * to a `| WHERE` command (and the query opens in code mode).
  */
+
+import { DataViewField, IndexPatternField } from '../../../../../../data/common';
 
 /** Single-quote a string literal for PPL, escaping embedded quotes as `''`. */
 function quote(value: string): string {
@@ -97,6 +103,60 @@ export function addFilterToPPLSearchExpression(query: string, predicate: string)
   const rebuiltHead = `${normalizedSource}${nextSearch}`.trim();
   const rebuiltTail = tail ? ` ${tail.trim()}` : '';
   return `${rebuiltHead}${rebuiltTail}`.trim();
+}
+
+/**
+ * Insert a `| WHERE <predicate>` command after the leading source clause.
+ *
+ * Used for filters that are not search-expression-representable (exists). The
+ * resulting query is valid PPL but not builder-representable, so it opens in
+ * code mode. Idempotent, and flips an existing opposite predicate in place —
+ * mirroring `addFilterToPPLSearchExpression`'s behavior for the WHERE form.
+ */
+export function addFilterToPPLWhereCommand(query: string, predicate: string): string {
+  if (!predicate) return query;
+
+  const whereCommand = `WHERE ${predicate}`;
+  const negated = negatePredicate(predicate);
+  const negatedCommand = negated ? `WHERE ${negated}` : '';
+
+  const commands = query.split('|').map((cmd) => cmd.trim());
+  for (let i = 0; i < commands.length; i++) {
+    if (commands[i] === whereCommand) return commands.join(' | ').trim();
+    if (negatedCommand && commands[i] === negatedCommand) {
+      commands[i] = whereCommand;
+      return commands.join(' | ').trim();
+    }
+  }
+
+  commands.splice(1, 0, whereCommand);
+  return commands.join(' | ').trim();
+}
+
+/**
+ * Apply a "Filter for/out value" action to a PPL query, choosing the
+ * representation the builder can round-trip when possible.
+ *
+ * Value filters (equals/not-equals) merge into the search expression so the
+ * builder renders a chip. Exists filters (`_exists_` sentinel field, where
+ * `values` carries the target field name) emit `ISNULL()`/`ISNOTNULL()`, which
+ * the search grammar can't hold, so they fall back to a `| WHERE` command.
+ */
+export function addFilterToPPLQuery(
+  query: string,
+  field: string | IndexPatternField | DataViewField,
+  values: string,
+  operation: '+' | '-'
+): string {
+  const fieldName = typeof field === 'string' ? field : field.name;
+
+  // `_exists_` is generateFilters' convention: the target field name is carried
+  // in `values`, and a null predicate value yields ISNULL/ISNOTNULL.
+  if (fieldName === '_exists_') {
+    return addFilterToPPLWhereCommand(query, buildPPLPredicate(values, null, operation));
+  }
+
+  return addFilterToPPLSearchExpression(query, buildPPLPredicate(fieldName, values, operation));
 }
 
 /** Return the `=`/`!=` negation of a comparison predicate, or '' if not one. */

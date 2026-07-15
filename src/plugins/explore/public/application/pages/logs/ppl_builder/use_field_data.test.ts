@@ -63,4 +63,20 @@ describe('useFieldData', () => {
 
     expect(result.current.fieldNames).toEqual(['service', 'bytes']);
   });
+
+  it('excludes date-typed fields from group-by options (time grouping is "over time")', () => {
+    mockUseDatasetContext.mockReturnValue({
+      dataset: datasetWithFields([
+        { name: '@timestamp', type: 'date' },
+        { name: 'service' },
+        { name: 'bytes', type: 'number' },
+      ]),
+    });
+
+    const { result } = renderHook(() => useFieldData());
+
+    // The full field list keeps the date field; the group-by options drop it.
+    expect(result.current.fieldNames).toEqual(['@timestamp', 'service', 'bytes']);
+    expect(result.current.groupByFieldNames).toEqual(['service', 'bytes']);
+  });
 });

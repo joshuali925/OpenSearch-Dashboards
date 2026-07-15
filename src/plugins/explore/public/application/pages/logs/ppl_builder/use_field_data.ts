@@ -70,10 +70,13 @@ export const useFieldData = () => {
 
   const timeFieldName = useMemo(() => (dataset as any)?.timeFieldName || '@timestamp', [dataset]);
 
-  // Date fields, for the time-span `span(<field>, …)` field picker. The span
-  // field must be a date, so restrict the picker to date-typed fields.
-  const dateFieldNames = useMemo<string[]>(
-    () => fields.filter((f) => f.type === 'date').map((f) => f.name),
+  // Group-by field options: every field EXCEPT date-typed ones. Grouping by a
+  // raw timestamp is a code-mode operation — in the builder, time grouping is
+  // the "over time" entry (a `span(…)` on the dataset's designated time field),
+  // so a bare date field never appears in the field list and the ambiguity of
+  // "group by @timestamp — exact values or buckets?" has no surface to exist on.
+  const groupByFieldNames = useMemo<string[]>(
+    () => fields.filter((f) => f.type !== 'date').map((f) => f.name),
     [fields]
   );
 
@@ -112,7 +115,7 @@ export const useFieldData = () => {
     sortableFieldNames,
     numericAndAggregatableNames,
     numericFieldNames,
-    dateFieldNames,
+    groupByFieldNames,
     timeFieldName,
     getValues,
   };

@@ -5,7 +5,23 @@
 
 import React, { useMemo, useRef, useState } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiFieldSearch, EuiIcon, EuiPopover, EuiPopoverTitle } from '@elastic/eui';
+import { EuiFieldSearch, EuiIcon, EuiPopover, EuiPopoverTitle, EuiToolTip } from '@elastic/eui';
+
+/**
+ * The "over time" entry pinned to the top of the popover — plain-language time
+ * grouping (compiled to a `span(...)` behind the scenes). When supplied, it
+ * renders first under an "Over time" header; picking it calls `onSelect` and
+ * closes the popover. The group-by control passes this so time grouping is added
+ * from the same popover as the fields, rather than a standalone clock button. It
+ * is omitted once a time grouping already exists (PPL allows only one span).
+ */
+interface OverTimeEntry {
+  /** Natural-language hint shown after the label (e.g. "every 1h"). */
+  hint: string;
+  /** The real syntax, shown as the row's tooltip (e.g. "span(@timestamp, 1h)"). */
+  tooltip: string;
+  onSelect: () => void;
+}
 
 interface FieldMenuBaseProps {
   /** Field names to choose from. */
@@ -18,9 +34,11 @@ interface FieldMenuBaseProps {
    * Custom trigger renderer. Given a click handler that toggles the popover, it
    * returns the trigger node — used by the group-by control to render its own
    * removable pills plus a caret. When omitted, a plain label + caret button is
-   * shown (used by the inline span field token).
+   * shown (used by the sort-column token).
    */
   renderTrigger?: (onToggle: () => void) => React.ReactElement;
+  /** Optional plain-language time-grouping entry pinned to the top of the list. */
+  overTime?: OverTimeEntry;
   dataTestSubj?: string;
 }
 
@@ -54,7 +72,7 @@ type FieldMenuProps = SingleFieldMenuProps | MultiFieldMenuProps;
  * list can be added by typing a new value and pressing Enter.
  */
 export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
-  const { options, placeholder, triggerClassName, renderTrigger, dataTestSubj } = props;
+  const { options, placeholder, triggerClassName, renderTrigger, overTime, dataTestSubj } = props;
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const firstMatchRef = useRef<string | null>(null);
@@ -83,18 +101,22 @@ export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
 
   // Filter options by the query, recording the first surviving item for the Enter
   // shortcut. When the query matches nothing exactly, offer it as a new value.
-  const { filtered, allowCreate } = useMemo(() => {
+  const { filtered, allowCreate, overTimeMatches } = useMemo(() => {
     firstMatchRef.current = null;
     const q = search.trim().toLowerCase();
     const items = options.filter((o) => o.toLowerCase().includes(q));
     firstMatchRef.current = items[0] ?? null;
     const exact = options.some((o) => o.toLowerCase() === q);
-    return { filtered: items, allowCreate: q.length > 0 && !exact };
-  }, [search, options]);
+    // The "over time" entry is a fixed label; match it the way its text reads.
+    const otMatch = !!overTime && `over time ${overTime.hint}`.toLowerCase().includes(q);
+    return { filtered: items, allowCreate: q.length > 0 && !exact, overTimeMatches: otMatch };
+  }, [search, options, overTime]);
 
   const applyFirst = () => {
     const q = search.trim();
-    if (firstMatchRef.current) toggle(firstMatchRef.current);
+    // "Over time" leads the list, so Enter picks it first when it still matches.
+    if (overTime && overTimeMatches) overTime.onSelect();
+    else if (firstMatchRef.current) toggle(firstMatchRef.current);
     else if (q) toggle(q);
   };
 
@@ -141,7 +163,31 @@ export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
         />
       </EuiPopoverTitle>
       <div className="plqFnPopover__list">
-        {filtered.length === 0 && !allowCreate ? (
+        {/* Time grouping leads the list in plain language — it's a top-3 logs
+            operation and must work with zero PPL knowledge. The real span(...)
+            syntax lives in the row's tooltip, not the label. */}
+        {overTime && overTimeMatches && (
+          <>
+            <div className="plqFnPopover__group">
+              {i18n.translate('explore.pplBuilder.overTimeGroup', {
+                defaultMessage: 'Over time',
+              })}
+            </div>
+            <EuiToolTip content={overTime.tooltip} position="right">
+              <button
+                type="button"
+                className="plqFnPopover__item plqFieldOption"
+                onClick={overTime.onSelect}
+                data-test-subj="pplBuilderGroupByOverTime"
+              >
+                <EuiIcon type="clock" size="s" className="plqFieldOption__check" />
+                {i18n.translate('explore.pplBuilder.overTime', { defaultMessage: 'over time' })}
+                <span className="plqFieldOption__hint">{overTime.hint}</span>
+              </button>
+            </EuiToolTip>
+          </>
+        )}
+        {filtered.length === 0 && !allowCreate && !(overTime && overTimeMatches) ? (
           <div className="plqFnPopover__empty">
             {i18n.translate('explore.pplBuilder.noMatchingField', {
               defaultMessage: 'No matching field',
@@ -149,6 +195,11 @@ export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
           </div>
         ) : (
           <>
+            {filtered.length > 0 && overTime && (
+              <div className="plqFnPopover__group">
+                {i18n.translate('explore.pplBuilder.fieldsGroup', { defaultMessage: 'Fields' })}
+              </div>
+            )}
             {filtered.map((field) => (
               <button
                 key={field}

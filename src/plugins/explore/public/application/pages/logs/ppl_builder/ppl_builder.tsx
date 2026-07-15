@@ -36,7 +36,8 @@ const CHART_BAR_TARGET = 15;
 // A PPL span interval is a positive number optionally followed by a time unit
 // (e.g. `30s`, `1m`, `2d`). Anything else produces an invalid `span(...)` that
 // only fails server-side, so flag it in the field.
-const SPAN_INTERVAL_RE = /^\d+(\.\d+)?\s*(ms|s|m|h|d|w|M|q|y|second|minute|hour|day|week|month|quarter|year)?s?$/i;
+const SPAN_INTERVAL_RE =
+  /^\d+(\.\d+)?\s*(ms|s|m|h|d|w|M|q|y|second|minute|hour|day|week|month|quarter|year)?s?$/i;
 
 export const PPLBuilder: React.FC<PPLBuilderProps> = ({
   initialState,
@@ -55,7 +56,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     sortableFieldNames,
     numericAndAggregatableNames,
     numericFieldNames,
-    dateFieldNames,
+    groupByFieldNames,
     timeFieldName,
     getValues,
   } = useFieldData();
@@ -123,15 +124,14 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     [hasAggregation, state.aggregations, state.groupBy.fields, sortableFieldNames]
   );
 
-  const toggleSpan = () => {
-    if (state.groupBy.span) {
-      dispatch({ type: 'REMOVE_SPAN' });
-    } else {
-      dispatch({
-        type: 'SET_SPAN',
-        span: { field: timeFieldName, interval: deriveAutoInterval(), auto: true },
-      });
-    }
+  // Add time grouping — a `span(<time field>, <auto interval>)` on the dataset's
+  // designated time field. Surfaced in the builder as the "over time" entry in
+  // the group-by popover; the field itself is a code-mode concern.
+  const addSpan = () => {
+    dispatch({
+      type: 'SET_SPAN',
+      span: { field: timeFieldName, interval: deriveAutoInterval(), auto: true },
+    });
   };
 
   return (
@@ -153,9 +153,10 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
       </div>
 
       {/* Row 2 — the whole aggregation on one wrapping line: Group into — metrics
-          — add-metric — by (with time span chip) — add time span — [spacer] —
-          Sort. Sort is pinned to the far right after a divider; the by-group and
-          time-span only appear once at least one metric exists. */}
+          — add-metric — by (fields first, then the "every" time chip) — [spacer]
+          — Sort. Sort is pinned to the far right after a divider; the by-group
+          only appears once at least one metric exists. Time grouping is entered
+          from the by popover ("over time"), not a standalone button. */}
       <div className="plqRow plqRow--builder">
         <span className="plqRow__label">
           {i18n.translate('explore.pplBuilder.groupInto', { defaultMessage: 'Group into' })}
@@ -200,13 +201,32 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                   list. */}
               <FieldMenu
                 multi
-                options={fieldNames}
+                options={groupByFieldNames}
                 value={state.groupBy.fields}
                 onChange={(fields) => dispatch({ type: 'SET_GROUPBY_FIELDS', fields })}
+                // "Over time" leads the popover — plain-language time grouping,
+                // offered only while no span exists (PPL allows one). Picking it
+                // adds a `span(<time field>, auto)`; the chip's ✕ brings it back.
+                overTime={
+                  state.groupBy.span
+                    ? undefined
+                    : {
+                        hint: i18n.translate('explore.pplBuilder.overTimeHint', {
+                          defaultMessage: 'every {interval}',
+                          values: { interval: deriveAutoInterval() },
+                        }),
+                        tooltip: `span(${timeFieldName}, ${deriveAutoInterval()})`,
+                        onSelect: addSpan,
+                      }
+                }
                 dataTestSubj="pplBuilderGroupByFields"
                 renderTrigger={(onToggle) => (
                   <span className="plqPills">
-                    {state.groupBy.fields.length === 0 ? (
+                    {/* "Everything" is the semantic default — shown only when the
+                        box is truly empty (no fields AND no time grouping). Once
+                        an "every" chip exists the box has content, so the caret
+                        alone stands in as the inline "add field" affordance. */}
+                    {state.groupBy.fields.length === 0 && !state.groupBy.span ? (
                       <button
                         type="button"
                         className="plqPills__placeholder"
@@ -242,6 +262,67 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                         </span>
                       ))
                     )}
+
+                    {/* Time grouping, when present, is the LAST grouping chip —
+                        a modifier pinned after the plain field chips, matching
+                        PPL's `by <fields>, span(...)` order. It reads as natural
+                        language ("every 1h"); the real span(...) syntax lives in
+                        the tooltip, and the time field is a code-mode concern (not
+                        editable here). The add-field caret trails it, so the box
+                        reads `<fields> every 1h  ˅`. */}
+                    {state.groupBy.span && (
+                      <EuiToolTip
+                        content={`span(${state.groupBy.span.field}, ${state.groupBy.span.interval})`}
+                        position="top"
+                      >
+                        <span className="plqChip" data-test-subj="pplBuilderSpanChip">
+                          <span className="plqChip__nat">
+                            {i18n.translate('explore.pplBuilder.every', {
+                              defaultMessage: 'every',
+                            })}
+                          </span>
+                          <input
+                            value={state.groupBy.span.interval}
+                            onChange={(e) =>
+                              dispatch({
+                                type: 'SET_SPAN',
+                                span: {
+                                  field: state.groupBy.span!.field,
+                                  interval: e.target.value,
+                                  auto: false,
+                                },
+                              })
+                            }
+                            className={`plqChip__param plqChip__mono${
+                              SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())
+                                ? ''
+                                : ' plqChip__param--invalid'
+                            }`}
+                            style={{
+                              width: inputWidth(state.groupBy.span.interval || '1m', 12, 20, 80),
+                            }}
+                            aria-label={i18n.translate('explore.pplBuilder.spanInterval', {
+                              defaultMessage: 'Time span interval',
+                            })}
+                            data-test-subj="pplBuilderSpanInterval"
+                          />
+                          <EuiButtonIcon
+                            className="plqX"
+                            iconType="cross"
+                            color="text"
+                            size="s"
+                            aria-label={i18n.translate('explore.pplBuilder.removeSpan', {
+                              defaultMessage: 'Remove time grouping',
+                            })}
+                            onClick={() => dispatch({ type: 'REMOVE_SPAN' })}
+                            data-test-subj="pplBuilderRemoveSpan"
+                          />
+                        </span>
+                      </EuiToolTip>
+                    )}
+
+                    {/* Add / edit grouping — the trailing caret opens the picker.
+                        Kept last so it sits to the right of the "every" chip. */}
                     <EuiButtonIcon
                       className="plqPills__caret"
                       iconType="arrowDown"
@@ -255,93 +336,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                   </span>
                 )}
               />
-
-              {/* Time span, when present, renders as a chip to the RIGHT of the
-                  group-by fields — it's another grouping key appended after the
-                  plain fields, matching `by span(...), clientip` reading order. */}
-              {state.groupBy.span && (
-                <span className="plqChip" data-test-subj="pplBuilderSpanChip">
-                  <span className="plqChip__mono">span(</span>
-                  {/* Time-span field picker: the same search-popover as the
-                      group-by, rendered as a plain monospace token inside the
-                      chip so `span( <field> , … )` reads as one flat expression. */}
-                  <FieldMenu
-                    options={dateFieldNames}
-                    value={state.groupBy.span.field}
-                    onChange={(field) =>
-                      dispatch({
-                        type: 'SET_SPAN',
-                        span: { field, interval: state.groupBy.span!.interval, auto: false },
-                      })
-                    }
-                    triggerClassName="plqChip__fieldToken"
-                    placeholder={i18n.translate('explore.pplBuilder.spanField', {
-                      defaultMessage: 'Time span field',
-                    })}
-                    dataTestSubj="pplBuilderSpanField"
-                  />
-                  <span className="plqChip__mono">,</span>
-                  <input
-                    value={state.groupBy.span.interval}
-                    onChange={(e) =>
-                      dispatch({
-                        type: 'SET_SPAN',
-                        span: {
-                          field: state.groupBy.span!.field,
-                          interval: e.target.value,
-                          auto: false,
-                        },
-                      })
-                    }
-                    className={`plqChip__param plqChip__mono${
-                      SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())
-                        ? ''
-                        : ' plqChip__param--invalid'
-                    }`}
-                    style={{ width: inputWidth(state.groupBy.span.interval || '1m', 12, 20, 80) }}
-                    aria-label={i18n.translate('explore.pplBuilder.spanInterval', {
-                      defaultMessage: 'Time span interval',
-                    })}
-                    data-test-subj="pplBuilderSpanInterval"
-                  />
-                  <span className="plqChip__mono">)</span>
-                  <EuiButtonIcon
-                    className="plqX"
-                    iconType="cross"
-                    color="text"
-                    size="s"
-                    aria-label={i18n.translate('explore.pplBuilder.removeSpan', {
-                      defaultMessage: 'Remove time span',
-                    })}
-                    onClick={toggleSpan}
-                    data-test-subj="pplBuilderRemoveSpan"
-                  />
-                </span>
-              )}
             </div>
-
-            {/* Add time span — a dashed clock icon; hidden once a span exists
-                (only one span is supported, and its chip's ✕ brings it back). */}
-            {!state.groupBy.span && (
-              <EuiToolTip
-                content={i18n.translate('explore.pplBuilder.addSpan', {
-                  defaultMessage: 'Add time span',
-                })}
-                position="top"
-              >
-                <EuiButtonIcon
-                  className="plqIconBtn plqIconBtn--ghost"
-                  iconType="clock"
-                  color="text"
-                  size="s"
-                  onClick={toggleSpan}
-                  aria-label={i18n.translate('explore.pplBuilder.addSpan', {
-                    defaultMessage: 'Add time span',
-                  })}
-                  data-test-subj="pplBuilderAddSpan"
-                />
-              </EuiToolTip>
-            )}
           </>
         )}
 

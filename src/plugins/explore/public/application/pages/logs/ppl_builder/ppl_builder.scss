@@ -333,9 +333,10 @@ $plqControlHeight: 36px;
 }
 
 // ---------- chips inside controls ----------
-// The time-span chip (`span(timestamp, 1m)`) is a grouping key like the group-by
-// field pills, so it shares their blue treatment (primary-soft fill, primary
-// text) to match the `round` scalar-function chip.
+// The time-grouping chip reads as natural language ("every 1h") — a grouping key
+// like the group-by field pills, so it shares their blue treatment (primary-soft
+// fill, primary text) to match the `round` scalar-function chip. The real
+// `span(…)` syntax lives in the chip's tooltip, not its label.
 .plqChip {
   display: inline-flex;
   align-items: center;
@@ -354,37 +355,19 @@ $plqControlHeight: 36px;
     color: $plqFnText;
   }
 
-  // The inline field-picker trigger (`span(<field>, …)`): a bare button that
-  // reads as the plain monospace field token and opens the search popover on
-  // click, so the whole `span(timestamp, 1m)` reads as one flat expression.
-  &__fieldToken {
-    display: inline-flex;
-    align-items: center;
-    height: 18px;
-    padding: 0 2px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-
-    .plqFieldTrigger__label {
-      // stylelint-disable-next-line @osd/stylelint/no_restricted_properties
-      font-family: $euiCodeFontFamily;
-      font-size: 11.5px;
-      line-height: 18px;
-      color: $plqFnText;
-    }
-
-    // The caret is redundant inside the compact chip token — the field text
-    // itself is the affordance, and the chip already has its own ✕.
-    .plqFieldTrigger__caret {
-      display: none;
-    }
+  // The natural-language label ("every") reads as plain UI text, not code — so
+  // it uses the default UI font rather than the monospace of the interval token.
+  &__nat {
+    font-size: 12px;
+    line-height: 18px;
+    color: $plqFnText;
+    cursor: default;
   }
 
   // The inline interval input matches the `round` chip's param exactly (see
   // .plqFn__param): a borderless, transparent field that blends into the chip
-  // fill so the whole `span(timestamp, 1m)` reads as one flat token, keeping the
-  // chip the same compact height as the scalar-function chip beside it.
+  // fill so `every 1h` reads as one flat token, keeping the chip the same
+  // compact height as the scalar-function chip beside it.
   &__param {
     height: 18px;
     padding: 0 2px;
@@ -463,7 +446,7 @@ $plqControlHeight: 36px;
   }
 }
 
-// ---------- icon buttons (add metric / add time span / code toggle) ----------
+// ---------- icon buttons (add metric / code toggle) ----------
 // 28×28 bordered = "does something"; dashed border = "adds something".
 .plqIconBtn.euiButtonIcon {
   width: 28px;
@@ -629,5 +612,15 @@ $plqControlHeight: 36px;
     &--hidden {
       visibility: hidden;
     }
+  }
+
+  // The muted trailing hint on the "over time" row (e.g. "every 1h") — plain UI
+  // font, sub color, so it reads as a subtitle beside the natural-language label
+  // rather than part of it.
+  &__hint {
+    // stylelint-disable-next-line @osd/stylelint/no_restricted_properties
+    font-family: $euiFontFamily;
+    font-size: 11px;
+    color: $plqSub;
   }
 }

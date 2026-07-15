@@ -34,7 +34,7 @@ const ASC = 'asc';
  * Pick one column and a direction. It applies to an aggregated result (sorting
  * by an output column) or to raw search rows (sorting by any field), so it is
  * offered independently of whether the query aggregates. Collapses to an "Add
- * sort" affordance when unsorted, mirroring the "Add time span" button.
+ * sort" affordance when unsorted, mirroring the empty-state "Add metric" button.
  */
 export const SortRow: React.FC<SortRowProps> = ({ sort, columns, dispatch }) => {
   if (!sort) {
@@ -63,9 +63,9 @@ export const SortRow: React.FC<SortRowProps> = ({ sort, columns, dispatch }) => 
       <span className="plqGroup__label">
         {i18n.translate('explore.pplBuilder.sortBy', { defaultMessage: 'Sort by' })}
       </span>
-      {/* Column picker: the same search-popover as the metric field, group-by,
-          and span pickers, rather than an inline combobox whose dropdown is
-          clipped to a narrow width. */}
+      {/* Column picker: the same search-popover as the metric field and group-by
+          pickers, rather than an inline combobox whose dropdown is clipped to a
+          narrow width. */}
       <FieldMenu
         options={columns}
         value={sort.column}

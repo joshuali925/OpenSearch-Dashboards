@@ -58,7 +58,9 @@ jest.mock('./use_field_data', () => ({
     sortableFieldNames: ['service', 'bytes'],
     numericAndAggregatableNames: ['bytes'],
     numericFieldNames: ['bytes'],
-    dateFieldNames: ['@timestamp'],
+    // Group-by options exclude date-typed fields — time grouping is the
+    // "over time" popover entry, not a bare @timestamp field.
+    groupByFieldNames: ['service', 'bytes', 'service.keyword'],
     timeFieldName: '@timestamp',
     getValues: jest.fn(async () => []),
   }),
@@ -108,14 +110,44 @@ describe('PPLBuilder', () => {
     expect(onQueryChange).toHaveBeenLastCalledWith('| stats count()', expect.anything());
   });
 
-  it('renders a span chip and interval for an aggregated state', () => {
+  it('renders a natural-language "every" chip and interval for a time-grouped state', () => {
     renderBuilder({
       ...emptyState(),
       aggregations: [{ id: 'a', fn: 'count' }],
       groupBy: { fields: [], span: { field: '@timestamp', interval: '5m', auto: false } },
     });
-    expect(screen.getByTestId('pplBuilderSpanChip')).toBeInTheDocument();
+    const chip = screen.getByTestId('pplBuilderSpanChip');
+    expect(chip).toBeInTheDocument();
+    // The chip reads as plain language, not `span(...)`.
+    expect(chip).toHaveTextContent('every');
     expect(screen.getByTestId('pplBuilderSpanInterval')).toHaveValue('5m');
+  });
+
+  it('adds time grouping from the "over time" entry in the group-by popover', () => {
+    const { onQueryChange } = renderBuilder({
+      ...emptyState(),
+      aggregations: [{ id: 'a', fn: 'count' }],
+      groupBy: { fields: [] },
+    });
+    // Open the group-by popover (the "Everything" placeholder is its trigger).
+    fireEvent.click(screen.getByTestId('pplBuilderGroupByFields'));
+    // "Over time" leads the list; picking it adds a span on the time field. The
+    // mocked auto interval is 30s (see createHistogramConfigs stub).
+    fireEvent.click(screen.getByTestId('pplBuilderGroupByOverTime'));
+    expect(onQueryChange).toHaveBeenLastCalledWith(
+      '| stats count() by span(@timestamp, 30s)',
+      expect.anything()
+    );
+  });
+
+  it('removes time grouping via the chip ✕', () => {
+    const { onQueryChange } = renderBuilder({
+      ...emptyState(),
+      aggregations: [{ id: 'a', fn: 'count' }],
+      groupBy: { fields: [], span: { field: '@timestamp', interval: '5m', auto: false } },
+    });
+    fireEvent.click(screen.getByTestId('pplBuilderRemoveSpan'));
+    expect(onQueryChange).toHaveBeenLastCalledWith('| stats count()', expect.anything());
   });
 
   it('offers an "Add sort" affordance as its own operation, even without aggregation', () => {

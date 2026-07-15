@@ -258,9 +258,8 @@ $plqControlHeight: 36px;
     }
   }
 
-  .plqFieldTrigger__labelBtn:hover .plqFieldTrigger__label,
-  .plqFieldTrigger__labelBtn:focus .plqFieldTrigger__label {
-    color: $plqPrimary;
+  .plqFieldTrigger__labelBtn:focus {
+    outline: none;
   }
 
   // Center combobox pills within the shrunk wrap. Keep right padding so the

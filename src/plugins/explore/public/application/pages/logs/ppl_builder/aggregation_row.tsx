@@ -142,15 +142,16 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
           value={agg.percentile ?? 95}
           min={0}
           max={100}
-          onChange={(e) =>
-            dispatch({
-              type: 'SET_AGGREGATION',
-              index: idx,
-              agg: { percentile: Number(e.target.value) },
-            })
-          }
+          onChange={(e) => {
+            // Clamp to the PPL-valid percentile range: the engine rejects a
+            // percentile outside [0,100] with a 500, and `min`/`max` alone don't
+            // stop a typed out-of-range value from reaching the query.
+            const raw = Number(e.target.value);
+            const percentile = Number.isNaN(raw) ? 95 : Math.min(Math.max(raw, 0), 100);
+            dispatch({ type: 'SET_AGGREGATION', index: idx, agg: { percentile } });
+          }}
           className="plqSpanInterval"
-          style={{ width: 40 }}
+          style={{ width: 52 }}
           aria-label={i18n.translate('explore.pplBuilder.percentileValue', {
             defaultMessage: 'Percentile',
           })}

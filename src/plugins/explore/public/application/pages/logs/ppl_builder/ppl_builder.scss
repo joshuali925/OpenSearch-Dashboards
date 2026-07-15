@@ -6,8 +6,8 @@
 // Visual builder for the logs PPL query. The design deliberately departs from
 // the default OUI control chrome: a flat, code-editor-dense look inside a single
 // gray box, with 2px "flat" radius on every control (the rounded pills read as
-// bulky), floating labels on the control borders (Datadog anatomy without a
-// separate labels row), and one unified 16px ✕ for every removable thing. Values
+// bulky), floating labels on the control borders (without a separate labels
+// row), and one unified 16px ✕ for every removable thing. Values
 // are taken straight from OUI light so the box sits naturally in the panel.
 // Source of truth: ppl_query_builder_fix_prototype.html.
 
@@ -39,7 +39,6 @@ $plqRadius: 2px; // flat, code-style radius inside the builder
 // so the whole builder reads as one aligned band of controls.
 $plqControlHeight: 36px;
 
-// ---------- gray query box ----------
 .plqBuilder {
   background: $plqBoxBg;
   border: 1px solid $plqBorderSoft;
@@ -63,7 +62,6 @@ $plqControlHeight: 36px;
   flex-wrap: wrap;
 }
 
-// ---------- leading gray label chips ("Search for" / "Group into") ----------
 .plqRow__label {
   display: inline-flex;
   align-items: center;
@@ -79,7 +77,6 @@ $plqControlHeight: 36px;
   user-select: none;
 }
 
-// ---------- search input ----------
 .plqSearchBoxWrap {
   flex: 1;
   min-width: 200px;
@@ -150,7 +147,6 @@ $plqControlHeight: 36px;
   // color exactly as they do in code mode). No bespoke token styles here.
 }
 
-// ---------- controls with floating labels (Show / by / Sort by) ----------
 .plqGroup {
   position: relative;
   display: inline-flex;
@@ -296,10 +292,6 @@ $plqControlHeight: 36px;
   }
 }
 
-// ---------- group-by field pills (the "by" control's selected fields) ----------
-// Selected group-by fields render as flat blue pills (matching the `round` and
-// `span(…)` chips) followed by a caret that opens the search popover. This
-// replaces the inline combobox whose dropdown was clipped to a narrow width.
 .plqPills {
   display: inline-flex;
   align-items: center;
@@ -362,11 +354,6 @@ $plqControlHeight: 36px;
   }
 }
 
-// ---------- chips inside controls ----------
-// The time-grouping chip reads as natural language ("every 1h") — a grouping key
-// like the group-by field pills, so it shares their neutral treatment (gray
-// fill, black text) to match the `round` scalar-function chip. The real
-// `span(…)` syntax lives in the chip's tooltip, not its label.
 .plqChip {
   display: inline-flex;
   align-items: center;
@@ -472,7 +459,6 @@ $plqControlHeight: 36px;
   }
 }
 
-// ---------- unified close button (one ✕ for everything removable) ----------
 .plqX.euiButtonIcon {
   width: 16px;
   height: 16px;
@@ -490,8 +476,6 @@ $plqControlHeight: 36px;
   }
 }
 
-// ---------- icon buttons (add metric / code toggle) ----------
-// 28×28 bordered = "does something"; dashed border = "adds something".
 .plqIconBtn.euiButtonIcon {
   width: 28px;
   height: 28px;
@@ -542,9 +526,6 @@ $plqControlHeight: 36px;
   font-size: 11.5px;
 }
 
-// ---------- ghost "add" text buttons (empty-state Add metric / Sort) ----------
-// Labeled dashed buttons shown when the row is sparse; they teach where icons
-// would be cryptic.
 .plqGhostAdd.euiButtonEmpty {
   height: $plqControlHeight;
   border: 1px dashed $plqBorder;
@@ -569,7 +550,6 @@ $plqControlHeight: 36px;
   }
 }
 
-// ---------- spacer + divider that pin the sort control to the right ----------
 .plqSpacer {
   flex: 1 1 12px;
 }
@@ -591,7 +571,6 @@ $plqControlHeight: 36px;
   flex-shrink: 0;
 }
 
-// ---------- ƒx function popover (search-first, flat grouped list) ----------
 .plqFnPopover {
   width: 224px;
 

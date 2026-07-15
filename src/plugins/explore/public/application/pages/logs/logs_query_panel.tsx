@@ -247,10 +247,6 @@ export const LogsQueryPanel: React.FC = () => {
     </div>
   );
 
-  // The builder/code switch is a single `</>` icon (replacing the old two-button
-  // group). In builder mode it lives inside the builder's search row; in code
-  // mode it is pinned top-right of the editor. When a code query can't round-trip
-  // to the builder the toggle is disabled with an explanatory tooltip.
   const switchToCode = useCallback(() => handleModeChange('code'), [handleModeChange]);
   const switchToBuilder = useCallback(() => handleModeChange('builder'), [handleModeChange]);
 

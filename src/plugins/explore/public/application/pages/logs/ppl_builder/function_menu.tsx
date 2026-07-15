@@ -29,8 +29,6 @@ export const FunctionMenu: React.FC<FunctionMenuProps> = ({ onAddFunction, dataT
     defaultMessage: 'Wrap in function',
   });
 
-  // Flatten the categories into ordered rows tagged with their group, so the
-  // shared menu draws the Math / String / Date & time headers from ordering.
   const options = useMemo<SearchMenuOption[]>(
     () =>
       SCALAR_FN_CATEGORIES.flatMap((cat) =>

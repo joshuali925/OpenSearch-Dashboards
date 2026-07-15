@@ -26,10 +26,13 @@ export interface PPLParseResult {
 // can't drift as aggregations are added, plus `dc` — the terse PPL alias for
 // distinct_count that isn't a catalog id.
 const SINGLE_ARG_AGG: Record<string, AggFn> = {
-  ...AGG_FUNCTIONS.reduce((acc, def) => {
-    if (def.needsField && def.id !== 'percentile') acc[def.id] = def.id;
-    return acc;
-  }, {} as Record<string, AggFn>),
+  ...AGG_FUNCTIONS.reduce(
+    (acc, def) => {
+      if (def.needsField && def.id !== 'percentile') acc[def.id] = def.id;
+      return acc;
+    },
+    {} as Record<string, AggFn>
+  ),
   dc: 'distinct_count',
 };
 
@@ -90,7 +93,6 @@ function parseFieldExpression(text: string): { field: string; functions: ScalarC
   // Guard against more args than the catalog defines (an unmodeled variant).
   if (extraParams.length > (def.params.length || 0)) return null;
   const fn: ScalarCall = { id: fnId, name: def.name, params: extraParams };
-  // Outermost call wraps the inner chain -> append after inner's functions.
   return { field: inner.field, functions: [...inner.functions, fn] };
 }
 
@@ -166,7 +168,7 @@ function parseSortCommand(sortCtx: any): Sort | null {
   if (!byCtx) return null;
   const rawFields = byCtx.sortField ? byCtx.sortField() : [];
   const fields = Array.isArray(rawFields) ? rawFields : rawFields ? [rawFields] : [];
-  if (fields.length !== 1) return null; // only single-column sort is modeled
+  if (fields.length !== 1) return null;
 
   const field = fields[0];
   const exprCtx = field.sortFieldExpression && field.sortFieldExpression();
@@ -180,7 +182,6 @@ function parseSortCommand(sortCtx: any): Sort | null {
   const column = unquote(fieldExprCtx.getText());
   if (!column) return null;
 
-  // Descending if the field carries a `-` prefix or the clause ends in desc/d.
   const prefixDesc = typeof field.MINUS === 'function' && !!field.MINUS();
   const suffixDesc =
     (typeof sortCtx.DESC === 'function' && !!sortCtx.DESC()) ||
@@ -289,7 +290,6 @@ export function parsePPL(query: string): PPLParseResult {
       const sortCtx = cmd.sortCommand && cmd.sortCommand();
 
       if (sortCtx) {
-        // Only one sort is modeled, and it must be the last stage.
         if (seenSort) return fallback;
         seenSort = true;
         const sort = parseSortCommand(sortCtx);
@@ -298,9 +298,9 @@ export function parsePPL(query: string): PPLParseResult {
         continue;
       }
 
-      if (!statsCtx) return fallback; // any other trailing command is unmodeled
-      if (seenStats) return fallback; // only one stats clause modeled
-      if (seenSort) return fallback; // stats after sort isn't the modeled shape
+      if (!statsCtx) return fallback;
+      if (seenStats) return fallback;
+      if (seenSort) return fallback;
       seenStats = true;
 
       // Reject statsArgs (partitions/allnum/delim/...) and dedupSplit.

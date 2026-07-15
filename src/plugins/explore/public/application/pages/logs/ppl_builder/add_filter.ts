@@ -76,8 +76,6 @@ export function addFilterToPPLSearchExpression(query: string, predicate: string)
 
   const [head, tail] = splitAtFirstPipe(query);
 
-  // Peel the (optional) source clause off the head so we only touch the search
-  // terms that follow it.
   const sourceMatch = head.match(SOURCE_CLAUSE_RE);
   const sourcePart = sourceMatch ? sourceMatch[0] : '';
   const searchPart = head.slice(sourcePart.length).trim();
@@ -88,17 +86,13 @@ export function addFilterToPPLSearchExpression(query: string, predicate: string)
   if (!searchPart) {
     nextSearch = predicate;
   } else if (containsPredicate(searchPart, predicate)) {
-    // Already present — nothing to add.
     nextSearch = searchPart;
   } else if (negatedPredicate && containsPredicate(searchPart, negatedPredicate)) {
-    // Flip the existing opposite filter in place.
     nextSearch = searchPart.replace(negatedPredicate, predicate);
   } else {
     nextSearch = `${searchPart} ${predicate}`;
   }
 
-  // Reassemble: normalize the source clause to a single trailing space when
-  // present, then the search terms, then the untouched pipeline tail.
   const normalizedSource = sourcePart ? `${sourcePart.trim()} ` : '';
   const rebuiltHead = `${normalizedSource}${nextSearch}`.trim();
   const rebuiltTail = tail ? ` ${tail.trim()}` : '';

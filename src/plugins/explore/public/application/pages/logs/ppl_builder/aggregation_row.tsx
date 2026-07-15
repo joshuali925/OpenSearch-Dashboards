@@ -84,7 +84,7 @@ const FunctionPill: React.FC<{
 };
 
 /**
- * One aggregation "Show" group: `Show <fn> of <field>` — the datadog "Show Count
+ * One aggregation "Show" group: `Show <fn> of <field>` — the "Show Count
  * of all logs" control. Count needs no field; other fns aggregate over a field,
  * and percentile adds a numeric percentile input. When the group has a field, a
  * `ƒx` trigger wraps it in scalar functions (e.g. avg(round(latency))). The
@@ -98,8 +98,6 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
   dispatch,
 }) => {
   const def = AGG_FN_MAP[agg.fn];
-  // Numeric aggregations (avg/sum/…) only offer numeric fields; the rest
-  // (min/max/distinct_count/earliest/…) accept any aggregatable field.
   const fieldOptions = def?.numericOnly ? numericFieldOptions : anyFieldOptions;
   return (
     <div className="plqGroup" data-test-subj={`pplBuilderAgg-${idx}`}>
@@ -113,10 +111,6 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
       />
       {def?.needsField && (
         <>
-          {/* Field picker: the same search-popover as the "Show" selector and the
-              group-by, rather than an inline combobox whose dropdown is clipped to
-              a narrow width. Shows the chosen field (or "of field") as plain text
-              with a caret. */}
           <FieldMenu
             options={fieldOptions}
             value={agg.field || ''}
@@ -127,9 +121,6 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
             })}
             dataTestSubj={`pplBuilderAggField-${idx}`}
           />
-          {/* Scalar functions wrapping the field, rendered to the RIGHT of it so
-              the row reads left-to-right as application order. The chain array is
-              innermost-first, which matches that left-to-right reading. */}
           {(agg.functions ?? []).map((fn, fnIdx) => (
             <FunctionPill key={fnIdx} fn={fn} aggIdx={idx} fnIdx={fnIdx} dispatch={dispatch} />
           ))}
@@ -158,9 +149,6 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
           data-test-subj={`pplBuilderAggPercentile-${idx}`}
         />
       )}
-      {/* ƒx wrap-in-function trigger, then the metric-level ✕ at the far edge.
-          The ƒx opens a searchable function menu; the ✕ deletes the whole metric
-          (distinct from each fn-chip's own ✕, which unwraps just that function). */}
       {def?.needsField && (
         <FunctionMenu
           onAddFunction={(fn) => dispatch({ type: 'ADD_FUNCTION', index: idx, fn })}

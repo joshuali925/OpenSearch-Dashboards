@@ -12,9 +12,6 @@ import { analyzeSearchExpression } from './search_completion';
 /** Dedicated Monaco language id for the restricted PPL search-expression box. */
 export const PPL_SEARCH_LANGUAGE_ID = 'pplSearchExpression';
 
-// Auto-grow bounds for the search box. It starts at a single line and grows with
-// the content (wrapped lines included), capping before it takes over the panel;
-// past the cap the box scrolls internally.
 const LINE_HEIGHT = 18;
 const MIN_HEIGHT = 20;
 const MAX_HEIGHT = 120;
@@ -33,8 +30,6 @@ function ensureLanguageRegistered() {
 /** Monaco action that (re-)opens the native suggestion widget. */
 const TRIGGER_SUGGEST_ACTION = 'editor.action.triggerSuggest';
 
-// Re-opens the suggestion widget immediately after an item is accepted, so that
-// picking a field flows straight into value suggestions.
 const RETRIGGER_COMMAND: monaco.languages.CompletionItem['command'] = {
   id: TRIGGER_SUGGEST_ACTION,
   title: 'Suggest',
@@ -52,7 +47,7 @@ interface SearchBoxProps {
 }
 
 /**
- * Datadog-style single-line search box for the PPL `search` command's
+ * Single-line search box for the PPL `search` command's
  * <search-expression>. Reuses the shared Monaco {@link CodeEditor} (the same
  * widget as the code editor) and drives its native suggestion dropdown with a
  * grammar-based analysis ({@link analyzeSearchExpression}) so fields, values,
@@ -71,16 +66,10 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   const onRequestValuesRef = useRef(onRequestValues);
   onRequestValuesRef.current = onRequestValues;
 
-  // Pending deferred suggestion-trigger (cursor moves; see handleEditorDidMount).
   const suggestTimerRef = useRef<number | undefined>(undefined);
 
-  // The editor's height, grown to fit its content so multi-line (wrapped)
-  // expressions are fully visible instead of clipped to one line. Driven by
-  // Monaco's onDidContentSizeChange, clamped to [MIN_HEIGHT, MAX_HEIGHT].
   const [editorHeight, setEditorHeight] = useState(MIN_HEIGHT);
 
-  // Resize the editor to fit its content, capping at MAX_HEIGHT (beyond which it
-  // scrolls). Mirrors the code editor's auto-grow (use_query_panel_editor).
   const syncHeight = useCallback((editor: monaco.editor.IStandaloneCodeEditor) => {
     const contentHeight = editor.getContentHeight();
     const nextHeight = Math.min(Math.max(contentHeight, MIN_HEIGHT), MAX_HEIGHT);
@@ -101,8 +90,6 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
     (editor: monaco.editor.IStandaloneCodeEditor) => {
       syncHeight(editor);
 
-      // Grow / shrink the box to fit its content as the user types or wraps
-      // onto new lines, so the whole expression stays visible.
       editor.onDidContentSizeChange(() => syncHeight(editor));
 
       // Keep suggestions available at all times: re-open the widget after any
@@ -135,7 +122,6 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
     [triggerSuggest, syncHeight]
   );
 
-  // Clear any pending deferred trigger on unmount.
   useEffect(() => () => window.clearTimeout(suggestTimerRef.current), []);
 
   ensureLanguageRegistered();
@@ -167,8 +153,6 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
             detail: i18n.translate('explore.pplBuilder.searchBox.fieldDetail', {
               defaultMessage: 'Field',
             }),
-            // Accepting a field auto-completes `=` (no surrounding spaces) and
-            // re-triggers the suggestion widget so the value dropdown opens.
             insertText: `${name}=`,
             range,
             sortText: `2_${name}`,
@@ -181,7 +165,6 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
         try {
           const values = await onRequestValuesRef.current(analysis.suggestValuesForField);
           for (const v of values) {
-            // Quote values containing whitespace or special characters.
             const needsQuote = /[\s"'()=<>!,]/.test(v) || v === '';
             const insert = needsQuote ? `"${v.replace(/"/g, '\\"')}"` : v;
             suggestions.push({
@@ -190,8 +173,6 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
               detail: i18n.translate('explore.pplBuilder.searchBox.valueDetail', {
                 defaultMessage: 'Value',
               }),
-              // Accepting a value appends a trailing space and re-triggers the
-              // widget so the next suggestion (AND/OR/NOT) opens automatically.
               insertText: `${insert} `,
               range,
               sortText: `0_${v}`,
@@ -234,7 +215,6 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
 
   const suggestionProvider = useMemo<monaco.languages.CompletionItemProvider>(
     () => ({
-      // Re-trigger on the operators / space / quote that begin a new token.
       triggerCharacters: [' ', '=', '!', '>', '<', '(', ',', '"', "'"],
       provideCompletionItems,
     }),
@@ -249,8 +229,6 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
       lineDecorationsWidth: 0,
       minimap: { enabled: false },
       scrollBeyondLastLine: false,
-      // Wrap long expressions onto new lines so they grow the box vertically
-      // instead of scrolling horizontally out of view.
       wordWrap: 'on',
       wrappingIndent: 'none',
       overviewRulerLanes: 0,

@@ -119,7 +119,6 @@ function applyFunctions(fieldExpr: string, functions?: ScalarCall[]): string {
   let expr = fieldExpr;
   for (const fn of functions ?? []) {
     const extra = fn.params.map((p) => p.trim());
-    // Drop empty trailing params so optional args collapse cleanly.
     while (extra.length > 0 && extra[extra.length - 1] === '') extra.pop();
     expr = extra.length > 0 ? `${fn.id}(${expr}, ${extra.join(', ')})` : `${fn.id}(${expr})`;
   }
@@ -128,7 +127,6 @@ function applyFunctions(fieldExpr: string, functions?: ScalarCall[]): string {
 
 export function compileAggregation(agg: Aggregation): string | null {
   if (agg.fn === 'count') {
-    // Datadog "Count of all logs" — count all rows, no field argument.
     return 'count()';
   }
   if (!agg.field) return null;
@@ -137,11 +135,8 @@ export function compileAggregation(agg: Aggregation): string | null {
     case 'percentile':
       return `percentile(${arg}, ${agg.percentile ?? 95})`;
     case 'distinct_count':
-      // `dc` is the terse alias; emit the explicit name for readability.
       return `distinct_count(${arg})`;
     default:
-      // avg/sum/min/max/median/stddev_*/var_* all take a single expression
-      // argument.
       return `${agg.fn}(${arg})`;
   }
 }
@@ -232,9 +227,6 @@ export function buildPPL(state: PPLBuilderState): string {
     }
   }
 
-  // Sort is its own pipe operation appended after any stats stage — a sibling of
-  // the aggregation, not part of it. It applies to an aggregated result (sorting
-  // by an output column) or to raw search rows (sorting by any field).
   const sortClause = compileValidSort(state);
   if (sortClause) parts.push(sortClause);
 

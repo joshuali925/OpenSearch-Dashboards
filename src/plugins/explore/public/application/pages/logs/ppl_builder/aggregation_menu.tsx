@@ -57,8 +57,6 @@ export const AggregationMenu: React.FC<AggregationMenuProps> = ({
         defaultMessage: 'No matching aggregation',
       })}
       searchDataTestSubj={dataTestSubj ? `${dataTestSubj}-search` : undefined}
-      // The trigger reads "Percentile ⌄" as one token, but only the caret anchors
-      // the popover so its beak lines up under the dropdown icon.
       trigger={(toggle) => ({
         wrapperClassName: 'plqAggTrigger',
         leading: (

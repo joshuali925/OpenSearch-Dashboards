@@ -23,8 +23,6 @@ interface SortRowProps {
   dispatch: React.Dispatch<BuilderAction>;
 }
 
-// Direction options for the sort — descending first, since "highest first" is
-// the common case (matches Datadog's default when sorting a measure).
 const DESC = 'desc';
 const ASC = 'asc';
 
@@ -38,9 +36,6 @@ const ASC = 'asc';
  */
 export const SortRow: React.FC<SortRowProps> = ({ sort, columns, dispatch }) => {
   if (!sort) {
-    // Ghost "＋ Sort" — a labelled dashed button pinned right, mirroring the
-    // empty-state "Add metric". Defaults to the first candidate column,
-    // descending (the typical "top N" reading of a result).
     return (
       <EuiButtonEmpty
         size="xs"
@@ -63,9 +58,6 @@ export const SortRow: React.FC<SortRowProps> = ({ sort, columns, dispatch }) => 
       <span className="plqGroup__label">
         {i18n.translate('explore.pplBuilder.sortBy', { defaultMessage: 'Sort by' })}
       </span>
-      {/* Column picker: the same search-popover as the metric field and group-by
-          pickers, rather than an inline combobox whose dropdown is clipped to a
-          narrow width. */}
       <FieldMenu
         options={columns}
         value={sort.column}

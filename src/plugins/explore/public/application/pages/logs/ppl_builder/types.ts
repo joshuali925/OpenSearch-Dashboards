@@ -42,8 +42,8 @@ export type AggFn =
  */
 export interface ScalarCall {
   id: string; // catalog id, e.g. 'round' — also the emitted PPL function name
-  name: string; // display name
-  params: string[]; // extra positional args beyond the wrapped expression
+  name: string;
+  params: string[];
 }
 
 export interface Aggregation {

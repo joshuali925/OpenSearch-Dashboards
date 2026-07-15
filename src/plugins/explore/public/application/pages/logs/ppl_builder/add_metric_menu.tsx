@@ -38,8 +38,6 @@ export const AddMetricMenu: React.FC<AddMetricMenuProps> = ({
     defaultMessage: 'Add metric',
   });
 
-  // A flat list of aggregations (no categories): rendered as root items so the
-  // menu opens straight onto the choices rather than a single category to drill.
   const rootItems = useMemo(
     () =>
       AGG_FUNCTIONS.map((agg) => ({
@@ -69,8 +67,6 @@ export const AddMetricMenu: React.FC<AddMetricMenuProps> = ({
       rootTitle={i18n.translate('explore.pplBuilder.addMetricTitle', {
         defaultMessage: 'Select aggregation',
       })}
-      // Anchor under the trigger's left edge, matching the other builder
-      // popovers so the panel hangs from the left.
       anchorPosition="downLeft"
       panelClassName="cfmMenuPanel"
       dataTestSubj={dataTestSubj}

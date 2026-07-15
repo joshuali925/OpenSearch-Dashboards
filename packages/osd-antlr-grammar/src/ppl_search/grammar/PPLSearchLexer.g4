@@ -2,7 +2,7 @@ lexer grammar PPLSearchLexer;
 
 // Restricted lexer for the PPL `search` command's <search-expression> only
 // (see the search command docs). It is intentionally small: it feeds a
-// Datadog-style search box with grammar-driven autocomplete, not the full PPL
+// single-line search box with grammar-driven autocomplete, not the full PPL
 // pipeline (that lives in OpenSearchPPLLexer). Keywords are case-insensitive.
 
 // Boolean keywords

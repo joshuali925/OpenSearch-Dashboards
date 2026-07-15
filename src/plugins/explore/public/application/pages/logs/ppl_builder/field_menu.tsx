@@ -101,15 +101,11 @@ export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
     }
   };
 
-  // "Over time" (when present) leads the list under its own header, then the
-  // fields. Grouping is expressed by ordering + each row's `group` (only labelled
-  // when the over-time entry exists, so a plain field list stays ungrouped).
   const menuOptions = useMemo<SearchMenuOption[]>(() => {
     const rows: SearchMenuOption[] = [];
     if (overTime) {
       rows.push({
         key: '__overTime',
-        // Matched the way its text reads, so typing "over"/"time"/"1h" keeps it.
         filterText: `over time ${overTime.hint}`,
         group: i18n.translate('explore.pplBuilder.overTimeGroup', { defaultMessage: 'Over time' }),
         leadingIcon: 'clock',
@@ -156,8 +152,6 @@ export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
       })}
       searchDataTestSubj={dataTestSubj ? `${dataTestSubj}-search` : undefined}
       trigger={(toggle) => {
-        // Group-by mode: the consumer's pills are the trigger's leading content;
-        // the popover anchors on a standalone caret appended after them.
         if (renderTrigger) {
           return {
             wrapperClassName: 'plqPills',
@@ -174,8 +168,6 @@ export const FieldMenu: React.FC<FieldMenuProps> = (props) => {
             ),
           };
         }
-        // Default: label text (a toggle) beside the caret-anchored popover, so the
-        // trigger reads "machine.ram ⌄" but the beak lines up under the caret.
         return {
           wrapperClassName: triggerClassName,
           leading: (

@@ -30,7 +30,6 @@ interface PPLBuilderProps {
   onSwitchToCode?: () => void;
 }
 
-// Target bar count for the auto time-bucket, matching the traces chart's density.
 const CHART_BAR_TARGET = 15;
 
 // A PPL span interval is a positive number optionally followed by a time unit
@@ -67,8 +66,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
   // rows.
   const [searchText, setSearchText] = useState(() => state.searchExpression);
 
-  // Derive an adaptive span interval from the current time range, reusing the
-  // same createHistogramConfigs path the logs histogram uses.
   const deriveAutoInterval = useCallback((): string => {
     // Use the fully-resolved DataView (with timeFieldName + fields) so
     // createAggConfigs succeeds and the interval actually adapts to the range.
@@ -124,9 +121,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     [hasAggregation, state.aggregations, state.groupBy.fields, sortableFieldNames]
   );
 
-  // Add time grouping — a `span(<time field>, <auto interval>)` on the dataset's
-  // designated time field. Surfaced in the builder as the "over time" entry in
-  // the group-by popover; the field itself is a code-mode concern.
   const addSpan = () => {
     dispatch({
       type: 'SET_SPAN',
@@ -136,7 +130,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
 
   return (
     <div className="plqBuilder" data-test-subj="pplBuilder">
-      {/* Row 1 — search / filter, with the </> code toggle pinned at its end. */}
       <div className="plqRow">
         <span className="plqRow__label">
           {i18n.translate('explore.pplBuilder.searchFor', { defaultMessage: 'Search for' })}
@@ -152,17 +145,11 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
         {onSwitchToCode && <ModeToggleButton isCode={false} onToggle={onSwitchToCode} />}
       </div>
 
-      {/* Row 2 — the whole aggregation on one wrapping line: Group into — metrics
-          — add-metric — by (fields first, then the "every" time chip) — [spacer]
-          — Sort. Sort is pinned to the far right after a divider; the by-group
-          only appears once at least one metric exists. Time grouping is entered
-          from the by popover ("over time"), not a standalone button. */}
       <div className="plqRow plqRow--builder">
         <span className="plqRow__label">
           {i18n.translate('explore.pplBuilder.groupInto', { defaultMessage: 'Group into' })}
         </span>
 
-        {/* Metric aggregation groups. */}
         {state.aggregations.map((agg, idx) => (
           <AggregationRow
             key={agg.id}
@@ -174,39 +161,24 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
           />
         ))}
 
-        {/* Add-metric: a labelled ghost button when the row is empty (labels
-            teach), collapsing to an icon-only dashed ＋ once a metric exists
-            (icons keep it dense). */}
         <AddMetricMenu
           hasMetrics={hasAggregation}
           onAdd={(fn) => dispatch({ type: 'ADD_AGGREGATION', agg: { fn } })}
           dataTestSubj="pplBuilderAddAggregation"
         />
 
-        {/* Group-by + time-bucket, shown only once the query aggregates. */}
         {hasAggregation && (
           <>
-            {/* Group-by fields — outlined group matching the metric groups, with
-                the "by" label floating on the top border. The time span, when
-                present, renders as a chip inside this same box. */}
             <div className="plqGroup" data-test-subj="pplBuilderGroupBy">
               <span className="plqGroup__label">
                 {i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
               </span>
 
-              {/* Group-by field picker: a search-first popover (like the "Show"
-                  and ƒx menus) rather than an inline combobox whose dropdown is
-                  clipped to a narrow width. Selected fields render as removable
-                  blue pills; a trailing caret opens the readable multi-select
-                  list. */}
               <FieldMenu
                 multi
                 options={groupByFieldNames}
                 value={state.groupBy.fields}
                 onChange={(fields) => dispatch({ type: 'SET_GROUPBY_FIELDS', fields })}
-                // "Over time" leads the popover — plain-language time grouping,
-                // offered only while no span exists (PPL allows one). Picking it
-                // adds a `span(<time field>, auto)`; the chip's ✕ brings it back.
                 overTime={
                   state.groupBy.span
                     ? undefined
@@ -229,10 +201,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                 })}
                 renderTrigger={(onToggle) => (
                   <>
-                    {/* "Everything" is the semantic default — shown only when the
-                        box is truly empty (no fields AND no time grouping). Once
-                        an "every" chip exists the box has content, so the caret
-                        alone stands in as the inline "add field" affordance. */}
                     {state.groupBy.fields.length === 0 && !state.groupBy.span ? (
                       <button
                         type="button"
@@ -247,9 +215,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                     ) : (
                       state.groupBy.fields.map((f) => (
                         <span key={f} className="plqPill">
-                          {/* The field name is static text — only its ✕ removes it
-                              and the trailing caret opens the picker. Clicking the
-                              label itself does nothing (matches the mock's chips). */}
                           <span className="plqPill__label">{f}</span>
                           <EuiButtonIcon
                             className="plqPill__remove"
@@ -271,13 +236,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                       ))
                     )}
 
-                    {/* Time grouping, when present, is the LAST grouping chip —
-                        a modifier pinned after the plain field chips, matching
-                        PPL's `by <fields>, span(...)` order. It reads as natural
-                        language ("every 1h"); the real span(...) syntax lives in
-                        the tooltip, and the time field is a code-mode concern (not
-                        editable here). The add-field caret trails it, so the box
-                        reads `<fields> every 1h  ˅`. */}
                     {state.groupBy.span && (
                       <EuiToolTip
                         content={i18n.translate('explore.pplBuilder.spanTooltip', {
@@ -332,9 +290,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
           </>
         )}
 
-        {/* Sort — its own trailing `| sort` pipe operation, pinned to the far
-            right after a divider. Shown independently of whether the query
-            aggregates. Collapses to a ghost "＋ Sort" when unsorted. */}
         <span className="plqSpacer" />
         <span className="plqDivider" />
         <SortRow sort={state.sort} columns={sortColumns} dispatch={dispatch} />

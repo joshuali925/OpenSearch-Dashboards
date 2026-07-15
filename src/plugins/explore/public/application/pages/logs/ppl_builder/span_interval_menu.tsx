@@ -18,9 +18,6 @@ interface SpanIntervalMenuProps {
   dataTestSubj?: string;
 }
 
-// Common bucket intervals, matching the design mock's set exactly
-// (ppl_query_builder_states_v4.html). The popover still accepts any custom
-// value typed into the search box, so this list is a shortcut, not a restriction.
 const COMMON_INTERVALS = ['1m', '5m', '30m', '1h', '12h', '1d'];
 
 /**

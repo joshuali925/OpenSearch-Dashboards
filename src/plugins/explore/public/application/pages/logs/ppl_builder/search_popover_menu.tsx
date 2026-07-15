@@ -135,8 +135,6 @@ export const SearchPopoverMenu: React.FC<SearchPopoverMenuProps> = ({
     if (!keepOpenOnSelect) close();
   };
 
-  // Filter rows by the query (matching `filterText`/`key`), recording the first
-  // survivor for the Enter shortcut and whether the query is a brand-new value.
   const { filtered, allowCreateNow } = useMemo(() => {
     firstMatchRef.current = null;
     const q = search.trim().toLowerCase();
@@ -155,9 +153,6 @@ export const SearchPopoverMenu: React.FC<SearchPopoverMenuProps> = ({
   const { anchor, leading, wrapperClassName } = trigger(toggleOpen);
 
   const renderRow = (option: SearchMenuOption) => {
-    // Rows get the flat `plqFieldOption` layout (leading-icon column) whenever the
-    // menu is checkable or the row carries a fixed leading icon; otherwise a plain
-    // full-width item (aggregation / function lists).
     const asFieldOption = checkable || !!option.leadingIcon;
     const button = (
       <button
@@ -221,7 +216,6 @@ export const SearchPopoverMenu: React.FC<SearchPopoverMenuProps> = ({
         ) : (
           <>
             {filtered.map((option, i) => {
-              // Draw a section header when this row opens a new group.
               const header =
                 option.group && option.group !== filtered[i - 1]?.group ? (
                   <div key={`${option.group}-header`} className="plqFnPopover__group">

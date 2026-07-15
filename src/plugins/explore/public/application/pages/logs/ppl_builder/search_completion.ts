@@ -93,7 +93,6 @@ function findCursorTokenIndex(tokenStream: CommonTokenStream, cursorColumn: numb
 /** Walk back from the caret token to the field name governing a value position. */
 function findGoverningField(tokenStream: CommonTokenStream, cursorIndex: number): string | null {
   let i = cursorIndex - 1;
-  // Skip back over the value list we might be inside (values, commas, quotes, WS).
   while (i >= 0) {
     const t = tokenStream.get(i);
     if (t.type === WS) {
@@ -102,7 +101,6 @@ function findGoverningField(tokenStream: CommonTokenStream, cursorIndex: number)
     }
     if (COMPARISON_OPS.has(t.type) || t.type === PPLSearchParser.IN) {
       i--;
-      // Next non-WS token going back should be the field.
       while (i >= 0 && tokenStream.get(i).type === WS) i--;
       if (i >= 0) {
         const f = tokenStream.get(i);
@@ -117,7 +115,6 @@ function findGoverningField(tokenStream: CommonTokenStream, cursorIndex: number)
       t.type === PPLSearchParser.COMMA ||
       t.type === PPLSearchParser.LPAREN
     ) {
-      // Part of the value / IN-list; keep scanning back for the operator.
       i--;
       continue;
     }
@@ -187,7 +184,6 @@ export function analyzeSearchExpression(query: string, cursorColumn: number): Se
     const candidates = core.collectCandidates(cursorIndex);
 
     const rules = candidates.rules;
-    // Fields/terms are suggested when the grammar expects a field or a bare term.
     const suggestFields =
       rules.has(PPLSearchParser.RULE_field) || rules.has(PPLSearchParser.RULE_term);
 

@@ -5,7 +5,7 @@
 
 import { CharStream, CommonTokenStream, Token } from 'antlr4ng';
 import { CodeCompletionCore } from 'antlr4-c3';
-import { PPLSearchLexer, PPLSearchParser } from '@osd/antlr-grammar';
+import { OpenSearchPPLSearchOnlyLexer, OpenSearchPPLSearchOnlyParser } from '@osd/antlr-grammar';
 
 /**
  * Grammar-driven analysis of the "Search for" expression at a cursor position.
@@ -13,7 +13,7 @@ import { PPLSearchLexer, PPLSearchParser } from '@osd/antlr-grammar';
  * This drives autocomplete for the PPL `search` command's search-expression
  * syntax ONLY (full-text terms, `field <op> value`, `IN (...)`, `AND`/`OR`/`NOT`,
  * parentheses) — not the full PPL pipeline. It uses antlr4-c3's
- * {@link CodeCompletionCore} over the restricted {@link PPLSearchParser} so that
+ * {@link CodeCompletionCore} over the restricted {@link OpenSearchPPLSearchOnlyParser} so that
  * fields, values, operators, and boolean keywords are each suggested only where
  * the grammar actually permits them at the caret.
  */
@@ -34,33 +34,33 @@ export interface SearchAnalysis {
 // Operators and boolean keywords, mapped to the text we surface. Comparison
 // operators use their literal symbol; keywords use their upper-case name.
 const OPERATOR_TOKENS: Record<number, string> = {
-  [PPLSearchParser.EQ]: '=',
-  [PPLSearchParser.NEQ]: '!=',
-  [PPLSearchParser.GT]: '>',
-  [PPLSearchParser.GE]: '>=',
-  [PPLSearchParser.LT]: '<',
-  [PPLSearchParser.LE]: '<=',
+  [OpenSearchPPLSearchOnlyParser.EQ]: '=',
+  [OpenSearchPPLSearchOnlyParser.NEQ]: '!=',
+  [OpenSearchPPLSearchOnlyParser.GT]: '>',
+  [OpenSearchPPLSearchOnlyParser.GE]: '>=',
+  [OpenSearchPPLSearchOnlyParser.LT]: '<',
+  [OpenSearchPPLSearchOnlyParser.LE]: '<=',
 };
 const KEYWORD_TOKENS: Record<number, string> = {
-  [PPLSearchParser.AND]: 'AND',
-  [PPLSearchParser.OR]: 'OR',
-  [PPLSearchParser.NOT]: 'NOT',
-  [PPLSearchParser.IN]: 'IN',
+  [OpenSearchPPLSearchOnlyParser.AND]: 'AND',
+  [OpenSearchPPLSearchOnlyParser.OR]: 'OR',
+  [OpenSearchPPLSearchOnlyParser.NOT]: 'NOT',
+  [OpenSearchPPLSearchOnlyParser.IN]: 'IN',
 };
 
-const WS = PPLSearchParser.WS;
+const WS = OpenSearchPPLSearchOnlyParser.WS;
 const VALUE_LIKE = new Set<number>([
-  PPLSearchParser.PHRASE,
-  PPLSearchParser.TERM,
-  PPLSearchParser.BACKTICK,
+  OpenSearchPPLSearchOnlyParser.PHRASE,
+  OpenSearchPPLSearchOnlyParser.TERM,
+  OpenSearchPPLSearchOnlyParser.BACKTICK,
 ]);
 const COMPARISON_OPS = new Set<number>([
-  PPLSearchParser.EQ,
-  PPLSearchParser.NEQ,
-  PPLSearchParser.GT,
-  PPLSearchParser.GE,
-  PPLSearchParser.LT,
-  PPLSearchParser.LE,
+  OpenSearchPPLSearchOnlyParser.EQ,
+  OpenSearchPPLSearchOnlyParser.NEQ,
+  OpenSearchPPLSearchOnlyParser.GT,
+  OpenSearchPPLSearchOnlyParser.GE,
+  OpenSearchPPLSearchOnlyParser.LT,
+  OpenSearchPPLSearchOnlyParser.LE,
 ]);
 
 /** Exclusive 0-based char offset where a token ends. */
@@ -79,9 +79,9 @@ function findCursorTokenIndex(tokenStream: CommonTokenStream, cursorColumn: numb
       const moveNext =
         token.type === WS ||
         COMPARISON_OPS.has(token.type) ||
-        token.type === PPLSearchParser.LPAREN ||
-        token.type === PPLSearchParser.COMMA ||
-        token.type === PPLSearchParser.IN;
+        token.type === OpenSearchPPLSearchOnlyParser.LPAREN ||
+        token.type === OpenSearchPPLSearchOnlyParser.COMMA ||
+        token.type === OpenSearchPPLSearchOnlyParser.IN;
       if (moveNext && cursorColumn >= end) return i + 1;
       if (start > cursorColumn) return i;
       return i;
@@ -99,12 +99,15 @@ function findGoverningField(tokenStream: CommonTokenStream, cursorIndex: number)
       i--;
       continue;
     }
-    if (COMPARISON_OPS.has(t.type) || t.type === PPLSearchParser.IN) {
+    if (COMPARISON_OPS.has(t.type) || t.type === OpenSearchPPLSearchOnlyParser.IN) {
       i--;
       while (i >= 0 && tokenStream.get(i).type === WS) i--;
       if (i >= 0) {
         const f = tokenStream.get(i);
-        if (f.type === PPLSearchParser.TERM || f.type === PPLSearchParser.BACKTICK) {
+        if (
+          f.type === OpenSearchPPLSearchOnlyParser.TERM ||
+          f.type === OpenSearchPPLSearchOnlyParser.BACKTICK
+        ) {
           return f.text || null;
         }
       }
@@ -112,8 +115,8 @@ function findGoverningField(tokenStream: CommonTokenStream, cursorIndex: number)
     }
     if (
       VALUE_LIKE.has(t.type) ||
-      t.type === PPLSearchParser.COMMA ||
-      t.type === PPLSearchParser.LPAREN
+      t.type === OpenSearchPPLSearchOnlyParser.COMMA ||
+      t.type === OpenSearchPPLSearchOnlyParser.LPAREN
     ) {
       i--;
       continue;
@@ -137,9 +140,9 @@ export function analyzeSearchExpression(query: string, cursorColumn: number): Se
   };
   try {
     const inputStream = CharStream.fromString(query);
-    const lexer = new PPLSearchLexer(inputStream);
+    const lexer = new OpenSearchPPLSearchOnlyLexer(inputStream);
     const tokenStream = new CommonTokenStream(lexer);
-    const parser = new PPLSearchParser(tokenStream);
+    const parser = new OpenSearchPPLSearchOnlyParser(tokenStream);
     parser.removeErrorListeners();
     parser.searchExpression();
     tokenStream.fill();
@@ -160,9 +163,9 @@ export function analyzeSearchExpression(query: string, cursorColumn: number): Se
       here &&
       here.type !== Token.EOF &&
       here.type !== WS &&
-      (here.type === PPLSearchParser.TERM ||
-        here.type === PPLSearchParser.PHRASE ||
-        here.type === PPLSearchParser.BACKTICK)
+      (here.type === OpenSearchPPLSearchOnlyParser.TERM ||
+        here.type === OpenSearchPPLSearchOnlyParser.PHRASE ||
+        here.type === OpenSearchPPLSearchOnlyParser.BACKTICK)
     ) {
       const start = here.column;
       const end = tokenEnd(here);
@@ -175,22 +178,23 @@ export function analyzeSearchExpression(query: string, cursorColumn: number): Se
 
     const core = new CodeCompletionCore(parser);
     core.preferredRules = new Set([
-      PPLSearchParser.RULE_field,
-      PPLSearchParser.RULE_value,
-      PPLSearchParser.RULE_term,
+      OpenSearchPPLSearchOnlyParser.RULE_field,
+      OpenSearchPPLSearchOnlyParser.RULE_value,
+      OpenSearchPPLSearchOnlyParser.RULE_term,
     ]);
-    core.ignoredTokens = new Set([PPLSearchParser.RPAREN]);
+    core.ignoredTokens = new Set([OpenSearchPPLSearchOnlyParser.RPAREN]);
 
     const candidates = core.collectCandidates(cursorIndex);
 
     const rules = candidates.rules;
     const suggestFields =
-      rules.has(PPLSearchParser.RULE_field) || rules.has(PPLSearchParser.RULE_term);
+      rules.has(OpenSearchPPLSearchOnlyParser.RULE_field) ||
+      rules.has(OpenSearchPPLSearchOnlyParser.RULE_term);
 
     // Values are suggested when the grammar expects a value (comparison RHS or IN
     // list). Resolve the governing field so we can fetch its value suggestions.
     let suggestValuesForField: string | undefined;
-    if (rules.has(PPLSearchParser.RULE_value)) {
+    if (rules.has(OpenSearchPPLSearchOnlyParser.RULE_value)) {
       const field = findGoverningField(tokenStream, cursorIndex);
       if (field) suggestValuesForField = field;
     }

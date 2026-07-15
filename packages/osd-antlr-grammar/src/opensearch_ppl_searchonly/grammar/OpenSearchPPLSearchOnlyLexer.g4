@@ -1,4 +1,4 @@
-lexer grammar PPLSearchLexer;
+lexer grammar OpenSearchPPLSearchOnlyLexer;
 
 // Restricted lexer for the PPL `search` command's <search-expression> only
 // (see the search command docs). It is intentionally small: it feeds a

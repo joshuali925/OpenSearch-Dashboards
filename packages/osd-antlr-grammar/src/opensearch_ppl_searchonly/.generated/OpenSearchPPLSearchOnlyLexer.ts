@@ -1,10 +1,10 @@
-// Generated from ./src/ppl_search/grammar/PPLSearchLexer.g4 by ANTLR 4.13.1
+// Generated from ./src/opensearch_ppl_searchonly/grammar/OpenSearchPPLSearchOnlyLexer.g4 by ANTLR 4.13.1
 
 import * as antlr from "antlr4ng";
 import { Token } from "antlr4ng";
 
 
-export class PPLSearchLexer extends antlr.Lexer {
+export class OpenSearchPPLSearchOnlyLexer extends antlr.Lexer {
     public static readonly AND = 1;
     public static readonly OR = 2;
     public static readonly NOT = 3;
@@ -49,20 +49,20 @@ export class PPLSearchLexer extends antlr.Lexer {
 
     public constructor(input: antlr.CharStream) {
         super(input);
-        this.interpreter = new antlr.LexerATNSimulator(this, PPLSearchLexer._ATN, PPLSearchLexer.decisionsToDFA, new antlr.PredictionContextCache());
+        this.interpreter = new antlr.LexerATNSimulator(this, OpenSearchPPLSearchOnlyLexer._ATN, OpenSearchPPLSearchOnlyLexer.decisionsToDFA, new antlr.PredictionContextCache());
     }
 
-    public get grammarFileName(): string { return "PPLSearchLexer.g4"; }
+    public get grammarFileName(): string { return "OpenSearchPPLSearchOnlyLexer.g4"; }
 
-    public get literalNames(): (string | null)[] { return PPLSearchLexer.literalNames; }
-    public get symbolicNames(): (string | null)[] { return PPLSearchLexer.symbolicNames; }
-    public get ruleNames(): string[] { return PPLSearchLexer.ruleNames; }
+    public get literalNames(): (string | null)[] { return OpenSearchPPLSearchOnlyLexer.literalNames; }
+    public get symbolicNames(): (string | null)[] { return OpenSearchPPLSearchOnlyLexer.symbolicNames; }
+    public get ruleNames(): string[] { return OpenSearchPPLSearchOnlyLexer.ruleNames; }
 
-    public get serializedATN(): number[] { return PPLSearchLexer._serializedATN; }
+    public get serializedATN(): number[] { return OpenSearchPPLSearchOnlyLexer._serializedATN; }
 
-    public get channelNames(): string[] { return PPLSearchLexer.channelNames; }
+    public get channelNames(): string[] { return OpenSearchPPLSearchOnlyLexer.channelNames; }
 
-    public get modeNames(): string[] { return PPLSearchLexer.modeNames; }
+    public get modeNames(): string[] { return OpenSearchPPLSearchOnlyLexer.modeNames; }
 
     public static readonly _serializedATN: number[] = [
         4,0,17,120,6,-1,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,
@@ -114,19 +114,19 @@ export class PPLSearchLexer extends antlr.Lexer {
 
     private static __ATN: antlr.ATN;
     public static get _ATN(): antlr.ATN {
-        if (!PPLSearchLexer.__ATN) {
-            PPLSearchLexer.__ATN = new antlr.ATNDeserializer().deserialize(PPLSearchLexer._serializedATN);
+        if (!OpenSearchPPLSearchOnlyLexer.__ATN) {
+            OpenSearchPPLSearchOnlyLexer.__ATN = new antlr.ATNDeserializer().deserialize(OpenSearchPPLSearchOnlyLexer._serializedATN);
         }
 
-        return PPLSearchLexer.__ATN;
+        return OpenSearchPPLSearchOnlyLexer.__ATN;
     }
 
 
-    private static readonly vocabulary = new antlr.Vocabulary(PPLSearchLexer.literalNames, PPLSearchLexer.symbolicNames, []);
+    private static readonly vocabulary = new antlr.Vocabulary(OpenSearchPPLSearchOnlyLexer.literalNames, OpenSearchPPLSearchOnlyLexer.symbolicNames, []);
 
     public override get vocabulary(): antlr.Vocabulary {
-        return PPLSearchLexer.vocabulary;
+        return OpenSearchPPLSearchOnlyLexer.vocabulary;
     }
 
-    private static readonly decisionsToDFA = PPLSearchLexer._ATN.decisionToState.map( (ds: antlr.DecisionState, index: number) => new antlr.DFA(ds, index) );
+    private static readonly decisionsToDFA = OpenSearchPPLSearchOnlyLexer._ATN.decisionToState.map( (ds: antlr.DecisionState, index: number) => new antlr.DFA(ds, index) );
 }

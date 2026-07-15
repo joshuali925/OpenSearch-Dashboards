@@ -1,7 +1,7 @@
-parser grammar PPLSearchParser;
+parser grammar OpenSearchPPLSearchOnlyParser;
 
 options {
-    tokenVocab = PPLSearchLexer;
+    tokenVocab = OpenSearchPPLSearchOnlyLexer;
 }
 
 // Grammar for the PPL `search` command <search-expression>. Operator precedence

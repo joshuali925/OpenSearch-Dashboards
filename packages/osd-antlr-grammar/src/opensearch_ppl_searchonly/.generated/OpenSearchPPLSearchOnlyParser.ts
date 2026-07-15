@@ -1,16 +1,16 @@
-// Generated from ./src/ppl_search/grammar/PPLSearchParser.g4 by ANTLR 4.13.1
+// Generated from ./src/opensearch_ppl_searchonly/grammar/OpenSearchPPLSearchOnlyParser.g4 by ANTLR 4.13.1
 
 import * as antlr from "antlr4ng";
 import { Token } from "antlr4ng";
 
-import { PPLSearchParserVisitor } from "./PPLSearchParserVisitor.js";
+import { OpenSearchPPLSearchOnlyParserVisitor } from "./OpenSearchPPLSearchOnlyParserVisitor.js";
 
 // for running tests with parameters, TODO: discuss strategy for typed parameters in CI
 // eslint-disable-next-line no-unused-vars
 type int = number;
 
 
-export class PPLSearchParser extends antlr.Parser {
+export class OpenSearchPPLSearchOnlyParser extends antlr.Parser {
     public static readonly AND = 1;
     public static readonly OR = 2;
     public static readonly NOT = 3;
@@ -55,11 +55,11 @@ export class PPLSearchParser extends antlr.Parser {
         "field", "value", "term",
     ];
 
-    public get grammarFileName(): string { return "PPLSearchParser.g4"; }
-    public get literalNames(): (string | null)[] { return PPLSearchParser.literalNames; }
-    public get symbolicNames(): (string | null)[] { return PPLSearchParser.symbolicNames; }
-    public get ruleNames(): string[] { return PPLSearchParser.ruleNames; }
-    public get serializedATN(): number[] { return PPLSearchParser._serializedATN; }
+    public get grammarFileName(): string { return "OpenSearchPPLSearchOnlyParser.g4"; }
+    public get literalNames(): (string | null)[] { return OpenSearchPPLSearchOnlyParser.literalNames; }
+    public get symbolicNames(): (string | null)[] { return OpenSearchPPLSearchOnlyParser.symbolicNames; }
+    public get ruleNames(): string[] { return OpenSearchPPLSearchOnlyParser.ruleNames; }
+    public get serializedATN(): number[] { return OpenSearchPPLSearchOnlyParser._serializedATN; }
 
     protected createFailedPredicateException(predicate?: string, message?: string): antlr.FailedPredicateException {
         return new antlr.FailedPredicateException(this, predicate, message);
@@ -67,11 +67,11 @@ export class PPLSearchParser extends antlr.Parser {
 
     public constructor(input: antlr.TokenStream) {
         super(input);
-        this.interpreter = new antlr.ParserATNSimulator(this, PPLSearchParser._ATN, PPLSearchParser.decisionsToDFA, new antlr.PredictionContextCache());
+        this.interpreter = new antlr.ParserATNSimulator(this, OpenSearchPPLSearchOnlyParser._ATN, OpenSearchPPLSearchOnlyParser.decisionsToDFA, new antlr.PredictionContextCache());
     }
     public searchExpression(): SearchExpressionContext {
         let localContext = new SearchExpressionContext(this.context, this.state);
-        this.enterRule(localContext, 0, PPLSearchParser.RULE_searchExpression);
+        this.enterRule(localContext, 0, OpenSearchPPLSearchOnlyParser.RULE_searchExpression);
         try {
             this.enterOuterAlt(localContext, 1);
             {
@@ -94,7 +94,7 @@ export class PPLSearchParser extends antlr.Parser {
     }
     public andExpression(): AndExpressionContext {
         let localContext = new AndExpressionContext(this.context, this.state);
-        this.enterRule(localContext, 2, PPLSearchParser.RULE_andExpression);
+        this.enterRule(localContext, 2, OpenSearchPPLSearchOnlyParser.RULE_andExpression);
         let _la: number;
         try {
             this.enterOuterAlt(localContext, 1);
@@ -113,7 +113,7 @@ export class PPLSearchParser extends antlr.Parser {
                 if (_la === 1) {
                     {
                     this.state = 25;
-                    this.match(PPLSearchParser.AND);
+                    this.match(OpenSearchPPLSearchOnlyParser.AND);
                     }
                 }
 
@@ -142,7 +142,7 @@ export class PPLSearchParser extends antlr.Parser {
     }
     public orExpression(): OrExpressionContext {
         let localContext = new OrExpressionContext(this.context, this.state);
-        this.enterRule(localContext, 4, PPLSearchParser.RULE_orExpression);
+        this.enterRule(localContext, 4, OpenSearchPPLSearchOnlyParser.RULE_orExpression);
         let _la: number;
         try {
             this.enterOuterAlt(localContext, 1);
@@ -156,7 +156,7 @@ export class PPLSearchParser extends antlr.Parser {
                 {
                 {
                 this.state = 35;
-                this.match(PPLSearchParser.OR);
+                this.match(OpenSearchPPLSearchOnlyParser.OR);
                 this.state = 36;
                 this.notExpression();
                 }
@@ -182,7 +182,7 @@ export class PPLSearchParser extends antlr.Parser {
     }
     public notExpression(): NotExpressionContext {
         let localContext = new NotExpressionContext(this.context, this.state);
-        this.enterRule(localContext, 6, PPLSearchParser.RULE_notExpression);
+        this.enterRule(localContext, 6, OpenSearchPPLSearchOnlyParser.RULE_notExpression);
         let _la: number;
         try {
             this.enterOuterAlt(localContext, 1);
@@ -193,7 +193,7 @@ export class PPLSearchParser extends antlr.Parser {
             if (_la === 3) {
                 {
                 this.state = 42;
-                this.match(PPLSearchParser.NOT);
+                this.match(OpenSearchPPLSearchOnlyParser.NOT);
                 }
             }
 
@@ -216,7 +216,7 @@ export class PPLSearchParser extends antlr.Parser {
     }
     public primaryExpression(): PrimaryExpressionContext {
         let localContext = new PrimaryExpressionContext(this.context, this.state);
-        this.enterRule(localContext, 8, PPLSearchParser.RULE_primaryExpression);
+        this.enterRule(localContext, 8, OpenSearchPPLSearchOnlyParser.RULE_primaryExpression);
         try {
             this.state = 54;
             this.errorHandler.sync(this);
@@ -225,11 +225,11 @@ export class PPLSearchParser extends antlr.Parser {
                 this.enterOuterAlt(localContext, 1);
                 {
                 this.state = 47;
-                this.match(PPLSearchParser.LPAREN);
+                this.match(OpenSearchPPLSearchOnlyParser.LPAREN);
                 this.state = 48;
                 this.andExpression();
                 this.state = 49;
-                this.match(PPLSearchParser.RPAREN);
+                this.match(OpenSearchPPLSearchOnlyParser.RPAREN);
                 }
                 break;
             case 2:
@@ -270,7 +270,7 @@ export class PPLSearchParser extends antlr.Parser {
     }
     public comparisonExpression(): ComparisonExpressionContext {
         let localContext = new ComparisonExpressionContext(this.context, this.state);
-        this.enterRule(localContext, 10, PPLSearchParser.RULE_comparisonExpression);
+        this.enterRule(localContext, 10, OpenSearchPPLSearchOnlyParser.RULE_comparisonExpression);
         try {
             this.enterOuterAlt(localContext, 1);
             {
@@ -297,7 +297,7 @@ export class PPLSearchParser extends antlr.Parser {
     }
     public inExpression(): InExpressionContext {
         let localContext = new InExpressionContext(this.context, this.state);
-        this.enterRule(localContext, 12, PPLSearchParser.RULE_inExpression);
+        this.enterRule(localContext, 12, OpenSearchPPLSearchOnlyParser.RULE_inExpression);
         let _la: number;
         try {
             this.enterOuterAlt(localContext, 1);
@@ -305,9 +305,9 @@ export class PPLSearchParser extends antlr.Parser {
             this.state = 60;
             this.field();
             this.state = 61;
-            this.match(PPLSearchParser.IN);
+            this.match(OpenSearchPPLSearchOnlyParser.IN);
             this.state = 62;
-            this.match(PPLSearchParser.LPAREN);
+            this.match(OpenSearchPPLSearchOnlyParser.LPAREN);
             this.state = 63;
             this.value();
             this.state = 68;
@@ -317,7 +317,7 @@ export class PPLSearchParser extends antlr.Parser {
                 {
                 {
                 this.state = 64;
-                this.match(PPLSearchParser.COMMA);
+                this.match(OpenSearchPPLSearchOnlyParser.COMMA);
                 this.state = 65;
                 this.value();
                 }
@@ -327,7 +327,7 @@ export class PPLSearchParser extends antlr.Parser {
                 _la = this.tokenStream.LA(1);
             }
             this.state = 71;
-            this.match(PPLSearchParser.RPAREN);
+            this.match(OpenSearchPPLSearchOnlyParser.RPAREN);
             }
         }
         catch (re) {
@@ -345,7 +345,7 @@ export class PPLSearchParser extends antlr.Parser {
     }
     public comparisonOperator(): ComparisonOperatorContext {
         let localContext = new ComparisonOperatorContext(this.context, this.state);
-        this.enterRule(localContext, 14, PPLSearchParser.RULE_comparisonOperator);
+        this.enterRule(localContext, 14, OpenSearchPPLSearchOnlyParser.RULE_comparisonOperator);
         let _la: number;
         try {
             this.enterOuterAlt(localContext, 1);
@@ -376,7 +376,7 @@ export class PPLSearchParser extends antlr.Parser {
     }
     public field(): FieldContext {
         let localContext = new FieldContext(this.context, this.state);
-        this.enterRule(localContext, 16, PPLSearchParser.RULE_field);
+        this.enterRule(localContext, 16, OpenSearchPPLSearchOnlyParser.RULE_field);
         let _la: number;
         try {
             this.enterOuterAlt(localContext, 1);
@@ -407,7 +407,7 @@ export class PPLSearchParser extends antlr.Parser {
     }
     public value(): ValueContext {
         let localContext = new ValueContext(this.context, this.state);
-        this.enterRule(localContext, 18, PPLSearchParser.RULE_value);
+        this.enterRule(localContext, 18, OpenSearchPPLSearchOnlyParser.RULE_value);
         let _la: number;
         try {
             this.enterOuterAlt(localContext, 1);
@@ -438,7 +438,7 @@ export class PPLSearchParser extends antlr.Parser {
     }
     public term(): TermContext {
         let localContext = new TermContext(this.context, this.state);
-        this.enterRule(localContext, 20, PPLSearchParser.RULE_term);
+        this.enterRule(localContext, 20, OpenSearchPPLSearchOnlyParser.RULE_term);
         let _la: number;
         try {
             this.enterOuterAlt(localContext, 1);
@@ -498,21 +498,21 @@ export class PPLSearchParser extends antlr.Parser {
 
     private static __ATN: antlr.ATN;
     public static get _ATN(): antlr.ATN {
-        if (!PPLSearchParser.__ATN) {
-            PPLSearchParser.__ATN = new antlr.ATNDeserializer().deserialize(PPLSearchParser._serializedATN);
+        if (!OpenSearchPPLSearchOnlyParser.__ATN) {
+            OpenSearchPPLSearchOnlyParser.__ATN = new antlr.ATNDeserializer().deserialize(OpenSearchPPLSearchOnlyParser._serializedATN);
         }
 
-        return PPLSearchParser.__ATN;
+        return OpenSearchPPLSearchOnlyParser.__ATN;
     }
 
 
-    private static readonly vocabulary = new antlr.Vocabulary(PPLSearchParser.literalNames, PPLSearchParser.symbolicNames, []);
+    private static readonly vocabulary = new antlr.Vocabulary(OpenSearchPPLSearchOnlyParser.literalNames, OpenSearchPPLSearchOnlyParser.symbolicNames, []);
 
     public override get vocabulary(): antlr.Vocabulary {
-        return PPLSearchParser.vocabulary;
+        return OpenSearchPPLSearchOnlyParser.vocabulary;
     }
 
-    private static readonly decisionsToDFA = PPLSearchParser._ATN.decisionToState.map( (ds: antlr.DecisionState, index: number) => new antlr.DFA(ds, index) );
+    private static readonly decisionsToDFA = OpenSearchPPLSearchOnlyParser._ATN.decisionToState.map( (ds: antlr.DecisionState, index: number) => new antlr.DFA(ds, index) );
 }
 
 export class SearchExpressionContext extends antlr.ParserRuleContext {
@@ -523,9 +523,9 @@ export class SearchExpressionContext extends antlr.ParserRuleContext {
         return this.getRuleContext(0, AndExpressionContext)!;
     }
     public override get ruleIndex(): number {
-        return PPLSearchParser.RULE_searchExpression;
+        return OpenSearchPPLSearchOnlyParser.RULE_searchExpression;
     }
-    public override accept<Result>(visitor: PPLSearchParserVisitor<Result>): Result | null {
+    public override accept<Result>(visitor: OpenSearchPPLSearchOnlyParserVisitor<Result>): Result | null {
         if (visitor.visitSearchExpression) {
             return visitor.visitSearchExpression(this);
         } else {
@@ -552,15 +552,15 @@ export class AndExpressionContext extends antlr.ParserRuleContext {
     public AND(i: number): antlr.TerminalNode | null;
     public AND(i?: number): antlr.TerminalNode | null | antlr.TerminalNode[] {
     	if (i === undefined) {
-    		return this.getTokens(PPLSearchParser.AND);
+    		return this.getTokens(OpenSearchPPLSearchOnlyParser.AND);
     	} else {
-    		return this.getToken(PPLSearchParser.AND, i);
+    		return this.getToken(OpenSearchPPLSearchOnlyParser.AND, i);
     	}
     }
     public override get ruleIndex(): number {
-        return PPLSearchParser.RULE_andExpression;
+        return OpenSearchPPLSearchOnlyParser.RULE_andExpression;
     }
-    public override accept<Result>(visitor: PPLSearchParserVisitor<Result>): Result | null {
+    public override accept<Result>(visitor: OpenSearchPPLSearchOnlyParserVisitor<Result>): Result | null {
         if (visitor.visitAndExpression) {
             return visitor.visitAndExpression(this);
         } else {
@@ -587,15 +587,15 @@ export class OrExpressionContext extends antlr.ParserRuleContext {
     public OR(i: number): antlr.TerminalNode | null;
     public OR(i?: number): antlr.TerminalNode | null | antlr.TerminalNode[] {
     	if (i === undefined) {
-    		return this.getTokens(PPLSearchParser.OR);
+    		return this.getTokens(OpenSearchPPLSearchOnlyParser.OR);
     	} else {
-    		return this.getToken(PPLSearchParser.OR, i);
+    		return this.getToken(OpenSearchPPLSearchOnlyParser.OR, i);
     	}
     }
     public override get ruleIndex(): number {
-        return PPLSearchParser.RULE_orExpression;
+        return OpenSearchPPLSearchOnlyParser.RULE_orExpression;
     }
-    public override accept<Result>(visitor: PPLSearchParserVisitor<Result>): Result | null {
+    public override accept<Result>(visitor: OpenSearchPPLSearchOnlyParserVisitor<Result>): Result | null {
         if (visitor.visitOrExpression) {
             return visitor.visitOrExpression(this);
         } else {
@@ -613,12 +613,12 @@ export class NotExpressionContext extends antlr.ParserRuleContext {
         return this.getRuleContext(0, PrimaryExpressionContext)!;
     }
     public NOT(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.NOT, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.NOT, 0);
     }
     public override get ruleIndex(): number {
-        return PPLSearchParser.RULE_notExpression;
+        return OpenSearchPPLSearchOnlyParser.RULE_notExpression;
     }
-    public override accept<Result>(visitor: PPLSearchParserVisitor<Result>): Result | null {
+    public override accept<Result>(visitor: OpenSearchPPLSearchOnlyParserVisitor<Result>): Result | null {
         if (visitor.visitNotExpression) {
             return visitor.visitNotExpression(this);
         } else {
@@ -633,13 +633,13 @@ export class PrimaryExpressionContext extends antlr.ParserRuleContext {
         super(parent, invokingState);
     }
     public LPAREN(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.LPAREN, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.LPAREN, 0);
     }
     public andExpression(): AndExpressionContext | null {
         return this.getRuleContext(0, AndExpressionContext);
     }
     public RPAREN(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.RPAREN, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.RPAREN, 0);
     }
     public comparisonExpression(): ComparisonExpressionContext | null {
         return this.getRuleContext(0, ComparisonExpressionContext);
@@ -651,9 +651,9 @@ export class PrimaryExpressionContext extends antlr.ParserRuleContext {
         return this.getRuleContext(0, TermContext);
     }
     public override get ruleIndex(): number {
-        return PPLSearchParser.RULE_primaryExpression;
+        return OpenSearchPPLSearchOnlyParser.RULE_primaryExpression;
     }
-    public override accept<Result>(visitor: PPLSearchParserVisitor<Result>): Result | null {
+    public override accept<Result>(visitor: OpenSearchPPLSearchOnlyParserVisitor<Result>): Result | null {
         if (visitor.visitPrimaryExpression) {
             return visitor.visitPrimaryExpression(this);
         } else {
@@ -677,9 +677,9 @@ export class ComparisonExpressionContext extends antlr.ParserRuleContext {
         return this.getRuleContext(0, ValueContext)!;
     }
     public override get ruleIndex(): number {
-        return PPLSearchParser.RULE_comparisonExpression;
+        return OpenSearchPPLSearchOnlyParser.RULE_comparisonExpression;
     }
-    public override accept<Result>(visitor: PPLSearchParserVisitor<Result>): Result | null {
+    public override accept<Result>(visitor: OpenSearchPPLSearchOnlyParserVisitor<Result>): Result | null {
         if (visitor.visitComparisonExpression) {
             return visitor.visitComparisonExpression(this);
         } else {
@@ -697,10 +697,10 @@ export class InExpressionContext extends antlr.ParserRuleContext {
         return this.getRuleContext(0, FieldContext)!;
     }
     public IN(): antlr.TerminalNode {
-        return this.getToken(PPLSearchParser.IN, 0)!;
+        return this.getToken(OpenSearchPPLSearchOnlyParser.IN, 0)!;
     }
     public LPAREN(): antlr.TerminalNode {
-        return this.getToken(PPLSearchParser.LPAREN, 0)!;
+        return this.getToken(OpenSearchPPLSearchOnlyParser.LPAREN, 0)!;
     }
     public value(): ValueContext[];
     public value(i: number): ValueContext | null;
@@ -712,21 +712,21 @@ export class InExpressionContext extends antlr.ParserRuleContext {
         return this.getRuleContext(i, ValueContext);
     }
     public RPAREN(): antlr.TerminalNode {
-        return this.getToken(PPLSearchParser.RPAREN, 0)!;
+        return this.getToken(OpenSearchPPLSearchOnlyParser.RPAREN, 0)!;
     }
     public COMMA(): antlr.TerminalNode[];
     public COMMA(i: number): antlr.TerminalNode | null;
     public COMMA(i?: number): antlr.TerminalNode | null | antlr.TerminalNode[] {
     	if (i === undefined) {
-    		return this.getTokens(PPLSearchParser.COMMA);
+    		return this.getTokens(OpenSearchPPLSearchOnlyParser.COMMA);
     	} else {
-    		return this.getToken(PPLSearchParser.COMMA, i);
+    		return this.getToken(OpenSearchPPLSearchOnlyParser.COMMA, i);
     	}
     }
     public override get ruleIndex(): number {
-        return PPLSearchParser.RULE_inExpression;
+        return OpenSearchPPLSearchOnlyParser.RULE_inExpression;
     }
-    public override accept<Result>(visitor: PPLSearchParserVisitor<Result>): Result | null {
+    public override accept<Result>(visitor: OpenSearchPPLSearchOnlyParserVisitor<Result>): Result | null {
         if (visitor.visitInExpression) {
             return visitor.visitInExpression(this);
         } else {
@@ -741,27 +741,27 @@ export class ComparisonOperatorContext extends antlr.ParserRuleContext {
         super(parent, invokingState);
     }
     public EQ(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.EQ, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.EQ, 0);
     }
     public NEQ(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.NEQ, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.NEQ, 0);
     }
     public GT(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.GT, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.GT, 0);
     }
     public GE(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.GE, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.GE, 0);
     }
     public LT(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.LT, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.LT, 0);
     }
     public LE(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.LE, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.LE, 0);
     }
     public override get ruleIndex(): number {
-        return PPLSearchParser.RULE_comparisonOperator;
+        return OpenSearchPPLSearchOnlyParser.RULE_comparisonOperator;
     }
-    public override accept<Result>(visitor: PPLSearchParserVisitor<Result>): Result | null {
+    public override accept<Result>(visitor: OpenSearchPPLSearchOnlyParserVisitor<Result>): Result | null {
         if (visitor.visitComparisonOperator) {
             return visitor.visitComparisonOperator(this);
         } else {
@@ -776,15 +776,15 @@ export class FieldContext extends antlr.ParserRuleContext {
         super(parent, invokingState);
     }
     public TERM(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.TERM, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.TERM, 0);
     }
     public BACKTICK(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.BACKTICK, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.BACKTICK, 0);
     }
     public override get ruleIndex(): number {
-        return PPLSearchParser.RULE_field;
+        return OpenSearchPPLSearchOnlyParser.RULE_field;
     }
-    public override accept<Result>(visitor: PPLSearchParserVisitor<Result>): Result | null {
+    public override accept<Result>(visitor: OpenSearchPPLSearchOnlyParserVisitor<Result>): Result | null {
         if (visitor.visitField) {
             return visitor.visitField(this);
         } else {
@@ -799,18 +799,18 @@ export class ValueContext extends antlr.ParserRuleContext {
         super(parent, invokingState);
     }
     public PHRASE(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.PHRASE, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.PHRASE, 0);
     }
     public TERM(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.TERM, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.TERM, 0);
     }
     public BACKTICK(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.BACKTICK, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.BACKTICK, 0);
     }
     public override get ruleIndex(): number {
-        return PPLSearchParser.RULE_value;
+        return OpenSearchPPLSearchOnlyParser.RULE_value;
     }
-    public override accept<Result>(visitor: PPLSearchParserVisitor<Result>): Result | null {
+    public override accept<Result>(visitor: OpenSearchPPLSearchOnlyParserVisitor<Result>): Result | null {
         if (visitor.visitValue) {
             return visitor.visitValue(this);
         } else {
@@ -825,15 +825,15 @@ export class TermContext extends antlr.ParserRuleContext {
         super(parent, invokingState);
     }
     public PHRASE(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.PHRASE, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.PHRASE, 0);
     }
     public TERM(): antlr.TerminalNode | null {
-        return this.getToken(PPLSearchParser.TERM, 0);
+        return this.getToken(OpenSearchPPLSearchOnlyParser.TERM, 0);
     }
     public override get ruleIndex(): number {
-        return PPLSearchParser.RULE_term;
+        return OpenSearchPPLSearchOnlyParser.RULE_term;
     }
-    public override accept<Result>(visitor: PPLSearchParserVisitor<Result>): Result | null {
+    public override accept<Result>(visitor: OpenSearchPPLSearchOnlyParserVisitor<Result>): Result | null {
         if (visitor.visitTerm) {
             return visitor.visitTerm(this);
         } else {

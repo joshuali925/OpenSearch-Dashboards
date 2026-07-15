@@ -8,4 +8,4 @@ export * from './opensearch_ppl';
 export * from './opensearch_ppl_simplified';
 export * from './opensearch_sql';
 export * from './promql';
-export * from './ppl_search';
+export * from './opensearch_ppl_searchonly';

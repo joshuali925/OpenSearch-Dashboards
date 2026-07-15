@@ -69,7 +69,7 @@ const FunctionPill: React.FC<{
         );
       })}
       <EuiButtonIcon
-        className="plqX"
+        className="plqPillX"
         iconType="cross"
         color="text"
         size="s"

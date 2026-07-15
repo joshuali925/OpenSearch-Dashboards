@@ -217,7 +217,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                             <span key={f} className="plqPill">
                               <span className="plqPill__label">{f}</span>
                               <EuiButtonIcon
-                                className="plqPill__remove"
+                                className="plqPillX"
                                 iconType="cross"
                                 color="text"
                                 size="s"

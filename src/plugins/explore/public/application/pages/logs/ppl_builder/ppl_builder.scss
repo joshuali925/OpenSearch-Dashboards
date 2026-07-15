@@ -304,12 +304,21 @@ $plqControlHeight: 36px;
     color: $plqInk;
     user-select: none;
   }
+}
 
-  &__remove.euiButtonIcon {
-    width: 14px;
-    height: 14px;
-    min-width: 14px;
-    color: $plqInk;
+// The remove ✕ inside a chip-sized pill (group-by field, scalar function). Sized
+// down from the standalone `.plqX` so the glyph sits proportionate to the 18px
+// pill rather than filling it — EUI's `size="s"` renders a 16px cross regardless
+// of the button box, so the inner svg is shrunk too.
+.plqPillX.euiButtonIcon {
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  color: $plqInk;
+
+  .euiIcon {
+    width: 10px;
+    height: 10px;
   }
 }
 

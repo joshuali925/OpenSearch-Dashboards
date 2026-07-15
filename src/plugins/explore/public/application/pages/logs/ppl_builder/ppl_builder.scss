@@ -331,15 +331,15 @@ $plqControlHeight: 36px;
   }
 }
 
-// One selected group-by field: a flat blue pill matching the scalar-function
-// chip (primary-soft fill, primary monospace text, its own ✕ to remove).
+// One selected group-by field: a flat gray pill matching the scalar-function
+// chip (neutral chip fill, monospace text, its own ✕ to remove).
 .plqPill {
   display: inline-flex;
   align-items: center;
   gap: 2px;
   padding: 0 2px 0 8px;
   height: 18px;
-  background: $plqPrimarySoft;
+  background: $plqChipBg;
   color: $plqFnText;
   border-radius: $plqRadius;
 
@@ -428,9 +428,9 @@ $plqControlHeight: 36px;
   }
 }
 
-// A scalar function applied to the aggregation field (e.g. `round 2`): a blue
-// chip with an editable inline param and its own ✕ to unwrap. Distinguished from
-// the neutral group-by chip by its primary-soft fill + primary text.
+// A scalar function applied to the aggregation field (e.g. `round 2`): a gray
+// chip with an editable inline param and its own ✕ to unwrap, matching the
+// neutral group-by field pill.
 .plqFn {
   display: inline-flex;
   align-items: center;
@@ -438,7 +438,7 @@ $plqControlHeight: 36px;
   padding: 2px 4px 2px 8px;
   font-size: 12px;
   line-height: 18px;
-  background: $plqPrimarySoft;
+  background: $plqChipBg;
   color: $plqFnText;
   border-radius: $plqRadius;
 

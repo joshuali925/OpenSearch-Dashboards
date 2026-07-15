@@ -89,7 +89,7 @@ interface SearchPopoverMenuProps {
   keepOpenOnSelect?: boolean;
   searchPlaceholder: string;
   emptyMessage: string;
-  /** Anchor side; defaults to `downRight` so the beak sits under the caret. */
+  /** Anchor side; defaults to `downLeft` so the panel hangs from the left edge. */
   anchorPosition?: EuiPopoverProps['anchorPosition'];
   /** data-test-subj for the search box (`${x}-search`). */
   searchDataTestSubj?: string;
@@ -113,7 +113,7 @@ export const SearchPopoverMenu: React.FC<SearchPopoverMenuProps> = ({
   keepOpenOnSelect,
   searchPlaceholder,
   emptyMessage,
-  anchorPosition = 'downRight',
+  anchorPosition = 'downLeft',
   searchDataTestSubj,
 }) => {
   const [isOpen, setIsOpen] = useState(false);

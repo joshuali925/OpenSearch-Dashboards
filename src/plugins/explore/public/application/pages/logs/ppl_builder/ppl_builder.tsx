@@ -215,7 +215,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                           defaultMessage: 'every {interval}',
                           values: { interval: deriveAutoInterval() },
                         }),
-                        tooltip: i18n.translate('explore.pplBuilder.overTimeTooltip', {
+                        tooltip: i18n.translate('explore.pplBuilder.spanTooltip', {
                           defaultMessage:
                             'span({field}, {interval}) — uses the dataset’s time field',
                           values: { field: timeFieldName, interval: deriveAutoInterval() },
@@ -280,7 +280,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                         reads `<fields> every 1h  ˅`. */}
                     {state.groupBy.span && (
                       <EuiToolTip
-                        content={i18n.translate('explore.pplBuilder.spanChipTooltip', {
+                        content={i18n.translate('explore.pplBuilder.spanTooltip', {
                           defaultMessage:
                             'span({field}, {interval}) — uses the dataset’s time field',
                           values: {

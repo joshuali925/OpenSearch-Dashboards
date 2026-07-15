@@ -66,11 +66,11 @@ interface SearchPopoverMenuProps {
   /** The selectable rows (already ordered; grouping derives from `group`). */
   options: SearchMenuOption[];
   /**
-   * Builds the trigger from a toggle handler and the open state. Return just an
-   * `anchor` for a single-button trigger (ƒx glyph, interval chip), or add
-   * `leading` + `wrapperClassName` for a label/pills-plus-caret trigger.
+   * Builds the trigger from a toggle handler. Return just an `anchor` for a
+   * single-button trigger (ƒx glyph, interval chip), or add `leading` +
+   * `wrapperClassName` for a label/pills-plus-caret trigger.
    */
-  trigger: (toggle: () => void, isOpen: boolean) => TriggerParts;
+  trigger: (toggle: () => void) => TriggerParts;
   /**
    * Reserve a leading check column (marking `selected` rows) and render each row
    * as a `plqFieldOption`. Off for the flat aggregation / function lists.
@@ -152,7 +152,7 @@ export const SearchPopoverMenu: React.FC<SearchPopoverMenuProps> = ({
     else if (allowCreate && q) create(q);
   };
 
-  const { anchor, leading, wrapperClassName } = trigger(toggleOpen, isOpen);
+  const { anchor, leading, wrapperClassName } = trigger(toggleOpen);
 
   const renderRow = (option: SearchMenuOption) => {
     // Rows get the flat `plqFieldOption` layout (leading-icon column) whenever the

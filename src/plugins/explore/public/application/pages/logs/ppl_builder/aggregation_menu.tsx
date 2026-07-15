@@ -64,7 +64,7 @@ export const AggregationMenu: React.FC<AggregationMenuProps> = ({
         leading: (
           <button
             type="button"
-            className="plqAggTrigger__labelBtn plqFieldTrigger__labelBtn"
+            className="plqFieldTrigger__labelBtn"
             onClick={toggle}
             aria-label={ariaLabel}
             data-test-subj={dataTestSubj}
@@ -75,7 +75,7 @@ export const AggregationMenu: React.FC<AggregationMenuProps> = ({
         anchor: (
           <button
             type="button"
-            className="plqAggTrigger__caretBtn plqFieldTrigger__caretBtn"
+            className="plqFieldTrigger__caretBtn"
             onClick={toggle}
             aria-label={ariaLabel}
           >

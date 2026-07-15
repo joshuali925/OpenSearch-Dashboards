@@ -191,8 +191,7 @@ export const LogsQueryPanel: React.FC = () => {
   const canSwitchToBuilder = useMemo(() => parsePPL(liveCodeText).canBuild, [liveCodeText]);
 
   const handleModeChange = useCallback(
-    (id: string) => {
-      const newMode = id as LogsBuilderMode;
+    (newMode: LogsBuilderMode) => {
       if (newMode === mode) return;
       if (newMode === 'code') {
         // Carry the builder's current text into the code editor on mount, and

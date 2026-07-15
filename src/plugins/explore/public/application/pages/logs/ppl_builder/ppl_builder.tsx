@@ -53,8 +53,8 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
   const {
     fieldNames,
     sortableFieldNames,
-    numericAndAggregatableOptions,
-    numericOptions,
+    numericAndAggregatableNames,
+    numericFieldNames,
     dateFieldNames,
     timeFieldName,
     getValues,
@@ -117,7 +117,10 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
   // Recomputed from state so it tracks metric/group-by edits.
   const sortColumns = useMemo(
     () => (hasAggregation ? sortableColumns(state) : sortableFieldNames),
-    [hasAggregation, state, sortableFieldNames]
+    // sortableColumns reads only aggregations + group-by fields, so recompute
+    // when those change — not on unrelated state edits (e.g. search keystrokes).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hasAggregation, state.aggregations, state.groupBy.fields, sortableFieldNames]
   );
 
   const toggleSpan = () => {
@@ -164,8 +167,8 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
             key={agg.id}
             agg={agg}
             idx={idx}
-            numericFieldOptions={numericOptions}
-            anyFieldOptions={numericAndAggregatableOptions}
+            numericFieldOptions={numericFieldNames}
+            anyFieldOptions={numericAndAggregatableNames}
             dispatch={dispatch}
           />
         ))}
@@ -200,9 +203,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
                 options={fieldNames}
                 value={state.groupBy.fields}
                 onChange={(fields) => dispatch({ type: 'SET_GROUPBY_FIELDS', fields })}
-                placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
-                  defaultMessage: 'Everything',
-                })}
                 dataTestSubj="pplBuilderGroupByFields"
                 renderTrigger={(onToggle) => (
                   <span className="plqPills">

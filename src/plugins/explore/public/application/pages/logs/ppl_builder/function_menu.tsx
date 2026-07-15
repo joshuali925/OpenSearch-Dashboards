@@ -19,7 +19,7 @@ interface FunctionMenuProps {
  * The `ƒx` "wrap in function" affordance for an aggregation row: a compact italic
  * glyph that opens a search-first popover anchored under it. The popover is a
  * single flat, filterable list grouped under Math / String / Date & time headers
- * — no submenus and no second click level (per the mock's S3 spec). Typing
+ * — no submenus and no second click level. Typing
  * filters across all categories; Enter applies the first match; Esc closes. The
  * aggregation itself is chosen when the metric is created and edited via the
  * row's "Show" dropdown, so it is NOT offered here.

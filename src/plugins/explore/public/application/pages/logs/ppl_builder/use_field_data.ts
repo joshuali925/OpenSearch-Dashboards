@@ -4,7 +4,6 @@
  */
 
 import { useCallback, useMemo } from 'react';
-import { EuiComboBoxOptionOption } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
 import { useDatasetContext } from '../../../context';
@@ -55,23 +54,17 @@ export const useFieldData = () => {
     [fieldNames]
   );
 
-  const fieldOptions = useMemo<EuiComboBoxOptionOption[]>(
-    () => fields.map((f) => ({ label: f.name })),
-    [fields]
-  );
-
   // Any field usable as a `stats` argument (min/max/distinct_count/earliest/…).
-  const numericAndAggregatableOptions = useMemo<EuiComboBoxOptionOption[]>(
-    () =>
-      fields.filter((f) => f.type === 'number' || f.aggregatable).map((f) => ({ label: f.name })),
+  const numericAndAggregatableNames = useMemo<string[]>(
+    () => fields.filter((f) => f.type === 'number' || f.aggregatable).map((f) => f.name),
     [fields]
   );
 
   // Numeric-only fields, for aggregations that require a number (avg/sum/…).
   // A text field such as `referer` is aggregatable (via its keyword sibling) but
   // averaging it is meaningless, so it is excluded here.
-  const numericOptions = useMemo<EuiComboBoxOptionOption[]>(
-    () => fields.filter((f) => f.type === 'number').map((f) => ({ label: f.name })),
+  const numericFieldNames = useMemo<string[]>(
+    () => fields.filter((f) => f.type === 'number').map((f) => f.name),
     [fields]
   );
 
@@ -117,9 +110,8 @@ export const useFieldData = () => {
     fields,
     fieldNames,
     sortableFieldNames,
-    fieldOptions,
-    numericAndAggregatableOptions,
-    numericOptions,
+    numericAndAggregatableNames,
+    numericFieldNames,
     dateFieldNames,
     timeFieldName,
     getValues,

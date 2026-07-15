@@ -6,9 +6,9 @@
 import React from 'react';
 
 /**
- * The `</>` code-mode glyph used by the builder/code toggle, matching the mock
- * exactly (EUI has no equivalent single-glyph icon). Passed as an `iconType`
- * component to EuiButtonIcon; `currentColor` lets the button's color drive it.
+ * The `</>` code-mode glyph used by the builder/code toggle (EUI has no
+ * equivalent single-glyph icon). Passed as an `iconType` component to
+ * EuiButtonIcon; `currentColor` lets the button's color drive it.
  */
 export const CodeToggleIcon: React.FC = () => (
   <svg

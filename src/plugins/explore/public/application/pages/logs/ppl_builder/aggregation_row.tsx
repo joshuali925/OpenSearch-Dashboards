@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiComboBoxOptionOption, EuiButtonIcon, EuiFieldNumber, EuiToolTip } from '@elastic/eui';
+import { EuiButtonIcon, EuiFieldNumber, EuiToolTip } from '@elastic/eui';
 import { BuilderAction } from './build_ppl';
 import { Aggregation, ScalarCall } from './types';
 import { AGG_FN_MAP, SCALAR_FN_MAP } from './operations';
@@ -17,10 +17,10 @@ import { inputWidth } from '../../../components/query_builder';
 interface AggregationRowProps {
   agg: Aggregation;
   idx: number;
-  /** Numeric-only field options, for aggregations that require a number. */
-  numericFieldOptions: EuiComboBoxOptionOption[];
+  /** Numeric-only field names, for aggregations that require a number. */
+  numericFieldOptions: string[];
   /** Any aggregatable field, for aggregations that accept non-numeric fields. */
-  anyFieldOptions: EuiComboBoxOptionOption[];
+  anyFieldOptions: string[];
   dispatch: React.Dispatch<BuilderAction>;
 }
 
@@ -118,7 +118,7 @@ export const AggregationRow: React.FC<AggregationRowProps> = ({
               a narrow width. Shows the chosen field (or "of field") as plain text
               with a caret. */}
           <FieldMenu
-            options={fieldOptions.map((o) => String(o.label))}
+            options={fieldOptions}
             value={agg.field || ''}
             onChange={(field) => dispatch({ type: 'SET_AGGREGATION', index: idx, agg: { field } })}
             triggerClassName="plqAggTrigger"

@@ -56,9 +56,8 @@ jest.mock('./use_field_data', () => ({
     // `.keyword` sub-fields are excluded — the PPL engine rejects them as a
     // sort target.
     sortableFieldNames: ['service', 'bytes'],
-    fieldOptions: [{ label: 'service' }, { label: 'bytes' }],
-    numericAndAggregatableOptions: [{ label: 'bytes' }],
-    numericOptions: [{ label: 'bytes' }],
+    numericAndAggregatableNames: ['bytes'],
+    numericFieldNames: ['bytes'],
     dateFieldNames: ['@timestamp'],
     timeFieldName: '@timestamp',
     getValues: jest.fn(async () => []),

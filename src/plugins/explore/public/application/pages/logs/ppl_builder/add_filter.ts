@@ -22,9 +22,17 @@
 
 import { DataViewField, IndexPatternField } from '../../../../../../data/common';
 
-/** Single-quote a string literal for PPL, escaping embedded quotes as `''`. */
-function quote(value: string): string {
-  return `'${value.replace(/'/g, "''")}'`;
+/**
+ * Serialize a filter value as a PPL literal. Strings are single-quoted (with
+ * embedded quotes escaped as `''`); booleans and numbers are emitted bare so
+ * they compare against the field's real type rather than a string — quoting a
+ * boolean (`` `cancelled`='false' ``) matches nothing in PPL. Mirrors the shared
+ * `FilterUtils.quote`, which the table's raw cell values (real JS booleans and
+ * numbers, not their string forms) require.
+ */
+function toLiteral(value: string | number | boolean): string {
+  if (typeof value === 'string') return `'${value.replace(/'/g, "''")}'`;
+  return String(value);
 }
 
 /**
@@ -32,7 +40,7 @@ function quote(value: string): string {
  *
  * Mirrors the phrase/exists handling of the shared `FilterUtils.toPredicate` but
  * emits a search-expression-friendly comparison the builder can box as a chip:
- *   - `'+'` with a value    -> `` `field`='value' ``
+ *   - `'+'` with a value    -> `` `field`='value' `` (or `` `field`=false `` for a boolean)
  *   - `'-'` with a value    -> `` `field`!='value' ``
  *   - `'+'` with null value -> `ISNOTNULL(\`field\`)`
  *   - `'-'` with null value -> `ISNULL(\`field\`)`
@@ -42,7 +50,7 @@ function quote(value: string): string {
  */
 export function buildPPLPredicate(
   field: string,
-  value: string | null | undefined,
+  value: string | number | boolean | null | undefined,
   operation: '+' | '-'
 ): string {
   const cleanField = field.replace(/\.keyword$/, '');
@@ -53,7 +61,7 @@ export function buildPPLPredicate(
   }
 
   const op = negate ? '!=' : '=';
-  return `\`${cleanField}\`${op}${quote(value)}`;
+  return `\`${cleanField}\`${op}${toLiteral(value)}`;
 }
 
 /** Split a PPL query at its first top-level `|` into `[head, tail]`. */
@@ -145,7 +153,7 @@ export function addFilterToPPLWhereCommand(query: string, predicate: string): st
 export function addFilterToPPLQuery(
   query: string,
   field: string | IndexPatternField | DataViewField,
-  values: string,
+  values: string | number | boolean,
   operation: '+' | '-'
 ): string {
   const fieldName = typeof field === 'string' ? field : field.name;
@@ -153,7 +161,7 @@ export function addFilterToPPLQuery(
   // `_exists_` is generateFilters' convention: the target field name is carried
   // in `values`, and a null predicate value yields ISNULL/ISNOTNULL.
   if (fieldName === '_exists_') {
-    return addFilterToPPLWhereCommand(query, buildPPLPredicate(values, null, operation));
+    return addFilterToPPLWhereCommand(query, buildPPLPredicate(String(values), null, operation));
   }
 
   return addFilterToPPLSearchExpression(query, buildPPLPredicate(fieldName, values, operation));

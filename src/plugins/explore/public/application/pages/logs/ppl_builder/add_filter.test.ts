@@ -35,6 +35,16 @@ describe('buildPPLPredicate', () => {
   it('uses ISNULL for a negative null-value filter', () => {
     expect(buildPPLPredicate('service', undefined, '-')).toBe('ISNULL(`service`)');
   });
+
+  it('emits a boolean value bare (not quoted) so it compares as a boolean', () => {
+    expect(buildPPLPredicate('cancelled', false, '+')).toBe('`cancelled`=false');
+    expect(buildPPLPredicate('cancelled', true, '-')).toBe('`cancelled`!=true');
+  });
+
+  it('emits a numeric value bare (not quoted)', () => {
+    expect(buildPPLPredicate('status', 500, '+')).toBe('`status`=500');
+    expect(buildPPLPredicate('status', 0, '-')).toBe('`status`!=0');
+  });
 });
 
 describe('addFilterToPPLSearchExpression', () => {
@@ -145,6 +155,18 @@ describe('addFilterToPPLQuery', () => {
   it('accepts a field object, reading its name', () => {
     expect(addFilterToPPLQuery('source = logs', { name: 'service' } as any, 'web', '+')).toBe(
       "source = logs `service`='web'"
+    );
+  });
+
+  it('merges a boolean value bare (table cells pass real booleans, not strings)', () => {
+    const result = addFilterToPPLQuery('source = logs', 'cancelled', false, '+');
+    expect(result).toBe('source = logs `cancelled`=false');
+    expect(parsePPL(result).canBuild).toBe(true);
+  });
+
+  it('merges a numeric value bare', () => {
+    expect(addFilterToPPLQuery('source = logs', 'status', 404, '-')).toBe(
+      'source = logs `status`!=404'
     );
   });
 

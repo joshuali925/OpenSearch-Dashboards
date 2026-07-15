@@ -139,15 +139,15 @@ describe('useChangeQueryEditor', () => {
 
     // Committed to the QueryStringManager draft.
     expect(mockSetQuery).toHaveBeenCalledWith({
-      query: "source = logs `service` = 'web'",
+      query: "source = logs `service`='web'",
       language: 'PPL',
     });
     // Mirrored into the (possibly unmounted) code editor.
-    expect(mockSetEditorText).toHaveBeenCalledWith("source = logs `service` = 'web'");
+    expect(mockSetEditorText).toHaveBeenCalledWith("source = logs `service`='web'");
     // Ran the query so results refresh and the builder re-seeds.
     expect(onEditorRunActionCreator).toHaveBeenCalledWith(
       mockServices,
-      "source = logs `service` = 'web'"
+      "source = logs `service`='web'"
     );
     expect(mockDispatch).toHaveBeenCalledWith({ type: 'run' });
     expect(mockFocusOnEditor).toHaveBeenCalled();
@@ -159,7 +159,7 @@ describe('useChangeQueryEditor', () => {
     result.current.onAddFilter('service', 'web', '-');
 
     expect(mockSetQuery).toHaveBeenCalledWith({
-      query: "source = logs `service` != 'web'",
+      query: "source = logs `service`!='web'",
       language: 'PPL',
     });
   });
@@ -172,7 +172,7 @@ describe('useChangeQueryEditor', () => {
 
     expect(mockLanguageConfig.getQueryString).toHaveBeenCalled();
     expect(mockSetQuery).toHaveBeenCalledWith({
-      query: "source = logs `service` = 'web'",
+      query: "source = logs `service`='web'",
       language: 'PPL',
     });
   });
@@ -252,7 +252,7 @@ describe('useChangeQueryEditor', () => {
     result.current.onAddFilter(mockField, 'web', '+');
 
     expect(mockSetQuery).toHaveBeenCalledWith({
-      query: "source = logs `service` = 'web'",
+      query: "source = logs `service`='web'",
       language: 'PPL',
     });
   });

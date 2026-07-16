@@ -71,7 +71,13 @@ export const LogsQueryPanel: React.FC = () => {
     !loadedFromSaved && initialParse.canBuild ? 'builder' : 'code'
   );
 
+  // The seed handed to PPLBuilder on (re)mount. Only updated when we deliberately
+  // re-seed the builder (external change, mode toggle) — NOT on every keystroke,
+  // so builder edits don't re-render this panel.
   const [builderState, setBuilderState] = useState<PPLBuilderState>(initialParse.state);
+  // The builder's live state, updated on every edit. Read when snapshotting for a
+  // Builder -> Code toggle; kept in a ref so per-keystroke edits don't re-render.
+  const builderStateRef = useRef(initialParse.state);
   // Bumped whenever we re-seed builder state from a parse, so PPLBuilder remounts
   // and picks up the new initialState in its useReducer.
   const [builderKey, setBuilderKey] = useState(0);
@@ -95,6 +101,14 @@ export const LogsQueryPanel: React.FC = () => {
   // Text to push into the code editor once it mounts after a Builder -> Code
   // toggle (the shared editor otherwise mounts with the last-run Redux query).
   const pendingCodeSeedRef = useRef<string | null>(null);
+
+  // Re-seed the builder from a parsed state: remount PPLBuilder (via key) and keep
+  // the live ref in sync so an immediate mode toggle snapshots the right state.
+  const reseedBuilder = useCallback((next: PPLBuilderState) => {
+    builderStateRef.current = next;
+    setBuilderState(next);
+    setBuilderKey((k) => k + 1);
+  }, []);
 
   const lastDispatchedRef = useRef(reduxQuery);
   // Mirror of `mode` for use inside the external-sync effect without adding
@@ -123,21 +137,20 @@ export const LogsQueryPanel: React.FC = () => {
 
     if (isEmptyBuilder) {
       // A cleared / fresh query returns to Builder.
-      setBuilderState(parsed.state);
-      setBuilderKey((k) => k + 1);
+      reseedBuilder(parsed.state);
       setMode('builder');
       return;
     }
 
     if (modeRef.current === 'builder') {
       if (parsed.canBuild) {
-        setBuilderState(parsed.state);
-        setBuilderKey((k) => k + 1);
+        reseedBuilder(parsed.state);
       } else {
         setMode('code');
       }
     }
     // In Code mode we stay in Code; the toggle stays available when canBuild.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduxQuery]);
 
   // Keep builder output in the QueryStringManager (NOT Redux) so TopNav's submit
@@ -145,7 +158,7 @@ export const LogsQueryPanel: React.FC = () => {
   // keeps the results cacheKey stable so results don't disappear while editing.
   const onBuilderChange = useCallback(
     (query: string, state: PPLBuilderState) => {
-      setBuilderState(state);
+      builderStateRef.current = state;
       builderQueryRef.current = query;
       if (query === lastDispatchedRef.current) return;
       lastDispatchedRef.current = query;
@@ -199,7 +212,10 @@ export const LogsQueryPanel: React.FC = () => {
         // `auto` spans, stale sorts) survives an unedited round-trip back — the
         // parse(build(state)) path is lossy and would otherwise drop it.
         pendingCodeSeedRef.current = builderQueryRef.current;
-        preservedBuilderRef.current = { query: builderQueryRef.current, state: builderState };
+        preservedBuilderRef.current = {
+          query: builderQueryRef.current,
+          state: builderStateRef.current,
+        };
         setMode('code');
         return;
       }
@@ -212,19 +228,17 @@ export const LogsQueryPanel: React.FC = () => {
       const preserved = preservedBuilderRef.current;
       if (preserved && preserved.query === text) {
         builderQueryRef.current = text;
-        setBuilderState(preserved.state);
-        setBuilderKey((k) => k + 1);
+        reseedBuilder(preserved.state);
         setMode('builder');
         return;
       }
       const parsed = parsePPL(text);
       if (!parsed.canBuild) return;
       builderQueryRef.current = text;
-      setBuilderState(parsed.state);
-      setBuilderKey((k) => k + 1);
+      reseedBuilder(parsed.state);
       setMode('builder');
     },
-    [mode, getEditorText, liveCodeText, builderState]
+    [mode, getEditorText, liveCodeText, reseedBuilder]
   );
 
   // The Builder toggle is disabled when the current code text can't round-trip

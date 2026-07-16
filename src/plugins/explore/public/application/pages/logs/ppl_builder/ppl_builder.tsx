@@ -5,9 +5,8 @@
 
 import './ppl_builder.scss';
 
-import React, { useCallback, useMemo, useReducer, useRef, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useReducer, useRef, useEffect } from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiToolTip } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../../../opensearch_dashboards_react/public';
 import { ExploreServices } from '../../../../types';
 import { createHistogramConfigs } from '../../../../components/chart/utils';
@@ -16,13 +15,11 @@ import { PPLBuilderState, emptyState } from './types';
 import { SearchBox } from './search_box';
 import { AggregationRow } from './aggregation_row';
 import { SortRow } from './sort_row';
+import { GroupByRow } from './group_by_row';
 import { AddMetricMenu } from './add_metric_menu';
-import { FieldMenu } from './field_menu';
-import { SpanIntervalMenu } from './span_interval_menu';
 import { ModeToggleButton } from './mode_toggle_button';
 import { useFieldData } from './use_field_data';
 import { useDatasetContext } from '../../../context';
-import { ControlGroup, FieldPill, RemoveButton } from '../../../components/query_builder';
 
 interface PPLBuilderProps {
   initialState?: PPLBuilderState;
@@ -32,12 +29,6 @@ interface PPLBuilderProps {
 }
 
 const CHART_BAR_TARGET = 15;
-
-// A PPL span interval is a positive number optionally followed by a time unit
-// (e.g. `30s`, `1m`, `2d`). Anything else produces an invalid `span(...)` that
-// only fails server-side, so flag it in the field.
-const SPAN_INTERVAL_RE =
-  /^\d+(\.\d+)?\s*(ms|s|m|h|d|w|M|q|y|second|minute|hour|day|week|month|quarter|year)?s?$/i;
 
 export const PPLBuilder: React.FC<PPLBuilderProps> = ({
   initialState,
@@ -61,12 +52,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     getValues,
   } = useFieldData();
 
-  // The search box owns its text (the search-expression, source of truth for the
-  // row). Seeded once from the reducer's initial state; the parent remounts (via
-  // key) to re-seed on external changes, mirroring how MetricsQueryPanel re-inits
-  // rows.
-  const [searchText, setSearchText] = useState(() => state.searchExpression);
-
   const deriveAutoInterval = useCallback((): string => {
     // Use the fully-resolved DataView (with timeFieldName + fields) so
     // createAggConfigs succeeds and the interval actually adapts to the range.
@@ -88,6 +73,12 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
     }
   }, [services, dataset]);
 
+  // Memoized for the cosmetic "every {interval}" hint/tooltip so typing in the
+  // search box doesn't rebuild the histogram configs on every keystroke. The
+  // live `addSpan` path still calls deriveAutoInterval() to capture the current
+  // time range at click time.
+  const autoInterval = useMemo(() => deriveAutoInterval(), [deriveAutoInterval]);
+
   // The builder emits a source-less query (just the search expression + stats).
   // The `source = <index>` clause is the dataset's concern — hidden from the UI
   // and prepended by the execution layer when the query runs.
@@ -101,7 +92,6 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
 
   const onSearchChange = useCallback(
     (text: string) => {
-      setSearchText(text);
       dispatch({ type: 'SET_SEARCH_EXPRESSION', searchExpression: text });
     },
     [dispatch]
@@ -137,7 +127,7 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
         </span>
         <div className="plqSearchBoxWrap">
           <SearchBox
-            value={searchText}
+            value={state.searchExpression}
             fieldNames={fieldNames}
             onRequestValues={getValues}
             onChange={onSearchChange}
@@ -169,121 +159,14 @@ export const PPLBuilder: React.FC<PPLBuilderProps> = ({
         />
 
         {hasAggregation && (
-          <>
-            <ControlGroup
-              label={i18n.translate('explore.pplBuilder.by', { defaultMessage: 'by' })}
-              dataTestSubj="pplBuilderGroupBy"
-            >
-              <FieldMenu
-                multi
-                options={groupByFieldNames}
-                value={state.groupBy.fields}
-                onChange={(fields) => dispatch({ type: 'SET_GROUPBY_FIELDS', fields })}
-                overTime={
-                  state.groupBy.span
-                    ? undefined
-                    : {
-                        hint: i18n.translate('explore.pplBuilder.overTimeHint', {
-                          defaultMessage: 'every {interval}',
-                          values: { interval: deriveAutoInterval() },
-                        }),
-                        tooltip: i18n.translate('explore.pplBuilder.spanTooltip', {
-                          defaultMessage:
-                            'span({field}, {interval}) — uses the dataset’s time field',
-                          values: { field: timeFieldName, interval: deriveAutoInterval() },
-                        }),
-                        onSelect: addSpan,
-                      }
-                }
-                dataTestSubj="pplBuilderGroupByFields"
-                placeholder={i18n.translate('explore.pplBuilder.groupByEverything', {
-                  defaultMessage: 'Everything',
-                })}
-                triggerClassName="plqAggTrigger"
-                caretAriaLabel={i18n.translate('explore.pplBuilder.editGroupByFields', {
-                  defaultMessage: 'Edit group-by fields',
-                })}
-                // With a selection, render removable pills (each needs its own ✕,
-                // so this is a genuine multi-element trigger with a caret anchor).
-                // With nothing selected, omit this so the shared single-button
-                // trigger ("Everything ⌄") is used — one click target, popover
-                // anchored under the token, matching the metric field picker.
-                renderTrigger={
-                  state.groupBy.fields.length === 0 && !state.groupBy.span
-                    ? undefined
-                    : () => (
-                        <>
-                          {state.groupBy.fields.map((f) => (
-                            <FieldPill
-                              key={f}
-                              label={f}
-                              removeAriaLabel={i18n.translate(
-                                'explore.pplBuilder.removeGroupByField',
-                                {
-                                  defaultMessage: 'Remove {field}',
-                                  values: { field: f },
-                                }
-                              )}
-                              onRemove={() =>
-                                dispatch({
-                                  type: 'SET_GROUPBY_FIELDS',
-                                  fields: state.groupBy.fields.filter((x) => x !== f),
-                                })
-                              }
-                            />
-                          ))}
-
-                          {state.groupBy.span && (
-                            <EuiToolTip
-                              content={i18n.translate('explore.pplBuilder.spanTooltip', {
-                                defaultMessage:
-                                  'span({field}, {interval}) — uses the dataset’s time field',
-                                values: {
-                                  field: state.groupBy.span.field,
-                                  interval: state.groupBy.span.interval,
-                                },
-                              })}
-                              position="top"
-                            >
-                              <span className="plqChip" data-test-subj="pplBuilderSpanChip">
-                                <span className="plqChip__nat">
-                                  {i18n.translate('explore.pplBuilder.every', {
-                                    defaultMessage: 'every',
-                                  })}
-                                </span>
-                                <SpanIntervalMenu
-                                  interval={state.groupBy.span.interval}
-                                  isInvalid={
-                                    !SPAN_INTERVAL_RE.test(state.groupBy.span.interval.trim())
-                                  }
-                                  onChange={(interval) =>
-                                    dispatch({
-                                      type: 'SET_SPAN',
-                                      span: {
-                                        field: state.groupBy.span!.field,
-                                        interval,
-                                        auto: false,
-                                      },
-                                    })
-                                  }
-                                  dataTestSubj="pplBuilderSpanInterval"
-                                />
-                                <RemoveButton
-                                  ariaLabel={i18n.translate('explore.pplBuilder.removeSpan', {
-                                    defaultMessage: 'Remove time grouping',
-                                  })}
-                                  onClick={() => dispatch({ type: 'REMOVE_SPAN' })}
-                                  dataTestSubj="pplBuilderRemoveSpan"
-                                />
-                              </span>
-                            </EuiToolTip>
-                          )}
-                        </>
-                      )
-                }
-              />
-            </ControlGroup>
-          </>
+          <GroupByRow
+            groupBy={state.groupBy}
+            options={groupByFieldNames}
+            timeFieldName={timeFieldName}
+            autoInterval={autoInterval}
+            onAddSpan={addSpan}
+            dispatch={dispatch}
+          />
         )}
 
         <span className="plqSpacer" />

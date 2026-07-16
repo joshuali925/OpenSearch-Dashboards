@@ -48,7 +48,10 @@ export class FilterUtils {
       .filter(
         (filter) => !ignoreFilterIfFieldNotInIndex || filterMatchesIndex(filter, indexPattern)
       )
-      .map(FilterUtils.toPredicate)
+      // Wrapped (not passed by reference) so `this` stays bound to `FilterUtils`
+      // inside `toPredicate`, which dispatches through `this.comparison`/etc.
+      // This path always emits the canonical back-ticked form for query execution.
+      .map((filter) => FilterUtils.toPredicate(filter))
       .filter(Boolean);
     const predicate = (predicates.length > 1 ? predicates.map((p) => `(${p})`) : predicates).join(
       ' AND '
@@ -61,49 +64,71 @@ export class FilterUtils {
     // SQL/PPL does not accept .keyword and will automatically append it if needed
     const field = getFilterField(filter)?.replace(/.keyword$/, '');
     if (!field) return;
+    // Comparison assembly and field/exists rendering go through the seams below
+    // (`comparison`, `existsPredicate`, `formatFieldName`), invoked via `this` so
+    // subclasses can restyle without reimplementing the filter-type dispatch.
+    // The reference is late-bound: `PPLFilterUtils.toPredicate(filter)` runs this
+    // body with `this === PPLFilterUtils` and picks up its compact overrides,
+    // while the base class keeps the canonical `` `field` = value `` form.
     if (!meta.negate) {
       switch (meta.type) {
         case 'phrase':
-          return `\`${field}\` = ${FilterUtils.quote(meta.params.query)}`;
+          return this.comparison(field, '=', this.quote(meta.params.query));
         case 'phrases':
           return meta.params
-            .map((query: string) => `\`${field}\` = ${FilterUtils.quote(query)}`)
+            .map((query: string) => this.comparison(field, '=', this.quote(query)))
             .join(' OR ');
         case 'range':
           const ranges = [];
-          if (meta.params.gte != null) ranges.push(`\`${field}\` >= ${meta.params.gte}`);
-          if (meta.params.lt != null) ranges.push(`\`${field}\` < ${meta.params.lt}`);
+          if (meta.params.gte != null) ranges.push(this.comparison(field, '>=', meta.params.gte));
+          if (meta.params.lt != null) ranges.push(this.comparison(field, '<', meta.params.lt));
           return ranges.join(' AND ');
         case 'exists':
-          return `ISNOTNULL(\`${field}\`)`;
+          return this.existsPredicate(field, false);
       }
       if (filter.query) {
         if (filter.query.match_phrase && field in filter.query.match_phrase) {
-          return `\`${field}\` = ${FilterUtils.quote(filter.query.match_phrase[field])}`;
+          return this.comparison(field, '=', this.quote(filter.query.match_phrase[field]));
         }
       }
     } else {
       switch (meta.type) {
         case 'phrase':
-          return `\`${field}\` != ${FilterUtils.quote(meta.params.query)}`;
+          return this.comparison(field, '!=', this.quote(meta.params.query));
         case 'phrases':
           return meta.params
-            .map((query: string) => `\`${field}\` != ${FilterUtils.quote(query)}`)
+            .map((query: string) => this.comparison(field, '!=', this.quote(query)))
             .join(' AND ');
         case 'range':
           const ranges = [];
-          if (meta.params.gte != null) ranges.push(`\`${field}\` < ${meta.params.gte}`);
-          if (meta.params.lt != null) ranges.push(`\`${field}\` >= ${meta.params.lt}`);
+          if (meta.params.gte != null) ranges.push(this.comparison(field, '<', meta.params.gte));
+          if (meta.params.lt != null) ranges.push(this.comparison(field, '>=', meta.params.lt));
           return ranges.join(' OR ');
         case 'exists':
-          return `ISNULL(\`${field}\`)`;
+          return this.existsPredicate(field, true);
       }
       if (filter.query) {
         if (filter.query.match_phrase && field in filter.query.match_phrase) {
-          return `\`${field}\` != ${FilterUtils.quote(filter.query.match_phrase[field])}`;
+          return this.comparison(field, '!=', this.quote(filter.query.match_phrase[field]));
         }
       }
     }
+  }
+
+  /** Assemble one `<field> <op> <value>` comparison. Overridable for spacing. */
+  protected static comparison(field: string, operator: string, value: unknown): string {
+    return `${this.formatFieldName(field)} ${operator} ${value}`;
+  }
+
+  /** Render an exists/not-exists check as an ISNOTNULL/ISNULL function call. */
+  protected static existsPredicate(field: string, negate: boolean): string {
+    const fn = negate ? 'ISNULL' : 'ISNOTNULL';
+    return `${fn}(${this.formatFieldName(field)})`;
+  }
+
+  /** Render a field name for a predicate. Base always back-tick quotes it. */
+  protected static formatFieldName(field: string): string {
+    return `\`${field}\``;
   }
 
   protected static quote(value: unknown) {

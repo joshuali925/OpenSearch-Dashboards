@@ -19,6 +19,12 @@ const createFilter = (field: string, value: string, negate: boolean = false): Fi
   query: { match_phrase: { [field]: value } },
 });
 
+const createExistsFilter = (field: string, negate: boolean = false): Filter =>
+  ({
+    meta: { alias: null, disabled: false, index: 'mock-index', negate },
+    exists: { field },
+  }) as unknown as Filter;
+
 describe('PPLFilterUtils', () => {
   describe('insertWhereCommand', () => {
     it('should return original query when whereCommand is empty', () => {
@@ -64,25 +70,46 @@ describe('PPLFilterUtils', () => {
       expect(result).toEqual(query);
     });
 
-    it('should insert a filter as WHERE clause', () => {
+    it('merges a value filter into the search expression', () => {
       const query = 'source=test_index | fields *';
       const filter = createFilter('field1', 'value1');
       const result = addFilterToQuery(query, filter);
-      expect(result).toBe("source=test_index | WHERE `field1` = 'value1' | fields *");
+      expect(result).toBe("source=test_index field1='value1' | fields *");
     });
 
-    it('should not add duplicate filter', () => {
-      const query = "source=test_index | WHERE `field1` = 'value1' | fields *";
+    it('does not add a duplicate value filter', () => {
+      const query = "source=test_index field1='value1' | fields *";
       const filter = createFilter('field1', 'value1');
       const result = addFilterToQuery(query, filter);
-      expect(result).toBe("source=test_index | WHERE `field1` = 'value1' | fields *");
+      expect(result).toBe("source=test_index field1='value1' | fields *");
     });
 
-    it('should replace negated version of a filter', () => {
-      const query = "source=test_index | WHERE `field1` != 'value1' | fields *";
+    it('flips a negated value filter in place', () => {
+      const query = "source=test_index field1!='value1' | fields *";
       const filter = createFilter('field1', 'value1', false);
       const result = addFilterToQuery(query, filter);
-      expect(result).toBe("source=test_index | WHERE `field1` = 'value1' | fields *");
+      expect(result).toBe("source=test_index field1='value1' | fields *");
+    });
+
+    it('back-ticks a field name with special characters', () => {
+      const query = 'source=test_index | fields *';
+      const filter = createFilter('user name', 'bob');
+      const result = addFilterToQuery(query, filter);
+      expect(result).toBe("source=test_index `user name`='bob' | fields *");
+    });
+
+    it('back-ticks a reserved field name', () => {
+      const query = 'source=test_index | fields *';
+      const filter = createFilter('timeformat', 'iso');
+      const result = addFilterToQuery(query, filter);
+      expect(result).toBe("source=test_index `timeformat`='iso' | fields *");
+    });
+
+    it('keeps a dotted (nested) field name bare', () => {
+      const query = 'source=test_index | fields *';
+      const filter = createFilter('geo.dest', 'US');
+      const result = addFilterToQuery(query, filter);
+      expect(result).toBe("source=test_index geo.dest='US' | fields *");
     });
   });
 
@@ -93,43 +120,60 @@ describe('PPLFilterUtils', () => {
       expect(result).toEqual(query);
     });
 
-    it('should insert a single filter', () => {
+    it('merges a single value filter into the search expression', () => {
       const query = 'source=test_index | fields *';
       const filters = [createFilter('field1', 'value1')];
       const result = PPLFilterUtils.addFiltersToQuery(query, filters);
-      expect(result).toBe("source=test_index | WHERE `field1` = 'value1' | fields *");
+      expect(result).toBe("source=test_index field1='value1' | fields *");
     });
 
-    it('should insert multiple filters', () => {
+    it('space-appends multiple value filters (implicit AND)', () => {
       const query = 'source=test_index | fields *';
       const filters = [createFilter('field1', 'value1'), createFilter('field2', 'value2')];
       const result = PPLFilterUtils.addFiltersToQuery(query, filters);
-
-      expect(result).toContain('source=test_index');
-      expect(result).toContain("WHERE `field1` = 'value1'");
-      expect(result).toContain("WHERE `field2` = 'value2'");
-      expect(result).toContain('fields *');
+      expect(result).toBe("source=test_index field1='value1' field2='value2' | fields *");
     });
 
-    it('should not add duplicate filters', () => {
-      const query = "source=test_index | WHERE `field1` = 'value1' | fields *";
+    it('does not add duplicate value filters', () => {
+      const query = "source=test_index field1='value1' | fields *";
       const filters = [createFilter('field1', 'value1')];
       const result = PPLFilterUtils.addFiltersToQuery(query, filters);
-      expect(result).toBe("source=test_index | WHERE `field1` = 'value1' | fields *");
+      expect(result).toBe("source=test_index field1='value1' | fields *");
     });
 
-    it('should replace negated version of a filter', () => {
-      const query = "source=test_index | WHERE `field1` != 'value1' | fields *";
-      const filters = [createFilter('field1', 'value1', false)]; // Non-negated version
+    it('flips a negated value filter in place', () => {
+      const query = "source=test_index field1!='value1' | fields *";
+      const filters = [createFilter('field1', 'value1', false)];
       const result = PPLFilterUtils.addFiltersToQuery(query, filters);
-      expect(result).toBe("source=test_index | WHERE `field1` = 'value1' | fields *");
+      expect(result).toBe("source=test_index field1='value1' | fields *");
     });
 
-    it('should handle empty query', () => {
+    it('handles an empty query', () => {
       const query = '';
       const filters = [createFilter('field1', 'value1')];
       const result = PPLFilterUtils.addFiltersToQuery(query, filters);
-      expect(result).toBe("| WHERE `field1` = 'value1'");
+      expect(result).toBe("field1='value1'");
+    });
+
+    it('routes a positive exists filter to a WHERE command', () => {
+      const query = 'source=test_index | fields *';
+      const filters = [createExistsFilter('field1')];
+      const result = PPLFilterUtils.addFiltersToQuery(query, filters);
+      expect(result).toBe('source=test_index | WHERE ISNOTNULL(field1) | fields *');
+    });
+
+    it('routes a negated exists filter to an ISNULL WHERE command', () => {
+      const query = 'source=test_index | fields *';
+      const filters = [createExistsFilter('field1', true)];
+      const result = PPLFilterUtils.addFiltersToQuery(query, filters);
+      expect(result).toBe('source=test_index | WHERE ISNULL(field1) | fields *');
+    });
+
+    it('does not add a duplicate exists filter', () => {
+      const query = 'source=test_index | WHERE ISNOTNULL(field1) | fields *';
+      const filters = [createExistsFilter('field1')];
+      const result = PPLFilterUtils.addFiltersToQuery(query, filters);
+      expect(result).toBe('source=test_index | WHERE ISNOTNULL(field1) | fields *');
     });
   });
 });

@@ -20,8 +20,14 @@ import { BuilderState } from './promql_parser';
 import { builderReducer, buildPromQL, emptyFilter } from './build_promql';
 import { getOperationSiblings } from './operation_lookup';
 import { OperationPill } from './operation_pill';
-import { withConnector } from './tree_connector';
-import { comboBoxWidth, inputWidth } from './measure_text';
+import {
+  withConnector,
+  comboBoxWidth,
+  inputWidth,
+  ControlGroup,
+  RemoveButton,
+  Separator,
+} from '../../../components/query_builder';
 import { useMetricData } from './use_metric_data';
 import { LabelFilterRow } from './label_filter_row';
 import { LabelBadges } from './label_badges';
@@ -68,10 +74,9 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
   const metricRow = (
     <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false} wrap>
       <EuiFlexItem grow={false}>
-        <div className="pqbGroup">
-          <span className="pqbGroup__label">
-            {i18n.translate('explore.promqlBuilder.metric', { defaultMessage: 'Metric' })}
-          </span>
+        <ControlGroup
+          label={i18n.translate('explore.promqlBuilder.metric', { defaultMessage: 'Metric' })}
+        >
           <EuiComboBox
             compressed
             singleSelection={{ asPlainText: true }}
@@ -94,7 +99,7 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
             style={{ width: comboBoxWidth(state.metric || 'Select metric name') }}
             data-test-subj="promqlBuilderMetricSelect"
           />
-        </div>
+        </ControlGroup>
       </EuiFlexItem>
       {state.labelFilters.map((filter, idx) => (
         <LabelFilterRow
@@ -110,6 +115,7 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
       ))}
       <EuiFlexItem grow={false}>
         <EuiButtonIcon
+          className="plqIconBtn plqIconBtn--ghost"
           iconType="plusInCircle"
           aria-label={i18n.translate('explore.promqlBuilder.addFilter', {
             defaultMessage: 'Add filter',
@@ -120,28 +126,24 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
       </EuiFlexItem>
       {state.range !== undefined && (
         <EuiFlexItem grow={false}>
-          <div className="pqbGroup">
-            <span className="pqbGroup__label">
-              {i18n.translate('explore.promqlBuilder.range', { defaultMessage: 'Range' })}
-            </span>
+          <ControlGroup
+            label={i18n.translate('explore.promqlBuilder.range', { defaultMessage: 'Range' })}
+          >
             <input
               value={state.range}
               placeholder="5m"
               onChange={(e) => dispatch({ type: 'SET_RANGE', range: e.target.value })}
-              className="pqbParamInput"
+              className="plqParamInput"
               style={{ width: inputWidth(state.range || '5m') }}
             />
-            <div className="pqbSep" />
-            <EuiButtonIcon
-              iconType="cross"
-              size="s"
-              color="text"
-              aria-label={i18n.translate('explore.promqlBuilder.removeRange', {
+            <Separator />
+            <RemoveButton
+              ariaLabel={i18n.translate('explore.promqlBuilder.removeRange', {
                 defaultMessage: 'Remove range',
               })}
               onClick={() => dispatch({ type: 'REMOVE_RANGE' })}
             />
-          </div>
+          </ControlGroup>
         </EuiFlexItem>
       )}
       <OpsMenu hasRange={state.range !== undefined} dispatch={dispatch} />
@@ -155,7 +157,7 @@ export const PromQLBuilder: React.FC<PromQLBuilderProps> = ({
   );
 
   return (
-    <div className="pqbBuilder">
+    <div className="plqBuilder">
       {reversedOps.map((op, revIdx) => {
         const stateIdx = state.operations.length - 1 - revIdx;
         const pill = (

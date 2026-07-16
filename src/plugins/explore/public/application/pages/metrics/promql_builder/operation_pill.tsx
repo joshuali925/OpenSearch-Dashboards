@@ -11,13 +11,7 @@ import { BuilderAction } from './build_promql';
 import { OperationDef, GROUPABLE_AGGREGATION_IDS } from './operation_categories';
 import { OP_DEF_MAP, getCategoryLabel } from './operation_lookup';
 import { useAggregationGrouping } from './aggregation_grouping';
-import {
-  comboBoxWidth,
-  inputWidth,
-  ControlGroup,
-  RemoveButton,
-  Separator,
-} from '../../../components/query_builder';
+import { comboBoxWidth, inputWidth } from './measure_text';
 
 interface OperationPillProps {
   op: Operation;
@@ -48,7 +42,8 @@ export const OperationPill: React.FC<OperationPillProps> = ({
   const rangeParamIdx = isRangeFn && hasRange ? (op.id === 'quantile_over_time' ? 1 : 0) : -1;
 
   return (
-    <ControlGroup label={getCategoryLabel(op.id)}>
+    <div className="pqbGroup">
+      <span className="pqbGroup__label">{getCategoryLabel(op.id)}</span>
       <div className="pqbPill__body">
         <EuiComboBox
           compressed
@@ -69,9 +64,9 @@ export const OperationPill: React.FC<OperationPillProps> = ({
           className={opComboClass}
           style={{ minWidth: comboBoxWidth(op.name) }}
         />
-        {isAgg && <Separator />}
+        {isAgg && <div className="pqbSep" />}
         {isAgg && grouping.modeEl}
-        {isAgg && <Separator />}
+        {isAgg && <div className="pqbSep" />}
         {isAgg && grouping.labelsComboEl}
         {op.params.length > 0 &&
           op.params.map((p, pi) => {
@@ -80,7 +75,7 @@ export const OperationPill: React.FC<OperationPillProps> = ({
             const displayText = p || placeholder;
             return (
               <React.Fragment key={pi}>
-                <Separator />
+                <div className="pqbSep" />
                 <input
                   value={p}
                   placeholder={placeholder}
@@ -92,22 +87,24 @@ export const OperationPill: React.FC<OperationPillProps> = ({
                       value: e.target.value,
                     })
                   }
-                  className="plqParamInput"
+                  className="pqbParamInput"
                   style={{ width: inputWidth(displayText) }}
                 />
               </React.Fragment>
             );
           })}
-        <Separator />
-        <RemoveButton
-          ariaLabel={i18n.translate('explore.promqlBuilder.removeOperation', {
+        <div className="pqbSep" />
+        <EuiButtonIcon
+          iconType="cross"
+          size="s"
+          color="text"
+          aria-label={i18n.translate('explore.promqlBuilder.removeOperation', {
             defaultMessage: 'Remove operation',
           })}
           onClick={() => dispatch({ type: 'REMOVE_OPERATION', index: idx })}
         />
         <EuiToolTip content={opDef?.description || ''}>
           <EuiButtonIcon
-            className="plqX"
             iconType="iInCircle"
             size="s"
             color="text"
@@ -117,6 +114,6 @@ export const OperationPill: React.FC<OperationPillProps> = ({
           />
         </EuiToolTip>
       </div>
-    </ControlGroup>
+    </div>
   );
 };

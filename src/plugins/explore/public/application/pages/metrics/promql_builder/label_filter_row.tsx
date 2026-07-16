@@ -5,16 +5,17 @@
 
 import React from 'react';
 import { i18n } from '@osd/i18n';
-import { EuiComboBox, EuiComboBoxOptionOption, EuiFlexItem, EuiSuperSelect } from '@elastic/eui';
+import {
+  EuiComboBox,
+  EuiComboBoxOptionOption,
+  EuiFlexItem,
+  EuiButtonIcon,
+  EuiSuperSelect,
+} from '@elastic/eui';
 import { LabelFilter } from './promql_parser';
 import { BuilderAction } from './build_promql';
 import { OPERATORS } from './operation_categories';
-import {
-  comboBoxWidth,
-  ControlGroup,
-  RemoveButton,
-  Separator,
-} from '../../../components/query_builder';
+import { comboBoxWidth } from './measure_text';
 
 interface LabelFilterRowProps {
   filter: LabelFilter;
@@ -36,9 +37,10 @@ export const LabelFilterRow: React.FC<LabelFilterRowProps> = ({
   loadLabelValues,
 }) => (
   <EuiFlexItem grow={false}>
-    <ControlGroup
-      label={i18n.translate('explore.promqlBuilder.label', { defaultMessage: 'Label' })}
-    >
+    <div className="pqbGroup">
+      <span className="pqbGroup__label">
+        {i18n.translate('explore.promqlBuilder.label', { defaultMessage: 'Label' })}
+      </span>
       <EuiComboBox
         compressed
         singleSelection={{ asPlainText: true }}
@@ -71,7 +73,7 @@ export const LabelFilterRow: React.FC<LabelFilterRowProps> = ({
         className="pqbCombo--labelName"
         style={{ width: comboBoxWidth(filter.label || 'Label name'), flex: '0 0 auto' }}
       />
-      <Separator />
+      <div className="pqbSep" />
       <EuiSuperSelect
         compressed
         options={OPERATORS.map((op) => ({ value: op, inputDisplay: op }))}
@@ -81,7 +83,7 @@ export const LabelFilterRow: React.FC<LabelFilterRowProps> = ({
         }
         className="pqbOperatorSelect"
       />
-      <Separator />
+      <div className="pqbSep" />
       <EuiComboBox
         compressed
         singleSelection={{ asPlainText: true }}
@@ -108,11 +110,14 @@ export const LabelFilterRow: React.FC<LabelFilterRowProps> = ({
         className="pqbCombo--labelValue"
         style={{ width: comboBoxWidth(filter.value || 'Label value'), flex: '0 0 auto' }}
       />
-      <Separator />
-      <RemoveButton
-        ariaLabel={i18n.translate('explore.promqlBuilder.removeFilter', {
+      <div className="pqbSep" />
+      <EuiButtonIcon
+        iconType="cross"
+        color="text"
+        aria-label={i18n.translate('explore.promqlBuilder.removeFilter', {
           defaultMessage: 'Remove filter',
         })}
+        size="s"
         onClick={() =>
           canRemove
             ? dispatch({ type: 'REMOVE_LABEL_FILTER', index: idx })
@@ -123,6 +128,6 @@ export const LabelFilterRow: React.FC<LabelFilterRowProps> = ({
               })
         }
       />
-    </ControlGroup>
+    </div>
   </EuiFlexItem>
 );

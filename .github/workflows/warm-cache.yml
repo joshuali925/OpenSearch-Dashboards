@@ -1,0 +1,148 @@
+name: Warm CI caches
+
+# Populate the yarn caches on the base branches so every PR run can restore them.
+# GitHub Actions only lets a run read caches created on its own ref or on its
+# base/default branch, so caches saved by one PR are never visible to another PR.
+# Warming on push to the base branches (plus a nightly refresh) makes a single
+# cache reusable across all PRs instead of each PR rebuilding its own.
+
+on:
+  push:
+    branches: ['main', '[0-9]+\.x', '[0-9]+\.[0-9]+']
+    paths:
+      - 'yarn.lock'
+      - '.github/workflows/warm-cache.yml'
+  schedule:
+    # Refresh nightly so caches survive quiet periods: GitHub evicts a cache
+    # after 7 days without a read, and merges that don't touch yarn.lock don't
+    # re-trigger the push warm-up.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+env:
+  OSD_SNAPSHOT_SKIP_VERIFY_CHECKSUM: true
+  NODE_OPTIONS: '--max-old-space-size=8192 --max-semi-space-size=64 --dns-result-order=ipv4first'
+
+jobs:
+  warm-linux:
+    name: Warm Linux yarn cache
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: '.nvmrc'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup Yarn
+        run: |
+          npm uninstall -g yarn
+          npm i -g yarn@1.22.10
+          yarn config set network-timeout 1000000 -g
+
+      - name: Configure Yarn Cache
+        run: echo "YARN_CACHE_LOCATION=$(yarn cache dir)" >> $GITHUB_ENV
+
+      - name: Restore Yarn Cache
+        id: yarn-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.YARN_CACHE_LOCATION }}
+          key: yarn-Linux-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Run bootstrap
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          for i in 1 2 3; do
+            yarn osd bootstrap && exit 0
+            echo "Bootstrap attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          exit 1
+
+      - name: Save Yarn Cache
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.YARN_CACHE_LOCATION }}
+          key: yarn-Linux-${{ hashFiles('**/yarn.lock') }}
+
+      # The cypress workflow keys the same yarn cache dir under its own namespace;
+      # populate it here too so cypress PR runs get a base-branch hit.
+      - name: Look up Cypress yarn cache
+        id: yarn-cache-cypress
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.YARN_CACHE_LOCATION }}
+          key: yarn-Linux-cypress-${{ hashFiles('**/yarn.lock') }}
+          lookup-only: true
+
+      - name: Save Cypress yarn Cache
+        if: steps.yarn-cache-cypress.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.YARN_CACHE_LOCATION }}
+          key: yarn-Linux-cypress-${{ hashFiles('**/yarn.lock') }}
+
+  warm-windows:
+    name: Warm Windows yarn cache
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git's autocrlf
+        run: git config --global core.autocrlf false
+
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: '.nvmrc'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup Yarn
+        run: |
+          npm uninstall -g yarn
+          npm i -g yarn@1.22.10
+          yarn config set network-timeout 1000000 -g
+
+      - name: Configure Yarn Cache
+        shell: bash
+        run: echo "YARN_CACHE_LOCATION=$(yarn cache dir)" >> $GITHUB_ENV
+
+      - name: Restore Yarn Cache
+        id: yarn-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.YARN_CACHE_LOCATION }}
+          key: yarn-Windows-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Run bootstrap
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          for i in 1 2 3; do
+            yarn osd bootstrap && exit 0
+            echo "Bootstrap attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          exit 1
+
+      - name: Save Yarn Cache
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.YARN_CACHE_LOCATION }}
+          key: yarn-Windows-${{ hashFiles('**/yarn.lock') }}

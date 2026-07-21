@@ -451,6 +451,14 @@ jobs:
           done
           exit 1
 
+      # Warmed on the base branch by warm-cache.yml; restore-only here.
+      - name: Restore rspack cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: '**/node_modules/.cache/rspack'
+          key: rspack-cache-Linux-${{ github.sha }}
+          restore-keys: rspack-cache-Linux-
+
       - name: Build plugins
         run: node scripts/build_opensearch_dashboards_platform_plugins --no-examples --workers 10
 

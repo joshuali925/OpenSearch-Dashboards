@@ -25,7 +25,11 @@ import { FieldFormatMap } from '../../index_patterns/types';
 import { FieldFormatsStartCommon } from '../../field_formats';
 import { SavedObjectNotFound } from '../../../../opensearch_dashboards_utils/common';
 import { DataViewMissingIndices } from '../lib';
-import { isPayloadTooLargeError, getPayloadTooLargeToast } from '../../index_patterns/lib';
+import {
+  isPayloadTooLargeError,
+  getPayloadTooLargeToast,
+  SavedObjectsClientWithFieldsChunks,
+} from '../../index_patterns/lib';
 import { findByTitle } from '../utils';
 import { DuplicateDataViewError, MissingDataViewError } from '../errors';
 
@@ -79,7 +83,7 @@ export class DataViewsService {
   }: DataViewsServiceDeps) {
     this.apiClient = apiClient;
     this.config = uiSettings;
-    this.savedObjectsClient = savedObjectsClient;
+    this.savedObjectsClient = new SavedObjectsClientWithFieldsChunks(savedObjectsClient);
     this.fieldFormats = fieldFormats;
     this.onNotification = onNotification;
     this.onError = onError;
@@ -761,7 +765,12 @@ export class DataViewsService {
     });
 
     return this.savedObjectsClient
-      .update(savedObjectType, dataView.id, body, { version: dataView.version })
+      .update(
+        savedObjectType,
+        dataView.id,
+        body.fields === originalBody.fields ? { ...body, fields: undefined } : body,
+        { version: dataView.version }
+      )
       .then((resp) => {
         dataView.id = resp.id;
         dataView.version = resp.version;

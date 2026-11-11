@@ -57,6 +57,7 @@ import {
   IndexPatternMissingIndices,
   isPayloadTooLargeError,
   getPayloadTooLargeToast,
+  SavedObjectsClientWithFieldsChunks,
 } from '../lib';
 import { findByTitle, getDataSourceIdFromIndexPattern, getIndexPatternTitle } from '../utils';
 import { DuplicateIndexPatternError, MissingIndexPatternError } from '../errors';
@@ -108,7 +109,7 @@ export class IndexPatternsService {
   }: IndexPatternsServiceDeps) {
     this.apiClient = apiClient;
     this.config = uiSettings;
-    this.savedObjectsClient = savedObjectsClient;
+    this.savedObjectsClient = new SavedObjectsClientWithFieldsChunks(savedObjectsClient);
     this.fieldFormats = fieldFormats;
     this.onNotification = onNotification;
     this.onError = onError;
@@ -768,7 +769,12 @@ export class IndexPatternsService {
     });
 
     return this.savedObjectsClient
-      .update(savedObjectType, indexPattern.id, body, { version: indexPattern.version })
+      .update(
+        savedObjectType,
+        indexPattern.id,
+        body.fields === originalBody.fields ? { ...body, fields: undefined } : body,
+        { version: indexPattern.version }
+      )
       .then((resp) => {
         indexPattern.id = resp.id;
         indexPattern.version = resp.version;

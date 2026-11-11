@@ -75,10 +75,13 @@ describe('POST /api/index_patterns/{id}/_refresh_fields', () => {
     expect(mockContext.core.savedObjects.client.update).toHaveBeenCalledWith(
       'index-pattern',
       'id',
-      { fields: JSON.stringify(fields) },
+      { fields: JSON.stringify(fields), fieldsChunks: [] },
       { version: 'v1' }
     );
-    expect(mockResponse.ok).toHaveBeenCalledWith({ body: { fields, version: 'v2' } });
+    expect(mockResponse.ok).toHaveBeenCalledWith({
+      body: JSON.stringify({ fields, version: 'v2' }),
+      headers: { 'content-type': 'application/json' },
+    });
   });
 
   it('returns the boom error status and payload', async () => {

@@ -29,6 +29,7 @@
  */
 
 import { SavedObjectsType } from 'opensearch-dashboards/server';
+import { FIELDS_CHUNK_SAVED_OBJECT_TYPE } from '../../common';
 import { indexPatternSavedObjectTypeMigrations } from './index_pattern_migrations';
 
 export const indexPatternSavedObjectType: SavedObjectsType = {
@@ -65,4 +66,11 @@ export const indexPatternSavedObjectType: SavedObjectsType = {
     },
   },
   migrations: indexPatternSavedObjectTypeMigrations as any,
+};
+
+export const indexPatternFieldsSavedObjectType: SavedObjectsType = {
+  name: FIELDS_CHUNK_SAVED_OBJECT_TYPE,
+  hidden: false,
+  namespaceType: 'single',
+  mappings: { dynamic: false, properties: {} },
 };

@@ -48,6 +48,9 @@ export class SavedObjectsClientServerToCommon implements SavedObjectsClientCommo
   async get<T = unknown>(type: string, id: string) {
     return await this.savedObjectClient.get<T>(type, id);
   }
+  async bulkGet<T = unknown>(objects: Array<{ id: string; type: string }>) {
+    return { savedObjects: (await this.savedObjectClient.bulkGet<T>(objects)).saved_objects };
+  }
   async update<T = unknown>(
     type: string,
     id: string,

@@ -36,7 +36,7 @@ import {
   Logger,
 } from 'opensearch-dashboards/server';
 import { registerRoutes } from './routes';
-import { indexPatternSavedObjectType } from '../saved_objects';
+import { indexPatternSavedObjectType, indexPatternFieldsSavedObjectType } from '../saved_objects';
 import { capabilitiesProvider } from './capabilities_provider';
 import { IndexPatternsService as IndexPatternsCommonService } from '../../common/index_patterns';
 import { FieldFormatsStart } from '../field_formats';
@@ -58,6 +58,7 @@ export interface IndexPatternsServiceStartDeps {
 export class IndexPatternsService implements Plugin<void, IndexPatternsServiceStart> {
   public setup(core: CoreSetup) {
     core.savedObjects.registerType(indexPatternSavedObjectType);
+    core.savedObjects.registerType(indexPatternFieldsSavedObjectType);
     core.capabilities.registerProvider(capabilitiesProvider);
     core.capabilities.registerSwitcher(async (request, capabilites) => {
       return await core.security.readonlyService().hideForReadonly(request, capabilites, {

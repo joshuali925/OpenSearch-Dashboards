@@ -36,3 +36,7 @@ export { isDefault } from './is_default';
 export * from './types';
 export { validateIndexPattern } from './validate_index_pattern';
 export { isPayloadTooLargeError, getPayloadTooLargeToast } from './payload_too_large';
+export {
+  FIELDS_CHUNK_SAVED_OBJECT_TYPE,
+  SavedObjectsClientWithFieldsChunks,
+} from './fields_chunks_client';

@@ -33,7 +33,11 @@ export * from './types';
 export { IndexPatternsService } from './index_patterns';
 export type { IndexPattern } from './index_patterns';
 export * from './errors';
-export { isPayloadTooLargeError } from './lib';
+export {
+  isPayloadTooLargeError,
+  FIELDS_CHUNK_SAVED_OBJECT_TYPE,
+  SavedObjectsClientWithFieldsChunks,
+} from './lib';
 export {
   validateDataSourceReference,
   getIndexPatternTitle,

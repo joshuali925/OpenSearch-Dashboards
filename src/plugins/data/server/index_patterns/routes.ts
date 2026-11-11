@@ -31,8 +31,13 @@
 import Boom from '@hapi/boom';
 import { schema } from '@osd/config-schema';
 import { HttpServiceSetup, RequestHandlerContext } from 'opensearch-dashboards/server';
-import { FieldSpec, IndexPatternAttributes } from '../../common';
+import {
+  FieldSpec,
+  IndexPatternAttributes,
+  SavedObjectsClientWithFieldsChunks,
+} from '../../common';
 import { IndexPatternsFetcher } from './fetcher';
+import { SavedObjectsClientServerToCommon } from './saved_objects_client_wrapper';
 import { decideLegacyClient } from '../../../data_source/common/util/';
 
 export function registerRoutes(http: HttpServiceSetup) {
@@ -182,6 +187,7 @@ export function registerRoutes(http: HttpServiceSetup) {
       }
 
       try {
+        // Chunked index patterns keep their scripted fields in `fields`, which is all this needs
         const savedObject = await savedObjectsClient.get<IndexPatternAttributes>(
           'index-pattern',
           id
@@ -194,14 +200,15 @@ export function registerRoutes(http: HttpServiceSetup) {
           })),
           ...savedFields.filter((field) => field.scripted),
         ];
-        const { version } = await savedObjectsClient.update(
-          'index-pattern',
-          id,
-          { fields: JSON.stringify(fields) },
-          { version: savedObject.version }
-        );
+        const fieldsJson = JSON.stringify(fields);
+        const { version } = await new SavedObjectsClientWithFieldsChunks(
+          new SavedObjectsClientServerToCommon(savedObjectsClient)
+        ).update('index-pattern', id, { fields: fieldsJson }, { version: savedObject.version });
 
-        return response.ok({ body: { fields, version } });
+        return response.ok({
+          body: `{"fields":${fieldsJson},"version":${JSON.stringify(version)}}`,
+          headers: { 'content-type': 'application/json' },
+        });
       } catch (error) {
         if (Boom.isBoom(error)) {
           return response.customError({

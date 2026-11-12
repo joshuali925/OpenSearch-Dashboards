@@ -765,12 +765,7 @@ export class DataViewsService {
     });
 
     return this.savedObjectsClient
-      .update(
-        savedObjectType,
-        dataView.id,
-        body.fields === originalBody.fields ? { ...body, fields: undefined } : body,
-        { version: dataView.version }
-      )
+      .update(savedObjectType, dataView.id, body, { version: dataView.version })
       .then((resp) => {
         dataView.id = resp.id;
         dataView.version = resp.version;

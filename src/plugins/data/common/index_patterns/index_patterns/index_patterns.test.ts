@@ -428,22 +428,6 @@ describe('IndexPatterns', () => {
     });
   });
 
-  test('updateSavedObject leaves unchanged fields out of the update', async () => {
-    setDocsourcePayload('unchanged-fields', {
-      id: 'unchanged-fields',
-      version: 'a',
-      attributes: { title: 'logs-*', fields: '[]' },
-    });
-    const pattern = await indexPatterns.get('unchanged-fields');
-    pattern.title = 'renamed-*';
-    await indexPatterns.updateSavedObject(pattern);
-
-    expect((savedObjectsClient.update as jest.Mock).mock.calls[0][2]).toMatchObject({
-      title: 'renamed-*',
-      fields: undefined,
-    });
-  });
-
   test('createAndSave skips fetching fields when skipFetchFields is true', async () => {
     indexPatterns.createSavedObject = jest.fn();
     indexPatterns.setDefault = jest.fn();

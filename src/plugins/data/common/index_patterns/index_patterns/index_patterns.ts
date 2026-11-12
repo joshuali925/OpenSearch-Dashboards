@@ -769,12 +769,7 @@ export class IndexPatternsService {
     });
 
     return this.savedObjectsClient
-      .update(
-        savedObjectType,
-        indexPattern.id,
-        body.fields === originalBody.fields ? { ...body, fields: undefined } : body,
-        { version: indexPattern.version }
-      )
+      .update(savedObjectType, indexPattern.id, body, { version: indexPattern.version })
       .then((resp) => {
         indexPattern.id = resp.id;
         indexPattern.version = resp.version;
